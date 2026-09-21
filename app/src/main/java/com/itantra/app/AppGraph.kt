@@ -147,7 +147,9 @@ object AppGraph {
                 CoroutineScope(Dispatchers.IO).launch {
                     android.util.Log.i("AppGraph", "Wi-Fi Direct TCP disconnected — resetting session and restoring Bluetooth transport")
                     secureSessionManager.resetSession()
-                    transportEngine.switchTransport(bluetoothPeerTransport)
+                    if (transportEngine.activeTransportFlow.value == wifiDirectPeerTransport) {
+                        transportEngine.switchTransport(bluetoothPeerTransport)
+                    }
                 }
             }
         )

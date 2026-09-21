@@ -726,7 +726,11 @@ private fun WifiDirectPeerCard(
             Column(Modifier.weight(1f)) {
                 Text(peer.deviceName, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    if (peer.isGroupOwner) "Group Owner · ${peer.statusDisplay}" else "Peer Node · ${peer.statusDisplay}",
+                    if (isConnected) {
+                        if (peer.isGroupOwner) "Verified Group Owner · ${peer.statusDisplay}" else "Verified Peer · ${peer.statusDisplay}"
+                    } else {
+                        if (peer.isGroupOwner) "Unverified Group Owner · ${peer.statusDisplay}" else "Unverified Wi-Fi Peer · ${peer.statusDisplay}"
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = ITantraColors.TextMuted
                 )

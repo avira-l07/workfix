@@ -58,7 +58,8 @@ enum class WifiDirectError(val userMessage: String) {
     TCP_CONNECT_FAILED("TCP connection to peer failed."),
     SOCKET_CLOSED("Wi-Fi Direct socket disconnected."),
     SEND_FAILED("Failed to transmit data frame over Wi-Fi Direct."),
-    RECEIVE_FAILED("Failed to receive data from peer.")
+    RECEIVE_FAILED("Failed to receive data from peer."),
+    LOCATION_REQUIRED("Location mode must be enabled in device settings for Wi-Fi Direct discovery.")
 }
 
 /**
@@ -106,6 +107,16 @@ class WifiDirectConnectionManager(
     private var receiver: BroadcastReceiver? = null
     private var isReceiverRegistered = false
 
+    // FIX 017: Track active group owner address and role to prevent duplicate TCP tear-down/restarts
+    private var lastHandledGroupOwner: String? = null
+    private var lastHandledRole: Boolean? = null
+
+    // FIX 020: Bounded group formation timer
+    private var groupFormationTimeoutJob: kotlinx.coroutines.Job? = null
+
+    // FIX 021: Bounded discovery timeout
+    private var discoveryTimeoutJob: kotlinx.coroutines.Job? = null
+
     init {
         val supported = isWifiDirectSupported()
         debugLog("API Level: ${Build.VERSION.SDK_INT}, Wi-Fi Direct supported: $supported")
@@ -132,17 +143,29 @@ class WifiDirectConnectionManager(
                         onTcpConnected()
                     }
                     ConnectionState.DISCONNECTED -> {
-                        if (_state.value == WifiDirectState.CONNECTED || _state.value == WifiDirectState.TCP_CONNECTING) {
-                            debugLog("TCP socket DISCONNECTED — resetting state")
+                        // FIX 010 & 016: Always clean up and notify upper layer on TCP disconnect
+                        debugLog("TCP socket DISCONNECTED — terminal cleanup")
+                        val wasActive = _state.value == WifiDirectState.CONNECTED ||
+                                        _state.value == WifiDirectState.TCP_CONNECTING ||
+                                        _state.value == WifiDirectState.GROUP_FORMED
+                        if (_state.value != WifiDirectState.AVAILABLE && _state.value != WifiDirectState.OFF) {
                             _state.value = WifiDirectState.AVAILABLE
-                            _connectionInfo.value = null
+                        }
+                        _connectionInfo.value = null
+                        lastHandledGroupOwner = null
+                        lastHandledRole = null
+                        if (wasActive) {
                             onTcpDisconnected()
                         }
                     }
                     ConnectionState.ERROR -> {
+                        // FIX 016: Error path routes through terminal disconnect
                         _state.value = WifiDirectState.ERROR
                         _lastError.value = peerTransport.lastError.value
-                        debugLog("TCP socket ERROR: ${_lastError.value}")
+                        debugLog("TCP socket ERROR: ${_lastError.value} — restoring default transport")
+                        lastHandledGroupOwner = null
+                        lastHandledRole = null
+                        onTcpDisconnected()
                     }
                     else -> {}
                 }
@@ -170,6 +193,16 @@ class WifiDirectConnectionManager(
                 context, Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         }
+    }
+
+    /**
+     * FIX 022: Checks whether Location Mode is enabled in system settings.
+     * Required for Wi-Fi Direct discovery on Android 12 and below (API <= 32).
+     */
+    fun isLocationModeEnabled(): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+            ?: return false
+        return androidx.core.location.LocationManagerCompat.isLocationEnabled(locationManager)
     }
 
     // -------------------------------------------------------------------------
@@ -239,6 +272,23 @@ class WifiDirectConnectionManager(
                         }
                     }
 
+                    WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION -> {
+                        val discoveryState = intent.getIntExtra(
+                            WifiP2pManager.EXTRA_DISCOVERY_STATE,
+                            WifiP2pManager.WIFI_P2P_DISCOVERY_STOPPED
+                        )
+                        debugLog("WIFI_P2P_DISCOVERY_CHANGED_ACTION: state=$discoveryState")
+                        if (discoveryState == WifiP2pManager.WIFI_P2P_DISCOVERY_STOPPED) {
+                            discoveryTimeoutJob?.cancel()
+                            if (_state.value == WifiDirectState.DISCOVERING) {
+                                _state.value = WifiDirectState.AVAILABLE
+                                if (_peers.value.isEmpty()) {
+                                    _lastError.value = WifiDirectError.NO_PEERS_FOUND
+                                }
+                            }
+                        }
+                    }
+
                     WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION -> {
                         val device: WifiP2pDevice? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE, WifiP2pDevice::class.java)
@@ -260,6 +310,7 @@ class WifiDirectConnectionManager(
             addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION)
             addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION)
             addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION)
+            addAction(WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION)
             addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION)
         }
 
@@ -308,6 +359,18 @@ class WifiDirectConnectionManager(
         _lastError.value = WifiDirectError.NONE
         debugLog("Calling WifiP2pManager.discoverPeers()")
 
+        // FIX 021: Bounded 10-second timer to avoid indefinite busy state on 0 peers
+        discoveryTimeoutJob?.cancel()
+        discoveryTimeoutJob = scope.launch {
+            kotlinx.coroutines.delay(10_000L)
+            if (_state.value == WifiDirectState.DISCOVERING) {
+                _state.value = WifiDirectState.AVAILABLE
+                if (_peers.value.isEmpty()) {
+                    _lastError.value = WifiDirectError.NO_PEERS_FOUND
+                }
+            }
+        }
+
         @SuppressLint("MissingPermission")
         mgr.discoverPeers(ch, object : WifiP2pManager.ActionListener {
             override fun onSuccess() {
@@ -316,8 +379,14 @@ class WifiDirectConnectionManager(
 
             override fun onFailure(reasonCode: Int) {
                 debugLog("discoverPeers: initiation failed with reason=$reasonCode")
+                discoveryTimeoutJob?.cancel()
                 _state.value = WifiDirectState.ERROR
-                _lastError.value = WifiDirectError.DISCOVERY_FAILED
+                // FIX 022: Guide user if location mode is disabled on API <= 32
+                if (!isLocationModeEnabled() && Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                    _lastError.value = WifiDirectError.LOCATION_REQUIRED
+                } else {
+                    _lastError.value = WifiDirectError.DISCOVERY_FAILED
+                }
             }
         })
     }
@@ -335,8 +404,11 @@ class WifiDirectConnectionManager(
             debugLog("Peers updated: count=${distinct.size}")
 
             if (_state.value == WifiDirectState.DISCOVERING) {
-                if (distinct.isNotEmpty()) {
-                    _state.value = WifiDirectState.AVAILABLE
+                discoveryTimeoutJob?.cancel()
+                _state.value = WifiDirectState.AVAILABLE
+                // FIX 021 & 091: Truthful error reporting if peer list is empty
+                if (distinct.isEmpty()) {
+                    _lastError.value = WifiDirectError.NO_PEERS_FOUND
                 }
             }
         }
@@ -373,15 +445,43 @@ class WifiDirectConnectionManager(
         mgr.connect(ch, config, object : WifiP2pManager.ActionListener {
             override fun onSuccess() {
                 debugLog("WifiP2pManager.connect() negotiation started")
-                // Note: Connection is established only when connection info reports groupFormed == true
+                // FIX 020: Start bounded group-formation timer (18 seconds)
+                startGroupFormationTimer()
             }
 
             override fun onFailure(reasonCode: Int) {
                 debugLog("WifiP2pManager.connect() failed: reason=$reasonCode")
+                cancelGroupFormationTimer()
                 _state.value = WifiDirectState.ERROR
                 _lastError.value = WifiDirectError.CONNECT_REQUEST_FAILED
             }
         })
+    }
+
+    // FIX 020: Group formation negotiation timeout handling
+    private fun startGroupFormationTimer() {
+        groupFormationTimeoutJob?.cancel()
+        groupFormationTimeoutJob = scope.launch {
+            kotlinx.coroutines.delay(18_000L)
+            if (_state.value == WifiDirectState.CONNECTING) {
+                debugLog("Group formation negotiation timed out after 18s")
+                val mgr = wifiP2pManager
+                val ch = channel
+                if (mgr != null && ch != null) {
+                    @SuppressLint("MissingPermission")
+                    mgr.cancelConnect(ch, null)
+                    @SuppressLint("MissingPermission")
+                    mgr.removeGroup(ch, null)
+                }
+                _state.value = WifiDirectState.ERROR
+                _lastError.value = WifiDirectError.GROUP_FORMATION_FAILED
+            }
+        }
+    }
+
+    private fun cancelGroupFormationTimer() {
+        groupFormationTimeoutJob?.cancel()
+        groupFormationTimeoutJob = null
     }
 
     // -------------------------------------------------------------------------
@@ -407,10 +507,28 @@ class WifiDirectConnectionManager(
 
         if (!info.groupFormed) {
             debugLog("Group not formed yet")
+            lastHandledGroupOwner = null
+            lastHandledRole = null
             return
         }
 
-        _state.value = WifiDirectState.GROUP_FORMED
+        // Cancel group formation timer once group is formed
+        cancelGroupFormationTimer()
+
+        val ownerAddr = info.groupOwnerAddress?.hostAddress
+        val isOwner = info.isGroupOwner
+
+        // FIX 017: If the same group/role is already in progress or connected, do not re-trigger TCP setup
+        if (ownerAddr != null && ownerAddr == lastHandledGroupOwner && isOwner == lastHandledRole &&
+            (peerTransport.isConnected || _state.value == WifiDirectState.TCP_CONNECTING || _state.value == WifiDirectState.CONNECTED)) {
+            debugLog("handleConnectionInfo: already active for owner=$ownerAddr, isOwner=$isOwner. Skipping duplicate launch.")
+            return
+        }
+
+        lastHandledGroupOwner = ownerAddr
+        lastHandledRole = isOwner
+
+        // FIX 090: Stable transition directly to TCP_CONNECTING
         _state.value = WifiDirectState.TCP_CONNECTING
 
         scope.launch(Dispatchers.IO) {
@@ -437,6 +555,9 @@ class WifiDirectConnectionManager(
 
     fun disconnect() {
         debugLog("Manual disconnect called")
+        cancelGroupFormationTimer()
+        discoveryTimeoutJob?.cancel()
+
         val mgr = wifiP2pManager
         val ch = channel
 
@@ -463,5 +584,10 @@ class WifiDirectConnectionManager(
         _state.value = WifiDirectState.AVAILABLE
         _connectionInfo.value = null
         _peers.value = emptyList()
+        lastHandledGroupOwner = null
+        lastHandledRole = null
+
+        // FIX 010 & 016: Always notify onTcpDisconnected so default transport is restored
+        onTcpDisconnected()
     }
 }

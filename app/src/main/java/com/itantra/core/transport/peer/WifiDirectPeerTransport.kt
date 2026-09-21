@@ -33,6 +33,7 @@ import java.nio.ByteOrder
  * Fixed TCP Port: 8988
  * Connect Timeout: 12,000 ms
  */
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class WifiDirectPeerTransport : PeerTransport {
 
     companion object {
@@ -56,7 +57,8 @@ class WifiDirectPeerTransport : PeerTransport {
     private var outputStream: OutputStream? = null
 
     private val stateFlow = MutableStateFlow(ConnectionState.DISCONNECTED)
-    private val incomingFlow = MutableSharedFlow<ByteArray>(extraBufferCapacity = 64)
+    // FIX 019: replay = 16 so initial SECURE_HELLO is never dropped before TransportCoordinator subscribes
+    private val incomingFlow = MutableSharedFlow<ByteArray>(replay = 16, extraBufferCapacity = 64)
 
     private val _lastError = MutableStateFlow(WifiDirectError.NONE)
     val lastError: StateFlow<WifiDirectError> = _lastError.asStateFlow()
@@ -126,22 +128,29 @@ class WifiDirectPeerTransport : PeerTransport {
             connectionJob = scope.launch(Dispatchers.IO) {
                 stateFlow.value = ConnectionState.CONNECTING
                 debugLog("TCP Client connecting to ${hostAddress.hostAddress?.take(8)}***:$port")
+                // FIX 018: Keep pendingSocket outside try to guarantee close on timeout, error, or cancellation
+                var pendingSocket: Socket? = null
                 try {
                     val socket = Socket()
+                    pendingSocket = socket
                     socket.tcpNoDelay = true
                     socket.keepAlive = true
                     socket.connect(InetSocketAddress(hostAddress, port), CONNECT_TIMEOUT_MS)
                     debugLog("TCP Client connected successfully to group owner")
+                    pendingSocket = null
                     manageConnectedSocket(socket)
                 } catch (e: CancellationException) {
+                    try { pendingSocket?.close() } catch (_: Exception) {}
                     debugLog("Client connect job cancelled")
                     throw e
                 } catch (e: SocketTimeoutException) {
+                    try { pendingSocket?.close() } catch (_: Exception) {}
                     debugLog("TCP connect timeout to group owner")
                     _lastError.value = WifiDirectError.TCP_CONNECT_TIMEOUT
                     stateFlow.value = ConnectionState.ERROR
                     disconnectInternal()
                 } catch (e: Exception) {
+                    try { pendingSocket?.close() } catch (_: Exception) {}
                     debugLog("TCP Client connect error: ${e.javaClass.simpleName} - ${e.message}")
                     _lastError.value = WifiDirectError.TCP_CONNECT_FAILED
                     stateFlow.value = ConnectionState.ERROR
@@ -275,6 +284,9 @@ class WifiDirectPeerTransport : PeerTransport {
         try { outputStream?.close() } catch (_: Exception) {}
         try { activeSocket?.close() } catch (_: Exception) {}
         try { serverSocket?.close() } catch (_: Exception) {}
+
+        // FIX 019: Reset replay cache on terminal disconnect so old frames are not replayed on reconnect
+        incomingFlow.resetReplayCache()
 
         inputStream = null
         outputStream = null
