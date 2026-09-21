@@ -24,6 +24,8 @@ import android.bluetooth.BluetoothManager
 import com.itantra.core.crypto.SecureSessionManager
 import com.itantra.core.transceiver.TransceiverCoordinator
 import com.itantra.core.translation.TranslationRouter
+import com.itantra.core.translation.ProductionTranslationEngine
+import java.io.File
 import com.example.itantra.data.settings.SettingsRepository
 import com.example.itantra.data.settings.settingsDataStore
 
@@ -135,11 +137,10 @@ object AppGraph {
         SecureSessionManager()
     }
 
-    // Translation is a deliberate scope decision for this build, not a bug: the real MT model
-    // (~1.6GB) was never bundled into the APK and the native JNI bridge was never compiled.
-    // See UnavailableTranslationEngine's doc comment for how to re-enable it later.
     val translationEngine: com.itantra.core.translation.TranslationEngine by lazy {
-        com.itantra.core.translation.UnavailableTranslationEngine()
+        ProductionTranslationEngine().also { engine ->
+            engine.init(File(context.filesDir, "translation_models"))
+        }
     }
 
     val translationRouter: TranslationRouter by lazy {
