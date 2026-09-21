@@ -14,8 +14,12 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="s" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Location only needed for BT Classic discovery on Android 11 and below.
+         On Android 12+ (API 31+) BLUETOOTH_SCAN with neverForLocation replaces this. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"
+        android:maxSdkVersion="30" />
 
     <!-- Operational Hardening: Foreground Service & WakeLock -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

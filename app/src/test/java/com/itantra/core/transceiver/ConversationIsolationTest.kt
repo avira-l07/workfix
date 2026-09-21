@@ -34,8 +34,8 @@ class ConversationIsolationTest {
     private fun createSampleMessage(id: Long, text: String, peerId: String): TransceiverMessage {
         return TransceiverMessage(
             messageId = id,
-            language = LanguageCode.EN,
-            targetLanguage = LanguageCode.EN,
+            language = LanguageCode.ENGLISH,
+            targetLanguage = LanguageCode.ENGLISH,
             priority = 0,
             text = text,
             originalText = null,

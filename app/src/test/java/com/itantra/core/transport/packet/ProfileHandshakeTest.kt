@@ -13,7 +13,7 @@ class ProfileHandshakeTest {
             protocolVersion = 1,
             deviceId = "IT-7F3A-91C2",
             displayName = "Tactical Unit 1",
-            supportedLanguages = listOf(LanguageCode.EN, LanguageCode.HI)
+            supportedLanguages = listOf(LanguageCode.ENGLISH, LanguageCode.HINDI)
         )
         val bytes = original.toBytes()
         val restored = ProfilePayload.fromBytes(bytes)
@@ -22,6 +22,6 @@ class ProfileHandshakeTest {
         assertEquals(1, restored?.protocolVersion)
         assertEquals("IT-7F3A-91C2", restored?.deviceId)
         assertEquals("Tactical Unit 1", restored?.displayName)
-        assertEquals(listOf(LanguageCode.EN, LanguageCode.HI), restored?.supportedLanguages)
+        assertEquals(listOf(LanguageCode.ENGLISH, LanguageCode.HINDI), restored?.supportedLanguages)
     }
 }

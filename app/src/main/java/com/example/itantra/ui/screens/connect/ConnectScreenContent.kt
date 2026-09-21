@@ -40,6 +40,7 @@ fun ConnectScreenContent(
     devices: List<PeerDevice>,
     isScanning: Boolean,
     sasCode: String? = null,
+    connectionError: String? = null,
     myDeviceId: String = "IT-????-????",
     myDisplayName: String = "This Device",
     onBack: () -> Unit,
@@ -71,6 +72,9 @@ fun ConnectScreenContent(
         ) {
             item { MyProfileCard(myDeviceId = myDeviceId, myDisplayName = myDisplayName) }
             item { ActiveChannelCard(channelName) }
+            if (!connectionError.isNullOrBlank()) {
+                item { ConnectionErrorCard(error = connectionError) }
+            }
             item { ScanningCard(isScanning = isScanning, peersInRange = peersInRange) }
             item {
                 Text(
@@ -369,3 +373,46 @@ fun SasVerificationDialog(
     )
 }
 
+@Composable
+private fun ConnectionErrorCard(error: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ITantraColors.ErrorContainer, RoundedCornerShape(12.dp))
+            .border(1.dp, ITantraColors.OnErrorContainer.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.Sensors,
+                contentDescription = null,
+                tint = ITantraColors.OnErrorContainer,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "CONNECTION ISSUE",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ITantraColors.OnErrorContainer
+                )
+                Text(
+                    text = when (error) {
+                        "BLUETOOTH_DISABLED" -> "Bluetooth is disabled. Please turn on Bluetooth."
+                        "PERMISSION_DENIED" -> "Bluetooth permissions not granted. Grant Nearby Devices."
+                        "PAIRING_REQUIRED" -> "Pairing required before connecting."
+                        "PAIRING_FAILED" -> "Pairing failed. Try pairing again."
+                        "CONNECT_TIMEOUT" -> "Connection timed out. Move closer and retry."
+                        "RFCOMM_CONNECT_FAILED" -> "RFCOMM link failed. Ensure peer is listening."
+                        "BOND_LOST" -> "Bluetooth bond lost — re-pair device."
+                        "SOCKET_DISCONNECTED" -> "Bluetooth socket disconnected."
+                        "HANDSHAKE_FAILED" -> "Secure handshake failed. Reconnect."
+                        else -> error
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ITantraColors.OnErrorContainer
+                )
+            }
+        }
+    }
+}

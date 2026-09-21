@@ -76,6 +76,8 @@ class MainActivity : ComponentActivity() {
             try { unregisterReceiver(it) } catch (e: IllegalArgumentException) { }
         }
         debugTestReceiver = null
+        // Unregister bond receiver to avoid leaks.
+        AppGraph.bluetoothPeerTransport.unregisterBondReceiver(this)
         super.onDestroy()
     }
 
@@ -403,6 +405,10 @@ class MainActivity : ComponentActivity() {
             debugTestReceiver = testPttReceiver
         }
 
+        // Register bond-state / Android-16 KEY_MISSING receiver so the transport
+        // can react to bond loss without relying solely on socket IO errors.
+        AppGraph.bluetoothPeerTransport.registerBondReceiver(this)
+
         setContent {
             ITantraTheme(dynamicColor = false) {
                 TacticalAppScaffold(
@@ -415,22 +421,29 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestRequiredPermissions() {
-        val permissionsToRequest = mutableListOf(
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
+        val permissionsToRequest = mutableListOf<String>()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+ (API 31+): Nearby Devices permissions cover BT Classic.
+            // Location is NOT needed for BT Classic discovery on API 31+.
             permissionsToRequest.add(Manifest.permission.BLUETOOTH_SCAN)
             permissionsToRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
             permissionsToRequest.add(Manifest.permission.BLUETOOTH_ADVERTISE)
+        } else {
+            // Android 11 and below: location required for BT Classic discovery.
+            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
+            permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
+
+        // RECORD_AUDIO is always required for STT.
+        permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
 
         val allGranted = permissionsToRequest.all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
 
+        // permissionsGranted reflects Bluetooth + Audio; absence of location on API 31+
+        // must not block opening the Connect screen.
         permissionsGranted = allGranted
 
         if (!allGranted) {
@@ -588,11 +601,22 @@ fun TacticalAppScaffold(
                         }
 
                         val connectedDeviceAddress by AppGraph.bluetoothPeerTransport.connectedDeviceAddress.collectAsState()
+                        val btLastError by AppGraph.bluetoothPeerTransport.lastError.collectAsState()
 
-                        // Bonded devices list
-                        val bondedList = remember(transportState, connectedDeviceAddress, btAdapter) {
+                        // Bonded devices list — only read if BLUETOOTH_CONNECT is granted.
+                        // On Android 14/15/16 reading bondedDevices / device.name / device.address
+                        // without BLUETOOTH_CONNECT throws SecurityException.
+                        val bondedList = remember(transportState, connectedDeviceAddress, btAdapter, btLastError) {
+                            val hasConnectPerm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                ContextCompat.checkSelfPermission(
+                                    context, Manifest.permission.BLUETOOTH_CONNECT
+                                ) == PackageManager.PERMISSION_GRANTED
+                            } else true
+
+                            if (!hasConnectPerm) return@remember emptyList()
+
                             try {
-                                @Suppress("MissingPermission")
+                                @Suppress("MissingPermission") // guarded by hasConnectPerm above
                                 btAdapter?.bondedDevices?.map { dev ->
                                     val address = dev.address
                                     val isTargetOfCurrentSession = address != null && address == connectedDeviceAddress
@@ -604,11 +628,15 @@ fun TacticalAppScaffold(
                                         signalDbm = null,
                                         batteryPercent = null,
                                         state = when {
-                                            !isTargetOfCurrentSession -> PeerConnectionState.DISCONNECTED
-                                            transportState == ConnectionState.CONNECTED -> PeerConnectionState.CONNECTED
-                                            transportState == ConnectionState.CONNECTING ||
-                                                transportState == ConnectionState.LISTENING -> PeerConnectionState.CONNECTING
-                                            else -> PeerConnectionState.DISCONNECTED
+                                            isTargetOfCurrentSession && transportState == ConnectionState.CONNECTED ->
+                                                PeerConnectionState.CONNECTED
+                                            isTargetOfCurrentSession && (
+                                                transportState == ConnectionState.CONNECTING ||
+                                                    transportState == ConnectionState.LISTENING
+                                                ) -> PeerConnectionState.CONNECTING
+                                            // Not the current session target: show AVAILABLE so
+                                            // the CONNECT button is rendered (not "NOT CONNECTED").
+                                            else -> PeerConnectionState.AVAILABLE
                                         }
                                     )
                                 } ?: emptyList()
@@ -638,33 +666,47 @@ fun TacticalAppScaffold(
                             devices = liveDevices,
                             isScanning = isBtDiscovering || transportState == ConnectionState.CONNECTING || transportState == ConnectionState.LISTENING,
                             sasCode = liveSasCode,
+                            connectionError = btLastError.name.takeIf {
+                                btLastError != com.itantra.core.transport.peer.BluetoothError.NONE
+                            },
                             onBack = { currentDestination = AppDestination.HUB },
                             onBroadcastPing = {
                                 coroutineScope.launch {
                                     AppGraph.bluetoothPeerTransport.startServer()
-                                    try {
-                                        @Suppress("MissingPermission")
-                                        if (btAdapter?.isDiscovering == true) {
-                                            btAdapter.cancelDiscovery()
+                                    val hasScan = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        ContextCompat.checkSelfPermission(
+                                            context, Manifest.permission.BLUETOOTH_SCAN
+                                        ) == PackageManager.PERMISSION_GRANTED
+                                    } else true
+                                    if (hasScan) {
+                                        try {
+                                            @Suppress("MissingPermission") // hasScan checked above
+                                            if (btAdapter?.isDiscovering == true) btAdapter.cancelDiscovery()
+                                            @Suppress("MissingPermission")
+                                            btAdapter?.startDiscovery()
+                                        } catch (e: SecurityException) {
+                                            android.util.Log.e("ConnectScreen", "startDiscovery denied", e)
                                         }
-                                        @Suppress("MissingPermission")
-                                        btAdapter?.startDiscovery()
-                                    } catch (e: SecurityException) {
-                                        e.printStackTrace()
                                     }
                                 }
                             },
                             onConnect = { device ->
                                 coroutineScope.launch {
+                                    val hasConnect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        ContextCompat.checkSelfPermission(
+                                            context, Manifest.permission.BLUETOOTH_CONNECT
+                                        ) == PackageManager.PERMISSION_GRANTED
+                                    } else true
+                                    if (!hasConnect) return@launch
                                     try {
-                                        @Suppress("MissingPermission")
+                                        @Suppress("MissingPermission") // hasConnect checked above
                                         val target = btAdapter?.bondedDevices?.find { it.address == device.id }
                                             ?: btAdapter?.getRemoteDevice(device.id)
                                         if (target != null) {
                                             AppGraph.bluetoothPeerTransport.connectToDevice(target)
                                         }
                                     } catch (e: Exception) {
-                                        e.printStackTrace()
+                                        android.util.Log.e("ConnectScreen", "connectToDevice failed", e)
                                     }
                                 }
                             },

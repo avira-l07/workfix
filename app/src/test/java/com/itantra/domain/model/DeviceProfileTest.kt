@@ -18,7 +18,7 @@ class DeviceProfileTest {
         val profile = DeviceProfile(
             deviceId = "IT-A1B2-C3D4",
             displayName = "User Alpha",
-            activeLanguage = LanguageCode.EN
+            activeLanguage = LanguageCode.ENGLISH
         )
         val updated = profile.copy(displayName = "User Beta")
         assertEquals(profile.deviceId, updated.deviceId)
