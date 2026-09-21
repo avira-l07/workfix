@@ -69,6 +69,39 @@ class MainActivity : ComponentActivity() {
         permissionsGranted = results.values.all { it }
     }
 
+    private var onWifiDirectPermissionCallback: ((Boolean) -> Unit)? = null
+
+    private val wifiDirectPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        onWifiDirectPermissionCallback?.invoke(isGranted)
+        onWifiDirectPermissionCallback = null
+    }
+
+    fun requestWifiDirectPermission(onResult: (Boolean) -> Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPerm = ContextCompat.checkSelfPermission(
+                this, Manifest.permission.NEARBY_WIFI_DEVICES
+            ) == PackageManager.PERMISSION_GRANTED
+            if (hasPerm) {
+                onResult(true)
+            } else {
+                onWifiDirectPermissionCallback = onResult
+                wifiDirectPermissionLauncher.launch(Manifest.permission.NEARBY_WIFI_DEVICES)
+            }
+        } else {
+            val hasPerm = ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            if (hasPerm) {
+                onResult(true)
+            } else {
+                onWifiDirectPermissionCallback = onResult
+                wifiDirectPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+    }
+
     private var debugTestReceiver: android.content.BroadcastReceiver? = null
 
     override fun onDestroy() {
@@ -78,6 +111,8 @@ class MainActivity : ComponentActivity() {
         debugTestReceiver = null
         // Unregister bond receiver to avoid leaks.
         AppGraph.bluetoothPeerTransport.unregisterBondReceiver(this)
+        // Unregister Wi-Fi Direct receiver to avoid leaks.
+        AppGraph.wifiDirectConnectionManager.unregisterReceiver(this)
         super.onDestroy()
     }
 
@@ -408,6 +443,8 @@ class MainActivity : ComponentActivity() {
         // Register bond-state / Android-16 KEY_MISSING receiver so the transport
         // can react to bond loss without relying solely on socket IO errors.
         AppGraph.bluetoothPeerTransport.registerBondReceiver(this)
+        // Register Wi-Fi Direct receiver for peer discovery and group formation.
+        AppGraph.wifiDirectConnectionManager.registerReceiver(this)
 
         setContent {
             ITantraTheme(dynamicColor = false) {
@@ -660,6 +697,11 @@ fun TacticalAppScaffold(
                             map.values.toList()
                         }
 
+                        val wifiDirectState by AppGraph.wifiDirectConnectionManager.state.collectAsState()
+                        val wifiDirectPeers by AppGraph.wifiDirectConnectionManager.peers.collectAsState()
+                        val wifiDirectError by AppGraph.wifiDirectConnectionManager.lastError.collectAsState()
+                        val wifiDirectInfo by AppGraph.wifiDirectConnectionManager.connectionInfo.collectAsState()
+
                         ConnectScreenContent(
                             channelName = "TAC-RELIEF-04",
                             peersInRange = liveDevices.size,
@@ -669,6 +711,12 @@ fun TacticalAppScaffold(
                             connectionError = btLastError.name.takeIf {
                                 btLastError != com.itantra.core.transport.peer.BluetoothError.NONE
                             },
+                            wifiDirectPeers = wifiDirectPeers,
+                            wifiDirectState = wifiDirectState,
+                            wifiDirectError = wifiDirectError.takeIf {
+                                it != com.itantra.core.transport.peer.WifiDirectError.NONE
+                            }?.name,
+                            wifiDirectInfo = wifiDirectInfo,
                             onBack = { currentDestination = AppDestination.HUB },
                             onBroadcastPing = {
                                 coroutineScope.launch {
@@ -715,6 +763,25 @@ fun TacticalAppScaffold(
                             },
                             onOpenChat = { device ->
                                 activeChatPeerId = device.id
+                                currentDestination = AppDestination.CHAT
+                            },
+                            onDiscoverWifiDirectPeers = {
+                                (context as? MainActivity)?.requestWifiDirectPermission { granted ->
+                                    if (granted) {
+                                        AppGraph.wifiDirectConnectionManager.discoverPeers()
+                                    }
+                                } ?: run {
+                                    AppGraph.wifiDirectConnectionManager.discoverPeers()
+                                }
+                            },
+                            onConnectWifiDirect = { peer ->
+                                AppGraph.wifiDirectConnectionManager.connect(peer)
+                            },
+                            onDisconnectWifiDirect = {
+                                AppGraph.wifiDirectConnectionManager.disconnect()
+                            },
+                            onOpenChatWifiDirect = { peer ->
+                                activeChatPeerId = peer.deviceAddress
                                 currentDestination = AppDestination.CHAT
                             }
                         )

@@ -32,6 +32,8 @@ data class PeerDevice(
 
 enum class PeerConnectionState { CONNECTED, AVAILABLE, CONNECTING, DISCONNECTED }
 
+enum class TransportMode { BLUETOOTH, WIFI_DIRECT }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConnectScreenContent(
@@ -43,13 +45,24 @@ fun ConnectScreenContent(
     connectionError: String? = null,
     myDeviceId: String = "IT-????-????",
     myDisplayName: String = "This Device",
+    selectedTransportMode: TransportMode = TransportMode.BLUETOOTH,
+    wifiDirectPeers: List<com.itantra.core.transport.peer.WifiDirectPeer> = emptyList(),
+    wifiDirectState: com.itantra.core.transport.peer.WifiDirectState = com.itantra.core.transport.peer.WifiDirectState.OFF,
+    wifiDirectError: String? = null,
+    wifiDirectInfo: android.net.wifi.p2p.WifiP2pInfo? = null,
     onBack: () -> Unit,
     onBroadcastPing: () -> Unit,
     onConnect: (PeerDevice) -> Unit,
     onSasConfirmed: (PeerDevice) -> Unit = {},
     onOpenChat: (PeerDevice) -> Unit = {},
+    onDiscoverWifiDirectPeers: () -> Unit = {},
+    onConnectWifiDirect: (com.itantra.core.transport.peer.WifiDirectPeer) -> Unit = {},
+    onDisconnectWifiDirect: () -> Unit = {},
+    onOpenChatWifiDirect: (com.itantra.core.transport.peer.WifiDirectPeer) -> Unit = {},
 ) {
     var verifyingDevice by remember { mutableStateOf<PeerDevice?>(null) }
+    var verifyingWifiPeer by remember { mutableStateOf<com.itantra.core.transport.peer.WifiDirectPeer?>(null) }
+    var currentMode by remember { mutableStateOf(selectedTransportMode) }
 
     Scaffold(
         containerColor = ITantraColors.CanvasBg,
@@ -65,77 +78,204 @@ fun ConnectScreenContent(
             )
         },
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier.padding(padding).fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
         ) {
-            item { MyProfileCard(myDeviceId = myDeviceId, myDisplayName = myDisplayName) }
-            item { ActiveChannelCard(channelName) }
-            if (!connectionError.isNullOrBlank()) {
-                item { ConnectionErrorCard(error = connectionError) }
-            }
-            item { ScanningCard(isScanning = isScanning, peersInRange = peersInRange) }
-            item {
-                Text(
-                    "DISCOVERED DEVICES",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = ITantraColors.TextHeadline,
+            // Mode selector: BLUETOOTH vs WI-FI DIRECT
+            TabRow(
+                selectedTabIndex = currentMode.ordinal,
+                containerColor = ITantraColors.SurfaceWhite,
+                contentColor = ITantraColors.Primary
+            ) {
+                Tab(
+                    selected = currentMode == TransportMode.BLUETOOTH,
+                    onClick = { currentMode = TransportMode.BLUETOOTH },
+                    text = { Text("BLUETOOTH", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
+                )
+                Tab(
+                    selected = currentMode == TransportMode.WIFI_DIRECT,
+                    onClick = { currentMode = TransportMode.WIFI_DIRECT },
+                    text = { Text("WI-FI DIRECT", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
                 )
             }
-            if (devices.isEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
-                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Filled.Sensors,
-                                contentDescription = null,
-                                tint = ITantraColors.TextMuted,
-                                modifier = Modifier.size(32.dp)
+
+            if (currentMode == TransportMode.BLUETOOTH) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    item { MyProfileCard(myDeviceId = myDeviceId, myDisplayName = myDisplayName) }
+                    item { ActiveChannelCard(channelName, isWifi = false) }
+                    if (!connectionError.isNullOrBlank()) {
+                        item { ConnectionErrorCard(error = connectionError) }
+                    }
+                    item { ScanningCard(isScanning = isScanning, peersInRange = peersInRange) }
+                    item {
+                        Text(
+                            "DISCOVERED BLUETOOTH DEVICES",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = ITantraColors.TextHeadline,
+                        )
+                    }
+                    if (devices.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
+                                    .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        Icons.Filled.Sensors,
+                                        contentDescription = null,
+                                        tint = ITantraColors.TextMuted,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        "No peer devices discovered",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = ITantraColors.TextMuted
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        "Tap 'Broadcast Discovery Ping' to search nearby radios",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = ITantraColors.TextMuted
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        items(devices, key = { it.id }) { device ->
+                            PeerDeviceCard(
+                                device = device,
+                                onConnect = {
+                                    verifyingDevice = device
+                                    onConnect(device)
+                                },
+                                onOpenChat = { onOpenChat(device) }
                             )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                "No peer devices discovered",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = ITantraColors.TextMuted
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                "Tap 'Broadcast Discovery Ping' to search nearby radios",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = ITantraColors.TextMuted
-                            )
+                        }
+                    }
+                    item {
+                        Button(
+                            onClick = onBroadcastPing,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
+                        ) {
+                            Icon(Icons.Filled.Sensors, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("BROADCAST DISCOVERY PING")
                         }
                     }
                 }
             } else {
-                items(devices, key = { it.id }) { device ->
-                    PeerDeviceCard(
-                        device = device,
-                        onConnect = {
-                            verifyingDevice = device
-                            onConnect(device)
-                        },
-                        onOpenChat = { onOpenChat(device) }
-                    )
-                }
-            }
-            item {
-                Button(
-                    onClick = onBroadcastPing,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
+                // WI-FI DIRECT SECTION
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Icon(Icons.Filled.Sensors, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("BROADCAST DISCOVERY PING")
+                    item { MyProfileCard(myDeviceId = myDeviceId, myDisplayName = myDisplayName) }
+                    item { ActiveChannelCard(channelName, isWifi = true) }
+                    if (!wifiDirectError.isNullOrBlank()) {
+                        item { WifiDirectErrorCard(error = wifiDirectError) }
+                    }
+                    item {
+                        WifiDirectStatusCard(
+                            state = wifiDirectState,
+                            peerCount = wifiDirectPeers.size,
+                            info = wifiDirectInfo
+                        )
+                    }
+                    item {
+                        Text(
+                            "WI-FI DIRECT PEERS",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = ITantraColors.TextHeadline,
+                        )
+                    }
+                    if (wifiDirectPeers.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
+                                    .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        Icons.Filled.Sensors,
+                                        contentDescription = null,
+                                        tint = ITantraColors.TextMuted,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        "No Wi-Fi Direct peers discovered",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = ITantraColors.TextMuted
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        "Tap 'Discover Wi-Fi Direct Peers' to search nearby devices",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = ITantraColors.TextMuted
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        items(wifiDirectPeers, key = { it.deviceAddress }) { peer ->
+                            WifiDirectPeerCard(
+                                peer = peer,
+                                isConnected = wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTED,
+                                isConnecting = wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTING ||
+                                        wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.GROUP_FORMED ||
+                                        wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.TCP_CONNECTING,
+                                onConnect = {
+                                    verifyingWifiPeer = peer
+                                    onConnectWifiDirect(peer)
+                                },
+                                onOpenChat = { onOpenChatWifiDirect(peer) }
+                            )
+                        }
+                    }
+                    item {
+                        Button(
+                            onClick = onDiscoverWifiDirectPeers,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
+                        ) {
+                            Icon(Icons.Filled.Sensors, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("DISCOVER WI-FI DIRECT PEERS")
+                        }
+                    }
+                    if (wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTED ||
+                        wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTING ||
+                        wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.GROUP_FORMED ||
+                        wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.TCP_CONNECTING
+                    ) {
+                        item {
+                            OutlinedButton(
+                                onClick = onDisconnectWifiDirect,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ITantraColors.OnErrorContainer)
+                            ) {
+                                Text("DISCONNECT WI-FI DIRECT")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -143,7 +283,7 @@ fun ConnectScreenContent(
 
     verifyingDevice?.let { dev ->
         SasVerificationDialog(
-            device = dev,
+            deviceName = dev.name,
             sasCode = sasCode ?: "GENERATING...",
             onConfirm = {
                 onSasConfirmed(dev)
@@ -151,6 +291,19 @@ fun ConnectScreenContent(
             },
             onDismiss = { verifyingDevice = null }
         )
+    }
+
+    verifyingWifiPeer?.let { peer ->
+        if (sasCode != null) {
+            SasVerificationDialog(
+                deviceName = peer.deviceName,
+                sasCode = sasCode,
+                onConfirm = {
+                    verifyingWifiPeer = null
+                },
+                onDismiss = { verifyingWifiPeer = null }
+            )
+        }
     }
 }
 
@@ -175,7 +328,7 @@ private fun MyProfileCard(myDeviceId: String, myDisplayName: String) {
 }
 
 @Composable
-private fun ActiveChannelCard(channelName: String) {
+private fun ActiveChannelCard(channelName: String, isWifi: Boolean = false) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -191,13 +344,13 @@ private fun ActiveChannelCard(channelName: String) {
             Box(Modifier.size(6.dp).background(ITantraColors.StatusSuccess, RoundedCornerShape(50)))
             Spacer(Modifier.width(6.dp))
             Text(
-                "OFFLINE · DIRECT PEER-TO-PEER",
+                if (isWifi) "OFFLINE · WI-FI DIRECT PEER-TO-PEER" else "OFFLINE · DIRECT PEER-TO-PEER",
                 style = MaterialTheme.typography.labelSmall,
                 color = ITantraColors.TextMuted,
             )
             Spacer(Modifier.weight(1f))
             Text(
-                "DIRECT LINK · NO FORWARDING",
+                if (isWifi) "TCP 8988 · NO ROUTER" else "RFCOMM · NO ROUTER",
                 style = MaterialTheme.typography.labelSmall,
                 color = ITantraColors.TextHeadline,
             )
@@ -318,7 +471,7 @@ private fun StatChip(label: String, value: String) {
 
 @Composable
 fun SasVerificationDialog(
-    device: PeerDevice,
+    deviceName: String,
     sasCode: String = "-- ---",
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
@@ -331,7 +484,7 @@ fun SasVerificationDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    "Compare this 6-digit Short Authentication String with the display on ${device.name}:",
+                    "Compare this 6-digit Short Authentication String with the display on $deviceName:",
                     style = MaterialTheme.typography.bodyMedium,
                     color = ITantraColors.TextBody
                 )
@@ -374,6 +527,19 @@ fun SasVerificationDialog(
 }
 
 @Composable
+fun SasVerificationDialog(
+    device: PeerDevice,
+    sasCode: String = "-- ---",
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) = SasVerificationDialog(
+    deviceName = device.name,
+    sasCode = sasCode,
+    onConfirm = onConfirm,
+    onDismiss = onDismiss
+)
+
+@Composable
 private fun ConnectionErrorCard(error: String) {
     Box(
         modifier = Modifier
@@ -392,7 +558,7 @@ private fun ConnectionErrorCard(error: String) {
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
-                    text = "CONNECTION ISSUE",
+                    text = "BLUETOOTH CONNECTION ISSUE",
                     style = MaterialTheme.typography.labelSmall,
                     color = ITantraColors.OnErrorContainer
                 )
@@ -413,6 +579,183 @@ private fun ConnectionErrorCard(error: String) {
                     color = ITantraColors.OnErrorContainer
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun WifiDirectStatusCard(
+    state: com.itantra.core.transport.peer.WifiDirectState,
+    peerCount: Int,
+    info: android.net.wifi.p2p.WifiP2pInfo?
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
+            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        val (stateText, badgeColor) = when (state) {
+            com.itantra.core.transport.peer.WifiDirectState.CONNECTED -> "CONNECTED · TCP 8988" to ITantraColors.StatusSuccess
+            com.itantra.core.transport.peer.WifiDirectState.TCP_CONNECTING -> "TCP SOCKET CONNECTING…" to ITantraColors.Primary
+            com.itantra.core.transport.peer.WifiDirectState.GROUP_FORMED -> "P2P GROUP FORMED" to ITantraColors.Primary
+            com.itantra.core.transport.peer.WifiDirectState.CONNECTING -> "NEGOTIATING P2P LINK…" to ITantraColors.Primary
+            com.itantra.core.transport.peer.WifiDirectState.DISCOVERING -> "SEARCHING FOR WI-FI DIRECT PEERS…" to ITantraColors.Primary
+            com.itantra.core.transport.peer.WifiDirectState.AVAILABLE -> "WI-FI DIRECT READY" to ITantraColors.TextHeadline
+            com.itantra.core.transport.peer.WifiDirectState.PERMISSION_REQUIRED -> "PERMISSION REQUIRED" to ITantraColors.OnErrorContainer
+            com.itantra.core.transport.peer.WifiDirectState.OFF -> "WI-FI P2P DISABLED" to ITantraColors.TextMuted
+            com.itantra.core.transport.peer.WifiDirectState.ERROR -> "ERROR" to ITantraColors.OnErrorContainer
+        }
+
+        Text(
+            text = stateText,
+            style = MaterialTheme.typography.labelMedium,
+            color = badgeColor,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "DIRECT PHONE-TO-PHONE · NO ROUTER · NO INTERNET",
+            style = MaterialTheme.typography.labelSmall,
+            color = ITantraColors.TextMuted,
+        )
+
+        if (info != null && info.groupFormed) {
+            Spacer(Modifier.height(8.dp))
+            val role = if (info.isGroupOwner) "Group Owner (TCP Server)" else "Client (TCP Client)"
+            val host = info.groupOwnerAddress?.hostAddress?.let { "${it.take(8)}***" } ?: "local"
+            Text(
+                text = "ROLE: $role · HOST: $host",
+                style = MaterialTheme.typography.labelSmall,
+                color = ITantraColors.Primary
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "$peerCount PEERS IN RANGE",
+            style = MaterialTheme.typography.labelSmall,
+            color = ITantraColors.Primary,
+            modifier = Modifier
+                .background(ITantraColors.AccentSubtle, RoundedCornerShape(50))
+                .padding(horizontal = 12.dp, vertical = 4.dp),
+        )
+    }
+}
+
+@Composable
+private fun WifiDirectErrorCard(error: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ITantraColors.ErrorContainer, RoundedCornerShape(12.dp))
+            .border(1.dp, ITantraColors.OnErrorContainer.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.Sensors,
+                contentDescription = null,
+                tint = ITantraColors.OnErrorContainer,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "WI-FI DIRECT ISSUE",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ITantraColors.OnErrorContainer
+                )
+                Text(
+                    text = when (error) {
+                        "PERMISSION_DENIED" -> "Nearby Wi-Fi permission required for Wi-Fi Direct"
+                        "P2P_NOT_SUPPORTED" -> "Wi-Fi Direct is not supported on this device."
+                        "P2P_DISABLED" -> "Wi-Fi Direct is unavailable. Enable Wi-Fi."
+                        "DISCOVERY_FAILED" -> "Failed to start peer discovery. Ensure Wi-Fi is enabled."
+                        "NO_PEERS_FOUND" -> "No Wi-Fi Direct peers found nearby."
+                        "CONNECT_REQUEST_FAILED" -> "Failed to initiate connection to peer."
+                        "GROUP_FORMATION_FAILED" -> "Wi-Fi Direct group formation failed."
+                        "GROUP_OWNER_ADDRESS_MISSING" -> "Group owner address is missing."
+                        "TCP_SERVER_FAILED" -> "Failed to start TCP server on port 8988."
+                        "TCP_CONNECT_TIMEOUT" -> "Connection timed out reaching group owner TCP server."
+                        "TCP_CONNECT_FAILED" -> "TCP connection to peer failed."
+                        "SOCKET_CLOSED" -> "Wi-Fi Direct socket disconnected."
+                        "SEND_FAILED" -> "Failed to transmit data frame over Wi-Fi Direct."
+                        "RECEIVE_FAILED" -> "Failed to receive data from peer."
+                        else -> error
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ITantraColors.OnErrorContainer
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WifiDirectPeerCard(
+    peer: com.itantra.core.transport.peer.WifiDirectPeer,
+    isConnected: Boolean,
+    isConnecting: Boolean,
+    onConnect: () -> Unit,
+    onOpenChat: () -> Unit = {}
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
+            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
+            .padding(12.dp),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(peer.deviceName, style = MaterialTheme.typography.titleSmall)
+                Text(
+                    if (peer.isGroupOwner) "Group Owner · ${peer.statusDisplay}" else "Peer Node · ${peer.statusDisplay}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ITantraColors.TextMuted
+                )
+            }
+            when {
+                isConnected -> Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    AssistChip(
+                        onClick = {},
+                        enabled = false,
+                        label = { Text("CONNECTED") },
+                        colors = AssistChipDefaults.assistChipColors(
+                            disabledContainerColor = ITantraColors.StatusSuccess.copy(alpha = 0.12f),
+                            disabledLabelColor = ITantraColors.StatusSuccess,
+                        ),
+                    )
+                    Button(
+                        onClick = onOpenChat,
+                        colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Text("OPEN CHAT", style = MaterialTheme.typography.labelSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    }
+                }
+                isConnecting -> AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = { Text("CONNECTING…") },
+                )
+                else -> OutlinedButton(onClick = onConnect) {
+                    Text("CONNECT")
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StatChip(label = "ADDRESS", value = peer.maskedAddress)
+            StatChip(label = "LINK", value = "Wi-Fi Direct P2P")
+            StatChip(label = "STATUS", value = peer.statusDisplay)
         }
     }
 }

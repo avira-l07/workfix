@@ -128,6 +128,31 @@ object AppGraph {
         com.itantra.core.transport.peer.BluetoothPeerTransport(context, bluetoothManager.adapter)
     }
 
+    val wifiDirectPeerTransport: com.itantra.core.transport.peer.WifiDirectPeerTransport by lazy {
+        com.itantra.core.transport.peer.WifiDirectPeerTransport()
+    }
+
+    val wifiDirectConnectionManager: com.itantra.core.transport.peer.WifiDirectConnectionManager by lazy {
+        com.itantra.core.transport.peer.WifiDirectConnectionManager(
+            context = context,
+            peerTransport = wifiDirectPeerTransport,
+            onTcpConnected = {
+                CoroutineScope(Dispatchers.IO).launch {
+                    android.util.Log.i("AppGraph", "Wi-Fi Direct TCP connected — resetting session and switching transport")
+                    secureSessionManager.resetSession()
+                    transportEngine.switchTransport(wifiDirectPeerTransport)
+                }
+            },
+            onTcpDisconnected = {
+                CoroutineScope(Dispatchers.IO).launch {
+                    android.util.Log.i("AppGraph", "Wi-Fi Direct TCP disconnected — resetting session and restoring Bluetooth transport")
+                    secureSessionManager.resetSession()
+                    transportEngine.switchTransport(bluetoothPeerTransport)
+                }
+            }
+        )
+    }
+
     val transportEngine: com.itantra.core.transport.TransportCoordinator by lazy {
         // Default to Bluetooth initially
         com.itantra.core.transport.TransportCoordinator(bluetoothPeerTransport)

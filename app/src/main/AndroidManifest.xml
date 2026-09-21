@@ -5,8 +5,14 @@
     <!-- Audio recording for VAD and STT -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <!-- Peer-to-Peer & Nearby Connections -->
+    <!-- Peer-to-Peer & Nearby Connections (Bluetooth Classic + Wi-Fi Direct) -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
+    <!-- Bluetooth Classic -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
@@ -14,10 +20,19 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="s" />
-    <!-- Location only needed for BT Classic discovery on Android 11 and below.
-         On Android 12+ (API 31+) BLUETOOTH_SCAN with neverForLocation replaces this. -->
+
+    <!-- Wi-Fi Direct API 33+ (Android 13+ / 14 / 15 / 16) -->
+    <uses-permission
+        android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="tiramisu" />
+
+    <!-- Location permission for peer discovery:
+         - Bluetooth Classic on Android 11 and below (API <= 30)
+         - Wi-Fi Direct on Android 12L and below (API <= 32)
+         On Android 13+ (API 33+) NEARBY_WIFI_DEVICES and BLUETOOTH_SCAN (neverForLocation) replace this. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="30" />
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"
         android:maxSdkVersion="30" />
 
@@ -31,6 +46,7 @@
     <uses-feature android:name="android.hardware.microphone" android:required="true" />
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+    <uses-feature android:name="android.hardware.wifi.direct" android:required="false" />
 
     <application
         android:allowBackup="false"

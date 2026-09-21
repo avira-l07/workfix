@@ -202,6 +202,14 @@ class TwentyMessageLoopbackTest {
             }
         }
 
+        val ackJob = testScope.launch {
+            senderCoordinator.receive().collect {
+                if (it.type == PacketType.ACK) {
+                    senderCoordinator.notifyAckReceived(it.messageId)
+                }
+            }
+        }
+
         // Send same packet twice
         senderCoordinator.send(packet)
         senderCoordinator.send(packet)
@@ -212,6 +220,7 @@ class TwentyMessageLoopbackTest {
             }
         }
         job.cancel()
+        ackJob.cancel()
 
         assertEquals(2, receivedList.size)
         assertEquals(999L, receivedList[0].messageId)
