@@ -1,0 +1,19 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+.kotlin
+app/build
+*.apk
+*.ap_
+*.aab
+*.dex
+
+# Local test scratch / downloaded models exceeding GitHub 100MB limit
+/models/

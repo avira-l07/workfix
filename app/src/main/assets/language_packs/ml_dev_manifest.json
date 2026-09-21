@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "languageCode": "ml",
+  "displayName": "Malayalam",
+  "packVersion": "1.0.0",
+  "downloadSizeBytes": 217662830,
+  "installedSizeBytes": 217662830,
+  "minimumAppVersion": 1,
+  "sttModel": {
+    "modelId": "whisper-tiny-multilingual",
+    "format": "onnx",
+    "quantization": "int8",
+    "checksumsSha256": {
+      "tiny-encoder.int8.onnx": "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434",
+      "tiny-decoder.int8.onnx": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925",
+      "tiny-tokens.txt": "c99891a107067b649a03fdf23c4b475fd0ad981da7f9aae84e72fb9f2d53c785"
+    },
+    "downloadUrl": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main",
+    "files": [
+      "tiny-encoder.int8.onnx",
+      "tiny-decoder.int8.onnx",
+      "tiny-tokens.txt"
+    ],
+    "sizeBytes": 103609903
+  },
+  "ttsModel": {
+    "modelId": "mms-tts-ml",
+    "format": "onnx",
+    "quantization": "fp32",
+    "checksumsSha256": {
+      "model.onnx": "7f03397b7144325dc3deab36315c59e423319b8b575497caacbb08d28072b26c",
+      "tokens.txt": "3a752c36593cc519193c8caa6c00371369b423366fa6ead8d91945a28b2c46a3"
+    },
+    "downloadUrl": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/mal",
+    "files": [
+      "model.onnx",
+      "tokens.txt"
+    ],
+    "sizeBytes": 114052927
+  },
+  "minimumRamBytes": 536870912
+}

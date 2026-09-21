@@ -1,0 +1,146 @@
+[
+  {
+    "id": "HI-001",
+    "category": "GREETINGS",
+    "referenceText": "नमस्ते, आप कैसे हैं?",
+    "isCritical": false
+  },
+  {
+    "id": "HI-002",
+    "category": "GREETINGS",
+    "referenceText": "शुभ प्रभात, आपका दिन शुभ हो।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-003",
+    "category": "GREETINGS",
+    "referenceText": "आपसे मिलकर बहुत खुशी हुई।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-004",
+    "category": "SIMPLE_SPEECH",
+    "referenceText": "मेरा नाम राहुल है और मैं यहाँ नया हूँ।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-005",
+    "category": "NUMBERS",
+    "referenceText": "यहाँ सौ से ज्यादा लोग फँसे हैं।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-006",
+    "category": "NUMBERS",
+    "referenceText": "मेरा फोन नंबर आठ नौ दो है।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-007",
+    "category": "NUMBERS",
+    "referenceText": "पचास पैकेट राशन और पानी की जरूरत है।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-008",
+    "category": "LOCATION",
+    "referenceText": "अस्पताल यहाँ से लगभग पाँच किलोमीटर दूर है।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-009",
+    "category": "LOCATION",
+    "referenceText": "पुल के आगे सड़क पर पानी बहुत तेज़ है।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-010",
+    "category": "LOCATION",
+    "referenceText": "हम उत्तर दिशा की ओर जा रहे हैं।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-011",
+    "category": "EMERGENCY",
+    "referenceText": "कृपया तुरंत बचाव दल भेजें।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-012",
+    "category": "EMERGENCY",
+    "referenceText": "बाढ़ का पानी गाँव में घुस गया है।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-013",
+    "category": "FIELD_INSTRUCTION",
+    "referenceText": "सभी संचार लाइनें कट गई हैं, रेडियो चालू रखें।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-014",
+    "category": "FIELD_INSTRUCTION",
+    "referenceText": "मेडिकल टीम को जल्द से जल्द सुरक्षित क्षेत्र में लाएं।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-015",
+    "category": "CONVERSATION",
+    "referenceText": "क्या आपके पास अतिरिक्त बैटरियां उपलब्ध हैं?",
+    "isCritical": false
+  },
+  {
+    "id": "HI-016",
+    "category": "CONVERSATION",
+    "referenceText": "स्थानीय प्रशासन ने लोगों को सतर्क रहने को कहा है।",
+    "isCritical": false
+  },
+  {
+    "id": "HI-CRIT-017",
+    "category": "CRITICAL_PAIR",
+    "referenceText": "तुरंत खाली करें",
+    "isCritical": true
+  },
+  {
+    "id": "HI-CRIT-018",
+    "category": "CRITICAL_PAIR",
+    "referenceText": "खाली मत करें",
+    "isCritical": true
+  },
+  {
+    "id": "HI-CRIT-019",
+    "category": "CRITICAL_PAIR",
+    "referenceText": "सड़क खुली है",
+    "isCritical": true
+  },
+  {
+    "id": "HI-CRIT-020",
+    "category": "CRITICAL_PAIR",
+    "referenceText": "सड़क बंद है",
+    "isCritical": true
+  },
+  {
+    "id": "HI-CRIT-021",
+    "category": "CRITICAL_PAIR",
+    "referenceText": "मरीज होश में है",
+    "isCritical": true
+  },
+  {
+    "id": "HI-CRIT-022",
+    "category": "CRITICAL_PAIR",
+    "referenceText": "मरीज बेहोश है",
+    "isCritical": true
+  },
+  {
+    "id": "HI-CRIT-023",
+    "category": "CRITICAL_PAIR",
+    "referenceText": "आग पर नियंत्रण है",
+    "isCritical": true
+  },
+  {
+    "id": "HI-CRIT-024",
+    "category": "CRITICAL_PAIR",
+    "referenceText": "आग पर नियंत्रण नहीं है",
+    "isCritical": true
+  }
+]
