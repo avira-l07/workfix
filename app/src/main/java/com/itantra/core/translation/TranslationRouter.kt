@@ -31,6 +31,21 @@ class TranslationRouter(
             return TranslationResult(text, text, true, source, target)
         }
 
+        // Section 22: Deterministic emergency phrasebook fallback — works 100% offline without neural MT
+        val emergencyPhrase = com.itantra.domain.model.EmergencyPhraseResolver.translateEmergencyPhrase(text, source, target)
+        if (emergencyPhrase != null) {
+            if (com.example.itantra.BuildConfig.DEBUG) {
+                android.util.Log.i("ITANTRA_MT_CALL", "TranslationRouter: Resolved via deterministic emergency phrasebook -> '$emergencyPhrase'")
+            }
+            return TranslationResult(
+                originalText = text,
+                translatedText = emergencyPhrase,
+                isSuccessful = true,
+                sourceLanguage = source,
+                targetLanguage = target
+            )
+        }
+
         if (!engine.supportedSourceLanguages.contains(source) || !engine.supportedTargetLanguages.contains(target)) {
             android.util.Log.w("ITANTRA_MT_CALL", "TranslationRouter: UNSUPPORTED_ROUTE between $source and $target")
             return TranslationResult(text, "", false, source, target, error = "UNSUPPORTED_ROUTE")

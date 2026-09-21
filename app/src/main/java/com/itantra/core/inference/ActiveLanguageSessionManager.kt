@@ -67,7 +67,11 @@ class ActiveLanguageSessionManager(
      */
     suspend fun switchTo(target: LanguageCode, loadStt: Boolean = true, loadTts: Boolean = true) {
         switchMutex.withLock {
-            if (_activeLanguage.value == target && _sessionState.value == LanguageSessionState.READY) return@withLock
+            val sttSatisfied = !loadStt || (currentSttEngine != null && currentSttEngine?.isLoaded == true)
+            val ttsSatisfied = !loadTts || (currentTtsEngine != null && currentTtsEngine?.isLoaded == true)
+            if (_activeLanguage.value == target && _sessionState.value == LanguageSessionState.READY && sttSatisfied && ttsSatisfied) {
+                return@withLock
+            }
 
             if (capabilityDetector?.determineProfile() == DeviceCapabilityDetector.CapabilityProfile.CORE_ONLY) {
                 currentSttEngine?.unload()
@@ -116,6 +120,49 @@ class ActiveLanguageSessionManager(
                 throw e
             }
         }
+    }
+
+    /**
+     * Ensures requested inference capabilities (STT and/or TTS) are active for [target].
+     * If the language is already active, only missing engines are loaded without disrupting
+     * already-loaded ones. If switching languages, performs full synchronized transition.
+     */
+    suspend fun ensureCapabilities(target: LanguageCode, requireStt: Boolean = true, requireTts: Boolean = true) {
+        switchMutex.withLock {
+            val needsStt = requireStt && (currentSttEngine == null || currentSttEngine?.isLoaded != true)
+            val needsTts = requireTts && (currentTtsEngine == null || currentTtsEngine?.isLoaded != true)
+            val isSameLang = _activeLanguage.value == target
+
+            if (isSameLang && !needsStt && !needsTts && _sessionState.value == LanguageSessionState.READY) {
+                return@withLock
+            }
+
+            if (isSameLang && _sessionState.value == LanguageSessionState.READY) {
+                if (needsTts) {
+                    _sessionState.value = LanguageSessionState.LOADING_TTS
+                    try {
+                        val tts = engineFactory.createSynthesizer(target)
+                        tts?.load()
+                        currentTtsEngine = tts
+                    } catch (e: Throwable) {
+                        android.util.Log.e("ActiveLanguageSession", "Failed to load TTS in ensureCapabilities", e)
+                    }
+                }
+                if (needsStt) {
+                    _sessionState.value = LanguageSessionState.LOADING_STT
+                    try {
+                        val stt = engineFactory.createRecognizer(target)
+                        stt?.load()
+                        currentSttEngine = stt
+                    } catch (e: Throwable) {
+                        android.util.Log.e("ActiveLanguageSession", "Failed to load STT in ensureCapabilities", e)
+                    }
+                }
+                _sessionState.value = LanguageSessionState.READY
+                return@withLock
+            }
+        }
+        switchTo(target, loadStt = requireStt, loadTts = requireTts)
     }
 
     suspend fun releaseAll() {

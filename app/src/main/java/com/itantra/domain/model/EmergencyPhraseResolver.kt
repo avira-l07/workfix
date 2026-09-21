@@ -149,4 +149,33 @@ object EmergencyPhraseResolver {
         EmergencyCode.DANGER -> "ଆଗରେ ବିପଦ।"
         EmergencyCode.ALL_CLEAR -> "ସବୁ ଠିକ୍ ଅଛି। ଅଞ୍ଚଳ ସୁରକ୍ଷିତ ଅଛି।"
     }
+
+    private fun normalize(phrase: String): String =
+        phrase.trim().lowercase().replace(Regex("[.,!?;:।\n\r]+$"), "").trim()
+
+    fun findCodeByPhrase(text: String, sourceLanguage: LanguageCode? = null): EmergencyCode? {
+        val norm = normalize(text)
+        if (norm.isEmpty()) return null
+
+        val languagesToCheck = if (sourceLanguage != null) {
+            listOf(sourceLanguage) + (LanguageCode.entries - sourceLanguage)
+        } else {
+            LanguageCode.entries
+        }
+
+        for (lang in languagesToCheck) {
+            for (code in EmergencyCode.entries) {
+                val phrase = resolve(code, lang)
+                if (normalize(phrase) == norm) {
+                    return code
+                }
+            }
+        }
+        return null
+    }
+
+    fun translateEmergencyPhrase(text: String, source: LanguageCode, target: LanguageCode): String? {
+        val code = findCodeByPhrase(text, source) ?: return null
+        return resolve(code, target)
+    }
 }
