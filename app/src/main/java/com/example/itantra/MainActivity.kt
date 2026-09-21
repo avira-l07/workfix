@@ -78,6 +78,46 @@ class MainActivity : ComponentActivity() {
         onWifiDirectPermissionCallback = null
     }
 
+    private var onDiscoverableResult: ((Boolean) -> Unit)? = null
+
+    private val discoverableLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val duration = result.resultCode
+        val isDiscoverable = duration > 0
+        onDiscoverableResult?.invoke(isDiscoverable)
+        onDiscoverableResult = null
+    }
+
+    fun requestBluetoothDiscoverable(durationSeconds: Int = 120, onResult: (Boolean) -> Unit) {
+        val btManager = getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
+        val adapter = btManager?.adapter
+        if (adapter == null || !adapter.isEnabled) {
+            onResult(false)
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val hasAdvertise = ContextCompat.checkSelfPermission(
+                this, Manifest.permission.BLUETOOTH_ADVERTISE
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!hasAdvertise) {
+                onResult(false)
+                return
+            }
+        }
+        try {
+            onDiscoverableResult = onResult
+            val intent = android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+                putExtra(android.bluetooth.BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, durationSeconds)
+            }
+            discoverableLauncher.launch(intent)
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Failed to launch ACTION_REQUEST_DISCOVERABLE", e)
+            onDiscoverableResult = null
+            onResult(false)
+        }
+    }
+
     fun requestWifiDirectPermission(onResult: (Boolean) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val hasPerm = ContextCompat.checkSelfPermission(
@@ -119,6 +159,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.itantra.app.AppGraph.init(this)
+        AppGraph.bluetoothPeerTransport.registerBondReceiver(this)
         enableEdgeToEdge()
 
         requestRequiredPermissions()
@@ -596,7 +637,7 @@ fun TacticalAppScaffold(
                                                     discoveredDevices = (discoveredDevices.filter { it.id != devId } + PeerDevice(
                                                         id = devId,
                                                         name = devName,
-                                                        role = "Discovered Operator",
+                                                        role = "Unverified Device",
                                                         transport = "Bluetooth RFCOMM",
                                                         signalDbm = sig,
                                                         batteryPercent = null,
@@ -634,6 +675,10 @@ fun TacticalAppScaffold(
                                         btAdapter.cancelDiscovery()
                                     }
                                 } catch (ignored: Exception) {}
+                                // FIX 024: Stop RFCOMM server listener when leaving Connect screen
+                                coroutineScope.launch {
+                                    AppGraph.bluetoothPeerTransport.stopServer()
+                                }
                             }
                         }
 
@@ -719,22 +764,41 @@ fun TacticalAppScaffold(
                             wifiDirectInfo = wifiDirectInfo,
                             onBack = { currentDestination = AppDestination.HUB },
                             onBroadcastPing = {
-                                coroutineScope.launch {
-                                    AppGraph.bluetoothPeerTransport.startServer()
-                                    val hasScan = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                        ContextCompat.checkSelfPermission(
-                                            context, Manifest.permission.BLUETOOTH_SCAN
-                                        ) == PackageManager.PERMISSION_GRANTED
-                                    } else true
-                                    if (hasScan) {
-                                        try {
-                                            @Suppress("MissingPermission") // hasScan checked above
-                                            if (btAdapter?.isDiscovering == true) btAdapter.cancelDiscovery()
-                                            @Suppress("MissingPermission")
-                                            btAdapter?.startDiscovery()
-                                        } catch (e: SecurityException) {
-                                            android.util.Log.e("ConnectScreen", "startDiscovery denied", e)
+                                val mainActivity = context as? MainActivity
+                                if (mainActivity != null) {
+                                    mainActivity.requestBluetoothDiscoverable(120) { discoverable ->
+                                        if (!discoverable) {
+                                            android.util.Log.w("ConnectScreen", "Discoverability request denied or cancelled")
+                                            AppGraph.bluetoothPeerTransport.setLastError(
+                                                com.itantra.core.transport.peer.BluetoothError.DISCOVERABILITY_DENIED
+                                            )
+                                            return@requestBluetoothDiscoverable
                                         }
+                                        coroutineScope.launch {
+                                            AppGraph.bluetoothPeerTransport.startServer()
+                                            val hasScan = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                                ContextCompat.checkSelfPermission(
+                                                    context, Manifest.permission.BLUETOOTH_SCAN
+                                                ) == PackageManager.PERMISSION_GRANTED
+                                            } else true
+                                            if (hasScan) {
+                                                try {
+                                                    @Suppress("MissingPermission") // hasScan checked above
+                                                    if (btAdapter?.isDiscovering == true) btAdapter.cancelDiscovery()
+                                                    @Suppress("MissingPermission")
+                                                    btAdapter?.startDiscovery()
+                                                } catch (e: SecurityException) {
+                                                    android.util.Log.e("ConnectScreen", "startDiscovery denied", e)
+                                                    AppGraph.bluetoothPeerTransport.setLastError(
+                                                        com.itantra.core.transport.peer.BluetoothError.PERMISSION_DENIED
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    coroutineScope.launch {
+                                        AppGraph.bluetoothPeerTransport.startServer()
                                     }
                                 }
                             },
@@ -747,6 +811,10 @@ fun TacticalAppScaffold(
                                     } else true
                                     if (!hasConnect) return@launch
                                     try {
+                                        @Suppress("MissingPermission")
+                                        if (btAdapter?.isDiscovering == true) {
+                                            btAdapter.cancelDiscovery()
+                                        }
                                         @Suppress("MissingPermission") // hasConnect checked above
                                         val target = btAdapter?.bondedDevices?.find { it.address == device.id }
                                             ?: btAdapter?.getRemoteDevice(device.id)

@@ -44,6 +44,7 @@ enum class BluetoothError {
     BOND_LOST,           // Android 16: ACTION_KEY_MISSING or bond dropped mid-session
     SOCKET_DISCONNECTED,
     HANDSHAKE_FAILED,    // Set by upper layer
+    DISCOVERABILITY_DENIED,
 }
 
 /**
@@ -103,6 +104,12 @@ class BluetoothPeerTransport(
 
     override fun observeConnectionState(): Flow<ConnectionState> = stateFlow
 
+    private var pendingBondDevice: BluetoothDevice? = null
+
+    fun setLastError(error: BluetoothError) {
+        _lastError.value = error
+    }
+
     // -------------------------------------------------------------------------
     // Android 16 bond-loss receiver
     // -------------------------------------------------------------------------
@@ -144,8 +151,34 @@ class BluetoothPeerTransport(
                         val prevBondState = intent.getIntExtra(
                             BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.BOND_NONE
                         )
+                        val devAddr = safeGetAddress(device ?: return)
                         debugLog("BOND_STATE_CHANGED: ${bondStateName(prevBondState)} -> ${bondStateName(bondState)}" +
-                            " peer=$isActivePeer addr=${device?.address?.take(8)?.plus("***")}")
+                            " peer=$isActivePeer addr=${devAddr?.take(8)?.plus("***")}")
+
+                        // FIX 005: First-time bonding transition handling
+                        val pending = pendingBondDevice
+                        if (pending != null && safeGetAddress(pending) == devAddr) {
+                            when (bondState) {
+                                BluetoothDevice.BOND_BONDED -> {
+                                    debugLog("Pending target bonded: $devAddr. Establishing RFCOMM connection.")
+                                    pendingBondDevice = null
+                                    scope.launch {
+                                        connectToBondedDevice(device)
+                                    }
+                                }
+                                BluetoothDevice.BOND_NONE -> {
+                                    if (prevBondState == BluetoothDevice.BOND_BONDING) {
+                                        debugLog("Pending target bonding failed or cancelled: $devAddr")
+                                        pendingBondDevice = null
+                                        _lastError.value = BluetoothError.PAIRING_FAILED
+                                        stateFlow.value = ConnectionState.ERROR
+                                    }
+                                }
+                                BluetoothDevice.BOND_BONDING -> {
+                                    debugLog("Pending target is bonding: $devAddr")
+                                }
+                            }
+                        }
 
                         // Android 15: if active peer lost its bond mid-session, invalidate.
                         if (isActivePeer && isConnected &&
@@ -245,6 +278,16 @@ class BluetoothPeerTransport(
                     val socket = withContext(Dispatchers.IO) { srv.accept() }
                     if (socket != null) {
                         debugLog("SERVER accepted connection from ${socket.remoteDevice?.address?.take(8)}***")
+                        // FIX 023: Cancel active discovery on server side when socket accepted
+                        if (hasScanPermission()) {
+                            try {
+                                @SuppressLint("MissingPermission")
+                                if (bluetoothAdapter?.isDiscovering == true) {
+                                    bluetoothAdapter.cancelDiscovery()
+                                    debugLog("SERVER cancelled active discovery on RFCOMM accept")
+                                }
+                            } catch (_: Exception) {}
+                        }
                         manageConnectedSocket(socket)
                     }
                 } catch (e: Exception) {
@@ -260,10 +303,33 @@ class BluetoothPeerTransport(
         }
     }
 
+    /**
+     * FIX 024: Explicitly stops the listening RFCOMM server socket without affecting
+     * an already-connected socket session.
+     */
+    suspend fun stopServer() {
+        connectionMutex.withLock {
+            if (_isServer && stateFlow.value == ConnectionState.LISTENING) {
+                debugLog("stopServer: stopping RFCOMM listening server socket")
+                try { serverSocket?.close() } catch (_: Exception) {}
+                serverSocket = null
+                connectionJob?.cancel()
+                connectionJob = null
+                stateFlow.value = ConnectionState.DISCONNECTED
+            }
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Client mode
     // -------------------------------------------------------------------------
 
+    /**
+     * FIX 005: Initiates connection to a Bluetooth device with explicit bonding workflow.
+     * If already bonded: connects immediately.
+     * If bonding: waits for BOND_BONDED broadcast.
+     * If not bonded: calls createBond() and awaits BOND_BONDED before RFCOMM setup.
+     */
     suspend fun connectToDevice(device: BluetoothDevice) {
         if (!hasConnectPermission()) {
             debugLog("connectToDevice: BLUETOOTH_CONNECT not granted")
@@ -271,6 +337,57 @@ class BluetoothPeerTransport(
             stateFlow.value = ConnectionState.ERROR
             return
         }
+
+        val bondState = try {
+            @SuppressLint("MissingPermission")
+            device.bondState
+        } catch (_: SecurityException) {
+            _lastError.value = BluetoothError.PERMISSION_DENIED
+            stateFlow.value = ConnectionState.ERROR
+            return
+        }
+
+        val deviceAddr = safeGetAddress(device)
+        debugLog("connectToDevice called for ${deviceAddr?.take(8)}*** with bondState=${bondStateName(bondState)}")
+
+        when (bondState) {
+            BluetoothDevice.BOND_BONDED -> {
+                pendingBondDevice = null
+                connectToBondedDevice(device)
+            }
+            BluetoothDevice.BOND_BONDING -> {
+                pendingBondDevice = device
+                _lastError.value = BluetoothError.NONE
+                stateFlow.value = ConnectionState.CONNECTING
+                debugLog("Target device is currently bonding. Stored as pending target, awaiting BOND_BONDED.")
+            }
+            BluetoothDevice.BOND_NONE -> {
+                pendingBondDevice = device
+                _lastError.value = BluetoothError.NONE
+                stateFlow.value = ConnectionState.CONNECTING
+                val initiated = try {
+                    @SuppressLint("MissingPermission")
+                    device.createBond()
+                } catch (e: SecurityException) {
+                    false
+                }
+                if (!initiated) {
+                    debugLog("createBond() failed immediately for ${deviceAddr?.take(8)}***")
+                    pendingBondDevice = null
+                    _lastError.value = BluetoothError.PAIRING_FAILED
+                    stateFlow.value = ConnectionState.ERROR
+                } else {
+                    debugLog("createBond() initiated for ${deviceAddr?.take(8)}***. Awaiting BOND_BONDED broadcast.")
+                }
+            }
+            else -> {
+                pendingBondDevice = null
+                connectToBondedDevice(device)
+            }
+        }
+    }
+
+    private suspend fun connectToBondedDevice(device: BluetoothDevice) {
         connectionMutex.withLock {
             disconnectInternal()
             _isServer = false
@@ -466,6 +583,7 @@ class BluetoothPeerTransport(
     }
 
     private fun disconnectInternal() {
+        pendingBondDevice = null
         stateFlow.value = ConnectionState.DISCONNECTED
         _connectedDeviceAddress.value = null
         connectionJob?.cancel()
