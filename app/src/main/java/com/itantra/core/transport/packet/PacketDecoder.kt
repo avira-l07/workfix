@@ -21,12 +21,10 @@ object PacketDecoder {
     const val MAX_FRAME_BODY_SIZE = MAX_PAYLOAD_SIZE + 36
 
     fun decode(framedData: ByteArray): ItantraPacket {
-        // V2 minimum: 32-byte header + 0-byte payload + 4-byte CRC = 36 bytes.
-        // V1 minimum is the same (32-byte header) + 4 CRC = 36 bytes.
-        // Accepting < 36 bytes would cause a BufferUnderflowException when reading
-        // the V2-only header fields (sourceLang, targetLang, translationMode).
-        if (framedData.size < 36) {
-            throw PacketDecodeException("Frame too small: ${framedData.size} bytes (min 36)")
+        // FIX 011: V1 minimum: 29-byte fixed header + 0-byte payload + 4-byte CRC = 33 bytes.
+        // V2 minimum: 32-byte fixed header + 0-byte payload + 4-byte CRC = 36 bytes.
+        if (framedData.size < 33) {
+            throw PacketDecodeException("Frame too small: ${framedData.size} bytes (min 33)")
         }
 
         val buffer = ByteBuffer.wrap(framedData).order(ByteOrder.BIG_ENDIAN)
@@ -57,6 +55,10 @@ object PacketDecoder {
         val version = buffer.get()
         if (version != 1.toByte() && version != 2.toByte()) {
             throw PacketDecodeException("Unsupported Protocol Version: $version")
+        }
+
+        if (version == 2.toByte() && framedData.size < 36) {
+            throw PacketDecodeException("V2 frame too small: ${framedData.size} bytes (min 36)")
         }
 
         val typeId = buffer.get()

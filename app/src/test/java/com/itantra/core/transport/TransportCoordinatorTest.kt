@@ -129,4 +129,39 @@ class TransportCoordinatorTest {
         assertEquals(com.itantra.domain.model.Measurement.Measured(expectedEncWireBytes), secureMetrics.finalFrameBytes)
         assertEquals(com.itantra.domain.model.Measurement.Measured(expectedEncWireBytes), secureMetrics.packetBytes)
     }
+
+    // ---- FIX 001 regression tests ----
+
+    @Test
+    fun `test FIX001 send rethrows when transport write fails`() = runBlocking {
+        // Arrange: transport that throws on send()
+        val failingTransport = object : PeerTransport {
+            override val isConnected: Boolean = true
+            override val isServer: Boolean = false
+            override fun observeConnectionState(): Flow<ConnectionState> =
+                MutableStateFlow(ConnectionState.CONNECTED)
+            override suspend fun disconnect() {}
+            override suspend fun send(bytes: ByteArray) {
+                throw java.io.IOException("Simulated write failure")
+            }
+            override fun receive(): Flow<ByteArray> = MutableSharedFlow()
+        }
+
+        val coordinator = TransportCoordinator(failingTransport)
+
+        val packet = ItantraPacket(
+            type = PacketType.CAPABILITIES,
+            messageId = 7777L,
+            payload = "test".toByteArray()
+        )
+
+        var exceptionRethrown = false
+        try {
+            coordinator.send(packet)
+        } catch (e: java.io.IOException) {
+            exceptionRethrown = true
+        }
+
+        assertTrue("FIX 001: IOException from transport.send() must be re-thrown", exceptionRethrown)
+    }
 }

@@ -60,6 +60,8 @@ class SecureSessionManager {
     private var rxKey: ByteArray? = null
     private var txNoncePrefix: ByteArray? = null
     private var rxNoncePrefix: ByteArray? = null
+    private var currentTranscriptHash: ByteArray? = null
+    private var currentSharedSecret: ByteArray? = null
 
     // Mutex protecting TX counter so concurrent encrypt() calls never share the same nonce
     private val encryptMutex = Mutex()
@@ -224,6 +226,8 @@ class SecureSessionManager {
                 txNoncePrefix = bToANonce; rxNoncePrefix = aToBNonce
             }
 
+            currentTranscriptHash = transcriptHash
+            currentSharedSecret = sharedSecret
             _sasCode.value = CryptoPrimitives.deriveSas(sharedSecret, transcriptHash)
             lastHandshakeDurationMillis = (System.nanoTime() - handshakeStartNanos) / 1_000_000
             verificationStartNanos = System.nanoTime()
@@ -235,10 +239,37 @@ class SecureSessionManager {
         }
     }
 
+    private fun computeVerificationToken(isForLocalRole: Boolean): ByteArray {
+        val secret = currentSharedSecret ?: return ByteArray(0)
+        val thash = currentTranscriptHash ?: return ByteArray(0)
+        val roleLabel = if (isForLocalRole) {
+            if (isInitiator) "INITIATOR_SAS_CONFIRM" else "RESPONDER_SAS_CONFIRM"
+        } else {
+            if (isInitiator) "RESPONDER_SAS_CONFIRM" else "INITIATOR_SAS_CONFIRM"
+        }
+        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
+        mac.init(javax.crypto.spec.SecretKeySpec(secret, "HmacSHA256"))
+        mac.update(thash)
+        mac.update(roleLabel.toByteArray(Charsets.UTF_8))
+        return mac.doFinal()
+    }
+
+    /**
+     * Confirms local SAS match and returns authenticated SECURE_VERIFY packet.
+     * Guarded per FIX 003: state must be WAITING_USER_VERIFICATION and sasCode non-blank.
+     */
     fun confirmSasMatch(): ItantraPacket {
+        if (_state.value != SecureSessionState.WAITING_USER_VERIFICATION || _sasCode.value.isNullOrBlank()) {
+            throw IllegalStateException("Cannot confirm SAS: state is ${_state.value} and sasCode is ${_sasCode.value}")
+        }
         localSasConfirmed = true
         checkVerificationState()
-        return ItantraPacket(type = PacketType.SECURE_VERIFY, messageId = System.currentTimeMillis())
+        val verifyToken = computeVerificationToken(isForLocalRole = true)
+        return ItantraPacket(
+            type = PacketType.SECURE_VERIFY,
+            messageId = System.currentTimeMillis(),
+            payload = verifyToken
+        )
     }
 
     fun rejectSas() {
@@ -246,9 +277,27 @@ class SecureSessionManager {
         _state.value = SecureSessionState.FAILED
     }
 
+    /**
+     * Resets session and marks state as HANDSHAKE_TIMEOUT per FIX 012.
+     */
+    fun setHandshakeTimeout() {
+        resetSession()
+        _state.value = SecureSessionState.HANDSHAKE_TIMEOUT
+    }
+
+    /**
+     * Processes incoming SECURE_VERIFY packet.
+     * Guarded per FIX 014: verifies that payload matches expected token bound to current ECDH transcript.
+     */
     fun processSecureVerify(packet: ItantraPacket) {
         if (_state.value != SecureSessionState.WAITING_USER_VERIFICATION &&
             _state.value != SecureSessionState.SECURE_VERIFIED) {
+            return
+        }
+        val expectedToken = computeVerificationToken(isForLocalRole = false)
+        if (expectedToken.isEmpty() || packet.payload.isEmpty() ||
+            !java.security.MessageDigest.isEqual(expectedToken, packet.payload)) {
+            android.util.Log.w("SecureSessionManager", "SECURE_VERIFY rejected: token mismatch or stale session")
             return
         }
         peerSasConfirmed = true
@@ -350,6 +399,8 @@ class SecureSessionManager {
         peerNonce = null
         txKey = null; rxKey = null
         txNoncePrefix = null; rxNoncePrefix = null
+        currentTranscriptHash = null
+        currentSharedSecret = null
         txCounter = 0
         replayWindow.reset()
         localSasConfirmed = false

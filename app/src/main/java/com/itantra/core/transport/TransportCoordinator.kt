@@ -90,37 +90,27 @@ class TransportCoordinator(
 
         readJob = scope.launch {
             activeTransport.receive().collect { frameData ->
-                lastRxAtMs.set(System.currentTimeMillis())
                 try {
                     val packet = PacketDecoder.decode(frameData)
+                    // Pre-auth handshake control packets refresh liveness during key exchange
+                    if (packet.type == PacketType.SECURE_HELLO || packet.type == PacketType.SECURE_VERIFY) {
+                        notifyLivenessReceived()
+                    }
                     if (packet.type == PacketType.HEARTBEAT) {
-                        // Liveness-only frame; consumed here and never forwarded upward.
+                        // Unauthenticated plaintext heartbeat dropped; authenticated heartbeats
+                        // are encrypted by SecureSessionManager and handled upward.
                         return@collect
                     }
                     // Emit packet upward for decryption/authentication
                     incomingFlow.emit(packet)
                 } catch (e: Exception) {
-                    // A single corrupted frame shouldn't necessarily be fatal for the link,
-                    // but we don't have a resync strategy at this layer yet - log and keep going,
-                    // the underlying transport will tear the connection down itself if the
-                    // stream framing is actually broken.
                     e.printStackTrace()
                 }
             }
         }
 
-        heartbeatJob = scope.launch {
-            while (isActive) {
-                delay(HEARTBEAT_INTERVAL_MS)
-                if (!activeTransport.isConnected) continue
-                try {
-                    val heartbeat = ItantraPacket(type = PacketType.HEARTBEAT, messageId = 0L)
-                    activeTransport.send(PacketEncoder.encode(heartbeat))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
+        // Unauthenticated plaintext heartbeat loop is disabled per FIX 015.
+        // Encrypted heartbeats are handled by TransceiverCoordinator when SECURE_VERIFIED.
 
         watchdogJob = scope.launch {
             while (isActive) {
@@ -131,11 +121,7 @@ class TransportCoordinator(
                 }
                 val idleFor = System.currentTimeMillis() - lastRxAtMs.get()
                 if (idleFor > WATCHDOG_TIMEOUT_MS) {
-                    // No data and no heartbeat from the peer for too long - the socket/RFCOMM
-                    // channel may still look "open" while the other side is actually gone
-                    // (app killed, radio silently dropped). Force a disconnect so the UI and
-                    // any retry logic notice instead of hanging forever on the next read.
-                    android.util.Log.w("TransportCoordinator", "Watchdog: no traffic for ${idleFor}ms, disconnecting")
+                    android.util.Log.w("TransportCoordinator", "Watchdog: no authenticated traffic for ${idleFor}ms, disconnecting")
                     activeTransport.disconnect()
                 }
             }
@@ -167,11 +153,11 @@ class TransportCoordinator(
     }
 
     override fun notifyAckReceived(messageId: Long) {
-        // Completed synchronously (no scope.launch dispatch hop) so the waiting send() call
-        // resumes as soon as possible - this was previously going through a SharedFlow emit
-        // on a freshly-launched coroutine, adding an avoidable dispatch delay on the exact
-        // path being latency-measured.
         ackWaiters.remove(messageId)?.complete(System.nanoTime())
+    }
+
+    override fun notifyLivenessReceived() {
+        lastRxAtMs.set(System.currentTimeMillis())
     }
 
     override suspend fun send(packet: ItantraPacket): TransmissionMetrics {
@@ -192,22 +178,28 @@ class TransportCoordinator(
                 ackWaiters[packet.messageId] = ackDeferred
             }
 
+            // FIX 001: Separate transport write failure from ACK timeout.
+            // If activeTransport.send throws, cancel waiter and re-throw immediately.
             try {
                 activeTransport.send(encoded)
-                // NOTE: do NOT update lastRxAtMs here. The watchdog must only
-                // track receive events to detect a dead peer — updating it on
-                // send would mask a one-way socket that never echoes back.
+            } catch (e: Exception) {
                 if (ackDeferred != null) {
+                    ackWaiters.remove(packet.messageId)
+                    ackDeferred.cancel()
+                }
+                throw e
+            }
+
+            if (ackDeferred != null) {
+                try {
                     val t1 = withTimeout(ACK_TIMEOUT_MS) { ackDeferred.await() }
                     txLatency = t1 - t0
+                } catch (e: TimeoutCancellationException) {
+                    // No ACK received in time after successful physical transmission
+                    println("ACK timeout for message: ${packet.messageId}")
+                } finally {
+                    ackWaiters.remove(packet.messageId)
                 }
-            } catch (e: TimeoutCancellationException) {
-                // No ACK received in time
-                println("ACK timeout for message: ${packet.messageId}")
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                ackWaiters.remove(packet.messageId)
             }
 
             val ciphertextBytes = packet.payload.size

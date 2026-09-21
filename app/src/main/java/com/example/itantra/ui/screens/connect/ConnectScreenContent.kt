@@ -294,16 +294,22 @@ fun ConnectScreenContent(
     }
 
     verifyingWifiPeer?.let { peer ->
-        if (sasCode != null) {
-            SasVerificationDialog(
-                deviceName = peer.deviceName,
-                sasCode = sasCode,
-                onConfirm = {
-                    verifyingWifiPeer = null
-                },
-                onDismiss = { verifyingWifiPeer = null }
-            )
-        }
+        SasVerificationDialog(
+            deviceName = peer.deviceName,
+            sasCode = sasCode ?: "GENERATING...",
+            onConfirm = {
+                val dummyPeerDevice = PeerDevice(
+                    id = peer.deviceAddress,
+                    name = peer.deviceName,
+                    role = if (peer.isGroupOwner) "Group Owner" else "Peer Node",
+                    transport = "Wi-Fi Direct P2P",
+                    state = PeerConnectionState.CONNECTED
+                )
+                onSasConfirmed(dummyPeerDevice)
+                verifyingWifiPeer = null
+            },
+            onDismiss = { verifyingWifiPeer = null }
+        )
     }
 }
 
@@ -476,6 +482,8 @@ fun SasVerificationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val isRealSas = !sasCode.isNullOrBlank() && sasCode != "GENERATING..." && sasCode != "-- ---"
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -499,7 +507,7 @@ fun SasVerificationDialog(
                         text = sasCode,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = ITantraColors.Primary,
+                        color = if (isRealSas) ITantraColors.Primary else ITantraColors.TextMuted,
                         letterSpacing = 4.sp
                     )
                 }
@@ -513,7 +521,12 @@ fun SasVerificationDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusSuccess)
+                enabled = isRealSas,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ITantraColors.StatusSuccess,
+                    disabledContainerColor = ITantraColors.BorderSubtle,
+                    disabledContentColor = ITantraColors.TextMuted
+                )
             ) {
                 Text("CODES MATCH · TRUST")
             }

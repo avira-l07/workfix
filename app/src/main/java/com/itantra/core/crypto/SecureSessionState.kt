@@ -5,5 +5,6 @@ enum class SecureSessionState {
     HANDSHAKING,
     WAITING_USER_VERIFICATION,
     SECURE_VERIFIED,
-    FAILED
+    FAILED,
+    HANDSHAKE_TIMEOUT
 }

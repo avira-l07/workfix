@@ -24,6 +24,9 @@ interface TransportEngine {
 
     fun notifyAckReceived(messageId: Long)
 
+    /** Notifies the engine that an authenticated packet was received, updating link liveness. */
+    fun notifyLivenessReceived() {}
+
     /** Sends a complete packet and returns transmission metrics. */
     suspend fun send(packet: ItantraPacket): TransmissionMetrics
 

@@ -166,6 +166,11 @@ class TransceiverCoordinator(
     private var currentAudioSink: SpeakerAudioSink? = null
     private var alertJob: Job? = null
 
+    // FIX 012: Retry jobs for handshake and verification phases
+    private var handshakeRetryJob: Job? = null
+    private var verifyRetryJob: Job? = null
+    private var encryptedHeartbeatJob: Job? = null
+
     private var isConnected = false
     private var recordingJob: Job? = null
     private val audioSource = MicrophoneAudioSource(scope)
@@ -256,14 +261,44 @@ class TransceiverCoordinator(
                     // Responder remains in NO_SESSION, ready to process incoming SECURE_HELLO.
                     val isInitiator = !transportEngine.isServer
                     if (isInitiator) {
-                        val hello = secureSessionManager.startHandshake(isInitiator = true)
-                        transportEngine.send(hello)
+                        // FIX 012: send SECURE_HELLO and retry up to 3 times every 1500ms
+                        // if still in HANDSHAKING state. On exhaustion mark HANDSHAKE_TIMEOUT.
+                        handshakeRetryJob?.cancel()
+                        handshakeRetryJob = scope.launch {
+                            val hello = secureSessionManager.startHandshake(isInitiator = true)
+                            transportEngine.send(hello)
+                            var attempts = 1
+                            while (attempts < 3 &&
+                                secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
+                                delay(1500)
+                                if (secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
+                                    android.util.Log.w(
+                                        "TransceiverCoordinator",
+                                        "SECURE_HELLO retry attempt $attempts"
+                                    )
+                                    val stored = secureSessionManager.getStoredHello()
+                                    if (stored != null) transportEngine.send(stored)
+                                    attempts++
+                                }
+                            }
+                            // Exhausted retries — mark timeout so UI can show an error
+                            if (secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
+                                android.util.Log.e(
+                                    "TransceiverCoordinator",
+                                    "SECURE_HELLO handshake timeout after $attempts attempts"
+                                )
+                                secureSessionManager.setHandshakeTimeout()
+                                transportEngine.disconnect()
+                            }
+                        }
                     }
                 } else if (!connected && isConnected) {
                     isConnected = false
+                    handshakeRetryJob?.cancel(); handshakeRetryJob = null
+                    verifyRetryJob?.cancel(); verifyRetryJob = null
+                    encryptedHeartbeatJob?.cancel(); encryptedHeartbeatJob = null
                     _peerCapabilities.value = PeerCapabilities()
                     _activePeerProfile.value = null
-                    hasSentHandshake = false
                     secureSessionManager.resetSession()
                     seenMessageIds.clear()
                 }
@@ -437,10 +472,15 @@ class TransceiverCoordinator(
         if (packet.type == PacketType.SECURE_VERIFY) {
             secureSessionManager.processSecureVerify(packet)
             if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
+                // Cancel any ongoing verify retry — we're done
+                verifyRetryJob?.cancel(); verifyRetryJob = null
+                handshakeRetryJob?.cancel(); handshakeRetryJob = null
                 scope.launch {
                     sendProfileHandshake()
                     sendCapabilities()
                     retryUnresolvedEmergencies()
+                    // FIX 015: start encrypted heartbeat now that session is verified
+                    startEncryptedHeartbeat()
                 }
             }
             return
@@ -458,6 +498,9 @@ class TransceiverCoordinator(
             e.printStackTrace()
             return
         }
+
+        // FIX 015: every successfully authenticated and decrypted packet refreshes link liveness
+        transportEngine.notifyLivenessReceived()
 
         when (decryptedPacket.type) {
             PacketType.PROFILE_HANDSHAKE -> {
@@ -1456,14 +1499,76 @@ class TransceiverCoordinator(
         }
     }
 
+    /**
+     * FIX 015: Sends encrypted HEARTBEAT every 20s. Only active while SECURE_VERIFIED.
+     * Called once after session becomes SECURE_VERIFIED; idempotent because previous job
+     * is cancelled on each disconnect in the connection observer.
+     */
+    private fun startEncryptedHeartbeat() {
+        encryptedHeartbeatJob?.cancel()
+        encryptedHeartbeatJob = scope.launch {
+            while (isConnected &&
+                secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
+                delay(20_000L)
+                if (!isConnected ||
+                    secureSessionManager.state.value != SecureSessionState.SECURE_VERIFIED) break
+                try {
+                    val heartbeat = ItantraPacket(
+                        type = PacketType.HEARTBEAT,
+                        messageId = nextMessageId()
+                    )
+                    val encrypted = secureSessionManager.encrypt(heartbeat)
+                    transportEngine.send(encrypted)
+                } catch (e: Exception) {
+                    android.util.Log.w("TransceiverCoordinator", "Encrypted heartbeat failed: ${e.message}")
+                }
+            }
+        }
+    }
+
+    /**
+     * FIX 013: Confirms SAS match, sends SECURE_VERIFY, and retries up to 3 times (1500ms apart)
+     * until the peer responds with its own SECURE_VERIFY and state reaches SECURE_VERIFIED.
+     */
     fun confirmPeerVerification() {
-        scope.launch {
-            val verifyPacket = secureSessionManager.confirmSasMatch()
+        verifyRetryJob?.cancel()
+        verifyRetryJob = scope.launch {
+            val verifyPacket = try {
+                secureSessionManager.confirmSasMatch()
+            } catch (e: IllegalStateException) {
+                android.util.Log.e("TransceiverCoordinator", "confirmPeerVerification: ${e.message}")
+                return@launch
+            }
             transportEngine.send(verifyPacket)
             if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
                 sendProfileHandshake()
                 sendCapabilities()
                 retryUnresolvedEmergencies()
+                startEncryptedHeartbeat()
+                return@launch
+            }
+            // Retry sending SECURE_VERIFY until peer responds or retries exhausted
+            var attempts = 1
+            while (attempts < 3 &&
+                secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION) {
+                delay(1500)
+                if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) break
+                if (secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION) {
+                    android.util.Log.w("TransceiverCoordinator", "SECURE_VERIFY retry attempt $attempts")
+                    transportEngine.send(verifyPacket)
+                    attempts++
+                }
+            }
+            if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
+                sendProfileHandshake()
+                sendCapabilities()
+                retryUnresolvedEmergencies()
+                startEncryptedHeartbeat()
+            } else {
+                android.util.Log.e(
+                    "TransceiverCoordinator",
+                    "SECURE_VERIFY never confirmed by peer after $attempts attempts"
+                )
             }
         }
     }

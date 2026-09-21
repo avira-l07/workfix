@@ -147,12 +147,14 @@ class SecureSessionManagerTest {
         val bobHello = bob.processSecureHello(aliceHello)!!
         alice.processSecureHello(bobHello)
 
-        // Alice receives Bob's verify packet, but Alice herself has NOT confirmed
-        val bobVerifyPacket = ItantraPacket(type = PacketType.SECURE_VERIFY, messageId = 200L)
-        alice.processSecureVerify(bobVerifyPacket)
+        // FIX 014: processSecureVerify rejects a packet without a valid transcript-bound token.
+        // An empty/random payload means peerSasConfirmed stays false.
+        val fakeVerifyPacket = ItantraPacket(type = PacketType.SECURE_VERIFY, messageId = 200L)
+        alice.processSecureVerify(fakeVerifyPacket)
 
         assertFalse(alice.localSasConfirmed)
-        assertTrue(alice.peerSasConfirmed)
+        // peerSasConfirmed must remain false because token is invalid
+        assertFalse("Fake SECURE_VERIFY must not set peerSasConfirmed", alice.peerSasConfirmed)
         assertEquals(SecureSessionState.WAITING_USER_VERIFICATION, alice.state.value)
 
         // App traffic should be rejected
@@ -195,5 +197,115 @@ class SecureSessionManagerTest {
         // Replay another SECURE_VERIFY
         alice.processSecureVerify(bobVerify)
         assertEquals(SecureSessionState.SECURE_VERIFIED, alice.state.value)
+    }
+
+    // ---- FIX 003 regression tests ----
+
+    @Test
+    fun testFix003_confirmSasMatch_throwsInNoSession() = runBlocking {
+        // Alice hasn't started a handshake; state == NO_SESSION
+        var threw = false
+        try {
+            alice.confirmSasMatch()
+        } catch (e: IllegalStateException) {
+            threw = true
+        }
+        assertTrue("confirmSasMatch must throw IllegalStateException in NO_SESSION", threw)
+    }
+
+    @Test
+    fun testFix003_confirmSasMatch_throwsWhileHandshaking() = runBlocking {
+        // Alice started handshake but hasn't received HELLO back; state == HANDSHAKING
+        alice.startHandshake(isInitiator = true)
+        assertEquals(SecureSessionState.HANDSHAKING, alice.state.value)
+        var threw = false
+        try {
+            alice.confirmSasMatch()
+        } catch (e: IllegalStateException) {
+            threw = true
+        }
+        assertTrue("confirmSasMatch must throw IllegalStateException while HANDSHAKING", threw)
+    }
+
+    @Test
+    fun testFix003_confirmSasMatch_succeedsInWaitingVerification() = runBlocking {
+        val aliceHello = alice.startHandshake(isInitiator = true)
+        val bobHello = bob.processSecureHello(aliceHello)!!
+        alice.processSecureHello(bobHello)
+        assertEquals(SecureSessionState.WAITING_USER_VERIFICATION, alice.state.value)
+
+        // Should not throw
+        val verifyPacket = alice.confirmSasMatch()
+        assertEquals(PacketType.SECURE_VERIFY, verifyPacket.type)
+        assertTrue("Token payload must be non-empty", verifyPacket.payload.isNotEmpty())
+    }
+
+    // ---- FIX 014 regression tests ----
+
+    @Test
+    fun testFix014_processSecureVerify_rejectsTokenFromDifferentSession() = runBlocking {
+        // Complete Alice–Bob session
+        val aliceHello = alice.startHandshake(isInitiator = true)
+        val bobHello = bob.processSecureHello(aliceHello)!!
+        alice.processSecureHello(bobHello)
+        val aliceVerify = alice.confirmSasMatch()
+        val bobVerify = bob.confirmSasMatch()
+
+        // Create an unrelated "eve" session
+        val eve = SecureSessionManager()
+        val carolHelper = SecureSessionManager()
+        val eveHello = eve.startHandshake(isInitiator = true)
+        val carolHello = carolHelper.processSecureHello(eveHello)!!
+        eve.processSecureHello(carolHello)
+        val eveVerify = eve.confirmSasMatch()
+
+        // Bob receives Alice's real verify — that should work
+        bob.processSecureVerify(aliceVerify)
+        // Alice receives Bob's real verify — that should work
+        alice.processSecureVerify(bobVerify)
+        assertEquals(SecureSessionState.SECURE_VERIFIED, alice.state.value)
+        assertEquals(SecureSessionState.SECURE_VERIFIED, bob.state.value)
+
+        // Now replay Eve's verify token into an already-verified Alice — should be ignored gracefully
+        val alicePrevState = alice.state.value
+        alice.processSecureVerify(eveVerify)
+        assertEquals("State must not change on foreign verify token", alicePrevState, alice.state.value)
+    }
+
+    @Test
+    fun testFix014_processSecureVerify_rejectsEmptyPayload() = runBlocking {
+        val aliceHello = alice.startHandshake(isInitiator = true)
+        val bobHello = bob.processSecureHello(aliceHello)!!
+        alice.processSecureHello(bobHello)
+        assertEquals(SecureSessionState.WAITING_USER_VERIFICATION, alice.state.value)
+
+        val emptyVerify = ItantraPacket(type = PacketType.SECURE_VERIFY, messageId = 1L)
+        alice.processSecureVerify(emptyVerify)
+
+        // peerSasConfirmed must remain false; state must stay WAITING_USER_VERIFICATION
+        assertFalse("Empty token must not set peerSasConfirmed", alice.peerSasConfirmed)
+        assertEquals(SecureSessionState.WAITING_USER_VERIFICATION, alice.state.value)
+    }
+
+    @Test
+    fun testFix014_transcriptBindingPreventsReplay() = runBlocking {
+        // Full session: alice initiator, bob responder
+        val aliceHello = alice.startHandshake(isInitiator = true)
+        val bobHello = bob.processSecureHello(aliceHello)!!
+        alice.processSecureHello(bobHello)
+        val aliceVerify = alice.confirmSasMatch()
+        val bobVerify = bob.confirmSasMatch()
+        alice.processSecureVerify(bobVerify)
+        bob.processSecureVerify(aliceVerify)
+        assertEquals(SecureSessionState.SECURE_VERIFIED, alice.state.value)
+        assertEquals(SecureSessionState.SECURE_VERIFIED, bob.state.value)
+
+        // Reset Alice and replay the old bobVerify from the stale session
+        alice.resetSession()
+        val aliceHello2 = alice.startHandshake(isInitiator = true)
+        val bobHello2 = bob.processSecureHello(aliceHello2) // bob is reset on its own session-level logic
+        // Even if we managed to deliver the old verify, it must be rejected
+        alice.processSecureVerify(bobVerify)
+        assertFalse("Replayed stale verify must not set peerSasConfirmed", alice.peerSasConfirmed)
     }
 }
