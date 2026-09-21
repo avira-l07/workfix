@@ -154,9 +154,12 @@ class OperationalForegroundService : Service() {
     private fun acquireWakeLock() {
         if (wakeLock == null) {
             val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+            // No fixed timeout: wakelock is tied to continuous mode lifetime.
+            // releaseWakeLock() is always called on ACTION_STOP_CONTINUOUS,
+            // ACTION_RESOLVE_EMERGENCY, and onDestroy() to prevent leaks.
             wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "iTantra:OperationalWakeLock")?.apply {
                 setReferenceCounted(false)
-                acquire(10 * 60 * 1000L /* 10 minutes timeout */)
+                acquire()
             }
         }
     }
@@ -227,7 +230,17 @@ class OperationalForegroundService : Service() {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "High priority notifications for unresolved SOS emergency messages"
-                setBypassDnd(true)
+                setBypassDnd(
+                    // Only bypass DND if notification policy access is granted;
+                    // unconditional setBypassDnd(true) throws SecurityException on
+                    // some devices when permission is not granted.
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        (getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)
+                            ?.isNotificationPolicyAccessGranted == true
+                    } else {
+                        true // Pre-M: no policy access concept, safe to set
+                    }
+                )
             }
 
             manager.createNotificationChannel(continuousChannel)

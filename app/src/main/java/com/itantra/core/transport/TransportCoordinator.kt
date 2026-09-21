@@ -175,7 +175,9 @@ class TransportCoordinator(
     }
 
     override suspend fun send(packet: ItantraPacket): TransmissionMetrics {
-        if (!isConnected) return TransmissionMetrics()
+        // Throw on disconnect — returning empty metrics here would cause callers to
+        // mark the message as SENT even though nothing was written to the socket.
+        if (!isConnected) throw java.io.IOException("Cannot send: transport is not connected")
 
         return withContext(Dispatchers.IO) {
             val t0 = System.nanoTime()
@@ -192,7 +194,9 @@ class TransportCoordinator(
 
             try {
                 activeTransport.send(encoded)
-                lastRxAtMs.set(System.currentTimeMillis())
+                // NOTE: do NOT update lastRxAtMs here. The watchdog must only
+                // track receive events to detect a dead peer — updating it on
+                // send would mask a one-way socket that never echoes back.
                 if (ackDeferred != null) {
                     val t1 = withTimeout(ACK_TIMEOUT_MS) { ackDeferred.await() }
                     txLatency = t1 - t0

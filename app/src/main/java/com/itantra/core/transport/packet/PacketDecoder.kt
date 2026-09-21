@@ -21,8 +21,12 @@ object PacketDecoder {
     const val MAX_FRAME_BODY_SIZE = MAX_PAYLOAD_SIZE + 36
 
     fun decode(framedData: ByteArray): ItantraPacket {
-        if (framedData.size < 33) {
-            throw PacketDecodeException("Frame too small: ${framedData.size} bytes (min 33)")
+        // V2 minimum: 32-byte header + 0-byte payload + 4-byte CRC = 36 bytes.
+        // V1 minimum is the same (32-byte header) + 4 CRC = 36 bytes.
+        // Accepting < 36 bytes would cause a BufferUnderflowException when reading
+        // the V2-only header fields (sourceLang, targetLang, translationMode).
+        if (framedData.size < 36) {
+            throw PacketDecodeException("Frame too small: ${framedData.size} bytes (min 36)")
         }
 
         val buffer = ByteBuffer.wrap(framedData).order(ByteOrder.BIG_ENDIAN)
@@ -80,8 +84,14 @@ object PacketDecoder {
             throw PacketDecodeException("Invalid payload length: $payloadLen")
         }
 
-        if (buffer.remaining() < payloadLen) {
-            throw PacketDecodeException("Truncated payload. Expected $payloadLen, got ${buffer.remaining()}")
+        // Exact size check: buffer must have exactly payloadLen bytes remaining before CRC.
+        // '<' would accept frames with trailing garbage before the CRC field.
+        // '!=' rejects both truncated and oversized payloads.
+        if (buffer.remaining() - 4 != payloadLen) {
+            throw PacketDecodeException(
+                "Payload size mismatch: expected $payloadLen bytes, " +
+                "got ${buffer.remaining() - 4} (frame=${framedData.size})"
+            )
         }
 
         // 3. Extract Payload

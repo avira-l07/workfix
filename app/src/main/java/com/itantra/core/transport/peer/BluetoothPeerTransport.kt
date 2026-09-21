@@ -124,7 +124,10 @@ class BluetoothPeerTransport(
 
                 var connectedSocket: BluetoothSocket? = null
 
-                // 2. Standard secure RFCOMM with controlled timeout
+                // 2. Standard secure RFCOMM with controlled timeout.
+                // Insecure fallback removed: server only listens on secure RFCOMM, so an
+                // insecure client socket will always be rejected by the server side.
+                // Using one auth path on both sides avoids a silent protocol mismatch.
                 try {
                     connectedSocket = withTimeout(CONNECT_TIMEOUT_MS) {
                         withContext(Dispatchers.IO) {
@@ -134,26 +137,9 @@ class BluetoothPeerTransport(
                         }
                     }
                 } catch (e: Exception) {
-                    android.util.Log.w("BluetoothPeerTransport", "Secure RFCOMM failed: ${e.message}. Attempting insecure fallback...")
+                    android.util.Log.e("BluetoothPeerTransport", "Secure RFCOMM failed: ${e.message}")
                     try { connectedSocket?.close() } catch (ignored: Exception) {}
                     connectedSocket = null
-
-                    // 5. Insecure RFCOMM fallback if secure fails (without reflection)
-                    if (isActive) {
-                        try {
-                            connectedSocket = withTimeout(CONNECT_TIMEOUT_MS) {
-                                withContext(Dispatchers.IO) {
-                                    val socket = device.createInsecureRfcommSocketToServiceRecord(ITANTRA_UUID)
-                                    socket.connect()
-                                    socket
-                                }
-                            }
-                        } catch (fallbackEx: Exception) {
-                            android.util.Log.e("BluetoothPeerTransport", "Insecure RFCOMM fallback also failed: ${fallbackEx.message}")
-                            try { connectedSocket?.close() } catch (ignored: Exception) {}
-                            connectedSocket = null
-                        }
-                    }
                 }
 
                 if (connectedSocket != null && isActive) {
@@ -228,21 +214,27 @@ class BluetoothPeerTransport(
     }
 
     override suspend fun send(bytes: ByteArray) {
-        if (!isConnected) return
+        // Throw on disconnect so callers cannot falsely mark a message as SENT.
+        if (!isConnected) throw IOException("Cannot send: transport is not connected")
 
         withContext(Dispatchers.IO) {
-            try {
-                writeMutex.withLock {
-                    val out = outputStream ?: throw IOException("Output stream is null")
+            writeMutex.withLock {
+                try {
+                    val out = outputStream ?: run {
+                        stateFlow.value = ConnectionState.ERROR
+                        disconnectInternal()
+                        throw IOException("Cannot send: output stream is null")
+                    }
                     out.write(bytes)
                     out.flush()
-                }
-            } catch (e: Exception) {
-                if (e !is CancellationException) {
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: IOException) {
                     android.util.Log.e("BluetoothPeerTransport", "Send failed: ${e.message}")
                     stateFlow.value = ConnectionState.ERROR
+                    disconnectInternal()
+                    throw e // Propagate so callers set message state to ERROR, not SENT
                 }
-                disconnectInternal()
             }
         }
     }
