@@ -42,7 +42,9 @@ class ActiveLanguageSessionManager(
     private val _isSttAutoDetect = MutableStateFlow<Boolean>(true)
     val isSttAutoDetect: StateFlow<Boolean> = _isSttAutoDetect
 
+    @Deprecated("Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent")
     private val _activeLanguage = MutableStateFlow<LanguageCode?>(null)
+    @Deprecated("Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent")
     val activeLanguage: StateFlow<LanguageCode?> = _activeLanguage
 
     private val _sessionState = MutableStateFlow(LanguageSessionState.IDLE)

@@ -731,8 +731,18 @@ class TransceiverCoordinator(
 
     private suspend fun processIncomingMessagePacket(packet: ItantraPacket) {
         val isEmergencyCode = packet.type == PacketType.EMERGENCY_CODE
-        val desiredReceive = currentReceiveLanguage.value ?: sessionManager.activeTtsLanguage.value ?: LanguageCode.HINDI
+
+        // Extract packet language metadata first, before building text or choosing local language.
+        // These are needed to compute srcLang, which feeds the null-receive fallback.
+        val rawSrcLang = packet.sourceLanguage ?: packet.languageCode
+        val pktTargetLang = packet.targetLanguage ?: packet.languageCode
+
+        // PHASE 4/29: when receiveLanguage is null, fall back to packet's source language
+        // so that the message stays in its original language (same-language bypass).
+        val srcLang = rawSrcLang ?: pktTargetLang ?: LanguageCode.HINDI
+        val desiredReceive = currentReceiveLanguage.value ?: srcLang
         val localLanguage = desiredReceive
+
         var text = if (isEmergencyCode && packet.payload.isNotEmpty()) {
             val code = com.itantra.domain.model.EmergencyCode.fromId(packet.payload[0])
             // Emergency code bypasses MT and resolves directly into receiver's active local language (Section N)
@@ -741,8 +751,7 @@ class TransceiverCoordinator(
             String(packet.payload, Charsets.UTF_8)
         }
 
-        val pktLang = packet.targetLanguage ?: packet.languageCode ?: localLanguage
-        val srcLang = packet.sourceLanguage ?: packet.languageCode ?: pktLang
+        val pktLang = pktTargetLang ?: localLanguage
         var textLanguage = if (isEmergencyCode) localLanguage else pktLang
         var translationStatus = com.itantra.domain.model.TranslationStatus.NONE
         var originalText: String? = null
@@ -1094,10 +1103,11 @@ class TransceiverCoordinator(
                 return
             }
             val msgId = nextMessageId()
-            val targetLang = resolveTargetLanguage(sessionManager.activeLanguage.value ?: LanguageCode.HINDI)
+            val sttLang = sessionManager.activeSttLanguage.value ?: LanguageCode.HINDI
+            val targetLang = resolveTargetLanguage(sttLang)
             val msg = TransceiverMessage(
                 messageId = msgId,
-                language = sessionManager.activeLanguage.value ?: LanguageCode.HINDI,
+                language = sttLang,
                 targetLanguage = targetLang,
                 priority = com.itantra.domain.model.MessagePriority.NORMAL,
                 text = "STT Pack Required",
@@ -1112,10 +1122,11 @@ class TransceiverCoordinator(
         continuousListenEngine.pauseListening()
 
         val msgId = nextMessageId()
-        val targetLang = resolveTargetLanguage(sessionManager.activeLanguage.value ?: LanguageCode.HINDI)
+        val sttLang = sessionManager.activeSttLanguage.value ?: LanguageCode.HINDI
+        val targetLang = resolveTargetLanguage(sttLang)
         val msg = TransceiverMessage(
             messageId = msgId,
-            language = sessionManager.activeLanguage.value ?: LanguageCode.HINDI,
+            language = sttLang,
             targetLanguage = targetLang,
             priority = com.itantra.domain.model.MessagePriority.NORMAL,
             text = "Recognizing...",
@@ -1227,6 +1238,7 @@ class TransceiverCoordinator(
     fun startRecording(isCritical: Boolean = false) {
         if (recordingJob != null) return
         val engine = sessionManager.currentSttEngine
+        val sttLang = sessionManager.activeSttLanguage.value ?: LanguageCode.HINDI
         if (engine == null || !engine.isLoaded) {
             val lastMsg = _messages.value.lastOrNull()
             if (lastMsg != null && lastMsg.state == MessageState.ERROR && lastMsg.text == "STT Pack Required") {
@@ -1236,7 +1248,7 @@ class TransceiverCoordinator(
             addMessage(
                 TransceiverMessage(
                     messageId = msgId,
-                    language = sessionManager.activeLanguage.value ?: LanguageCode.HINDI,
+                    language = sttLang,
                     targetLanguage = currentTargetLanguage.value,
                     priority = 0,
                     text = "STT Pack Required",
