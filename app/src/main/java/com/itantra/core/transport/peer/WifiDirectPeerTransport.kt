@@ -95,6 +95,7 @@ class WifiDirectPeerTransport : PeerTransport {
                 try {
                     val srv = ServerSocket()
                     srv.reuseAddress = true
+                    srv.soTimeout = 30_000  // Don't block accept() forever; allows clean coroutine cancellation
                     srv.bind(InetSocketAddress(port))
                     serverSocket = srv
                     debugLog("TCP Server bound and listening on port $port")
@@ -105,6 +106,11 @@ class WifiDirectPeerTransport : PeerTransport {
                 } catch (e: CancellationException) {
                     debugLog("Server accept job cancelled")
                     throw e
+                } catch (e: java.net.SocketTimeoutException) {
+                    debugLog("Server accept timed out after 30s — no client arrived")
+                    _lastError.value = WifiDirectError.TCP_SERVER_FAILED
+                    stateFlow.value = ConnectionState.ERROR
+                    disconnectInternal()
                 } catch (e: Exception) {
                     debugLog("Server error: ${e.javaClass.simpleName} - ${e.message}")
                     _lastError.value = WifiDirectError.TCP_SERVER_FAILED
@@ -128,33 +134,53 @@ class WifiDirectPeerTransport : PeerTransport {
             connectionJob = scope.launch(Dispatchers.IO) {
                 stateFlow.value = ConnectionState.CONNECTING
                 debugLog("TCP Client connecting to ${hostAddress.hostAddress?.take(8)}***:$port")
-                // FIX 018: Keep pendingSocket outside try to guarantee close on timeout, error, or cancellation
-                var pendingSocket: Socket? = null
-                try {
-                    val socket = Socket()
-                    pendingSocket = socket
-                    socket.tcpNoDelay = true
-                    socket.keepAlive = true
-                    socket.connect(InetSocketAddress(hostAddress, port), CONNECT_TIMEOUT_MS)
-                    debugLog("TCP Client connected successfully to group owner")
-                    pendingSocket = null
-                    manageConnectedSocket(socket)
-                } catch (e: CancellationException) {
-                    try { pendingSocket?.close() } catch (_: Exception) {}
-                    debugLog("Client connect job cancelled")
-                    throw e
-                } catch (e: SocketTimeoutException) {
-                    try { pendingSocket?.close() } catch (_: Exception) {}
-                    debugLog("TCP connect timeout to group owner")
-                    _lastError.value = WifiDirectError.TCP_CONNECT_TIMEOUT
-                    stateFlow.value = ConnectionState.ERROR
-                    disconnectInternal()
-                } catch (e: Exception) {
-                    try { pendingSocket?.close() } catch (_: Exception) {}
-                    debugLog("TCP Client connect error: ${e.javaClass.simpleName} - ${e.message}")
-                    _lastError.value = WifiDirectError.TCP_CONNECT_FAILED
-                    stateFlow.value = ConnectionState.ERROR
-                    disconnectInternal()
+
+                // Retry up to 3 times with 1.5s backoff: the Group Owner's ServerSocket may not be
+                // bound yet when WIFI_P2P_CONNECTION_CHANGED fires on the client side.
+                val maxAttempts = 3
+                val retryDelayMs = 1_500L
+                var lastException: Exception? = null
+
+                for (attempt in 1..maxAttempts) {
+                    if (!isActive) break
+                    if (attempt > 1) {
+                        debugLog("TCP Client retry attempt $attempt/$maxAttempts after ${retryDelayMs}ms delay")
+                        delay(retryDelayMs)
+                    }
+                    var pendingSocket: Socket? = null
+                    try {
+                        val socket = Socket()
+                        pendingSocket = socket
+                        socket.tcpNoDelay = true
+                        socket.keepAlive = true
+                        socket.connect(InetSocketAddress(hostAddress, port), CONNECT_TIMEOUT_MS)
+                        debugLog("TCP Client connected successfully to group owner (attempt $attempt)")
+                        pendingSocket = null
+                        manageConnectedSocket(socket)
+                        return@launch  // Success — exit retry loop
+                    } catch (e: CancellationException) {
+                        try { pendingSocket?.close() } catch (_: Exception) {}
+                        debugLog("Client connect job cancelled")
+                        throw e
+                    } catch (e: SocketTimeoutException) {
+                        try { pendingSocket?.close() } catch (_: Exception) {}
+                        debugLog("TCP connect timeout on attempt $attempt")
+                        lastException = e
+                        if (attempt == maxAttempts) {
+                            _lastError.value = WifiDirectError.TCP_CONNECT_TIMEOUT
+                            stateFlow.value = ConnectionState.ERROR
+                            disconnectInternal()
+                        }
+                    } catch (e: Exception) {
+                        try { pendingSocket?.close() } catch (_: Exception) {}
+                        debugLog("TCP Client connect error attempt $attempt: ${e.javaClass.simpleName} - ${e.message}")
+                        lastException = e
+                        if (attempt == maxAttempts) {
+                            _lastError.value = WifiDirectError.TCP_CONNECT_FAILED
+                            stateFlow.value = ConnectionState.ERROR
+                            disconnectInternal()
+                        }
+                    }
                 }
             }
         }
