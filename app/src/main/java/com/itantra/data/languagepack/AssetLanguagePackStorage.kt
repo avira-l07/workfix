@@ -61,13 +61,27 @@ class AssetLanguagePackStorage(
         return sb.toString()
     }
 
+    private fun getExpectedTtsSha256(code: LanguageCode, fileName: String): String? {
+        return try {
+            val manifestAsset = "language_packs/${code.wireCode}_dev_manifest.json"
+            val json = context.assets.open(manifestAsset).bufferedReader().use { it.readText() }
+            LanguagePackManifestParser.parseOrNull(json)?.ttsModel?.checksumsSha256?.get(fileName)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     /**
      * Extracts bundled STT model files from assets/language_packs/shared/stt/
      * into context.filesDir/language_packs/shared/stt/ if not already present or incomplete,
      * validating SHA-256 integrity against trusted manifest hashes (FIX 033).
+     *
+     * Also inspects assets for optional bundled TTS assets across all canonical languages
+     * (LanguageCatalog.all.map { it.code }) and extracts them atomically if present.
      */
     fun extractBundledAssetsIfNeeded() {
         try {
+            // 1. Shared STT extraction
             val spec = ModelFileSpecs.getSttSpec(LanguageCode.HINDI)
             val targetDir = delegate.sharedSttDirectory()
             if (!targetDir.exists()) {
@@ -98,7 +112,50 @@ class AssetLanguagePackStorage(
                     }
 
                     if (!isExistingValid) {
-                        Log.i(TAG, "Extracting bundled asset: $assetPath -> ${destFile.absolutePath}")
+                        Log.i(TAG, "Extracting bundled STT asset: $assetPath -> ${destFile.absolutePath}")
+                        copyAssetToFile(assetPath, destFile, expectedSha)
+                    }
+                }
+            }
+
+            // 2. Bundled TTS extraction across all canonical languages
+            for (code in com.itantra.domain.model.LanguageCatalog.all.map { it.code }) {
+                val ttsSpec = ModelFileSpecs.getTtsSpec(code) ?: continue
+                val ttsAssetDir = "language_packs/${code.wireCode}/tts"
+                val targetTtsDir = File(delegate.packDirectory(code), "tts")
+
+                val hasBundledTts = ttsSpec.requiredFiles.all { fileName ->
+                    try {
+                        context.assets.open("$ttsAssetDir/$fileName").use { true }
+                    } catch (_: Exception) {
+                        false
+                    }
+                }
+                if (!hasBundledTts) {
+                    // Normal: bundled TTS folder not included in this build, use runtime download/import
+                    continue
+                }
+
+                if (!targetTtsDir.exists()) {
+                    targetTtsDir.mkdirs()
+                }
+
+                for (fileName in ttsSpec.requiredFiles) {
+                    val destFile = File(targetTtsDir, fileName)
+                    val assetPath = "$ttsAssetDir/$fileName"
+                    val expectedSha = getExpectedTtsSha256(code, fileName)
+                    val isExistingValid = if (destFile.exists() && destFile.length() > 0L) {
+                        if (expectedSha != null) {
+                            sha256(destFile).equals(expectedSha, ignoreCase = true)
+                        } else {
+                            true
+                        }
+                    } else {
+                        false
+                    }
+
+                    if (!isExistingValid) {
+                        Log.i(TAG, "Extracting bundled TTS asset: $assetPath -> ${destFile.absolutePath}")
                         copyAssetToFile(assetPath, destFile, expectedSha)
                     }
                 }

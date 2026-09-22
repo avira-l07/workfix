@@ -96,8 +96,8 @@ fun DedicatedChatScreen(
 
     val isConnected = activePeerProfile?.isConnected == true || peerProfile?.isConnected == true
 
-    // Observe active language ("receive in" language) to reflect current setting
-    val activeLanguage by AppGraph.activeLanguageSessionManager.activeLanguage.collectAsState()
+    // Observe receive language to reflect current setting
+    val receiveLanguage by AppGraph.languagePackRepository.observeReceiveLanguage().collectAsState(initial = null)
 
     Scaffold(
         containerColor = ITantraColors.CanvasBg,
@@ -148,7 +148,7 @@ fun DedicatedChatScreen(
                 actions = {
                     // "Receive in" language pill — tap to change
                     ReceiveLanguageChip(
-                        activeLanguage = activeLanguage,
+                        activeLanguage = receiveLanguage,
                         onClick = { showLanguagePicker = true }
                     )
                     Spacer(Modifier.width(8.dp))
@@ -333,9 +333,9 @@ fun DedicatedChatScreen(
     // Receive-language bottom sheet
     if (showLanguagePicker) {
         LanguagePickerBottomSheet(
-            currentLanguage = activeLanguage,
+            currentLanguage = receiveLanguage,
             onLanguageSelected = { code ->
-                AppGraph.switchActiveLanguage(code)
+                AppGraph.setReceiveLanguage(code)
                 showLanguagePicker = false
             },
             onDismiss = { showLanguagePicker = false }

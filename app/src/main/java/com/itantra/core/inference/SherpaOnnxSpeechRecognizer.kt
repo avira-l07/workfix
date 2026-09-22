@@ -16,7 +16,8 @@ class SherpaOnnxSpeechRecognizer(
     private val context: Context,
     override val languageCode: LanguageCode,
     private val storage: LanguagePackStorage,
-    private val metricsRecorder: MetricsRecorder
+    private val metricsRecorder: MetricsRecorder,
+    val autoDetect: Boolean = false
 ) : SpeechRecognizerEngine {
 
     private var recognizer: OfflineRecognizer? = null
@@ -68,7 +69,7 @@ class SherpaOnnxSpeechRecognizer(
                 whisper = OfflineWhisperModelConfig(
                     encoder = File(sttDir, spec.mainModelFile).absolutePath,
                     decoder = File(sttDir, spec.auxFile!!).absolutePath,
-                    language = languageCode.wireCode,
+                    language = if (autoDetect) "" else languageCode.wireCode,
                     task = "transcribe",
                     tailPaddings = -1
                 ),
@@ -130,28 +131,17 @@ class SherpaOnnxSpeechRecognizer(
 
         val stream = rec.createStream()
         var pureInferenceMs = 0L
-        val resultText = try {
+        val whisperResult = try {
             stream.acceptWaveform(fullWaveform, sampleRate = 16000)
             val tDecodeStart = android.os.SystemClock.elapsedRealtimeNanos()
             rec.decode(stream)
             pureInferenceMs = (android.os.SystemClock.elapsedRealtimeNanos() - tDecodeStart) / 1_000_000
-            val raw = rec.getResult(stream).text.trim()
-            val cleaned = raw.replace(Regex("<\\|.*?\\|>"), "")
-                .replace(Regex("^[\\(\\)\\[\\]\\s]+|[\\(\\)\\[\\]\\s]+$"), "")
-                .trim()
-            SpeechDeduplicator.deduplicate(cleaned)
+            rec.getResult(stream)
         } finally {
             stream.release()
         }
 
-        SpeechRecognitionResult(
-            text = resultText,
-            isFinal = true,
-            languageCode = languageCode,
-            confidence = 1.0f,
-            timestampMillis = System.currentTimeMillis(),
-            pureInferenceMs = pureInferenceMs
-        )
+        processWhisperResult(whisperResult, pureInferenceMs)
     }
 
     suspend fun decodeDirect(samples: FloatArray, silencePadding: Int = 0): SpeechRecognitionResult = withContext(Dispatchers.Default) {
@@ -165,23 +155,57 @@ class SherpaOnnxSpeechRecognizer(
         }
         val stream = rec.createStream()
         var pureInferenceMs = 0L
-        val resultText = try {
+        val whisperResult = try {
             stream.acceptWaveform(fullWaveform, sampleRate = 16000)
             val tDecodeStart = android.os.SystemClock.elapsedRealtimeNanos()
             rec.decode(stream)
             pureInferenceMs = (android.os.SystemClock.elapsedRealtimeNanos() - tDecodeStart) / 1_000_000
-            val raw = rec.getResult(stream).text.trim()
-            raw.replace(Regex("<\\|.*?\\|>"), "")
-                .replace(Regex("^[\\(\\)\\[\\]\\s]+|[\\(\\)\\[\\]\\s]+$"), "")
-                .trim()
+            rec.getResult(stream)
         } finally {
             stream.release()
         }
 
-        SpeechRecognitionResult(
-            text = resultText,
+        processWhisperResult(whisperResult, pureInferenceMs)
+    }
+
+    private fun processWhisperResult(
+        whisperResult: OfflineRecognizerResult,
+        pureInferenceMs: Long
+    ): SpeechRecognitionResult {
+        val rawText = whisperResult.text.trim()
+        val detectedCode = whisperResult.lang.trim()
+        val cleanedText = TranscriptPostProcessor.postProcess(rawText)
+
+        // Language resolution priority:
+        // 1. Whisper detected language
+        // 2. Explicit MANUAL STT language (if not in autoDetect mode)
+        // 3. Unicode script detector for unambiguous scripts
+        // 4. Configured fallback (languageCode)
+        val whisperLang = LanguageCode.fromWireCode(detectedCode)
+        val scriptLang = LanguageScriptDetector.detect(cleanedText, manualFallback = languageCode)
+
+        val resolvedLanguage = when {
+            whisperLang != null -> whisperLang
+            !autoDetect -> languageCode
+            scriptLang != null -> scriptLang
+            else -> languageCode
+        }
+
+        if (com.example.itantra.BuildConfig.DEBUG) {
+            android.util.Log.d(
+                "STT_LANG",
+                "STT_MODE=${if (autoDetect) "AUTO" else "MANUAL"} " +
+                "STT_HINT=${if (autoDetect) "<auto>" else languageCode.wireCode} " +
+                "WHISPER_DETECTED=$detectedCode " +
+                "SCRIPT_DETECTED=${scriptLang?.wireCode ?: "none"} " +
+                "RESOLVED_SOURCE_LANGUAGE=${resolvedLanguage.name}"
+            )
+        }
+
+        return SpeechRecognitionResult(
+            text = cleanedText,
             isFinal = true,
-            languageCode = languageCode,
+            languageCode = resolvedLanguage,
             confidence = 1.0f,
             timestampMillis = System.currentTimeMillis(),
             pureInferenceMs = pureInferenceMs

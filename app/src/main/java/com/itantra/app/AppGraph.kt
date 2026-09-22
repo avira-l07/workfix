@@ -19,6 +19,8 @@ import com.itantra.data.benchmark.LocalBenchmarkRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 
 import android.bluetooth.BluetoothManager
 import com.itantra.core.crypto.SecureSessionManager
@@ -44,50 +46,44 @@ object AppGraph {
                     val savedLang = prefs.getString("source_lang", null)?.let { LanguageCode.fromWireCode(it) }
                     val langToActivate = savedLang ?: LanguageCode.HINDI
                     languagePackRepository.setActiveLanguage(langToActivate)
-                    val shouldLoadTts = storage.isTtsInstalled(langToActivate)
-                    activeLanguageSessionManager.switchTo(langToActivate, loadStt = true, loadTts = shouldLoadTts)
+
+                    val modeStr = prefs.getString("speech_input_mode", "AUTO")
+                    val isAuto = modeStr != "MANUAL"
+                    activeLanguageSessionManager.ensureStt(langToActivate, autoDetect = isAuto)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
 
-                // Automatically keep activeLanguageSessionManager in sync with repository changes
+                // Single unified lifecycle observer: translates desired repository state into engine capabilities
                 launch {
                     try {
-                        languagePackRepository.observeActiveLanguage().collect { lang ->
-                            if (lang != null && activeLanguageSessionManager.activeLanguage.value != lang) {
-                                try {
-                                    val shouldLoadTts = languagePackStorage.isTtsInstalled(lang)
-                                    activeLanguageSessionManager.switchTo(lang, loadStt = true, loadTts = shouldLoadTts)
-                                } catch (e: Exception) {
-                                    android.util.Log.e("AppGraph", "Failed to switch sessionManager to $lang", e)
-                                }
-                            } else if (lang == null && activeLanguageSessionManager.activeLanguage.value != null) {
+                        kotlinx.coroutines.flow.combine(
+                            languagePackRepository.observeActiveLanguage(),
+                            languagePackRepository.observePackSummaries(),
+                            languagePackRepository.observeSpeechInputMode()
+                        ) { activeLang, summaries, mode ->
+                            Triple(activeLang, summaries, mode)
+                        }.collectLatest { (lang, summaries, mode) ->
+                            if (lang == null) {
                                 try {
                                     activeLanguageSessionManager.releaseAll()
                                 } catch (e: Exception) {
                                     android.util.Log.e("AppGraph", "Failed to release sessionManager on active language clear", e)
                                 }
+                                return@collectLatest
                             }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
 
-                // Automatically ensure TTS capability when TTS is installed for active language (FIX 031)
-                launch {
-                    try {
-                        languagePackRepository.observePackSummaries().collect { summaries ->
-                            val currentActive = activeLanguageSessionManager.activeLanguage.value ?: return@collect
-                            val activeSummary = summaries.find { it.language.code == currentActive } ?: return@collect
-                            val ttsReadyOnDisk = activeSummary.isTtsDownloaded || languagePackStorage.isTtsInstalled(currentActive)
-                            val ttsLoaded = activeLanguageSessionManager.currentTtsEngine != null && activeLanguageSessionManager.currentTtsEngine?.isLoaded == true
-                            if (ttsReadyOnDisk && !ttsLoaded) {
-                                try {
-                                    activeLanguageSessionManager.ensureCapabilities(currentActive, requireStt = true, requireTts = true)
-                                } catch (e: Exception) {
-                                    android.util.Log.e("AppGraph", "Failed to auto-load TTS for $currentActive", e)
+                            val ttsInstalled = languagePackStorage.isTtsInstalled(lang) ||
+                                (summaries.find { it.language.code == lang }?.isTtsDownloaded == true)
+
+                            try {
+                                val isAuto = mode == com.itantra.domain.model.SpeechInputMode.AUTO
+                                activeLanguageSessionManager.ensureStt(lang, autoDetect = isAuto)
+                                if (ttsInstalled) {
+                                    activeLanguageSessionManager.ensureTts(lang)
                                 }
+                            } catch (e: Exception) {
+                                android.util.Log.e("AppGraph", "Failed to ensure capabilities for $lang", e)
                             }
                         }
                     } catch (e: Exception) {
@@ -102,8 +98,6 @@ object AppGraph {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 languagePackRepository.setActiveLanguage(code)
-                val shouldLoadTts = languagePackStorage.isTtsInstalled(code)
-                activeLanguageSessionManager.switchTo(code, loadStt = true, loadTts = shouldLoadTts)
             } catch (e: Exception) {
                 android.util.Log.e("AppGraph", "Failed to switch active language to $code", e)
             }
@@ -116,6 +110,16 @@ object AppGraph {
                 languagePackRepository.setTargetLanguage(code)
             } catch (e: Exception) {
                 android.util.Log.e("AppGraph", "Failed to set target language to $code", e)
+            }
+        }
+    }
+
+    fun setReceiveLanguage(code: LanguageCode?) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                languagePackRepository.setReceiveLanguage(code)
+            } catch (e: Exception) {
+                android.util.Log.e("AppGraph", "Failed to set receive language to $code", e)
             }
         }
     }
@@ -143,8 +147,12 @@ object AppGraph {
 
     val activeLanguageSessionManager: ActiveLanguageSessionManager by lazy {
         val factory = object : EngineFactory {
+            override fun createRecognizer(language: LanguageCode, autoDetect: Boolean): SpeechRecognizerEngine {
+                return SherpaOnnxSpeechRecognizer(context, language, languagePackStorage, metricsRecorder, autoDetect)
+            }
+
             override fun createRecognizer(language: LanguageCode): SpeechRecognizerEngine {
-                return SherpaOnnxSpeechRecognizer(context, language, languagePackStorage, metricsRecorder)
+                return SherpaOnnxSpeechRecognizer(context, language, languagePackStorage, metricsRecorder, autoDetect = false)
             }
 
             override fun createSynthesizer(language: LanguageCode): SpeechSynthesizerEngine? {
@@ -232,6 +240,11 @@ object AppGraph {
     }
 
     val transceiverCoordinator: TransceiverCoordinator by lazy {
+        // TtsCapabilityProvider: thin bridge so TransceiverCoordinator can check TTS disk
+        // availability without directly depending on AssetLanguagePackStorage.
+        val ttsProvider = com.itantra.core.inference.TtsCapabilityProvider { lang ->
+            languagePackStorage.isTtsInstalled(lang)
+        }
         TransceiverCoordinator(
             context,
             activeLanguageSessionManager,
@@ -241,7 +254,8 @@ object AppGraph {
             secureSessionManager,
             translationRouter,
             database.messageDao(),
-            deviceProfileManager
+            deviceProfileManager,
+            ttsProvider
         ).apply {
             attachSettings(settingsRepository)
         }

@@ -20,6 +20,24 @@ interface LanguagePackRepository {
     /** Live view of the currently selected TARGET language, if any. */
     fun observeTargetLanguage(): Flow<LanguageCode?>
 
+    /** Live view of the currently selected RECEIVE language, if any. */
+    fun observeReceiveLanguage(): Flow<LanguageCode?>
+
+    /** Sets the preferred language for incoming messages. Null reverts to auto/sender language. */
+    suspend fun setReceiveLanguage(code: LanguageCode?): Boolean
+
+    /** Live view of speech input mode (AUTO vs MANUAL). */
+    fun observeSpeechInputMode(): Flow<com.itantra.domain.model.SpeechInputMode>
+
+    /** Sets speech input mode. */
+    suspend fun setSpeechInputMode(mode: com.itantra.domain.model.SpeechInputMode)
+
+    /** Live view of manual STT fallback language hint. */
+    fun observeManualSttLanguage(): Flow<LanguageCode?>
+
+    /** Sets manual STT language hint. */
+    suspend fun setManualSttLanguage(code: LanguageCode?): Boolean
+
     suspend fun getManifest(code: LanguageCode): LanguagePackManifest?
 
     /**

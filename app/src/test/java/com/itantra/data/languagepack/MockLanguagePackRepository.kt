@@ -69,6 +69,30 @@ class MockLanguagePackRepository : LanguagePackRepository {
     private val targetLanguageFlow: MutableStateFlow<LanguageCode?> =
         MutableStateFlow(LanguageCode.ENGLISH)
 
+    private val receiveLanguageFlow = MutableStateFlow<LanguageCode?>(null)
+    private val speechInputModeFlow = MutableStateFlow(com.itantra.domain.model.SpeechInputMode.AUTO)
+    private val manualSttLanguageFlow = MutableStateFlow<LanguageCode?>(null)
+
+    override fun observeReceiveLanguage(): Flow<LanguageCode?> = receiveLanguageFlow
+
+    override suspend fun setReceiveLanguage(code: LanguageCode?): Boolean {
+        receiveLanguageFlow.value = code
+        return true
+    }
+
+    override fun observeSpeechInputMode(): Flow<com.itantra.domain.model.SpeechInputMode> = speechInputModeFlow
+
+    override suspend fun setSpeechInputMode(mode: com.itantra.domain.model.SpeechInputMode) {
+        speechInputModeFlow.value = mode
+    }
+
+    override fun observeManualSttLanguage(): Flow<LanguageCode?> = manualSttLanguageFlow
+
+    override suspend fun setManualSttLanguage(code: LanguageCode?): Boolean {
+        manualSttLanguageFlow.value = code
+        return true
+    }
+
     override fun observePackSummaries(): Flow<List<LanguagePackSummary>> =
         entriesFlow.map { entries ->
             LanguageCatalog.all.map { language ->

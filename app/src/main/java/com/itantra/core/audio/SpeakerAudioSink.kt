@@ -34,21 +34,32 @@ class SpeakerAudioSink(
     private var audioFocusRequest: AudioFocusRequest? = null
     private var originalAlarmVolume: Int? = null
     private var hasElevatedVolume: Boolean = false
+    private var hasSetCommunicationDevice: Boolean = false
 
     /**
      * Initializes the AudioTrack with the specified sample rate and usage attributes.
      * @param sampleRate Typically 16000 Hz or 22050 Hz.
-     * @param usage AudioAttributes.USAGE_VOICE_COMMUNICATION or AudioAttributes.USAGE_ALARM.
+     * @param usage AudioAttributes.USAGE_MEDIA (default) or AudioAttributes.USAGE_ALARM.
      * @param requestMaxVolume When true and usage is USAGE_ALARM, requests maximum alarm volume.
      */
     fun init(
         sampleRate: Int,
-        usage: Int = AudioAttributes.USAGE_VOICE_COMMUNICATION,
+        usage: Int = AudioAttributes.USAGE_MEDIA,
         requestMaxVolume: Boolean = false
     ) {
         release() // ensure clean state
         this.sampleRate = sampleRate
         this.totalFramesWritten = 0L
+
+        audioManager = context?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+
+        // Route to communication device only if explicitly configured for voice communication.
+        // For normal USAGE_MEDIA, rely on Android standard media/loudspeaker routing.
+        if (usage == AudioAttributes.USAGE_VOICE_COMMUNICATION) {
+            audioManager?.let { am ->
+                routeToSpeakerIfPossible(am)
+            }
+        }
 
         val contentType = if (usage == AudioAttributes.USAGE_ALARM) {
             AudioAttributes.CONTENT_TYPE_SONIFICATION
@@ -67,7 +78,7 @@ class SpeakerAudioSink(
             AudioFormat.ENCODING_PCM_FLOAT
         ).coerceAtLeast(sampleRate / 10 * 4) // minimum 100ms buffer
 
-        audioTrack = AudioTrack.Builder()
+        val track = AudioTrack.Builder()
             .setAudioAttributes(attributes)
             .setAudioFormat(
                 AudioFormat.Builder()
@@ -80,22 +91,54 @@ class SpeakerAudioSink(
             .setTransferMode(AudioTrack.MODE_STREAM)
             .build()
 
+        if (track.state != AudioTrack.STATE_INITIALIZED) {
+            track.release()
+            throw IllegalStateException("AUDIO_TRACK_INIT_FAILED: AudioTrack state is ${track.state}")
+        }
+        audioTrack = track
+
         requestAudioFocus(attributes, usage)
 
         if (usage == AudioAttributes.USAGE_ALARM && requestMaxVolume) {
             applyEmergencyVolumeIntent()
         }
 
-        audioTrack?.play()
+        track.play()
         android.util.Log.i("SpeakerAudioSink", "AUDIO_PLAY_STARTED: usage=$usage at ${android.os.SystemClock.elapsedRealtime()}")
+    }
+
+    private fun routeToSpeakerIfPossible(am: AudioManager) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                val devices = am.availableCommunicationDevices
+                val speaker = devices.find { it.type == android.media.AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+                if (speaker != null) {
+                    val success = am.setCommunicationDevice(speaker)
+                    hasSetCommunicationDevice = success
+                    android.util.Log.i("SpeakerAudioSink", "AUDIO_ROUTE: setCommunicationDevice(BUILTIN_SPEAKER) success=$success")
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("SpeakerAudioSink", "Could not set communication device to speaker", e)
+            }
+        }
+    }
+
+    private fun clearSpeakerRouting(am: AudioManager) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && hasSetCommunicationDevice) {
+            try {
+                am.clearCommunicationDevice()
+                hasSetCommunicationDevice = false
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun requestAudioFocus(attributes: AudioAttributes, usage: Int) {
         try {
-            audioManager = context?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
             val am = audioManager ?: return
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val focusResult = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val focusGain = if (usage == AudioAttributes.USAGE_ALARM) {
                     AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
                 } else {
@@ -104,9 +147,7 @@ class SpeakerAudioSink(
 
                 val req = AudioFocusRequest.Builder(focusGain)
                     .setAudioAttributes(attributes)
-                    .setOnAudioFocusChangeListener { focusChange ->
-                        // Focus changes handled gracefully; alarm continues, normal speech may duck
-                    }
+                    .setOnAudioFocusChangeListener { /* handle ducking */ }
                     .build()
 
                 audioFocusRequest = req
@@ -115,13 +156,18 @@ class SpeakerAudioSink(
                 @Suppress("DEPRECATION")
                 am.requestAudioFocus(
                     null,
-                    if (usage == AudioAttributes.USAGE_ALARM) AudioManager.STREAM_ALARM else AudioManager.STREAM_VOICE_CALL,
+                    if (usage == AudioAttributes.USAGE_ALARM) AudioManager.STREAM_ALARM else AudioManager.STREAM_MUSIC,
                     AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
                 )
             }
+
+            when (focusResult) {
+                AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> android.util.Log.i("SpeakerAudioSink", "AUDIO_FOCUS_GRANTED")
+                AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> android.util.Log.i("SpeakerAudioSink", "AUDIO_FOCUS_DELAYED")
+                else -> android.util.Log.w("SpeakerAudioSink", "AUDIO_FOCUS_FAILED ($focusResult)")
+            }
         } catch (e: Exception) {
-            // Audio focus failure should never crash safety audio pipeline
-            e.printStackTrace()
+            android.util.Log.w("SpeakerAudioSink", "Audio focus request failed with exception", e)
         }
     }
 
@@ -133,14 +179,13 @@ class SpeakerAudioSink(
             am.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
             hasElevatedVolume = true
         } catch (e: Exception) {
-            // Maximum-volume intent requested; exact device behavior depends on Android/OEM policy
             e.printStackTrace()
         }
     }
 
     /**
      * Writes raw float samples to the audio track. Blocks until audio is queued.
-     * Updates frame counters for end-of-utterance clipping prevention.
+     * Completes write across multiple chunks if needed and validates frame counts.
      */
     suspend fun play(samples: FloatArray) = withContext(Dispatchers.IO) {
         if (samples.isEmpty()) return@withContext
@@ -148,11 +193,16 @@ class SpeakerAudioSink(
         if (track.playState != AudioTrack.PLAYSTATE_PLAYING) {
             track.play()
         }
-        val written = track.write(samples, 0, samples.size, AudioTrack.WRITE_BLOCKING)
-        if (written > 0) {
+        var offset = 0
+        while (offset < samples.size) {
+            val written = track.write(samples, offset, samples.size - offset, AudioTrack.WRITE_BLOCKING)
+            if (written <= 0) {
+                throw IllegalStateException("AUDIO_WRITE_FAILED: AudioTrack.write returned $written at offset $offset/${samples.size}")
+            }
+            offset += written
             totalFramesWritten += written
         }
-        android.util.Log.i("SpeakerAudioSink", "AudioTrack wrote $written frames (total=$totalFramesWritten, sampleRate=$sampleRate)")
+        android.util.Log.i("SpeakerAudioSink", "AudioTrack wrote ${samples.size} frames (total=$totalFramesWritten, sampleRate=$sampleRate)")
     }
 
     /**
@@ -175,6 +225,8 @@ class SpeakerAudioSink(
             track.stop()
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            audioManager?.let { clearSpeakerRouting(it) }
         }
     }
 
@@ -193,6 +245,8 @@ class SpeakerAudioSink(
             track.stop()
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            audioManager?.let { clearSpeakerRouting(it) }
         }
     }
 
@@ -200,6 +254,8 @@ class SpeakerAudioSink(
      * Releases AudioTrack and restores original alarm volume and audio focus.
      */
     fun release() {
+        audioManager?.let { clearSpeakerRouting(it) }
+
         try {
             audioTrack?.release()
         } catch (e: Exception) {

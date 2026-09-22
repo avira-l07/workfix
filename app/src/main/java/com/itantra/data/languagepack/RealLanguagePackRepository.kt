@@ -19,6 +19,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,6 +47,17 @@ class RealLanguagePackRepository(
     )
     private val targetLanguage = MutableStateFlow<LanguageCode?>(
         context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("target_lang", null)?.let { LanguageCode.fromWireCode(it) }
+    )
+    private val receiveLanguage = MutableStateFlow<LanguageCode?>(
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("receive_lang", null)?.let { LanguageCode.fromWireCode(it) }
+    )
+    private val speechInputMode = MutableStateFlow(
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("speech_input_mode", "AUTO")?.let {
+            try { com.itantra.domain.model.SpeechInputMode.valueOf(it) } catch (_: Exception) { com.itantra.domain.model.SpeechInputMode.AUTO }
+        } ?: com.itantra.domain.model.SpeechInputMode.AUTO
+    )
+    private val manualSttLanguage = MutableStateFlow<LanguageCode?>(
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("manual_stt_lang", null)?.let { LanguageCode.fromWireCode(it) }
     )
     private val downloadProgress = MutableStateFlow<Map<LanguageCode, Int>>(emptyMap())
     private val downloadJobs = mutableMapOf<LanguageCode, Job>()
@@ -149,6 +161,12 @@ class RealLanguagePackRepository(
 
     override fun observeTargetLanguage(): Flow<LanguageCode?> = targetLanguage
 
+    override fun observeReceiveLanguage(): Flow<LanguageCode?> = receiveLanguage.asStateFlow()
+
+    override fun observeSpeechInputMode(): Flow<com.itantra.domain.model.SpeechInputMode> = speechInputMode.asStateFlow()
+
+    override fun observeManualSttLanguage(): Flow<LanguageCode?> = manualSttLanguage.asStateFlow()
+
     override suspend fun getManifest(code: LanguageCode): LanguagePackManifest? = withContext(Dispatchers.IO) {
         try {
             val json = context.assets.open("language_packs/${code.wireCode}_dev_manifest.json")
@@ -175,6 +193,38 @@ class RealLanguagePackRepository(
             prefs.remove("target_lang")
         } else {
             prefs.putString("target_lang", code.wireCode)
+        }
+        prefs.apply()
+        return true
+    }
+
+    override suspend fun setReceiveLanguage(code: LanguageCode?): Boolean {
+        receiveLanguage.value = code
+        val prefs = context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).edit()
+        if (code == null) {
+            prefs.remove("receive_lang")
+        } else {
+            prefs.putString("receive_lang", code.wireCode)
+        }
+        prefs.apply()
+        return true
+    }
+
+    override suspend fun setSpeechInputMode(mode: com.itantra.domain.model.SpeechInputMode) {
+        speechInputMode.value = mode
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putString("speech_input_mode", mode.name)
+            .apply()
+    }
+
+    override suspend fun setManualSttLanguage(code: LanguageCode?): Boolean {
+        manualSttLanguage.value = code
+        val prefs = context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).edit()
+        if (code == null) {
+            prefs.remove("manual_stt_lang")
+        } else {
+            prefs.putString("manual_stt_lang", code.wireCode)
         }
         prefs.apply()
         return true

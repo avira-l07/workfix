@@ -11,6 +11,7 @@ import com.itantra.core.inference.ActiveLanguageSessionManager
 import com.itantra.core.inference.ContinuousListenEngine
 import com.itantra.core.inference.ContinuousListenState
 import com.itantra.core.inference.MicrophoneAudioSource
+import com.itantra.core.inference.TtsCapabilityProvider
 import com.itantra.core.metrics.MetricsRecorder
 import com.itantra.core.transport.ConnectionState
 import com.itantra.core.transport.TransportEngine
@@ -53,7 +54,8 @@ class TransceiverCoordinator(
     val secureSessionManager: SecureSessionManager,
     private val translationRouter: com.itantra.core.translation.TranslationRouter,
     private val messageDao: com.itantra.data.db.MessageDao? = null,
-    val deviceProfileManager: com.itantra.core.profile.DeviceProfileManager? = null
+    val deviceProfileManager: com.itantra.core.profile.DeviceProfileManager? = null,
+    private val ttsCapabilityProvider: TtsCapabilityProvider? = null
 ) {
     companion object {
         private const val ENCRYPTED_HEARTBEAT_INTERVAL_MS = 15_000L
@@ -81,6 +83,16 @@ class TransceiverCoordinator(
 
     private val _activeConversationPeerId = MutableStateFlow<String?>(null)
     val activeConversationPeerId: StateFlow<String?> = _activeConversationPeerId.asStateFlow()
+
+    private val currentReceiveLanguage = MutableStateFlow<LanguageCode?>(null)
+
+    init {
+        scope.launch {
+            languagePackRepository.observeReceiveLanguage().collect {
+                currentReceiveLanguage.value = it
+            }
+        }
+    }
 
     fun setActiveConversation(peerId: String?) {
         _activeConversationPeerId.value = peerId
@@ -719,7 +731,8 @@ class TransceiverCoordinator(
 
     private suspend fun processIncomingMessagePacket(packet: ItantraPacket) {
         val isEmergencyCode = packet.type == PacketType.EMERGENCY_CODE
-        val localLanguage = sessionManager.activeLanguage.value ?: LanguageCode.ENGLISH
+        val desiredReceive = currentReceiveLanguage.value ?: sessionManager.activeTtsLanguage.value ?: LanguageCode.HINDI
+        val localLanguage = desiredReceive
         var text = if (isEmergencyCode && packet.payload.isNotEmpty()) {
             val code = com.itantra.domain.model.EmergencyCode.fromId(packet.payload[0])
             // Emergency code bypasses MT and resolves directly into receiver's active local language (Section N)
@@ -814,29 +827,77 @@ class TransceiverCoordinator(
             return
         }
 
-        val engine = sessionManager.currentTtsEngine
         val isCritical = packet.flags.toInt() == com.itantra.domain.model.MessagePriority.CRITICAL || isEmergencyCode
 
-        val canSpeak = engine != null && engine.isLoaded && engine.languageCode == textLanguage
-
-        if (!canSpeak && !isCritical && !debugBeepWhenNoVoice) {
-            updateMessage(msg.messageId) {
-                it.copy(state = MessageState.DELIVERED, statusDetail = com.itantra.domain.model.VOICE_OUTPUT_UNAVAILABLE_NOTE)
+        // ── RX_TTS TRACE ────────────────────────────────────────────────────
+        // Step 1: Determine whether TTS for this language is installed on disk
+        // and attempt to prepare the TTS engine before we evaluate canSpeak.
+        // This is the fix for Root Cause #1: we no longer return early just
+        // because the engine was null/unloaded at the moment the packet arrived.
+        // ────────────────────────────────────────────────────────────────────
+        val finalLanguage = textLanguage
+        if (!isCritical) {
+            val ttsInstalled = ttsCapabilityProvider?.isTtsInstalled(finalLanguage) ?: false
+            if (com.example.itantra.BuildConfig.DEBUG) {
+                android.util.Log.d(
+                    "RX_TTS",
+                    "RECEIVE_LANGUAGE=${localLanguage.name} " +
+                    "FINAL_TEXT_LANGUAGE=${finalLanguage.name} " +
+                    "TTS_LANGUAGE=${sessionManager.currentTtsEngine?.languageCode?.name} " +
+                    "TTS_INSTALLED=$ttsInstalled"
+                )
             }
+            if (!ttsInstalled) {
+                updateMessage(msg.messageId) {
+                    it.copy(
+                        state = MessageState.DELIVERED,
+                        statusDetail = "TTS_MODEL_NOT_INSTALLED"
+                    )
+                }
+                return
+            }
+            try {
+                sessionManager.ensureTts(finalLanguage)
+                android.util.Log.d(
+                    "RX_TTS",
+                    "ensureTts complete: engine=${sessionManager.currentTtsEngine?.languageCode} " +
+                    "loaded=${sessionManager.currentTtsEngine?.isLoaded}"
+                )
+            } catch (e: Exception) {
+                android.util.Log.w("RX_TTS", "ensureTts failed for $finalLanguage: ${e.message}")
+            }
+        }
+
+        // Step 2: Re-evaluate canSpeak after preparation attempt
+        val engine = sessionManager.currentTtsEngine
+        val canSpeak = engine != null && engine.isLoaded && engine.languageCode == finalLanguage
+
+        android.util.Log.d(
+            "RX_TTS",
+            "canSpeak=$canSpeak isCritical=$isCritical " +
+            "engineExists=${engine != null} engineLoaded=${engine?.isLoaded} engineLang=${engine?.languageCode}"
+        )
+
+        // Step 3: If TTS is not available and message is not critical, record truthful status
+        if (!canSpeak && !isCritical && !debugBeepWhenNoVoice) {
+            val reason = when {
+                engine == null -> "TTS_ENGINE_NOT_LOADED"
+                !engine.isLoaded -> "TTS_ENGINE_NOT_LOADED"
+                engine.languageCode != finalLanguage -> "TTS_LANGUAGE_MISMATCH"
+                else -> "TTS_MODEL_NOT_INSTALLED"
+            }
+            android.util.Log.w("RX_TTS", "Voice unavailable for packet=${packet.messageId}: $reason")
+            updateMessage(msg.messageId) {
+                it.copy(
+                    state = MessageState.DELIVERED,
+                    statusDetail = reason
+                )
+            }
+            sendTtsFailed(packet.messageId)
             return
         }
 
-        if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
-            try {
-                val startedPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.TTS_STARTED, messageId = packet.messageId))
-                scope.launch { transportEngine.send(startedPkt) }
-            } catch (e: Exception) {
-                android.util.Log.w("TransceiverCoord", "Could not send TTS_STARTED: ${e.message}")
-            }
-        }
-        updateMessage(msg.messageId) { it.copy(state = MessageState.REMOTE_PLAYING) }
-
-        // TTS Suppression Rule
+        // Step 4: TTS Suppression — mute microphone and cancel cooldown before playback
         cooldownJob?.cancel()
         isTtsPlaying = true
         continuousListenEngine.pauseListening()
@@ -847,17 +908,46 @@ class TransceiverCoordinator(
             val sampleRate: Int
 
             if (engine != null && canSpeak) {
+                // Step 5: Synthesize — TTS_STARTED sent ONLY after synthesis succeeds and PCM is valid
                 val req = SpeechSynthesisRequest(
                     languageCode = engine.languageCode,
                     text = text,
                     correlationId = msg.messageId.toString()
                 )
+                android.util.Log.d("RX_TTS", "synthesisStart packet=${packet.messageId} lang=${engine.languageCode}")
                 val result = engine.synthesize(req)
+
+                // Step 6: Validate synthesis result — do not play empty PCM
+                if (result.pcmAudio.isEmpty() || result.sampleRateHz <= 0) {
+                    val detail = "TTS_EMPTY_PCM: samples=${result.pcmAudio.size} sampleRate=${result.sampleRateHz}"
+                    android.util.Log.e("RX_TTS", detail)
+                    updateMessage(msg.messageId) {
+                        it.copy(state = MessageState.ERROR, statusDetail = detail)
+                    }
+                    sendTtsFailed(packet.messageId)
+                    return
+                }
+
                 pcmAudio = result.pcmAudio
                 sampleRate = result.sampleRateHz
+                android.util.Log.d(
+                    "RX_TTS",
+                    "pcmSamples=${pcmAudio.size} sampleRate=$sampleRate"
+                )
+
+                // Step 7: TTS_STARTED — sent NOW, just before actual playback begins (truthful)
+                updateMessage(msg.messageId) { it.copy(state = MessageState.REMOTE_PLAYING) }
+                if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
+                    try {
+                        val startedPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.TTS_STARTED, messageId = packet.messageId))
+                        scope.launch { transportEngine.send(startedPkt) }
+                    } catch (e: Exception) {
+                        android.util.Log.w("TransceiverCoord", "Could not send TTS_STARTED: ${e.message}")
+                    }
+                }
             } else if (isCritical) {
-                // Safety-critical emergency tone: generate high-penetration multi-tone alarm PCM (800Hz / 1000Hz alternating warble)
-                // Guaranteed audible on device speaker regardless of voice pack status
+                // Safety-critical emergency tone: high-penetration multi-tone alarm (800Hz/1000Hz warble)
+                // Guaranteed audible regardless of voice pack status
                 sampleRate = 16000
                 val durationSeconds = 2.0
                 val numSamples = (sampleRate * durationSeconds).toInt()
@@ -865,28 +955,43 @@ class TransceiverCoordinator(
                     val freq = if ((i / 4000) % 2 == 0) 800.0 else 1000.0
                     (Math.sin(2.0 * Math.PI * freq * i / sampleRate) * 0.7).toFloat()
                 }
+                // For critical tones send TTS_STARTED immediately
+                updateMessage(msg.messageId) { it.copy(state = MessageState.REMOTE_PLAYING) }
+                if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
+                    try {
+                        val startedPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.TTS_STARTED, messageId = packet.messageId))
+                        scope.launch { transportEngine.send(startedPkt) }
+                    } catch (e: Exception) {
+                        android.util.Log.w("TransceiverCoord", "Could not send TTS_STARTED: ${e.message}")
+                    }
+                }
             } else {
-                // Debug-only placeholder tone
+                // Debug-only diagnostic tone
                 sampleRate = 16000
                 val durationSeconds = 3.0
                 val numSamples = (sampleRate * durationSeconds).toInt()
                 pcmAudio = FloatArray(numSamples) { i ->
                     (Math.sin(2.0 * Math.PI * 440.0 * i / sampleRate) * 0.3).toFloat()
                 }
+                updateMessage(msg.messageId) { it.copy(state = MessageState.REMOTE_PLAYING) }
             }
 
             val ttfaMillis = (SystemClock.elapsedRealtimeNanos() - t0) / 1_000_000
 
+            // Step 8: Audio route — USAGE_MEDIA for normal TTS (audible through speaker),
+            // USAGE_ALARM only for safety-critical emergency audio.
             val sink = SpeakerAudioSink(context)
             currentAudioSink = sink
             val usage = if (isCritical) {
                 android.media.AudioAttributes.USAGE_ALARM
             } else {
-                android.media.AudioAttributes.USAGE_VOICE_COMMUNICATION
+                android.media.AudioAttributes.USAGE_MEDIA
             }
+            android.util.Log.d("RX_TTS", "audioRoute usage=$usage isCritical=$isCritical")
             sink.init(sampleRate, usage, requestMaxVolume = isCritical)
             sink.play(pcmAudio)
             sink.flushAndStop()
+            android.util.Log.d("RX_TTS", "playbackCompleted=true framesTotal=${pcmAudio.size}")
 
             val usedVoice = (engine != null && canSpeak)
             val fallbackLabel = if (usedVoice) null else if (isCritical) "SAFETY ALARM TONE" else "TTS UNAVAILABLE — DIAGNOSTIC TONE"
@@ -898,6 +1003,7 @@ class TransceiverCoordinator(
                 )
             }
 
+            // Step 9: TTS_COMPLETED — sent only after full playback drain
             val payloadBytes = ByteBuffer.allocate(8).order(ByteOrder.BIG_ENDIAN).putLong(ttfaMillis).array()
             if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
                 try {
@@ -909,19 +1015,13 @@ class TransceiverCoordinator(
             }
 
         } catch (e: kotlinx.coroutines.CancellationException) {
-            // Interrupted by preemption
-            updateMessage(msg.messageId) { it.copy(state = MessageState.ERROR, text = it.text + " (Interrupted)") }
+            // Interrupted by emergency preemption
+            updateMessage(msg.messageId) { it.copy(state = MessageState.ERROR, statusDetail = "PLAYBACK_INTERRUPTED") }
         } catch (e: Exception) {
-            e.printStackTrace()
-            updateMessage(msg.messageId) { it.copy(state = MessageState.ERROR) }
-            if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
-                try {
-                    val failPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.TTS_FAILED, messageId = packet.messageId))
-                    scope.launch { transportEngine.send(failPkt) }
-                } catch (ex: Exception) {
-                    android.util.Log.w("TransceiverCoord", "Could not send TTS_FAILED: ${ex.message}")
-                }
-            }
+            val detail = "TTS_SYNTHESIS_FAILED: ${e.message}"
+            android.util.Log.e("RX_TTS", detail, e)
+            updateMessage(msg.messageId) { it.copy(state = MessageState.ERROR, statusDetail = detail) }
+            sendTtsFailed(packet.messageId)
         } finally {
             currentAudioSink?.release()
             currentAudioSink = null
@@ -932,6 +1032,20 @@ class TransceiverCoordinator(
                 isTtsPlaying = false
                 if (continuousModeJob?.isActive == true) {
                     continuousListenEngine.resetAndResume()
+                }
+            }
+        }
+    }
+
+    /** Sends TTS_FAILED to the sender if session is secure. */
+    private fun sendTtsFailed(messageId: Long) {
+        if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
+            scope.launch {
+                try {
+                    val failPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.TTS_FAILED, messageId = messageId))
+                    transportEngine.send(failPkt)
+                } catch (ex: Exception) {
+                    android.util.Log.w("TransceiverCoord", "Could not send TTS_FAILED: ${ex.message}")
                 }
             }
         }
@@ -1039,11 +1153,7 @@ class TransceiverCoordinator(
                         return@launch
                     }
 
-                    val srcLang = sessionManager.activeLanguage.value ?: LanguageCode.HINDI
-                    // Was `currentTargetLanguage.value` (nullable, skips translation entirely
-                    // when unset). Now resolves via the peer's advertised language first, so an
-                    // unconfigured session still translates into what the peer can actually
-                    // read instead of silently sending untranslated text.
+                    val srcLang = result.languageCode
                     val targetLang = resolveTargetLanguage(srcLang)
                     var finalTxt = result.text
                     var origTxt: String? = null
@@ -1087,6 +1197,8 @@ class TransceiverCoordinator(
 
                     updateMessage(msgId) {
                         it.copy(
+                            language = srcLang,
+                            targetLanguage = targetLang,
                             state = MessageState.STT_COMPLETE,
                             text = finalTxt,
                             originalText = origTxt,
@@ -1347,8 +1459,8 @@ class TransceiverCoordinator(
                         com.itantra.domain.model.MessagePriority.NORMAL
                     }
 
-                    val targetLang = msg.targetLanguage ?: resolveTargetLanguage(msg.language ?: LanguageCode.HINDI)
-                    val srcLang = msg.language ?: LanguageCode.HINDI
+                    val srcLang = result.languageCode
+                    val targetLang = msg.targetLanguage ?: resolveTargetLanguage(srcLang)
                     var finalTxt = result.text
                     var origTxt: String? = null
                     var translationStatus = com.itantra.domain.model.TranslationStatus.BYPASSED
@@ -1401,6 +1513,8 @@ class TransceiverCoordinator(
 
                     updateMessage(msgId) {
                         it.copy(
+                            language = srcLang,
+                            targetLanguage = targetLang,
                             state = MessageState.STT_COMPLETE,
                             text = finalTxt,
                             originalText = origTxt,
@@ -1411,6 +1525,16 @@ class TransceiverCoordinator(
                             rawPcmEquivalentBytes = rawPcmEq.toInt(),
                             speechDurationMillis = durationMillis,
                             statusDetail = failureDetail
+                        )
+                    }
+
+                    if (com.example.itantra.BuildConfig.DEBUG) {
+                        android.util.Log.d(
+                            "TX_VOICE",
+                            "STT_MODE=${if (sessionManager.isSttAutoDetect.value) "AUTO" else "MANUAL"} " +
+                            "WHISPER_DETECTED=${result.languageCode.wireCode} " +
+                            "RESOLVED_SOURCE_LANGUAGE=${result.languageCode.name} " +
+                            "PACKET_SOURCE=${srcLang.name}"
                         )
                     }
 

@@ -31,23 +31,6 @@ class LanguagePacksViewModel(
             initialValue = LanguagePacksUiState(),
         )
 
-    init {
-        viewModelScope.launch {
-            repository.observePackSummaries().collect { summaries ->
-                val active = sessionManager?.activeLanguage?.value ?: return@collect
-                val activePack = summaries.find { it.language.code == active } ?: return@collect
-                if (activePack.isTtsDownloaded && (sessionManager.currentTtsEngine == null || !sessionManager.currentTtsEngine!!.isLoaded)) {
-                    val shouldTts = storage?.isTtsInstalled(active) ?: true
-                    try {
-                        sessionManager.ensureCapabilities(active, requireStt = true, requireTts = shouldTts)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-            }
-        }
-    }
-
     /**
      * Starts downloading the language pack for [code] directly without switching active language (FIX 006).
      */
@@ -67,22 +50,12 @@ class LanguagePacksViewModel(
     }
 
     /**
-     * Activates the selected language pack in repository and switches active inference
-     * engines in [sessionManager].
+     * Requests activation of the selected language pack in repository.
+     * Model lifecycle is strictly managed by AppGraph's centralized observer.
      */
     fun activateLanguage(code: LanguageCode) {
         viewModelScope.launch {
-            val success = repository.setActiveLanguage(code)
-            if (success && sessionManager != null) {
-                val pack = repository.observePackSummaries().firstOrNull()?.find { it.language.code == code }
-                val loadStt = pack?.isSttDownloaded ?: true
-                val loadTts = pack?.isTtsDownloaded ?: true
-                try {
-                    sessionManager.switchTo(code, loadStt = loadStt, loadTts = loadTts)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
+            repository.setActiveLanguage(code)
         }
     }
 

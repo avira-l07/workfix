@@ -51,6 +51,8 @@ data class LanguagePack(
     val status: PackStatus,
     val downloadProgress: Float = 0f,
     val isTarget: Boolean = false,
+    val isSttReady: Boolean = false,
+    val isTtsReady: Boolean = false,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,6 +81,8 @@ fun LanguagePacksScreen(
     val packs = packSummaries.map { summary ->
         val sttMb = ((summary.sttSizeBytes ?: (40L * 1024 * 1024)) / (1024 * 1024)).toInt()
         val ttsMb = ((summary.ttsSizeBytes ?: (45L * 1024 * 1024)) / (1024 * 1024)).toInt()
+        val isSttReady = summary.isSttDownloaded
+        val isTtsReady = summary.isTtsDownloaded
         val status = when {
             summary.language.code == activeLangCode || summary.availability == LanguagePackAvailability.ACTIVE -> PackStatus.ACTIVE
             summary.sttInstallState == LanguagePackInstallState.DOWNLOADING || summary.ttsInstallState == LanguagePackInstallState.DOWNLOADING -> PackStatus.DOWNLOADING
@@ -102,7 +106,9 @@ fun LanguagePacksScreen(
             },
             status = status,
             downloadProgress = (summary.downloadProgressPercent ?: 0) / 100f,
-            isTarget = (summary.language.code == targetLangCode)
+            isTarget = (summary.language.code == targetLangCode),
+            isSttReady = isSttReady,
+            isTtsReady = isTtsReady,
         )
     }
 
@@ -443,7 +449,17 @@ private fun LanguagePackCard(
 
                 when (pack.status) {
                     PackStatus.ACTIVE -> StatusBadge("ACTIVE CORE", ITantraColors.Primary, ITantraColors.SurfaceWhite)
-                    PackStatus.READY -> StatusBadge("READY", ITantraColors.StatusSuccess, ITantraColors.SurfaceWhite)
+                    PackStatus.READY -> {
+                        if (pack.isSttReady && pack.isTtsReady) {
+                            StatusBadge("STT & TTS READY", ITantraColors.StatusSuccess, ITantraColors.SurfaceWhite)
+                        } else if (pack.isSttReady && !pack.isTtsReady) {
+                            StatusBadge("STT READY • TTS REQ", ITantraColors.StatusWarning, ITantraColors.SurfaceWhite)
+                        } else if (!pack.isSttReady && pack.isTtsReady) {
+                            StatusBadge("TTS READY", ITantraColors.StatusSuccess, ITantraColors.SurfaceWhite)
+                        } else {
+                            StatusBadge("READY", ITantraColors.StatusSuccess, ITantraColors.SurfaceWhite)
+                        }
+                    }
                     PackStatus.UPDATE_AVAILABLE -> StatusBadge("UPDATE", ITantraColors.StatusWarning, ITantraColors.SurfaceWhite)
                     PackStatus.DOWNLOADING -> StatusBadge("DOWNLOADING", ITantraColors.Primary, ITantraColors.SurfaceWhite)
                     PackStatus.AVAILABLE -> StatusBadge("AVAILABLE", ITantraColors.TextMuted, ITantraColors.SurfaceWhite)
@@ -456,6 +472,41 @@ private fun LanguagePackCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = ITantraColors.TextMuted,
             )
+
+            Row(
+                modifier = Modifier.padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = if (pack.isSttReady) Color(0xFFE8F5E9) else Color(0xFFF5F5F5),
+                    border = androidx.compose.foundation.BorderStroke(0.5.dp, if (pack.isSttReady) Color(0xFF81C784) else Color(0xFFE0E0E0))
+                ) {
+                    Text(
+                        text = if (pack.isSttReady) "STT READY" else "STT MISSING",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (pack.isSttReady) Color(0xFF2E7D32) else ITantraColors.TextMuted
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = if (pack.isTtsReady) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
+                    border = androidx.compose.foundation.BorderStroke(0.5.dp, if (pack.isTtsReady) Color(0xFF81C784) else Color(0xFFFFB74D))
+                ) {
+                    Text(
+                        text = if (pack.isTtsReady) "TTS READY" else "TTS DOWNLOAD REQUIRED",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (pack.isTtsReady) Color(0xFF2E7D32) else Color(0xFFE65100)
+                    )
+                }
+            }
 
             if (pack.status == PackStatus.DOWNLOADING) {
                 Spacer(Modifier.height(8.dp))

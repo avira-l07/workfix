@@ -19,11 +19,11 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.flow.firstOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LanguagePacksViewModelTest {
@@ -61,30 +61,22 @@ class LanguagePacksViewModelTest {
     }
 
     @Test
-    fun activateLanguage_switchesSessionManagerWhenInstalled() = runTest(testDispatcher) {
+    fun activateLanguage_setsRepositoryActiveLanguage() = runTest(testDispatcher) {
         val repo = MockLanguagePackRepository()
-        // Hindi is installed by default in MockLanguagePackRepository
-        val engineFactory = object : EngineFactory {
-            override fun createRecognizer(language: LanguageCode): SpeechRecognizerEngine =
-                FakeRecognizer(language)
-            override fun createSynthesizer(language: LanguageCode): SpeechSynthesizerEngine =
-                FakeSynthesizer(language)
-        }
-        val sessionManager = ActiveLanguageSessionManager(engineFactory)
-        val viewModel = LanguagePacksViewModel(repo, sessionManager)
+        val viewModel = LanguagePacksViewModel(repo)
 
         viewModel.activateLanguage(LanguageCode.HINDI)
         advanceUntilIdle()
 
-        assertEquals(LanguageCode.HINDI, sessionManager.activeLanguage.value)
-        assertNotNull(sessionManager.currentSttEngine)
-        assertNotNull(sessionManager.currentTtsEngine)
+        // ViewModel must only request the repository change.
+        // Engine lifecycle is exclusively managed by AppGraph's lifecycle observer.
+        assertEquals(LanguageCode.HINDI, repo.observeActiveLanguage().firstOrNull())
     }
 
     @Test
-    fun activateLanguage_doesNotSwitchSessionManagerWhenNotInstalled() = runTest(testDispatcher) {
+    fun activateLanguage_doesNotDirectlyManageEngineLifecycle() = runTest(testDispatcher) {
         val repo = MockLanguagePackRepository()
-        // Tamil is NOT installed by default in MockLanguagePackRepository
+        repo.simulateInstall(LanguageCode.TAMIL)
         val engineFactory = object : EngineFactory {
             override fun createRecognizer(language: LanguageCode): SpeechRecognizerEngine =
                 FakeRecognizer(language)
@@ -97,10 +89,14 @@ class LanguagePacksViewModelTest {
         viewModel.activateLanguage(LanguageCode.TAMIL)
         advanceUntilIdle()
 
-        // Tamil was not installed, so setActiveLanguage returns false, sessionManager remains null
+        // ViewModel must NOT touch sessionManager engines directly.
+        // Engine loading is done exclusively by AppGraph's collectLatest observer.
+        // In this isolated test (no AppGraph), sessionManager remains untouched.
         assertNull(sessionManager.activeLanguage.value)
         assertNull(sessionManager.currentSttEngine)
         assertNull(sessionManager.currentTtsEngine)
+        // But the repository state must have changed to TAMIL
+        assertEquals(LanguageCode.TAMIL, repo.observeActiveLanguage().firstOrNull())
     }
 
     @Test
@@ -128,7 +124,7 @@ class LanguagePacksViewModelTest {
     }
 
     @Test
-    fun ttsInstallForActiveLanguage_automaticallyLoadsTtsEngine() = runTest(testDispatcher) {
+    fun ttsInstallForActiveLanguage_viewModelDoesNotDirectlyLoadEngines() = runTest(testDispatcher) {
         val repo = MockLanguagePackRepository()
         var synthCreated = false
         val engineFactory = object : EngineFactory {
@@ -140,21 +136,18 @@ class LanguagePacksViewModelTest {
             }
         }
         val sessionManager = ActiveLanguageSessionManager(engineFactory)
-        // Activate HINDI with only STT initially
-        sessionManager.switchTo(LanguageCode.HINDI, loadStt = true, loadTts = false)
-        assertNotNull(sessionManager.currentSttEngine)
-        assertNull(sessionManager.currentTtsEngine)
-
         val viewModel = LanguagePacksViewModel(repo, sessionManager)
         advanceUntilIdle()
 
-        // Simulate install of HINDI pack
+        // Simulate install of HINDI pack — ViewModel observes this change
         repo.simulateInstall(LanguageCode.HINDI)
         advanceUntilIdle()
 
-        // TTS should be automatically loaded without a language switch
-        assertTrue(synthCreated)
-        assertNotNull(sessionManager.currentTtsEngine)
-        assertTrue(sessionManager.currentTtsEngine!!.isLoaded)
+        // ViewModel must NOT directly trigger engine creation; that is AppGraph's role.
+        // Verify ViewModel itself did not instantiate a synthesizer.
+        assertFalse(
+            "ViewModel must not create synthesizer engines directly (AppGraph owns this)",
+            synthCreated
+        )
     }
 }

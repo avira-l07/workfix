@@ -63,6 +63,24 @@ class FileLanguagePackStorage(
             if (marker.exists()) marker.delete()
             return false
         }
+
+        // Validate tokens.txt has readable non-empty token lines
+        val tokensFile = File(ttsDir, "tokens.txt")
+        if (tokensFile.exists()) {
+            val hasValidTokens = try {
+                tokensFile.useLines { lines ->
+                    lines.any { it.trim().isNotEmpty() }
+                }
+            } catch (_: Throwable) {
+                false
+            }
+            if (!hasValidTokens) {
+                val marker = File(ttsDir, ".verified_v1")
+                if (marker.exists()) marker.delete()
+                return false
+            }
+        }
+
         return true
     }
 
@@ -199,6 +217,16 @@ class FileLanguagePackStorage(
             if (!f.exists() || f.length() == 0L) {
                 return false
             }
+        }
+
+        val srcTokens = File(srcTtsDir, "tokens.txt")
+        if (srcTokens.exists()) {
+            val hasValidTokens = try {
+                srcTokens.useLines { lines -> lines.any { it.trim().isNotEmpty() } }
+            } catch (_: Throwable) {
+                false
+            }
+            if (!hasValidTokens) return false
         }
 
         val targetPackDir = packDirectory(code)
