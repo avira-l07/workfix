@@ -13,9 +13,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
@@ -29,7 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.itantra.ui.theme.ITantraColors
+import com.itantra.app.AppGraph
 import com.itantra.core.transceiver.TransceiverCoordinator
+import com.itantra.domain.model.LanguageCatalog
+import com.itantra.domain.model.LanguageCode
 import com.itantra.domain.model.MessageSource
 import com.itantra.domain.model.MessageState
 import com.itantra.domain.model.PeerProfile
@@ -50,6 +55,7 @@ fun DedicatedChatScreen(
     coordinator: TransceiverCoordinator,
     onBack: () -> Unit
 ) {
+    var showLanguagePicker by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val allMessages by coordinator.messages.collectAsState()
     val activePeerProfile by coordinator.activePeerProfile.collectAsState()
@@ -89,6 +95,9 @@ fun DedicatedChatScreen(
         ?: "iTantra ID pending"
 
     val isConnected = activePeerProfile?.isConnected == true || peerProfile?.isConnected == true
+
+    // Observe active language ("receive in" language) to reflect current setting
+    val activeLanguage by AppGraph.activeLanguageSessionManager.activeLanguage.collectAsState()
 
     Scaffold(
         containerColor = ITantraColors.CanvasBg,
@@ -135,6 +144,14 @@ fun DedicatedChatScreen(
                             tint = ITantraColors.TextHeadline
                         )
                     }
+                },
+                actions = {
+                    // "Receive in" language pill — tap to change
+                    ReceiveLanguageChip(
+                        activeLanguage = activeLanguage,
+                        onClick = { showLanguagePicker = true }
+                    )
+                    Spacer(Modifier.width(8.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = ITantraColors.SurfaceWhite)
             )
@@ -307,6 +324,183 @@ fun DedicatedChatScreen(
 
                     item(key = "msg_${message.messageId}") {
                         MessageBubble(message = message)
+                    }
+                }
+            }
+        }
+    }
+
+    // Receive-language bottom sheet
+    if (showLanguagePicker) {
+        LanguagePickerBottomSheet(
+            currentLanguage = activeLanguage,
+            onLanguageSelected = { code ->
+                AppGraph.switchActiveLanguage(code)
+                showLanguagePicker = false
+            },
+            onDismiss = { showLanguagePicker = false }
+        )
+    }
+}
+
+/**
+ * Small pill in the top bar showing the current receive language.
+ * Tapping it opens the language picker.
+ */
+@Composable
+private fun ReceiveLanguageChip(
+    activeLanguage: LanguageCode?,
+    onClick: () -> Unit
+) {
+    val label = activeLanguage?.let { LanguageCatalog.byCode(it).nativeDisplayName } ?: "Any"
+    val wireCode = activeLanguage?.wireCode?.uppercase() ?: "AUTO"
+
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = ITantraColors.AccentSubtle,
+        border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.Primary.copy(alpha = 0.3f)),
+        modifier = Modifier.height(32.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                Icons.Filled.Language,
+                contentDescription = "Receive language",
+                tint = ITantraColors.Primary,
+                modifier = Modifier.size(14.dp)
+            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = ITantraColors.Primary,
+                    fontSize = 10.sp
+                )
+                Text(
+                    text = wireCode,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ITantraColors.TextMuted,
+                    fontSize = 8.sp
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Bottom sheet showing all 10 supported languages for incoming message reception.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LanguagePickerBottomSheet(
+    currentLanguage: LanguageCode?,
+    onLanguageSelected: (LanguageCode) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = ITantraColors.SurfaceWhite,
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 4.dp)
+            ) {
+                Icon(
+                    Icons.Filled.Language,
+                    contentDescription = null,
+                    tint = ITantraColors.Primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "Receive Messages In",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = ITantraColors.TextHeadline
+                )
+            }
+            Text(
+                "Choose the language in which you want to receive and read the peer's messages.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ITantraColors.TextMuted,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Language list
+            LanguageCatalog.all.forEach { language ->
+                val isSelected = language.code == currentLanguage
+                Surface(
+                    onClick = { onLanguageSelected(language.code) },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSelected) ITantraColors.Primary.copy(alpha = 0.08f) else Color.Transparent,
+                    border = if (isSelected)
+                        androidx.compose.foundation.BorderStroke(1.5.dp, ITantraColors.Primary)
+                    else
+                        androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.BorderSubtle),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Language code badge
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    if (isSelected) ITantraColors.Primary else ITantraColors.AccentSubtle,
+                                    RoundedCornerShape(6.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = language.code.wireCode.uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) Color.White else ITantraColors.Primary,
+                                fontSize = 10.sp
+                            )
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = language.nativeDisplayName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                color = if (isSelected) ITantraColors.Primary else ITantraColors.TextHeadline
+                            )
+                            Text(
+                                text = language.displayName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = ITantraColors.TextMuted
+                            )
+                        }
+                        if (isSelected) {
+                            Icon(
+                                Icons.Filled.Check,
+                                contentDescription = "Selected",
+                                tint = ITantraColors.Primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
