@@ -77,6 +77,41 @@ fun SettingsScreen(
             }
 
             item {
+                val targetLang by com.itantra.app.AppGraph.languagePackRepository.observeTargetLanguage().collectAsState(initial = null)
+                SettingsSection(icon = "🌐", title = "Outgoing Translation & Target Language", tag = "SEC-03") {
+                    Text(
+                        "Configure the target language for outgoing voice and typed messages. Set to Auto to automatically adapt to the connected peer's advertised language.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ITantraColors.TextMuted
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val isAuto = (targetLang == null)
+                        FilterChip(
+                            selected = isAuto,
+                            onClick = { com.itantra.app.AppGraph.setTargetLanguage(null) },
+                            label = { Text("Auto / Peer Default") }
+                        )
+                        val isHindi = (targetLang == com.itantra.domain.model.LanguageCode.HINDI)
+                        FilterChip(
+                            selected = isHindi,
+                            onClick = { com.itantra.app.AppGraph.setTargetLanguage(com.itantra.domain.model.LanguageCode.HINDI) },
+                            label = { Text("हिन्दी (HI)") }
+                        )
+                        val isEnglish = (targetLang == com.itantra.domain.model.LanguageCode.ENGLISH)
+                        FilterChip(
+                            selected = isEnglish,
+                            onClick = { com.itantra.app.AppGraph.setTargetLanguage(com.itantra.domain.model.LanguageCode.ENGLISH) },
+                            label = { Text("English (EN)") }
+                        )
+                    }
+                }
+            }
+
+            item {
                 SettingsSection(
                     icon = "🚨",
                     title = "Emergency Playback & Behavior",

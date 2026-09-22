@@ -155,7 +155,7 @@ class TransceiverViewModel(
         }
     }
 
-    fun setTargetLanguage(code: com.itantra.domain.model.LanguageCode) {
+    fun setTargetLanguage(code: com.itantra.domain.model.LanguageCode?) {
         viewModelScope.launch {
             languagePackRepository.setTargetLanguage(code)
         }

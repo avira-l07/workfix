@@ -9,10 +9,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.example.itantra.ui.theme.ITantraColors
 import com.itantra.app.AppGraph
 import com.itantra.core.inference.ActiveLanguageSessionManager
+import com.itantra.domain.model.LanguageCatalog
 import com.itantra.domain.model.LanguageCode
 import com.itantra.domain.model.LanguagePackAvailability
 import com.itantra.domain.model.LanguagePackInstallState
@@ -47,6 +50,7 @@ data class LanguagePack(
     val region: String,
     val status: PackStatus,
     val downloadProgress: Float = 0f,
+    val isTarget: Boolean = false,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,6 +71,7 @@ fun LanguagePacksScreen(
     val coroutineScope = rememberCoroutineScope()
     val packSummaries by repository.observePackSummaries().collectAsState(initial = emptyList())
     val activeLangCode by repository.observeActiveLanguage().collectAsState(initial = null)
+    val targetLangCode by repository.observeTargetLanguage().collectAsState(initial = null)
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All") }
@@ -96,7 +101,8 @@ fun LanguagePacksScreen(
                 LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.KANNADA, LanguageCode.MALAYALAM -> "SOUTH REGION"
             },
             status = status,
-            downloadProgress = (summary.downloadProgressPercent ?: 0) / 100f
+            downloadProgress = (summary.downloadProgressPercent ?: 0) / 100f,
+            isTarget = (summary.language.code == targetLangCode)
         )
     }
 
@@ -141,6 +147,41 @@ fun LanguagePacksScreen(
         ) {
             item {
                 StorageOverviewCard(packs = packs)
+            }
+
+            item {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = ITantraColors.SurfaceWhite,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.BorderSubtle),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("MIC LANGUAGE", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
+                            Text(
+                                activeLangCode?.let { LanguageCatalog.byCode(it).displayName } ?: "None",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = ITantraColors.Primary
+                            )
+                        }
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = ITantraColors.TextMuted, modifier = Modifier.size(16.dp))
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("TRANSLATE TO", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
+                            Text(
+                                targetLangCode?.let { LanguageCatalog.byCode(it).displayName } ?: "Auto / Peer Default",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (targetLangCode != null) ITantraColors.Primary else ITantraColors.TextHeadline
+                            )
+                        }
+                    }
+                }
             }
 
             item {
@@ -234,6 +275,15 @@ fun LanguagePacksScreen(
                             if (langCode != null) {
                                 viewModel.cancelDownload(langCode)
                             }
+                        },
+                        onSetTarget = {
+                            val langCode = LanguageCode.entries.find { it.name.equals(pack.code, ignoreCase = true) }
+                            if (langCode != null) {
+                                viewModel.setTargetLanguage(langCode)
+                            }
+                        },
+                        onClearTarget = {
+                            viewModel.setTargetLanguage(null)
                         }
                     )
                 }
@@ -361,7 +411,9 @@ private fun LanguagePackCard(
     pack: LanguagePack,
     onActivate: () -> Unit = {},
     onDownload: () -> Unit = {},
-    onCancelDownload: () -> Unit = {}
+    onCancelDownload: () -> Unit = {},
+    onSetTarget: () -> Unit = {},
+    onClearTarget: () -> Unit = {},
 ) {
     Card(
         modifier = Modifier
@@ -470,6 +522,48 @@ private fun LanguagePackCard(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(if (pack.status == PackStatus.UPDATE_AVAILABLE) "UPDATE MODEL (${pack.sizeMb} MB)" else "DOWNLOAD PACK (${pack.sizeMb} MB)")
+                }
+            }
+
+            // Target Language / Translation Outgoing Selector (FIX 030)
+            Spacer(Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (pack.isTarget) {
+                    Surface(
+                        color = ITantraColors.Primary.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier.weight(1f).padding(end = 6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Filled.Translate, contentDescription = null, tint = ITantraColors.Primary, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("TARGET LANGUAGE", style = MaterialTheme.typography.labelSmall, color = ITantraColors.Primary, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    OutlinedButton(
+                        onClick = onClearTarget,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("RESET TO AUTO", style = MaterialTheme.typography.labelSmall)
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = onSetTarget,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.fillMaxWidth().height(32.dp)
+                    ) {
+                        Icon(Icons.Filled.Translate, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("SET AS TRANSLATION TARGET", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         }

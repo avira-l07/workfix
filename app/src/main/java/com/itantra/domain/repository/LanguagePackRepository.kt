@@ -32,10 +32,10 @@ interface LanguagePackRepository {
     suspend fun setActiveLanguage(code: LanguageCode): Boolean
 
     /**
-     * Sets the active target language. Target languages only require the
-     * cross-language translation model and TTS capability.
+     * Sets the active target language. Passing null reverts to automatic
+     * resolution (same-language bypass or peer's advertised language).
      */
-    suspend fun setTargetLanguage(code: LanguageCode): Boolean
+    suspend fun setTargetLanguage(code: LanguageCode?): Boolean
 
     // --- Not implemented in Task 01. Declared so the UI/domain layer can
     // already depend on a stable contract; calling these throws

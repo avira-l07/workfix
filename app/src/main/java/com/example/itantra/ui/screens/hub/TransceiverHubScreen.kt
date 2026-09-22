@@ -100,6 +100,7 @@ fun TransceiverHubScreen(
     val liveMessages by coordinator.messages.collectAsState()
     val sessionState by coordinator.secureSessionManager.state.collectAsState()
     val activeLanguage by sessionManager.activeLanguage.collectAsState()
+    val targetLanguage by AppGraph.languagePackRepository.observeTargetLanguage().collectAsState(initial = null)
     val transportConnectionState by AppGraph.transportEngine.observeConnectionState().collectAsState(initial = ConnectionState.DISCONNECTED)
     val liveMetrics by AppGraph.metricsRecorder.latest.collectAsState()
     val continuousListenState by coordinator.continuousListenEngine.state.collectAsState()
@@ -770,7 +771,111 @@ fun TransceiverHubScreen(
                             modifier = Modifier.clickable { onNavigateToLanguagePacks() }
                         ) {
                             Text(
-                                "More \u25BE",
+                                "More ▾",
+                                fontWeight = FontWeight.Medium,
+                                color = ITantraColors.Primary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 5c. Tactical Target Language Quick Selector (FIX 030)
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(ITantraColors.SurfaceWhite, RoundedCornerShape(10.dp))
+                        .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(10.dp))
+                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.Translate,
+                            contentDescription = null,
+                            tint = ITantraColors.Primary,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "TRANSLATE TO:",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 9.5.sp,
+                            color = ITantraColors.TextMuted,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Auto / Same Chip
+                        val isAuto = (targetLanguage == null)
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = if (isAuto) ITantraColors.Primary else Color(0xFFF1F5F9),
+                            modifier = Modifier.clickable {
+                                AppGraph.setTargetLanguage(null)
+                            }
+                        ) {
+                            Text(
+                                "Auto",
+                                fontSize = 11.sp,
+                                fontWeight = if (isAuto) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isAuto) Color.White else ITantraColors.TextHeadline,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        // Hindi Chip
+                        val isTargetHindi = (targetLanguage == LanguageCode.HINDI)
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = if (isTargetHindi) ITantraColors.Primary else Color(0xFFF1F5F9),
+                            modifier = Modifier.clickable {
+                                AppGraph.setTargetLanguage(LanguageCode.HINDI)
+                            }
+                        ) {
+                            Text(
+                                "हिन्दी (HI)",
+                                fontSize = 11.sp,
+                                fontWeight = if (isTargetHindi) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isTargetHindi) Color.White else ITantraColors.TextHeadline,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        // English Chip
+                        val isTargetEnglish = (targetLanguage == LanguageCode.ENGLISH)
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = if (isTargetEnglish) ITantraColors.Primary else Color(0xFFF1F5F9),
+                            modifier = Modifier.clickable {
+                                AppGraph.setTargetLanguage(LanguageCode.ENGLISH)
+                            }
+                        ) {
+                            Text(
+                                "English (EN)",
+                                fontSize = 11.sp,
+                                fontWeight = if (isTargetEnglish) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isTargetEnglish) Color.White else ITantraColors.TextHeadline,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        // More / All Languages button
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFFF1F5F9),
+                            modifier = Modifier.clickable { onNavigateToLanguagePacks() }
+                        ) {
+                            Text(
+                                "More ▾",
                                 fontWeight = FontWeight.Medium,
                                 color = ITantraColors.Primary,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)

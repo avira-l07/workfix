@@ -110,6 +110,16 @@ object AppGraph {
         }
     }
 
+    fun setTargetLanguage(code: LanguageCode?) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                languagePackRepository.setTargetLanguage(code)
+            } catch (e: Exception) {
+                android.util.Log.e("AppGraph", "Failed to set target language to $code", e)
+            }
+        }
+    }
+
     private val context: Context
         get() = requireNotNull(appContext) { "AppGraph not initialized" }
 

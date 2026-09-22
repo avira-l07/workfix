@@ -115,7 +115,7 @@ class MockLanguagePackRepository : LanguagePackRepository {
         return true
     }
 
-    override suspend fun setTargetLanguage(code: LanguageCode): Boolean {
+    override suspend fun setTargetLanguage(code: LanguageCode?): Boolean {
         targetLanguageFlow.value = code
         return true
     }

@@ -165,9 +165,15 @@ class RealLanguagePackRepository(
         return true
     }
 
-    override suspend fun setTargetLanguage(code: LanguageCode): Boolean {
+    override suspend fun setTargetLanguage(code: LanguageCode?): Boolean {
         targetLanguage.value = code
-        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).edit().putString("target_lang", code.wireCode).apply()
+        val prefs = context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).edit()
+        if (code == null) {
+            prefs.remove("target_lang")
+        } else {
+            prefs.putString("target_lang", code.wireCode)
+        }
+        prefs.apply()
         return true
     }
 

@@ -85,4 +85,17 @@ class LanguagePacksViewModel(
             }
         }
     }
+
+    val targetLanguage: StateFlow<LanguageCode?> = repository.observeTargetLanguage()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+
+    fun setTargetLanguage(code: LanguageCode?) {
+        viewModelScope.launch {
+            repository.setTargetLanguage(code)
+        }
+    }
 }

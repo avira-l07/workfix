@@ -9,11 +9,27 @@ import java.io.File
  * It deliberately reuses the existing CTranslate2TranslationEngine rather than
  * duplicating translation logic. Model integrity is checked first.
  *
- * IMPORTANT:
- * Real inference requires the native library expected by
- * CTranslate2TranslationEngine (libitantra_mt_jni.so) plus its actual runtime
- * dependencies. If the native runtime is absent, this class fails safely with
- * MODEL_RUNTIME_OR_LOAD_FAILED instead of pretending that translation succeeded.
+ * FIX 007 — EXTERNAL BLOCKER:
+ * Real inference requires the native JNI library (libitantra_mt_jni.so) to be
+ * compiled and packaged under app/src/main/jniLibs/arm64-v8a/. Without it the
+ * native System.loadLibrary() call silently fails and nativeCreateEngine() is
+ * never linked, making all translation attempts return MODEL_RUNTIME_OR_LOAD_FAILED.
+ * This is reported as an EXTERNAL BLOCKER: the runtime and converted CTranslate2
+ * model artifacts (indic-en/, en-indic/) are not yet included in the repository.
+ * When they are available, init() will succeed and directional readiness flags
+ * (indicEnReady, enIndicReady) on CTranslate2TranslationEngine will be set.
+ *
+ * Self-check error taxonomy (returned in TranslationResult.error):
+ *   MODEL_NOT_INSTALLED  — model directory absent from storage
+ *   MODEL_INVALID        — model directory present but files missing/corrupt
+ *   MODEL_RUNTIME_OR_LOAD_FAILED — native library loaded but engine init failed
+ *   INFERENCE_FAILED     — engine loaded, native call threw an exception
+ *   ENGINE_NOT_INITIALIZED — init() not called before translate()
+ *   UNSUPPORTED_ROUTE    — language pair outside this engine's scope
+ *
+ * FIX 070:
+ * isLoaded is true when AT LEAST ONE translation direction is ready.
+ * Use isDirectionLoaded(src, tgt) to check a specific route before routing.
  */
 class ProductionTranslationEngine : TranslationEngine {
 
@@ -26,11 +42,34 @@ class ProductionTranslationEngine : TranslationEngine {
     private var manager: OfflineTranslationModelManager? = null
     private var delegate: CTranslate2TranslationEngine? = null
 
+    /**
+     * FIX 070: isLoaded is true when at least ONE translation direction is resident.
+     * This allows the engine to be used for a valid route even when the opposite
+     * direction model has not been installed yet.
+     */
     override val isLoaded: Boolean
         get() {
             val engine = delegate ?: return false
-            return engine.indicEnReady && engine.enIndicReady
+            return engine.indicEnReady || engine.enIndicReady
         }
+
+    /**
+     * Returns true only if the specific [sourceLang]->[targetLang] direction is
+     * ready for inference. Callers (TransceiverCoordinator, sendCapabilities) should
+     * prefer this over isLoaded for per-route decisions.
+     */
+    fun isDirectionLoaded(sourceLang: LanguageCode, targetLang: LanguageCode): Boolean {
+        if (sourceLang == targetLang) return true  // bypass: no MT needed
+        val engine = delegate ?: return false
+        return when {
+            sourceLang == LanguageCode.HINDI && targetLang == LanguageCode.ENGLISH -> engine.indicEnReady
+            sourceLang == LanguageCode.ENGLISH && targetLang == LanguageCode.HINDI -> engine.enIndicReady
+            // For other Indic pairs pivot translation requires both directions
+            targetLang == LanguageCode.ENGLISH -> engine.indicEnReady
+            sourceLang == LanguageCode.ENGLISH -> engine.enIndicReady
+            else -> engine.indicEnReady && engine.enIndicReady  // Indic->Indic pivot
+        }
+    }
 
     override fun init(modelsDir: File) {
         release()

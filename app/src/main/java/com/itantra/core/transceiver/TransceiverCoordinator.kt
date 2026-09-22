@@ -436,8 +436,26 @@ class TransceiverCoordinator(
     private suspend fun sendCapabilities() {
         if (secureSessionManager.state.value != SecureSessionState.SECURE_VERIFIED) return
 
-        val sttLangs = listOfNotNull(sessionManager.activeLanguage.value)
-        val ttsLangs = listOfNotNull(sessionManager.activeLanguage.value)
+        // FIX 028: only advertise TTS for a language when that engine is actually loaded.
+        // The previous code always advertised activeLanguage regardless of engine state,
+        // allowing peers to translate into languages this device cannot speak.
+        val ttsEngine = sessionManager.currentTtsEngine
+        val ttsLangs = if (ttsEngine != null && ttsEngine.isLoaded) {
+            listOf(ttsEngine.languageCode)
+        } else {
+            emptyList()
+        }
+
+        // FIX 029: only advertise STT for a language when that engine is actually loaded.
+        // The previous code always advertised activeLanguage regardless of STT engine state.
+        val sttEngine = sessionManager.currentSttEngine
+        val sttLangs = if (sttEngine != null && sttEngine.isLoaded) {
+            listOf(sttEngine.languageCode)
+        } else {
+            emptyList()
+        }
+
+        android.util.Log.d("TransceiverCoord", "sendCapabilities: sttLangs=$sttLangs, ttsLangs=$ttsLangs (from real engine state)")
 
         val sttMask = ProtocolLanguageMapper.toBitmask(sttLangs)
         val ttsMask = ProtocolLanguageMapper.toBitmask(ttsLangs)
@@ -666,16 +684,44 @@ class TransceiverCoordinator(
         }
 
         val pktLang = packet.targetLanguage ?: packet.languageCode ?: localLanguage
+        val srcLang = packet.sourceLanguage ?: packet.languageCode ?: pktLang
         var textLanguage = if (isEmergencyCode) localLanguage else pktLang
+        var translationStatus = com.itantra.domain.model.TranslationStatus.NONE
+        var originalText: String? = null
 
         if (!isEmergencyCode) {
-            if (pktLang == localLanguage) {
-                // Direct TTS: Same-language packet routes directly without translation.
+            // FIX 027: Determine whether receiver-side translation is needed.
+            // Do NOT translate twice: if sender already translated to local language, consume directly.
+            val alreadyTranslated = (packet.translationMode == com.itantra.domain.model.TranslationMode.DIRECT
+                    && pktLang == localLanguage)
+
+            if (pktLang == localLanguage || alreadyTranslated) {
+                // Direct TTS: Same-language or already translated packet routes directly.
                 textLanguage = localLanguage
+                translationStatus = com.itantra.domain.model.TranslationStatus.BYPASSED
             } else {
-                // Pass 3: Cross-language translation is deferred.
-                // Do NOT translate, do NOT silently change language, do NOT fallback to English.
-                android.util.Log.i("TransceiverCoord", "CROSS_LANGUAGE_DEFERRED: packet language $pktLang != local $localLanguage. Translation bypassed, transcript preserved.")
+                // Cross-language: attempt receiver-side recovery translation (source->local).
+                // This handles the case where sender's MT failed or typed text arrived untranslated.
+                android.util.Log.i("TransceiverCoord", "FIX 027: Attempting receiver-side translation $srcLang -> $localLanguage for packet $pktLang")
+                val translationRes = try {
+                    translationRouter.routeAndTranslate(text, srcLang, localLanguage)
+                } catch (e: Exception) {
+                    android.util.Log.e("TransceiverCoord", "Receiver-side translation exception", e)
+                    null
+                }
+                if (translationRes != null && translationRes.isSuccessful && translationRes.translatedText.isNotBlank()) {
+                    originalText = text
+                    text = translationRes.translatedText
+                    textLanguage = localLanguage
+                    translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
+                    android.util.Log.i("TransceiverCoord", "FIX 027: Receiver-side translation SUCCESS: '$text'")
+                } else {
+                    // Translation unavailable (model not installed, EXTERNAL BLOCKER etc.) —
+                    // preserve the original text so user sees what arrived; preserve error explicitly.
+                    textLanguage = pktLang
+                    translationStatus = com.itantra.domain.model.TranslationStatus.FAILED
+                    android.util.Log.w("TransceiverCoord", "FIX 027: Receiver-side translation FAILED: ${translationRes?.error}. Preserving transcript.")
+                }
             }
         }
 
@@ -686,8 +732,11 @@ class TransceiverCoordinator(
         val msg = TransceiverMessage(
             messageId = packet.messageId,
             language = packet.languageCode,
+            targetLanguage = if (textLanguage == localLanguage) localLanguage else pktLang,
             priority = packet.flags.toInt(),
             text = text,
+            originalText = originalText,
+            translationStatus = translationStatus,
             source = MessageSource.REMOTE,
             createdAtLocal = System.currentTimeMillis(),
             state = MessageState.DELIVERED,
@@ -697,6 +746,7 @@ class TransceiverCoordinator(
             isVoiceGenerated = isEmergencyCode || packet.flags.toInt() != 0
         )
         addMessage(msg)
+
 
         if (isEmergencyCode) {
             val code = if (packet.payload.isNotEmpty()) com.itantra.domain.model.EmergencyCode.fromId(packet.payload[0]) else null
@@ -966,16 +1016,24 @@ class TransceiverCoordinator(
                             origTxt = result.text
                             translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
                         } else {
-                            // Deliberate scope decision, not a failure: fall through and send
-                            // the transcript as-is rather than blocking transmission entirely.
-                            translationStatus = com.itantra.domain.model.TranslationStatus.FAILED
-                            failureDetail = if (translationRes.error == "NOT_INCLUDED_IN_BUILD") {
-                                TRANSLATION_SCOPE_NOTE
-                            } else {
-                                "Translation failed: ${translationRes.error ?: "Unknown"}"
+                            // FIX 008: Do NOT silently fall through to sending original text when
+                            // cross-language translation fails. Set state=ERROR so the user knows
+                            // translation could not be delivered in the peer's language.
+                            // The user can retransmit with an explicit "Send original anyway" action.
+                            val errorDetail = when {
+                                translationRes.error == "NOT_INCLUDED_IN_BUILD" -> TRANSLATION_SCOPE_NOTE
+                                translationRes.error?.startsWith("MODEL_") == true -> "Translation blocked: ${translationRes.error}"
+                                else -> "Translation failed: ${translationRes.error ?: "Unknown"}"
                             }
-                            finalTxt = result.text
-                            origTxt = null
+                            updateMessage(msgId) {
+                                it.copy(
+                                    state = MessageState.ERROR,
+                                    text = result.text,
+                                    translationStatus = com.itantra.domain.model.TranslationStatus.FAILED,
+                                    statusDetail = errorDetail
+                                )
+                            }
+                            return@launch
                         }
                     }
 
@@ -1269,16 +1327,27 @@ class TransceiverCoordinator(
                             origTxt = result.text
                             translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
                         } else {
-                            // Deliberate scope decision, not a failure - see
-                            // UnavailableTranslationEngine's doc comment.
-                            translationStatus = com.itantra.domain.model.TranslationStatus.FAILED
-                            failureDetail = if (translationRes.error == "NOT_INCLUDED_IN_BUILD" || translationRes.error == "ENGINE_NOT_LOADED") {
-                                TRANSLATION_SCOPE_NOTE
-                            } else {
-                                "Translation failed: ${translationRes.error ?: "Unknown"}"
+                            // FIX 008: Do NOT silently fall through to sending the original text
+                            // when cross-language MT fails. Block transmission and set ERROR state.
+                            // The user can explicitly choose "Send original anyway" if desired.
+                            val errorDetail = when {
+                                translationRes.error == "NOT_INCLUDED_IN_BUILD" || translationRes.error == "ENGINE_NOT_LOADED" ->
+                                    TRANSLATION_SCOPE_NOTE
+                                translationRes.error?.startsWith("MODEL_") == true ->
+                                    "Translation blocked: ${translationRes.error}"
+                                else ->
+                                    "Translation failed: ${translationRes.error ?: "Unknown"}"
                             }
-                            finalTxt = result.text
-                            origTxt = null
+                            updateMessage(msgId) {
+                                it.copy(
+                                    state = MessageState.ERROR,
+                                    text = result.text,
+                                    translationStatus = com.itantra.domain.model.TranslationStatus.FAILED,
+                                    mtLatencyMillis = mtLatency,
+                                    statusDetail = errorDetail
+                                )
+                            }
+                            return@withLock
                         }
                     }
 
@@ -1332,18 +1401,22 @@ class TransceiverCoordinator(
         scope.launch {
             val msgId = nextMessageId()
             val localLang = sessionManager.activeLanguage.value ?: LanguageCode.ENGLISH
+            // FIX 009: resolve target language with the same policy as voice — from user preference,
+            // peer capability, or same-language bypass. Previously targetLanguage was always localLang
+            // and translationMode=NONE, so typed text was never translated.
+            val targetLang = resolveTargetLanguage(localLang)
             val activePeer = targetPeerId ?: _activeConversationPeerId.value ?: _activePeerProfile.value?.deviceId ?: ""
             val myDeviceId = deviceProfileManager?.currentDeviceId ?: ""
 
             val msg = TransceiverMessage(
                 messageId = msgId,
                 language = localLang,
-                targetLanguage = localLang,
+                targetLanguage = targetLang,
                 priority = priority,
                 text = text,
                 source = MessageSource.LOCAL,
                 createdAtLocal = System.currentTimeMillis(),
-                state = MessageState.TRANSMITTING,
+                state = MessageState.STT_PROCESSING,
                 peerId = activePeer,
                 senderDeviceId = myDeviceId,
                 receiverDeviceId = activePeer,
@@ -1351,15 +1424,66 @@ class TransceiverCoordinator(
             )
             addMessage(msg)
 
-            val payload = text.toByteArray(Charsets.UTF_8)
+            // FIX 009: run through TranslationRouter when target differs from source.
+            var finalText = text
+            var origText: String? = null
+            var translationStatus = com.itantra.domain.model.TranslationStatus.BYPASSED
+            var translationMode = com.itantra.domain.model.TranslationMode.NONE
+            var payloadLang = localLang
+            var mtLatency = 0L
+
+            if (targetLang != localLang) {
+                val tMt0 = SystemClock.elapsedRealtimeNanos()
+                val translationRes = translationRouter.routeAndTranslate(text, localLang, targetLang)
+                mtLatency = (SystemClock.elapsedRealtimeNanos() - tMt0) / 1_000_000
+
+                if (translationRes.isSuccessful && translationRes.translatedText.isNotBlank()) {
+                    finalText = translationRes.translatedText
+                    origText = text
+                    translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
+                    translationMode = com.itantra.domain.model.TranslationMode.DIRECT
+                    payloadLang = targetLang
+                    updateMessage(msgId) {
+                        it.copy(
+                            text = finalText,
+                            originalText = origText,
+                            translationStatus = translationStatus,
+                            mtLatencyMillis = mtLatency
+                        )
+                    }
+                } else {
+                    // FIX 009/008: Block transmission when cross-language MT fails.
+                    val errorDetail = when {
+                        translationRes.error == "NOT_INCLUDED_IN_BUILD" || translationRes.error == "ENGINE_NOT_LOADED" ->
+                            TRANSLATION_SCOPE_NOTE
+                        translationRes.error?.startsWith("MODEL_") == true ->
+                            "Translation blocked: ${translationRes.error}"
+                        else ->
+                            "Translation failed: ${translationRes.error ?: "Unknown"}"
+                    }
+                    updateMessage(msgId) {
+                        it.copy(
+                            state = MessageState.ERROR,
+                            translationStatus = com.itantra.domain.model.TranslationStatus.FAILED,
+                            mtLatencyMillis = mtLatency,
+                            statusDetail = errorDetail
+                        )
+                    }
+                    return@launch
+                }
+            }
+
+            updateMessage(msgId) { it.copy(state = MessageState.TRANSMITTING) }
+
+            val payload = finalText.toByteArray(Charsets.UTF_8)
             val packet = ItantraPacket(
                 type = PacketType.TEXT,
                 flags = priority.toByte(),
                 messageId = msgId,
-                languageCode = localLang,
+                languageCode = payloadLang,
                 sourceLanguage = localLang,
-                targetLanguage = localLang,
-                translationMode = com.itantra.domain.model.TranslationMode.NONE,
+                targetLanguage = payloadLang,
+                translationMode = translationMode,
                 payload = payload
             )
 
@@ -1372,6 +1496,7 @@ class TransceiverCoordinator(
                         it.copy(
                             state = MessageState.DELIVERED,
                             rttMillis = rtt,
+                            mtLatencyMillis = mtLatency,
                             packetBytes = txMetrics.packetBytes.let { b -> if (b is com.itantra.domain.model.Measurement.Measured) b.value else 0 }
                         )
                     }
@@ -1379,6 +1504,7 @@ class TransceiverCoordinator(
                     updateMessage(msgId) {
                         it.copy(
                             state = MessageState.SENT,
+                            mtLatencyMillis = mtLatency,
                             packetBytes = txMetrics.packetBytes.let { b -> if (b is com.itantra.domain.model.Measurement.Measured) b.value else 0 }
                         )
                     }
@@ -1389,6 +1515,7 @@ class TransceiverCoordinator(
             }
         }
     }
+
 
     fun cancelMessage(msgId: Long) {
         updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = "Cancelled") }
