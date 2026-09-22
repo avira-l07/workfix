@@ -196,8 +196,9 @@ class WifiDirectConnectionManager(
     }
 
     /**
-     * FIX 022: Checks whether Location Mode is enabled in system settings.
-     * Required for Wi-Fi Direct discovery on Android 12 and below (API <= 32).
+     * Checks whether Location Mode is enabled in system settings.
+     * Required for Wi-Fi Direct discoverPeers(), discoverServices(), and requestPeers()
+     * on all supported Android versions.
      */
     fun isLocationModeEnabled(): Boolean {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
@@ -347,6 +348,12 @@ class WifiDirectConnectionManager(
             return
         }
 
+        if (!isLocationModeEnabled()) {
+            _state.value = WifiDirectState.ERROR
+            _lastError.value = WifiDirectError.LOCATION_REQUIRED
+            return
+        }
+
         val mgr = wifiP2pManager
         val ch = channel
         if (mgr == null || ch == null) {
@@ -381,8 +388,8 @@ class WifiDirectConnectionManager(
                 debugLog("discoverPeers: initiation failed with reason=$reasonCode")
                 discoveryTimeoutJob?.cancel()
                 _state.value = WifiDirectState.ERROR
-                // FIX 022: Guide user if location mode is disabled on API <= 32
-                if (!isLocationModeEnabled() && Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                // Guide user if location mode is disabled on any Android version
+                if (!isLocationModeEnabled()) {
                     _lastError.value = WifiDirectError.LOCATION_REQUIRED
                 } else {
                     _lastError.value = WifiDirectError.DISCOVERY_FAILED
@@ -393,6 +400,11 @@ class WifiDirectConnectionManager(
 
     private fun requestPeersInternal() {
         if (!hasPermission()) return
+        if (!isLocationModeEnabled()) {
+            _state.value = WifiDirectState.ERROR
+            _lastError.value = WifiDirectError.LOCATION_REQUIRED
+            return
+        }
         val mgr = wifiP2pManager ?: return
         val ch = channel ?: return
 
@@ -439,6 +451,9 @@ class WifiDirectConnectionManager(
 
         val config = WifiP2pConfig().apply {
             deviceAddress = peer.deviceAddress
+            // Force this device to be Group Owner (intent 15 = highest priority).
+            // Eliminates role-negotiation failures where both sides become clients.
+            groupOwnerIntent = 15
         }
 
         @SuppressLint("MissingPermission")

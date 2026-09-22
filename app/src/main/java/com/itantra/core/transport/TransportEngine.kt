@@ -27,6 +27,9 @@ interface TransportEngine {
     /** Notifies the engine that an authenticated packet was received, updating link liveness. */
     fun notifyLivenessReceived() {}
 
+    /** Enables or disables post-verification authenticated silence watchdog. */
+    fun setAuthenticatedLivenessEnabled(enabled: Boolean) {}
+
     /** Sends a complete packet and returns transmission metrics. */
     suspend fun send(packet: ItantraPacket): TransmissionMetrics
 

@@ -24,6 +24,7 @@ import com.itantra.domain.model.SpeechSynthesisRequest
 import com.itantra.domain.model.TransceiverMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -54,6 +55,13 @@ class TransceiverCoordinator(
     private val messageDao: com.itantra.data.db.MessageDao? = null,
     val deviceProfileManager: com.itantra.core.profile.DeviceProfileManager? = null
 ) {
+    companion object {
+        private const val ENCRYPTED_HEARTBEAT_INTERVAL_MS = 15_000L
+        private const val HELLO_RETRY_INTERVAL_MS = 1000L
+        private const val HELLO_FINAL_GRACE_MS = 1500L
+        private const val VERIFY_RETRY_INTERVAL_MS = 1000L
+    }
+
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     private val deviceIdSalt: Long by lazy {
@@ -261,7 +269,7 @@ class TransceiverCoordinator(
                     // Responder remains in NO_SESSION, ready to process incoming SECURE_HELLO.
                     val isInitiator = !transportEngine.isServer
                     if (isInitiator) {
-                        // FIX 012: send SECURE_HELLO and retry up to 3 times every 1500ms
+                        // Send SECURE_HELLO immediately and retry up to 3 times (1s apart)
                         // if still in HANDSHAKING state. On exhaustion mark HANDSHAKE_TIMEOUT.
                         handshakeRetryJob?.cancel()
                         handshakeRetryJob = scope.launch {
@@ -270,7 +278,7 @@ class TransceiverCoordinator(
                             var attempts = 1
                             while (attempts < 3 &&
                                 secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
-                                delay(1500)
+                                delay(HELLO_RETRY_INTERVAL_MS)
                                 if (secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
                                     android.util.Log.w(
                                         "TransceiverCoordinator",
@@ -281,6 +289,9 @@ class TransceiverCoordinator(
                                     attempts++
                                 }
                             }
+                            if (secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
+                                delay(HELLO_FINAL_GRACE_MS)
+                            }
                             // Exhausted retries — mark timeout so UI can show an error
                             if (secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
                                 android.util.Log.e(
@@ -288,6 +299,7 @@ class TransceiverCoordinator(
                                     "SECURE_HELLO handshake timeout after $attempts attempts"
                                 )
                                 secureSessionManager.setHandshakeTimeout()
+                                transportEngine.setAuthenticatedLivenessEnabled(false)
                                 transportEngine.disconnect()
                             }
                         }
@@ -297,10 +309,38 @@ class TransceiverCoordinator(
                     handshakeRetryJob?.cancel(); handshakeRetryJob = null
                     verifyRetryJob?.cancel(); verifyRetryJob = null
                     encryptedHeartbeatJob?.cancel(); encryptedHeartbeatJob = null
+                    transportEngine.setAuthenticatedLivenessEnabled(false)
                     _peerCapabilities.value = PeerCapabilities()
                     _activePeerProfile.value = null
                     secureSessionManager.resetSession()
                     seenMessageIds.clear()
+                }
+            }
+        }
+
+        scope.launch {
+            secureSessionManager.state.collect { state ->
+                when (state) {
+                    SecureSessionState.WAITING_USER_VERIFICATION -> {
+                        handshakeRetryJob?.cancel()
+                        handshakeRetryJob = null
+                    }
+                    SecureSessionState.SECURE_VERIFIED -> {
+                        handshakeRetryJob?.cancel()
+                        handshakeRetryJob = null
+                        verifyRetryJob?.cancel()
+                        verifyRetryJob = null
+                        transportEngine.setAuthenticatedLivenessEnabled(true)
+                        startEncryptedHeartbeat()
+                    }
+                    SecureSessionState.NO_SESSION,
+                    SecureSessionState.HANDSHAKE_TIMEOUT,
+                    SecureSessionState.FAILED -> {
+                        encryptedHeartbeatJob?.cancel()
+                        encryptedHeartbeatJob = null
+                        transportEngine.setAuthenticatedLivenessEnabled(false)
+                    }
+                    else -> Unit
                 }
             }
         }
@@ -493,12 +533,12 @@ class TransceiverCoordinator(
                 // Cancel any ongoing verify retry — we're done
                 verifyRetryJob?.cancel(); verifyRetryJob = null
                 handshakeRetryJob?.cancel(); handshakeRetryJob = null
+                transportEngine.setAuthenticatedLivenessEnabled(true)
+                startEncryptedHeartbeat()
                 scope.launch {
                     sendProfileHandshake()
                     sendCapabilities()
                     retryUnresolvedEmergencies()
-                    // FIX 015: start encrypted heartbeat now that session is verified
-                    startEncryptedHeartbeat()
                 }
             }
             return
@@ -517,8 +557,13 @@ class TransceiverCoordinator(
             return
         }
 
-        // FIX 015: every successfully authenticated and decrypted packet refreshes link liveness
+        // Every successfully authenticated and decrypted packet refreshes link liveness
         transportEngine.notifyLivenessReceived()
+
+        if (decryptedPacket.type == PacketType.HEARTBEAT) {
+            // Heartbeat authenticated; do not create chat message, notification, or TTS
+            return
+        }
 
         when (decryptedPacket.type) {
             PacketType.PROFILE_HANDSHAKE -> {
@@ -714,7 +759,7 @@ class TransceiverCoordinator(
                     text = translationRes.translatedText
                     textLanguage = localLanguage
                     translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
-                    android.util.Log.i("TransceiverCoord", "FIX 027: Receiver-side translation SUCCESS: '$text'")
+                    android.util.Log.i("TransceiverCoord", "Receiver-side translation SUCCESS charsIn=${originalText.length} charsOut=${text.length}")
                 } else {
                     // Translation unavailable (model not installed, EXTERNAL BLOCKER etc.) —
                     // preserve the original text so user sees what arrived; preserve error explicitly.
@@ -1316,10 +1361,10 @@ class TransceiverCoordinator(
                         // the result is immediate, and with a real engine the STT_PROCESSING
                         // state the message is already in covers the wait without implying a
                         // distinct, currently-failing "translating" step.
-                        if (com.example.itantra.BuildConfig.DEBUG) android.util.Log.i("ITANTRA_MT_CALL", "BEFORE translation call: text='${result.text}', srcLang=$srcLang, targetLang=$targetLang")
+                        if (com.example.itantra.BuildConfig.DEBUG) android.util.Log.i("ITANTRA_MT_CALL", "BEFORE translation call: chars=${result.text.length}, srcLang=$srcLang, targetLang=$targetLang")
                         val tMt0 = SystemClock.elapsedRealtimeNanos()
                         val translationRes = translationRouter.routeAndTranslate(result.text, srcLang, targetLang)
-                        if (com.example.itantra.BuildConfig.DEBUG) android.util.Log.i("ITANTRA_MT_CALL", "AFTER translation call: isSuccessful=${translationRes.isSuccessful}, translated='${translationRes.translatedText}', error=${translationRes.error}")
+                        if (com.example.itantra.BuildConfig.DEBUG) android.util.Log.i("ITANTRA_MT_CALL", "AFTER translation call: isSuccessful=${translationRes.isSuccessful}, charsOut=${translationRes.translatedText?.length ?: 0}, error=${translationRes.error}")
                         mtLatency = (SystemClock.elapsedRealtimeNanos() - tMt0) / 1_000_000
 
                         if (translationRes.isSuccessful && translationRes.translatedText.isNotBlank()) {
@@ -1627,17 +1672,19 @@ class TransceiverCoordinator(
     }
 
     /**
-     * FIX 015: Sends encrypted HEARTBEAT every 20s. Only active while SECURE_VERIFIED.
+     * Sends encrypted HEARTBEAT every 15s. Only active while SECURE_VERIFIED.
      * Called once after session becomes SECURE_VERIFIED; idempotent because previous job
-     * is cancelled on each disconnect in the connection observer.
+     * is cancelled on each disconnect or state reset.
      */
     private fun startEncryptedHeartbeat() {
         encryptedHeartbeatJob?.cancel()
         encryptedHeartbeatJob = scope.launch {
-            while (isConnected &&
+            while (isActive &&
+                isConnected &&
                 secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
-                delay(20_000L)
-                if (!isConnected ||
+                delay(ENCRYPTED_HEARTBEAT_INTERVAL_MS)
+                if (!isActive ||
+                    !isConnected ||
                     secureSessionManager.state.value != SecureSessionState.SECURE_VERIFIED) break
                 try {
                     val heartbeat = ItantraPacket(
@@ -1654,7 +1701,7 @@ class TransceiverCoordinator(
     }
 
     /**
-     * FIX 013: Confirms SAS match, sends SECURE_VERIFY, and retries up to 3 times (1500ms apart)
+     * Confirms SAS match, sends SECURE_VERIFY, and retries up to 3 times (1000ms apart)
      * until the peer responds with its own SECURE_VERIFY and state reaches SECURE_VERIFIED.
      */
     fun confirmPeerVerification() {
@@ -1668,17 +1715,19 @@ class TransceiverCoordinator(
             }
             transportEngine.send(verifyPacket)
             if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
+                verifyRetryJob = null
+                transportEngine.setAuthenticatedLivenessEnabled(true)
+                startEncryptedHeartbeat()
                 sendProfileHandshake()
                 sendCapabilities()
                 retryUnresolvedEmergencies()
-                startEncryptedHeartbeat()
                 return@launch
             }
             // Retry sending SECURE_VERIFY until peer responds or retries exhausted
             var attempts = 1
             while (attempts < 3 &&
                 secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION) {
-                delay(1500)
+                delay(VERIFY_RETRY_INTERVAL_MS)
                 if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) break
                 if (secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION) {
                     android.util.Log.w("TransceiverCoordinator", "SECURE_VERIFY retry attempt $attempts")
@@ -1687,10 +1736,12 @@ class TransceiverCoordinator(
                 }
             }
             if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
+                verifyRetryJob = null
+                transportEngine.setAuthenticatedLivenessEnabled(true)
+                startEncryptedHeartbeat()
                 sendProfileHandshake()
                 sendCapabilities()
                 retryUnresolvedEmergencies()
-                startEncryptedHeartbeat()
             } else {
                 android.util.Log.e(
                     "TransceiverCoordinator",

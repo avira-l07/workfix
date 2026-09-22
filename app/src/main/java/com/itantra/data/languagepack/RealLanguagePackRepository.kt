@@ -12,6 +12,7 @@ import com.itantra.domain.model.LanguagePackManifest
 import com.itantra.domain.model.LanguagePackSummary
 import com.itantra.domain.repository.LanguagePackRepository
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -50,6 +51,8 @@ class RealLanguagePackRepository(
     private val downloadJobs = mutableMapOf<LanguageCode, Job>()
     private val downloadMutex = kotlinx.coroutines.sync.Mutex()
     private val sharedSttMutex = kotlinx.coroutines.sync.Mutex()
+
+    internal fun getActiveJob(code: LanguageCode): Job? = downloadJobs[code]
 
     private fun isSharedSttReady(): Boolean {
         val spec = ModelFileSpecs.getSttSpec(LanguageCode.HINDI)
@@ -182,134 +185,135 @@ class RealLanguagePackRepository(
         val sttSpec = ModelFileSpecs.getSttSpec(code)
         val manifest = getManifest(code) ?: return
 
-        // Single flight check for same language (FIX 039)
-        val isAlreadyActive = downloadMutex.withLock {
-            downloadJobs[code]?.isActive == true
-        }
-        if (isAlreadyActive) return
-
-        val needSharedStt = !isSharedSttReady()
-
-        if (needSharedStt) {
-            LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.DOWNLOADING, true) }
-        }
-        updateState(code, LanguagePackInstallState.DOWNLOADING, false)
-        updateProgress(code, 0)
-
-        val rootDir = storage.packDirectory(code)
-        val parentDir = requireNotNull(rootDir.parentFile) { "Pack parent directory must exist" }
-        val sharedDir = File(parentDir, "shared/stt")
-        val tmpDir = File(rootDir, ".install_tmp")
-        tmpDir.deleteRecursively()
-        tmpDir.mkdirs()
-
-        val statFs = StatFs(parentDir.absolutePath)
-        val availableBytes = statFs.availableBlocksLong * statFs.blockSizeLong
-        val requiredBytes = (if (needSharedStt) manifest.sttModel.sizeBytes else 0L) +
-            manifest.ttsModel.sizeBytes + 50_000_000L
-
-        if (availableBytes < requiredBytes) {
-            if (needSharedStt) {
-                LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.ERROR, true) }
+        val jobToStart: Job? = downloadMutex.withLock {
+            val existing = downloadJobs[code]
+            if (existing != null && !existing.isCompleted) {
+                return@withLock null
             }
-            updateState(code, LanguagePackInstallState.ERROR, false)
-            updateProgress(code, null)
-            return
-        }
 
-        val totalExpectedBytes = (if (needSharedStt) manifest.sttModel.sizeBytes else 0L) + manifest.ttsModel.sizeBytes
-        var cumulativeBytesDownloaded = 0L
+            lateinit var createdJob: Job
+            createdJob = CoroutineScope(Dispatchers.IO).launch(start = CoroutineStart.LAZY) {
+                val needSharedStt = !isSharedSttReady()
 
-        val onBytesRead: (Int) -> Unit = { count ->
-            cumulativeBytesDownloaded += count
-            if (totalExpectedBytes > 0) {
-                val pct = ((cumulativeBytesDownloaded * 100) / totalExpectedBytes).toInt().coerceIn(0, 99)
-                updateProgress(code, pct)
-            }
-        }
-
-        var jobRef: Job? = null
-        val job = CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // 1. Download shared multilingual STT if missing, single-flight protected (FIX 040)
                 if (needSharedStt) {
-                    sharedSttMutex.withLock {
-                        if (!isSharedSttReady()) {
-                            val sttUrlBase = manifest.sttModel.downloadUrl ?: throw Exception("No STT URL")
-                            val tmpStt = File(tmpDir, "shared_stt")
-                            tmpStt.mkdirs()
+                    LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.DOWNLOADING, true) }
+                }
+                updateState(code, LanguagePackInstallState.DOWNLOADING, false)
+                updateProgress(code, 0)
 
-                            for (file in sttSpec.requiredFiles) {
-                                val targetFile = File(tmpStt, file)
-                                downloadFile("$sttUrlBase/$file", targetFile, onBytesRead)
-                                val expectedSha = manifest.sttModel.checksumsSha256[file]
-                                if (!expectedSha.isNullOrEmpty()) {
-                                    verifySha256(targetFile, expectedSha)
+                val rootDir = storage.packDirectory(code)
+                val parentDir = requireNotNull(rootDir.parentFile) { "Pack parent directory must exist" }
+                val sharedDir = File(parentDir, "shared/stt")
+                val tmpDir = File(rootDir, ".install_tmp")
+                tmpDir.deleteRecursively()
+                tmpDir.mkdirs()
+
+                try {
+                    val statFs = StatFs(parentDir.absolutePath)
+                    val availableBytes = statFs.availableBlocksLong * statFs.blockSizeLong
+                    val requiredBytes = (if (needSharedStt) manifest.sttModel.sizeBytes else 0L) +
+                        manifest.ttsModel.sizeBytes + 50_000_000L
+
+                    if (availableBytes < requiredBytes) {
+                        if (needSharedStt) {
+                            LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.ERROR, true) }
+                        }
+                        updateState(code, LanguagePackInstallState.ERROR, false)
+                        updateProgress(code, null)
+                        return@launch
+                    }
+
+                    val totalExpectedBytes = (if (needSharedStt) manifest.sttModel.sizeBytes else 0L) + manifest.ttsModel.sizeBytes
+                    var cumulativeBytesDownloaded = 0L
+
+                    val onBytesRead: (Int) -> Unit = { count ->
+                        cumulativeBytesDownloaded += count
+                        if (totalExpectedBytes > 0) {
+                            val pct = ((cumulativeBytesDownloaded * 100) / totalExpectedBytes).toInt().coerceIn(0, 99)
+                            updateProgress(code, pct)
+                        }
+                    }
+
+                    // 1. Download shared multilingual STT if missing, single-flight protected (FIX 040)
+                    if (needSharedStt) {
+                        sharedSttMutex.withLock {
+                            if (!isSharedSttReady()) {
+                                val sttUrlBase = manifest.sttModel.downloadUrl ?: throw Exception("No STT URL")
+                                val tmpStt = File(tmpDir, "shared_stt")
+                                tmpStt.mkdirs()
+
+                                for (file in sttSpec.requiredFiles) {
+                                    val targetFile = File(tmpStt, file)
+                                    downloadFile("$sttUrlBase/$file", targetFile, onBytesRead)
+                                    val expectedSha = manifest.sttModel.checksumsSha256[file]
+                                    if (!expectedSha.isNullOrEmpty()) {
+                                        verifySha256(targetFile, expectedSha)
+                                    }
                                 }
-                            }
 
-                            // Safe atomic move shared STT (FIX 041)
-                            sharedDir.mkdirs()
-                            for (file in sttSpec.requiredFiles) {
-                                val destFile = File(sharedDir, file)
-                                safeAtomicMove(File(tmpStt, file), destFile)
+                                // Safe atomic move shared STT (FIX 041)
+                                sharedDir.mkdirs()
+                                for (file in sttSpec.requiredFiles) {
+                                    val destFile = File(sharedDir, file)
+                                    safeAtomicMove(File(tmpStt, file), destFile)
+                                }
+                                File(sharedDir, ".verified_v1").writeText(manifest.packVersion)
+                                LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.INSTALLED, true) }
                             }
-                            File(sharedDir, ".verified_v1").writeText(manifest.packVersion)
-                            LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.INSTALLED, true) }
+                        }
+                    }
+
+                    // 2. Download per-language TTS
+                    val ttsUrlBase = manifest.ttsModel.downloadUrl ?: throw Exception("No TTS URL")
+                    val tmpTts = File(tmpDir, "tts")
+                    tmpTts.mkdirs()
+
+                    for (file in ttsSpec.requiredFiles) {
+                        val targetFile = File(tmpTts, file)
+                        downloadFile("$ttsUrlBase/$file", targetFile, onBytesRead)
+                        val expectedSha = manifest.ttsModel.checksumsSha256[file]
+                        if (!expectedSha.isNullOrEmpty()) {
+                            verifySha256(targetFile, expectedSha)
+                        }
+                    }
+
+                    // 3. Atomic Move per-language TTS with fallback (FIX 041)
+                    val ttsDest = File(rootDir, "tts")
+                    safeAtomicMove(tmpTts, ttsDest)
+                    File(ttsDest, ".verified_v1").writeText(manifest.packVersion)
+
+                    updateProgress(code, 100)
+                    updateState(code, LanguagePackInstallState.INSTALLED, false)
+
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    if (needSharedStt) {
+                        val sttOk = isSharedSttReady()
+                        LanguageCatalog.all.forEach {
+                            updateState(it.code, if (sttOk) LanguagePackInstallState.INSTALLED else LanguagePackInstallState.NOT_INSTALLED, true)
+                        }
+                    }
+                    updateState(code, if (isTtsReady(code)) LanguagePackInstallState.INSTALLED else LanguagePackInstallState.NOT_INSTALLED, false)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    if (needSharedStt) {
+                        LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.ERROR, true) }
+                    }
+                    updateState(code, LanguagePackInstallState.ERROR, false)
+                } finally {
+                    tmpDir.deleteRecursively()
+                    updateProgress(code, null)
+                    downloadMutex.withLock {
+                        if (downloadJobs[code] === createdJob) {
+                            downloadJobs.remove(code)
                         }
                     }
                 }
-
-                // 2. Download per-language TTS
-                val ttsUrlBase = manifest.ttsModel.downloadUrl ?: throw Exception("No TTS URL")
-                val tmpTts = File(tmpDir, "tts")
-                tmpTts.mkdirs()
-
-                for (file in ttsSpec.requiredFiles) {
-                    val targetFile = File(tmpTts, file)
-                    downloadFile("$ttsUrlBase/$file", targetFile, onBytesRead)
-                    val expectedSha = manifest.ttsModel.checksumsSha256[file]
-                    if (!expectedSha.isNullOrEmpty()) {
-                        verifySha256(targetFile, expectedSha)
-                    }
-                }
-
-                // 3. Atomic Move per-language TTS with fallback (FIX 041)
-                val ttsDest = File(rootDir, "tts")
-                safeAtomicMove(tmpTts, ttsDest)
-                File(ttsDest, ".verified_v1").writeText(manifest.packVersion)
-
-                updateProgress(code, 100)
-                updateState(code, LanguagePackInstallState.INSTALLED, false)
-
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                if (needSharedStt) {
-                    val sttOk = isSharedSttReady()
-                    LanguageCatalog.all.forEach {
-                        updateState(it.code, if (sttOk) LanguagePackInstallState.INSTALLED else LanguagePackInstallState.NOT_INSTALLED, true)
-                    }
-                }
-                updateState(code, if (isTtsReady(code)) LanguagePackInstallState.INSTALLED else LanguagePackInstallState.NOT_INSTALLED, false)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                if (needSharedStt) {
-                    LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.ERROR, true) }
-                }
-                updateState(code, LanguagePackInstallState.ERROR, false)
-            } finally {
-                tmpDir.deleteRecursively()
-                updateProgress(code, null)
-                downloadMutex.withLock {
-                    if (downloadJobs[code] === jobRef) {
-                        downloadJobs.remove(code)
-                    }
-                }
             }
+            downloadJobs[code] = createdJob
+            createdJob
         }
-        jobRef = job
-        downloadMutex.withLock {
-            downloadJobs[code] = job
-        }
+
+        jobToStart?.start()
     }
 
     private fun safeAtomicMove(source: File, destination: File) {

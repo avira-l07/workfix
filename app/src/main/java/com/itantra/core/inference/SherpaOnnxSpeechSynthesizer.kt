@@ -95,7 +95,7 @@ class SherpaOnnxSpeechSynthesizer(
 
         // Reject empty or whitespace text truthfully without crash or native call
         if (request.text.isBlank()) {
-            Log.w("SherpaOnnxTTS", "Rejecting blank/empty text for synthesis: '${request.text}'")
+            Log.w("SherpaOnnxTTS", "Rejecting blank/empty text for synthesis: length=${request.text.length} correlationId=${request.correlationId}")
             val defaultRate = try { engine.sampleRate() } catch (_: Throwable) { 16000 }
             return@withContext SpeechSynthesisResult(
                 correlationId = request.correlationId,
@@ -108,7 +108,7 @@ class SherpaOnnxSpeechSynthesizer(
 
         synthMutex.withLock {
             val t0 = SystemClock.elapsedRealtimeNanos()
-            Log.i("SherpaOnnxTTS", "Synthesizing text for ${languageCode.wireCode}: '${request.text}'")
+            Log.i("SherpaOnnxTTS", "TTS synth start lang=${languageCode.wireCode} chars=${request.text.length} correlationId=${request.correlationId}")
             val generatedAudio = engine.generate(request.text)
 
             val t1 = SystemClock.elapsedRealtimeNanos()

@@ -142,4 +142,12 @@ class WifiDirectPeerTransportTest {
         assertTrue(errorNames.contains("GROUP_FORMATION_FAILED"))
         assertTrue(errorNames.contains("TCP_CONNECT_TIMEOUT"))
     }
+
+    @Test
+    fun testWifiDirectLocationModeRequirementContract() {
+        val error = WifiDirectError.LOCATION_REQUIRED
+        assertNotNull(error)
+        assertEquals("LOCATION_REQUIRED", error.name)
+        assertEquals(WifiDirectState.ERROR, WifiDirectState.valueOf("ERROR"))
+    }
 }

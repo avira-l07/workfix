@@ -33,11 +33,8 @@ class TransportCoordinator(
 
     companion object {
         private const val ACK_TIMEOUT_MS = 5000L
-        private const val HEARTBEAT_INTERVAL_MS = 4000L
-        private const val WATCHDOG_CHECK_INTERVAL_MS = 2000L
-        // Must be comfortably larger than HEARTBEAT_INTERVAL_MS to tolerate one or two missed beats
-        // before declaring the link dead.
-        private const val WATCHDOG_TIMEOUT_MS = 13000L
+        private const val WATCHDOG_CHECK_INTERVAL_MS = 15_000L
+        private const val PEER_SILENCE_TIMEOUT_MS = 180_000L
     }
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -56,6 +53,13 @@ class TransportCoordinator(
     private var connectionStateJob: Job? = null
     private val lastRxAtMs = AtomicLong(0L)
 
+    @Volatile
+    private var authenticatedLivenessEnabled = false
+
+    internal fun isAuthenticatedLivenessEnabled(): Boolean = authenticatedLivenessEnabled
+    internal fun getLastRxAtMs(): Long = lastRxAtMs.get()
+    internal fun setLastRxAtMs(timeMs: Long) { lastRxAtMs.set(timeMs) }
+
     init {
         startObservingTransport()
     }
@@ -67,6 +71,7 @@ class TransportCoordinator(
         val oldTransport = _activeTransport.value
         if (oldTransport === newTransport) return
 
+        authenticatedLivenessEnabled = false
         oldTransport.disconnect()
         _activeTransport.value = newTransport
         startObservingTransport()
@@ -77,6 +82,7 @@ class TransportCoordinator(
         heartbeatJob?.cancel()
         watchdogJob?.cancel()
         connectionStateJob?.cancel()
+        authenticatedLivenessEnabled = false
         lastRxAtMs.set(System.currentTimeMillis())
 
         connectionStateJob = scope.launch {
@@ -84,6 +90,8 @@ class TransportCoordinator(
                 if (state == ConnectionState.CONNECTED) {
                     lastRxAtMs.set(System.currentTimeMillis())
                     android.util.Log.i("TransportCoordinator", "Link CONNECTED: reset lastRxAtMs to " + lastRxAtMs.get())
+                } else if (state == ConnectionState.DISCONNECTED || state == ConnectionState.ERROR) {
+                    authenticatedLivenessEnabled = false
                 }
             }
         }
@@ -92,16 +100,14 @@ class TransportCoordinator(
             activeTransport.receive().collect { frameData ->
                 try {
                     val packet = PacketDecoder.decode(frameData)
-                    // Pre-auth handshake control packets refresh liveness during key exchange
-                    if (packet.type == PacketType.SECURE_HELLO || packet.type == PacketType.SECURE_VERIFY) {
-                        notifyLivenessReceived()
-                    }
-                    if (packet.type == PacketType.HEARTBEAT) {
-                        // Unauthenticated plaintext heartbeat dropped; authenticated heartbeats
-                        // are encrypted by SecureSessionManager and handled upward.
+                    if (
+                        packet.type == PacketType.HEARTBEAT &&
+                        packet.securityVersion == 0.toByte()
+                    ) {
+                        // Reject unauthenticated/plain heartbeat.
                         return@collect
                     }
-                    // Emit packet upward for decryption/authentication
+                    // Emit packet upward for decryption/authentication (including encrypted HEARTBEAT)
                     incomingFlow.emit(packet)
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -109,19 +115,21 @@ class TransportCoordinator(
             }
         }
 
-        // Unauthenticated plaintext heartbeat loop is disabled per FIX 015.
-        // Encrypted heartbeats are handled by TransceiverCoordinator when SECURE_VERIFIED.
-
         watchdogJob = scope.launch {
             while (isActive) {
                 delay(WATCHDOG_CHECK_INTERVAL_MS)
+                if (!authenticatedLivenessEnabled) continue
                 if (!activeTransport.isConnected) {
-                    lastRxAtMs.set(System.currentTimeMillis())
+                    authenticatedLivenessEnabled = false
                     continue
                 }
-                val idleFor = System.currentTimeMillis() - lastRxAtMs.get()
-                if (idleFor > WATCHDOG_TIMEOUT_MS) {
-                    android.util.Log.w("TransportCoordinator", "Watchdog: no authenticated traffic for ${idleFor}ms, disconnecting")
+                val silentMs = System.currentTimeMillis() - lastRxAtMs.get()
+                if (silentMs >= PEER_SILENCE_TIMEOUT_MS) {
+                    android.util.Log.w(
+                        "TransportCoordinator",
+                        "Authenticated silence timeout: no authenticated traffic for ${silentMs}ms, disconnecting"
+                    )
+                    authenticatedLivenessEnabled = false
                     activeTransport.disconnect()
                 }
             }
@@ -142,6 +150,7 @@ class TransportCoordinator(
     }
 
     override suspend fun disconnect() {
+        authenticatedLivenessEnabled = false
         activeTransport.disconnect()
         readJob?.cancel()
         heartbeatJob?.cancel()
@@ -158,6 +167,15 @@ class TransportCoordinator(
 
     override fun notifyLivenessReceived() {
         lastRxAtMs.set(System.currentTimeMillis())
+    }
+
+    override fun setAuthenticatedLivenessEnabled(enabled: Boolean) {
+        if (enabled) {
+            authenticatedLivenessEnabled = true
+            lastRxAtMs.set(System.currentTimeMillis())
+        } else {
+            authenticatedLivenessEnabled = false
+        }
     }
 
     override suspend fun send(packet: ItantraPacket): TransmissionMetrics {

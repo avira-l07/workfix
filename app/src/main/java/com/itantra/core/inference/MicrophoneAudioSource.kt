@@ -35,11 +35,18 @@ class MicrophoneAudioSource(
     @SuppressLint("MissingPermission")
     val stream: SharedFlow<FloatArray> = callbackFlow {
         val sampleRate = 16000
-        val bufferSize = AudioRecord.getMinBufferSize(
+        val minBufferSize = AudioRecord.getMinBufferSize(
             sampleRate,
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_16BIT
-        ) * 2
+        )
+
+        if (minBufferSize <= 0) {
+            close(IllegalStateException("Invalid AudioRecord minBufferSize: $minBufferSize"))
+            return@callbackFlow
+        }
+
+        val bufferSize = minBufferSize * 2
 
         val audioRecord = try {
             AudioRecord(
@@ -52,10 +59,14 @@ class MicrophoneAudioSource(
         } catch (e: SecurityException) {
             close(SecurityException("Permission denied for RECORD_AUDIO", e))
             return@callbackFlow
+        } catch (e: IllegalArgumentException) {
+            close(IllegalArgumentException("Unsupported audio parameters: ${e.message}", e))
+            return@callbackFlow
         }
 
         if (audioRecord.state != AudioRecord.STATE_INITIALIZED) {
-            close(Exception("AudioRecord initialization failed (state uninitialized)"))
+            try { audioRecord.release() } catch (_: Exception) {}
+            close(IllegalStateException("AudioRecord initialization failed (state uninitialized)"))
             return@callbackFlow
         }
 
@@ -83,20 +94,66 @@ class MicrophoneAudioSource(
             t.printStackTrace()
         }
 
-        audioRecord.startRecording()
+        try {
+            audioRecord.startRecording()
+        } catch (e: SecurityException) {
+            try { echoCanceler?.release() } catch (_: Throwable) {}
+            try { audioRecord.release() } catch (_: Throwable) {}
+            close(SecurityException("AudioRecord.startRecording SecurityException: ${e.message}", e))
+            return@callbackFlow
+        } catch (e: IllegalStateException) {
+            try { echoCanceler?.release() } catch (_: Throwable) {}
+            try { audioRecord.release() } catch (_: Throwable) {}
+            close(IllegalStateException("AudioRecord.startRecording IllegalStateException: ${e.message}", e))
+            return@callbackFlow
+        }
+
         val buffer = ShortArray(bufferSize / 2)
+        var zeroReadCount = 0
 
         try {
             while (isActive) {
                 val readResult = audioRecord.read(buffer, 0, buffer.size)
-                if (readResult > 0) {
-                    val floatArray = FloatArray(readResult)
-                    for (i in 0 until readResult) {
-                        floatArray[i] = buffer[i] / 32768.0f
+                when {
+                    readResult > 0 -> {
+                        zeroReadCount = 0
+                        val floatArray = FloatArray(readResult)
+                        for (i in 0 until readResult) {
+                            floatArray[i] = buffer[i] / 32768.0f
+                        }
+                        val sendResult = trySend(floatArray)
+                        if (sendResult.isFailure) {
+                            android.util.Log.w("MicrophoneAudioSource", "Audio buffer dropped! trySend failed: $sendResult")
+                        }
                     }
-                    val sendResult = trySend(floatArray)
-                    if (sendResult.isFailure) {
-                        android.util.Log.w("MicrophoneAudioSource", "Audio buffer dropped! trySend failed: $sendResult")
+                    readResult == 0 -> {
+                        zeroReadCount++
+                        if (zeroReadCount > 10) {
+                            kotlinx.coroutines.delay(10)
+                        } else {
+                            kotlinx.coroutines.yield()
+                        }
+                    }
+                    readResult == AudioRecord.ERROR_DEAD_OBJECT -> {
+                        android.util.Log.e("MicrophoneAudioSource", "AudioRecord read error: ERROR_DEAD_OBJECT")
+                        close(IllegalStateException("AudioRecord dead object"))
+                        break
+                    }
+                    readResult == AudioRecord.ERROR_INVALID_OPERATION -> {
+                        android.util.Log.e("MicrophoneAudioSource", "AudioRecord read error: ERROR_INVALID_OPERATION")
+                        close(IllegalStateException("AudioRecord invalid operation"))
+                        break
+                    }
+                    readResult == AudioRecord.ERROR_BAD_VALUE -> {
+                        android.util.Log.e("MicrophoneAudioSource", "AudioRecord read error: ERROR_BAD_VALUE")
+                        close(IllegalArgumentException("AudioRecord bad value"))
+                        break
+                    }
+                    else -> {
+                        // Any other negative readResult is a terminal error
+                        android.util.Log.e("MicrophoneAudioSource", "AudioRecord read terminal error: $readResult")
+                        close(IllegalStateException("AudioRecord read error: $readResult"))
+                        break
                     }
                 }
             }
@@ -106,8 +163,12 @@ class MicrophoneAudioSource(
             } catch (t: Throwable) {
                 t.printStackTrace()
             }
-            audioRecord.stop()
-            audioRecord.release()
+            try {
+                audioRecord.stop()
+            } catch (_: Throwable) {}
+            try {
+                audioRecord.release()
+            } catch (_: Throwable) {}
         }
 
         awaitClose {

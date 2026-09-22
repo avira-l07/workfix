@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,12 +64,9 @@ fun ConnectScreenContent(
     var verifyingDevice by remember { mutableStateOf<PeerDevice?>(null) }
     var verifyingWifiPeer by remember { mutableStateOf<com.itantra.core.transport.peer.WifiDirectPeer?>(null) }
     var currentMode by remember { mutableStateOf(selectedTransportMode) }
-    // Track the device that triggered a connect so we can open the SAS dialog
-    // once the ECDH handshake actually completes (sasCode transitions null → real value).
     var pendingVerifyDevice by remember { mutableStateOf<PeerDevice?>(null) }
     var pendingVerifyWifiPeer by remember { mutableStateOf<com.itantra.core.transport.peer.WifiDirectPeer?>(null) }
 
-    // Open the SAS dialog only when sasCode arrives after a pending connect.
     LaunchedEffect(sasCode) {
         val code = sasCode
         if (!code.isNullOrBlank()) {
@@ -103,7 +101,7 @@ fun ConnectScreenContent(
                 .fillMaxSize()
         ) {
             // Mode selector: BLUETOOTH vs WI-FI DIRECT
-            TabRow(
+            PrimaryTabRow(
                 selectedTabIndex = currentMode.ordinal,
                 containerColor = ITantraColors.SurfaceWhite,
                 contentColor = ITantraColors.Primary
@@ -176,8 +174,6 @@ fun ConnectScreenContent(
                             PeerDeviceCard(
                                 device = device,
                                 onConnect = {
-                                    // Record which device to verify once ECDH completes.
-                                    // The SAS dialog opens via LaunchedEffect(sasCode) above.
                                     pendingVerifyDevice = device
                                     onConnect(device)
                                 },
@@ -264,7 +260,6 @@ fun ConnectScreenContent(
                                         wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.GROUP_FORMED ||
                                         wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.TCP_CONNECTING,
                                 onConnect = {
-                                    // Defer dialog until ECDH handshake completes (sasCode arrives).
                                     pendingVerifyWifiPeer = peer
                                     onConnectWifiDirect(peer)
                                 },
@@ -464,15 +459,9 @@ private fun PeerDeviceCard(device: PeerDevice, onConnect: () -> Unit, onOpenChat
                 PeerConnectionState.AVAILABLE -> OutlinedButton(onClick = onConnect) {
                     Text("CONNECT")
                 }
-                PeerConnectionState.DISCONNECTED -> AssistChip(
-                    onClick = {},
-                    enabled = false,
-                    label = { Text("NOT CONNECTED") },
-                    colors = AssistChipDefaults.assistChipColors(
-                        disabledContainerColor = ITantraColors.TextMuted.copy(alpha = 0.12f),
-                        disabledLabelColor = ITantraColors.TextMuted,
-                    ),
-                )
+                PeerConnectionState.DISCONNECTED -> OutlinedButton(onClick = onConnect) {
+                    Text("RECONNECT")
+                }
             }
         }
         Spacer(Modifier.height(8.dp))
