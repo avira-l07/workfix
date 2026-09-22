@@ -49,6 +49,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
+/** Shared Json parser – reuse to avoid per-call instance allocation warnings. */
+private val BenchmarkJson = Json { ignoreUnknownKeys = true }
+
 enum class AppDestination {
     HUB,
     SETTINGS,
@@ -192,7 +195,7 @@ class MainActivity : ComponentActivity() {
 
                     lifecycleScope.launch(Dispatchers.Default) {
                         try {
-                            android.util.Log.i("TEST_TTS", "=== INITIATING TTS TEST: lang=$targetLang, text='$testTtsText' ===")
+                            android.util.Log.i("TEST_TTS", "=== INITIATING TTS TEST: lang=$targetLang, chars=${testTtsText.length} ===")
                             val sessionManager = com.itantra.app.AppGraph.activeLanguageSessionManager
                             val storage = com.itantra.app.AppGraph.languagePackStorage
                             val isInstalled = storage.isTtsInstalled(targetLang)
@@ -297,7 +300,7 @@ class MainActivity : ComponentActivity() {
                                 val rawSamples = assets.open(wavPath).use { WavWriter.readWav(it) }
                                 for (pad in listOf(0, 800, 1600, 3200, 6400)) {
                                     val res = stt.decodeDirect(rawSamples, pad)
-                                    android.util.Log.i("TEST_INVESTIGATE", "[$id | pad=${pad} samples (${pad/16}ms)] -> '${res.text}'")
+                                    android.util.Log.i("TEST_INVESTIGATE", "[$id | pad=${pad} samples (${pad/16}ms)] -> chars=${res.text.length}")
                                 }
                             }
                         } catch (e: Exception) {
@@ -313,7 +316,7 @@ class MainActivity : ComponentActivity() {
                         try {
                             android.util.Log.i("TEST_BENCHMARK", "=== STARTING BENCHMARK EXECUTION VIA BROADCAST ===")
                             val jsonText = assets.open("benchmark/en_benchmark.json").bufferedReader().use { it.readText() }
-                            val sentenceDefs = Json { ignoreUnknownKeys = true }.decodeFromString<List<BenchmarkSentenceDef>>(jsonText)
+                            val sentenceDefs = BenchmarkJson.decodeFromString<List<BenchmarkSentenceDef>>(jsonText)
 
                             var stt = com.itantra.app.AppGraph.activeLanguageSessionManager.currentSttEngine
                             if (stt == null || stt.languageCode != LanguageCode.ENGLISH || !stt.isLoaded) {
@@ -348,7 +351,7 @@ class MainActivity : ComponentActivity() {
                                 cerResults.add(cer)
 
                                 val isExactMatch = TextNormalizer.isExactMatch(item.referenceText, res.text)
-                                android.util.Log.i("TEST_BENCHMARK", "[${item.id}] Ref: '${item.referenceText}' | Hyp: '${res.text}' | WER=${wer.wer} | CER=${cer.cer} | Latency=${latencyMillis}ms | PureInference=${res.pureInferenceMs}ms")
+                                android.util.Log.i("TEST_BENCHMARK", "[${item.id}] RefChars: ${item.referenceText.length} | HypChars: ${res.text.length} | WER=${wer.wer} | CER=${cer.cer} | Latency=${latencyMillis}ms | PureInference=${res.pureInferenceMs}ms")
 
                                 benchmarkResults.add(
                                     BenchmarkResult(
@@ -474,7 +477,7 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEBUG) {
             val pttFilter = android.content.IntentFilter("com.example.itantra.TEST_PTT")
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(testPttReceiver, pttFilter, android.content.Context.RECEIVER_EXPORTED)
+                registerReceiver(testPttReceiver, pttFilter, android.content.Context.RECEIVER_NOT_EXPORTED)
             } else {
                 registerReceiver(testPttReceiver, pttFilter)
             }
@@ -944,7 +947,7 @@ fun TacticalAppScaffold(
                                     try {
                                         // Load benchmark sentence definitions from assets
                                         val jsonText = context.assets.open("benchmark/en_benchmark.json").bufferedReader().use { it.readText() }
-                                        val sentenceDefs = Json { ignoreUnknownKeys = true }.decodeFromString<List<BenchmarkSentenceDef>>(jsonText)
+                                        val sentenceDefs = BenchmarkJson.decodeFromString<List<BenchmarkSentenceDef>>(jsonText)
 
                                         // Ensure English STT engine is loaded
                                         var stt = sessionManager.currentSttEngine

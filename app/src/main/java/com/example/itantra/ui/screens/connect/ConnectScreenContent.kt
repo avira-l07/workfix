@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,6 +64,22 @@ fun ConnectScreenContent(
     var verifyingDevice by remember { mutableStateOf<PeerDevice?>(null) }
     var verifyingWifiPeer by remember { mutableStateOf<com.itantra.core.transport.peer.WifiDirectPeer?>(null) }
     var currentMode by remember { mutableStateOf(selectedTransportMode) }
+    var pendingVerifyDevice by remember { mutableStateOf<PeerDevice?>(null) }
+    var pendingVerifyWifiPeer by remember { mutableStateOf<com.itantra.core.transport.peer.WifiDirectPeer?>(null) }
+
+    LaunchedEffect(sasCode) {
+        val code = sasCode
+        if (!code.isNullOrBlank()) {
+            pendingVerifyDevice?.let {
+                verifyingDevice = it
+                pendingVerifyDevice = null
+            }
+            pendingVerifyWifiPeer?.let {
+                verifyingWifiPeer = it
+                pendingVerifyWifiPeer = null
+            }
+        }
+    }
 
     Scaffold(
         containerColor = ITantraColors.CanvasBg,
@@ -84,7 +101,7 @@ fun ConnectScreenContent(
                 .fillMaxSize()
         ) {
             // Mode selector: BLUETOOTH vs WI-FI DIRECT
-            TabRow(
+            PrimaryTabRow(
                 selectedTabIndex = currentMode.ordinal,
                 containerColor = ITantraColors.SurfaceWhite,
                 contentColor = ITantraColors.Primary
@@ -157,7 +174,7 @@ fun ConnectScreenContent(
                             PeerDeviceCard(
                                 device = device,
                                 onConnect = {
-                                    verifyingDevice = device
+                                    pendingVerifyDevice = device
                                     onConnect(device)
                                 },
                                 onOpenChat = { onOpenChat(device) }
@@ -243,7 +260,7 @@ fun ConnectScreenContent(
                                         wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.GROUP_FORMED ||
                                         wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.TCP_CONNECTING,
                                 onConnect = {
-                                    verifyingWifiPeer = peer
+                                    pendingVerifyWifiPeer = peer
                                     onConnectWifiDirect(peer)
                                 },
                                 onOpenChat = { onOpenChatWifiDirect(peer) }
@@ -442,15 +459,9 @@ private fun PeerDeviceCard(device: PeerDevice, onConnect: () -> Unit, onOpenChat
                 PeerConnectionState.AVAILABLE -> OutlinedButton(onClick = onConnect) {
                     Text("CONNECT")
                 }
-                PeerConnectionState.DISCONNECTED -> AssistChip(
-                    onClick = {},
-                    enabled = false,
-                    label = { Text("NOT CONNECTED") },
-                    colors = AssistChipDefaults.assistChipColors(
-                        disabledContainerColor = ITantraColors.TextMuted.copy(alpha = 0.12f),
-                        disabledLabelColor = ITantraColors.TextMuted,
-                    ),
-                )
+                PeerConnectionState.DISCONNECTED -> OutlinedButton(onClick = onConnect) {
+                    Text("RECONNECT")
+                }
             }
         }
         Spacer(Modifier.height(8.dp))
