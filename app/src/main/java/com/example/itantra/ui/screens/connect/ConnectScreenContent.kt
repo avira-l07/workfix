@@ -63,6 +63,25 @@ fun ConnectScreenContent(
     var verifyingDevice by remember { mutableStateOf<PeerDevice?>(null) }
     var verifyingWifiPeer by remember { mutableStateOf<com.itantra.core.transport.peer.WifiDirectPeer?>(null) }
     var currentMode by remember { mutableStateOf(selectedTransportMode) }
+    // Track the device that triggered a connect so we can open the SAS dialog
+    // once the ECDH handshake actually completes (sasCode transitions null → real value).
+    var pendingVerifyDevice by remember { mutableStateOf<PeerDevice?>(null) }
+    var pendingVerifyWifiPeer by remember { mutableStateOf<com.itantra.core.transport.peer.WifiDirectPeer?>(null) }
+
+    // Open the SAS dialog only when sasCode arrives after a pending connect.
+    LaunchedEffect(sasCode) {
+        val code = sasCode
+        if (!code.isNullOrBlank()) {
+            pendingVerifyDevice?.let {
+                verifyingDevice = it
+                pendingVerifyDevice = null
+            }
+            pendingVerifyWifiPeer?.let {
+                verifyingWifiPeer = it
+                pendingVerifyWifiPeer = null
+            }
+        }
+    }
 
     Scaffold(
         containerColor = ITantraColors.CanvasBg,
@@ -157,7 +176,9 @@ fun ConnectScreenContent(
                             PeerDeviceCard(
                                 device = device,
                                 onConnect = {
-                                    verifyingDevice = device
+                                    // Record which device to verify once ECDH completes.
+                                    // The SAS dialog opens via LaunchedEffect(sasCode) above.
+                                    pendingVerifyDevice = device
                                     onConnect(device)
                                 },
                                 onOpenChat = { onOpenChat(device) }
@@ -243,7 +264,8 @@ fun ConnectScreenContent(
                                         wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.GROUP_FORMED ||
                                         wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.TCP_CONNECTING,
                                 onConnect = {
-                                    verifyingWifiPeer = peer
+                                    // Defer dialog until ECDH handshake completes (sasCode arrives).
+                                    pendingVerifyWifiPeer = peer
                                     onConnectWifiDirect(peer)
                                 },
                                 onOpenChat = { onOpenChatWifiDirect(peer) }
