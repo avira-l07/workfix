@@ -120,19 +120,50 @@ class MockLanguagePackRepository : LanguagePackRepository {
         return true
     }
 
+    var simulateDownloads: Boolean = false
+    val downloadCalls = mutableListOf<LanguageCode>()
+    val cancelCalls = mutableListOf<LanguageCode>()
+    val deleteCalls = mutableListOf<LanguageCode>()
+
     override suspend fun startDownload(code: LanguageCode) {
-        throw NotImplementedError(
-            "Language pack download is not implemented in Task 01. " +
-                "MockLanguagePackRepository only simulates pre-set install state."
-        )
+        if (!simulateDownloads) {
+            throw NotImplementedError(
+                "Language pack download is not implemented in Task 01. " +
+                    "MockLanguagePackRepository only simulates pre-set install state."
+            )
+        }
+        downloadCalls.add(code)
     }
 
     override suspend fun cancelDownload(code: LanguageCode) {
-        throw NotImplementedError("Language pack download is not implemented in Task 01.")
+        if (!simulateDownloads) {
+            throw NotImplementedError("Language pack download is not implemented in Task 01.")
+        }
+        cancelCalls.add(code)
     }
 
     override suspend fun deleteInstalledPack(code: LanguageCode) {
-        throw NotImplementedError("Language pack deletion is not implemented in Task 01.")
+        if (!simulateDownloads) {
+            throw NotImplementedError("Language pack deletion is not implemented in Task 01.")
+        }
+        deleteCalls.add(code)
+        if (activeLanguageFlow.value == code) {
+            activeLanguageFlow.value = null
+        }
+    }
+
+    fun simulateInstall(code: LanguageCode) {
+        entriesFlow.value = entriesFlow.value.toMutableMap().apply {
+            put(
+                code,
+                MockPackEntry(
+                    sttInstallState = LanguagePackInstallState.INSTALLED,
+                    ttsInstallState = LanguagePackInstallState.INSTALLED,
+                    sttSizeBytes = MOCK_INSTALLED_SIZE_BYTES,
+                    ttsSizeBytes = MOCK_INSTALLED_SIZE_BYTES
+                )
+            )
+        }
     }
 
     companion object {

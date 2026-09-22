@@ -7,6 +7,7 @@ import com.itantra.domain.model.LanguageCode
 import java.io.File
 import java.io.FileInputStream
 import java.security.MessageDigest
+import com.itantra.core.translation.OfflineTranslationModelManager
 
 class FileLanguagePackStorage(
     private val filesDir: File
@@ -35,10 +36,17 @@ class FileLanguagePackStorage(
         val sttDir = sharedSttDirectory()
         if (!sttDir.exists()) return false
 
-        return spec.requiredFiles.all { fileName ->
+        val filesPresent = spec.requiredFiles.all { fileName ->
             val f = File(sttDir, fileName)
             f.exists() && f.length() > 0L
         }
+        if (!filesPresent) {
+            // If files were deleted, invalidate verified marker
+            val marker = File(sttDir, ".verified_v1")
+            if (marker.exists()) marker.delete()
+            return false
+        }
+        return true
     }
 
     override fun isTtsInstalled(code: LanguageCode): Boolean {
@@ -46,9 +54,39 @@ class FileLanguagePackStorage(
         val ttsDir = File(packDirectory(code), "tts")
         if (!ttsDir.exists()) return false
 
-        return spec.requiredFiles.all { fileName ->
+        val filesPresent = spec.requiredFiles.all { fileName ->
             val f = File(ttsDir, fileName)
             f.exists() && f.length() > 0L
+        }
+        if (!filesPresent) {
+            val marker = File(ttsDir, ".verified_v1")
+            if (marker.exists()) marker.delete()
+            return false
+        }
+        return true
+    }
+
+    fun isSharedSttVerified(): Boolean {
+        val sttDir = sharedSttDirectory()
+        return isSharedSttInstalled() && File(sttDir, ".verified_v1").exists()
+    }
+
+    fun isTtsVerified(code: LanguageCode): Boolean {
+        val ttsDir = File(packDirectory(code), "tts")
+        return isTtsInstalled(code) && File(ttsDir, ".verified_v1").exists()
+    }
+
+    fun markSharedSttVerified(version: String = "1.0.0") {
+        val sttDir = sharedSttDirectory()
+        if (sttDir.exists()) {
+            File(sttDir, ".verified_v1").writeText(version)
+        }
+    }
+
+    fun markTtsVerified(code: LanguageCode, version: String = "1.0.0") {
+        val ttsDir = File(packDirectory(code), "tts")
+        if (ttsDir.exists()) {
+            File(ttsDir, ".verified_v1").writeText(version)
         }
     }
 
@@ -102,6 +140,13 @@ class FileLanguagePackStorage(
                 }
             }
         }
+
+        if (ttsDir.exists()) {
+            markTtsVerified(code)
+        }
+        if (expectedChecksums.keys.any { it.startsWith("shared/stt/") || it.startsWith("tiny-") }) {
+            markSharedSttVerified()
+        }
         return true
     }
 
@@ -119,16 +164,32 @@ class FileLanguagePackStorage(
             .sumOf { it.length() }
     }
 
+    private fun sha256(file: File): String {
+        if (!file.exists() || file.length() == 0L) return ""
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().buffered().use { input ->
+            val buf = ByteArray(8192)
+            var read: Int
+            while (input.read(buf).also { read = it } != -1) {
+                digest.update(buf, 0, read)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
     /**
-     * Atomically imports TTS model files for [code] from [srcTtsDir].
+     * Atomically imports TTS model files for [code] from [srcTtsDir] (FIX 036).
      * 1. Validates that [srcTtsDir] exists and is a directory.
-     * 2. Validates that all required files (model.onnx, tokens.txt) exist and are non-empty.
+     * 2. Validates that all required files exist and are non-empty.
      * 3. Stages files in a temporary staging directory.
-     * 4. Atomically promotes staging to destination 'tts/' directory.
-     * 5. Confirms that [isTtsInstalled] returns true.
-     * If any check fails, cleans up staging and leaves existing files untouched.
+     * 4. Verifies checksums if manifest is provided in src or expectedChecksums given.
+     * 5. Atomically promotes staging to destination with backup and rollback.
      */
-    fun importLanguageTts(code: LanguageCode, srcTtsDir: File): Boolean {
+    fun importLanguageTts(
+        code: LanguageCode,
+        srcTtsDir: File,
+        expectedChecksums: Map<String, String>? = null
+    ): Boolean {
         if (!srcTtsDir.exists() || !srcTtsDir.isDirectory) return false
         val spec = ModelFileSpecs.getTtsSpec(code) ?: return false
 
@@ -159,34 +220,48 @@ class FileLanguagePackStorage(
                 }
             }
 
-            // 3. Atomically replace destination
-            val finalTtsDir = File(targetPackDir, "tts")
-            if (finalTtsDir.exists()) {
-                val backupDir = File(targetPackDir, ".tts_backup_${System.nanoTime()}")
-                if (finalTtsDir.renameTo(backupDir)) {
-                    if (stagingDir.renameTo(finalTtsDir)) {
-                        backupDir.deleteRecursively()
-                    } else {
-                        backupDir.renameTo(finalTtsDir)
-                        stagingDir.deleteRecursively()
-                        return false
+            // 3. Verify checksums against expectedChecksums or manifest if present
+            val checksums = expectedChecksums ?: parseManifestChecksums(srcTtsDir)
+            if (checksums != null) {
+                for (requiredFile in spec.requiredFiles) {
+                    val expectedSha = checksums[requiredFile]
+                    if (!expectedSha.isNullOrEmpty()) {
+                        val actualSha = sha256(File(stagingDir, requiredFile))
+                        if (!actualSha.equals(expectedSha, ignoreCase = true)) {
+                            stagingDir.deleteRecursively()
+                            return false
+                        }
                     }
-                } else {
-                    finalTtsDir.deleteRecursively()
-                    if (!stagingDir.renameTo(finalTtsDir)) {
-                        stagingDir.copyRecursively(finalTtsDir, overwrite = true)
-                        stagingDir.deleteRecursively()
-                    }
-                }
-            } else {
-                if (!stagingDir.renameTo(finalTtsDir)) {
-                    stagingDir.copyRecursively(finalTtsDir, overwrite = true)
-                    stagingDir.deleteRecursively()
                 }
             }
 
-            // 4. Verify post-condition
-            return isTtsInstalled(code)
+            // Write verified marker into staging
+            File(stagingDir, ".verified_v1").writeText("1.0.0")
+
+            // 4. Atomically replace destination with backup and rollback
+            val finalTtsDir = File(targetPackDir, "tts")
+            val backupDir = File(targetPackDir, ".tts_backup_${System.nanoTime()}")
+            var hadBackup = false
+
+            if (finalTtsDir.exists()) {
+                if (finalTtsDir.renameTo(backupDir)) {
+                    hadBackup = true
+                } else {
+                    stagingDir.deleteRecursively()
+                    return false
+                }
+            }
+
+            val promoted = stagingDir.renameTo(finalTtsDir)
+            if (promoted) {
+                if (hadBackup) backupDir.deleteRecursively()
+                return isTtsInstalled(code)
+            } else {
+                // Rollback
+                if (hadBackup) backupDir.renameTo(finalTtsDir)
+                stagingDir.deleteRecursively()
+                return false
+            }
         } catch (e: Exception) {
             stagingDir.deleteRecursively()
             return false
@@ -194,9 +269,14 @@ class FileLanguagePackStorage(
     }
 
     /**
-     * Atomically imports shared STT model files from [srcSttDir].
+     * Atomically imports shared STT model files from [srcSttDir] (FIX 037).
+     * Validates required files, verifies against trusted SHA-256 hashes,
+     * and atomically promotes with backup and rollback.
      */
-    fun importSharedStt(srcSttDir: File): Boolean {
+    fun importSharedStt(
+        srcSttDir: File,
+        expectedChecksums: Map<String, String>? = null
+    ): Boolean {
         if (!srcSttDir.exists() || !srcSttDir.isDirectory) return false
         val spec = ModelFileSpecs.getSttSpec(LanguageCode.HINDI)
 
@@ -224,34 +304,121 @@ class FileLanguagePackStorage(
                 }
             }
 
-            if (dstStt.exists()) {
-                val backupDir = File(parent, ".stt_backup_${System.nanoTime()}")
-                if (dstStt.renameTo(backupDir)) {
-                    if (stagingDir.renameTo(dstStt)) {
-                        backupDir.deleteRecursively()
-                    } else {
-                        backupDir.renameTo(dstStt)
+            // Verify checksums against expectedChecksums or trusted STT hashes
+            val checksums = expectedChecksums ?: AssetLanguagePackStorage.TRUSTED_STT_SHA256
+            for (requiredFile in spec.requiredFiles) {
+                val expectedSha = checksums[requiredFile]
+                if (!expectedSha.isNullOrEmpty()) {
+                    val actualSha = sha256(File(stagingDir, requiredFile))
+                    if (!actualSha.equals(expectedSha, ignoreCase = true)) {
                         stagingDir.deleteRecursively()
                         return false
                     }
-                } else {
-                    dstStt.deleteRecursively()
-                    if (!stagingDir.renameTo(dstStt)) {
-                        stagingDir.copyRecursively(dstStt, overwrite = true)
-                        stagingDir.deleteRecursively()
-                    }
-                }
-            } else {
-                if (!stagingDir.renameTo(dstStt)) {
-                    stagingDir.copyRecursively(dstStt, overwrite = true)
-                    stagingDir.deleteRecursively()
                 }
             }
 
-            return isSharedSttInstalled()
+            File(stagingDir, ".verified_v1").writeText("1.0.0")
+
+            val backupDir = File(parent, ".stt_backup_${System.nanoTime()}")
+            var hadBackup = false
+
+            if (dstStt.exists()) {
+                if (dstStt.renameTo(backupDir)) {
+                    hadBackup = true
+                } else {
+                    stagingDir.deleteRecursively()
+                    return false
+                }
+            }
+
+            val promoted = stagingDir.renameTo(dstStt)
+            if (promoted) {
+                if (hadBackup) backupDir.deleteRecursively()
+                return isSharedSttInstalled()
+            } else {
+                if (hadBackup) dstStt.parentFile?.let { backupDir.renameTo(dstStt) }
+                stagingDir.deleteRecursively()
+                return false
+            }
         } catch (e: Exception) {
             stagingDir.deleteRecursively()
             return false
+        }
+    }
+
+    /**
+     * Atomically imports translation models from [srcMt] directory with full
+     * manifest, canonical path, and SHA-256 verification (FIX 038).
+     */
+    fun importTranslationModels(srcMt: File): Boolean {
+        if (!srcMt.exists() || !srcMt.isDirectory) return false
+        val dstMt = File(filesDir, "translation_models")
+        val parent = dstMt.parentFile ?: return false
+        if (!parent.exists()) parent.mkdirs()
+
+        val stagingDir = File(parent, ".mt_staging_${System.nanoTime()}")
+        if (stagingDir.exists()) stagingDir.deleteRecursively()
+        if (!stagingDir.mkdirs()) return false
+
+        try {
+            srcMt.copyRecursively(stagingDir, overwrite = true)
+
+            // Validate both directions with OfflineTranslationModelManager
+            val manager = OfflineTranslationModelManager(stagingDir)
+            var validDirectionCount = 0
+
+            for (dir in OfflineTranslationModelManager.Direction.values()) {
+                val subDir = manager.modelDir(dir)
+                if (subDir.exists()) {
+                    val inspection = manager.inspectDirectory(subDir, dir)
+                    if (inspection.status != OfflineTranslationModelManager.Status.READY) {
+                        stagingDir.deleteRecursively()
+                        return false
+                    }
+                    validDirectionCount++
+                }
+            }
+
+            if (validDirectionCount == 0) {
+                stagingDir.deleteRecursively()
+                return false
+            }
+
+            val backupDir = File(parent, ".mt_backup_${System.nanoTime()}")
+            var hadBackup = false
+
+            if (dstMt.exists()) {
+                if (dstMt.renameTo(backupDir)) {
+                    hadBackup = true
+                } else {
+                    stagingDir.deleteRecursively()
+                    return false
+                }
+            }
+
+            val promoted = stagingDir.renameTo(dstMt)
+            if (promoted) {
+                if (hadBackup) backupDir.deleteRecursively()
+                return true
+            } else {
+                if (hadBackup) backupDir.renameTo(dstMt)
+                stagingDir.deleteRecursively()
+                return false
+            }
+        } catch (e: Exception) {
+            stagingDir.deleteRecursively()
+            return false
+        }
+    }
+
+    private fun parseManifestChecksums(dir: File): Map<String, String>? {
+        val manifestFile = File(dir, "manifest.json")
+        if (!manifestFile.exists()) return null
+        return try {
+            val json = manifestFile.readText()
+            LanguagePackManifestParser.parseOrNull(json)?.ttsModel?.checksumsSha256
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -282,13 +449,12 @@ class FileLanguagePackStorage(
                 }
             }
 
-            // 3. Translation Models (optional)
+            // 3. Translation Models (validated via FIX 038)
             val srcMt = File(sourceDir, "mt")
             if (srcMt.exists()) {
-                val dstMt = File(filesDir, "translation_models")
-                dstMt.mkdirs()
-                srcMt.copyRecursively(dstMt, overwrite = true)
-                importedAny = true
+                if (importTranslationModels(srcMt)) {
+                    importedAny = true
+                }
             }
 
             importedAny

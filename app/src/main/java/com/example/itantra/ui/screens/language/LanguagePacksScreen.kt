@@ -31,6 +31,7 @@ import com.itantra.domain.model.LanguageCode
 import com.itantra.domain.model.LanguagePackAvailability
 import com.itantra.domain.model.LanguagePackInstallState
 import com.itantra.domain.repository.LanguagePackRepository
+import com.itantra.feature.languages.LanguagePacksViewModel
 import kotlinx.coroutines.launch
 
 enum class PackStatus { READY, ACTIVE, DOWNLOADING, UPDATE_AVAILABLE, AVAILABLE }
@@ -53,6 +54,13 @@ data class LanguagePack(
 fun LanguagePacksScreen(
     repository: LanguagePackRepository = remember { AppGraph.languagePackRepository },
     sessionManager: ActiveLanguageSessionManager = remember { AppGraph.activeLanguageSessionManager },
+    viewModel: LanguagePacksViewModel = remember {
+        LanguagePacksViewModel(
+            repository = repository,
+            sessionManager = sessionManager,
+            storage = AppGraph.languagePackStorage
+        )
+    },
     onBack: () -> Unit,
     onDownloadPack: (LanguagePack) -> Unit = {},
 ) {
@@ -211,31 +219,21 @@ fun LanguagePacksScreen(
                         onActivate = {
                             val langCode = LanguageCode.entries.find { it.name.equals(pack.code, ignoreCase = true) }
                             if (langCode != null) {
-                                coroutineScope.launch {
-                                    repository.setActiveLanguage(langCode)
-                                    try {
-                                        val shouldLoadTts = AppGraph.languagePackStorage.isTtsInstalled(langCode)
-                                        sessionManager.switchTo(langCode, loadStt = true, loadTts = shouldLoadTts)
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-                                }
+                                viewModel.activateLanguage(langCode)
                             }
                         },
                         onDownload = {
                             val langCode = LanguageCode.entries.find { it.name.equals(pack.code, ignoreCase = true) }
                             if (langCode != null) {
-                                coroutineScope.launch {
-                                    repository.setActiveLanguage(langCode)
-                                    try {
-                                        val shouldLoadTts = AppGraph.languagePackStorage.isTtsInstalled(langCode)
-                                        sessionManager.switchTo(langCode, loadStt = true, loadTts = shouldLoadTts)
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-                                }
+                                viewModel.downloadPack(langCode)
                             }
                             onDownloadPack(pack)
+                        },
+                        onCancelDownload = {
+                            val langCode = LanguageCode.entries.find { it.name.equals(pack.code, ignoreCase = true) }
+                            if (langCode != null) {
+                                viewModel.cancelDownload(langCode)
+                            }
                         }
                     )
                 }
@@ -359,7 +357,12 @@ private fun StorageOverviewCard(packs: List<LanguagePack>) {
 }
 
 @Composable
-private fun LanguagePackCard(pack: LanguagePack, onActivate: () -> Unit = {}, onDownload: () -> Unit = {}) {
+private fun LanguagePackCard(
+    pack: LanguagePack,
+    onActivate: () -> Unit = {},
+    onDownload: () -> Unit = {},
+    onCancelDownload: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -409,6 +412,14 @@ private fun LanguagePackCard(pack: LanguagePack, onActivate: () -> Unit = {}, on
                     modifier = Modifier.fillMaxWidth().height(4.dp),
                     color = ITantraColors.Primary,
                 )
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = onCancelDownload,
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = 6.dp),
+                ) {
+                    Text("CANCEL DOWNLOAD", style = MaterialTheme.typography.labelMedium)
+                }
             }
 
             if (pack.status == PackStatus.READY) {

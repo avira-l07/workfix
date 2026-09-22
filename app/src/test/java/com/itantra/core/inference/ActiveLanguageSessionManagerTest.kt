@@ -225,4 +225,43 @@ class ActiveLanguageSessionManagerTest {
         assertTrue(log.events.contains("load-stt-hi"))
         assertTrue(log.events.contains("load-tts-hi"))
     }
+
+    @Test
+    fun `ensureCapabilities sets ERROR when requested TTS load fails for active language`() = runTest {
+        val log = EventLog()
+        val factory = object : EngineFactory {
+            override fun createRecognizer(language: LanguageCode) = FakeRecognizer(language, log)
+            override fun createSynthesizer(language: LanguageCode) = object : SpeechSynthesizerEngine {
+                override val languageCode: LanguageCode = language
+                override val isLoaded: Boolean = false
+                override suspend fun load() { throw RuntimeException("TTS load failed") }
+                override suspend fun synthesize(request: SpeechSynthesisRequest) = throw NotImplementedError()
+                override suspend fun unload() {}
+            }
+        }
+        val manager = ActiveLanguageSessionManager(factory)
+        // Switch with only STT initially
+        manager.switchTo(LanguageCode.HINDI, loadStt = true, loadTts = false)
+        assertEquals(LanguageSessionState.READY, manager.sessionState.value)
+
+        // Try ensuring TTS, which fails
+        manager.ensureCapabilities(LanguageCode.HINDI, requireStt = true, requireTts = true)
+
+        // Must report ERROR, never claim READY
+        assertEquals(LanguageSessionState.ERROR, manager.sessionState.value)
+    }
+
+    @Test
+    fun `unloadIfActive unloads active language and resets to IDLE`() = runTest {
+        val log = EventLog()
+        val manager = ActiveLanguageSessionManager(fakeFactory(log))
+        manager.switchTo(LanguageCode.HINDI)
+        assertEquals(LanguageCode.HINDI, manager.activeLanguage.value)
+
+        manager.unloadIfActive(LanguageCode.HINDI)
+        assertEquals(null, manager.activeLanguage.value)
+        assertEquals(LanguageSessionState.IDLE, manager.sessionState.value)
+        assertTrue(log.events.contains("unload-stt-hi"))
+        assertTrue(log.events.contains("unload-tts-hi"))
+    }
 }

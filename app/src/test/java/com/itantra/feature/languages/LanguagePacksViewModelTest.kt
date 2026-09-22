@@ -16,10 +16,12 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.flow.firstOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -99,5 +101,60 @@ class LanguagePacksViewModelTest {
         assertNull(sessionManager.activeLanguage.value)
         assertNull(sessionManager.currentSttEngine)
         assertNull(sessionManager.currentTtsEngine)
+    }
+
+    @Test
+    fun downloadPack_invokesRepositoryStartDownloadExactlyOnceWithoutChangingActiveLanguage() = runTest(testDispatcher) {
+        val repo = MockLanguagePackRepository().apply { simulateDownloads = true }
+        val viewModel = LanguagePacksViewModel(repo)
+
+        viewModel.downloadPack(LanguageCode.TAMIL)
+        advanceUntilIdle()
+
+        assertEquals(listOf(LanguageCode.TAMIL), repo.downloadCalls)
+        // Active language in repo should not be TAMIL
+        assertEquals(LanguageCode.HINDI, repo.observeActiveLanguage().firstOrNull())
+    }
+
+    @Test
+    fun cancelDownload_invokesRepositoryCancelDownload() = runTest(testDispatcher) {
+        val repo = MockLanguagePackRepository().apply { simulateDownloads = true }
+        val viewModel = LanguagePacksViewModel(repo)
+
+        viewModel.cancelDownload(LanguageCode.TAMIL)
+        advanceUntilIdle()
+
+        assertEquals(listOf(LanguageCode.TAMIL), repo.cancelCalls)
+    }
+
+    @Test
+    fun ttsInstallForActiveLanguage_automaticallyLoadsTtsEngine() = runTest(testDispatcher) {
+        val repo = MockLanguagePackRepository()
+        var synthCreated = false
+        val engineFactory = object : EngineFactory {
+            override fun createRecognizer(language: LanguageCode): SpeechRecognizerEngine =
+                FakeRecognizer(language)
+            override fun createSynthesizer(language: LanguageCode): SpeechSynthesizerEngine {
+                synthCreated = true
+                return FakeSynthesizer(language)
+            }
+        }
+        val sessionManager = ActiveLanguageSessionManager(engineFactory)
+        // Activate HINDI with only STT initially
+        sessionManager.switchTo(LanguageCode.HINDI, loadStt = true, loadTts = false)
+        assertNotNull(sessionManager.currentSttEngine)
+        assertNull(sessionManager.currentTtsEngine)
+
+        val viewModel = LanguagePacksViewModel(repo, sessionManager)
+        advanceUntilIdle()
+
+        // Simulate install of HINDI pack
+        repo.simulateInstall(LanguageCode.HINDI)
+        advanceUntilIdle()
+
+        // TTS should be automatically loaded without a language switch
+        assertTrue(synthCreated)
+        assertNotNull(sessionManager.currentTtsEngine)
+        assertTrue(sessionManager.currentTtsEngine!!.isLoaded)
     }
 }

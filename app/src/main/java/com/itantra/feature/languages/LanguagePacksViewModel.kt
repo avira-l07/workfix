@@ -20,6 +20,7 @@ data class LanguagePacksUiState(
 class LanguagePacksViewModel(
     private val repository: LanguagePackRepository,
     private val sessionManager: ActiveLanguageSessionManager? = null,
+    private val storage: com.itantra.core.storage.LanguagePackStorage? = null,
 ) : ViewModel() {
 
     val uiState: StateFlow<LanguagePacksUiState> = repository.observePackSummaries()
@@ -29,6 +30,41 @@ class LanguagePacksViewModel(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = LanguagePacksUiState(),
         )
+
+    init {
+        viewModelScope.launch {
+            repository.observePackSummaries().collect { summaries ->
+                val active = sessionManager?.activeLanguage?.value ?: return@collect
+                val activePack = summaries.find { it.language.code == active } ?: return@collect
+                if (activePack.isTtsDownloaded && (sessionManager.currentTtsEngine == null || !sessionManager.currentTtsEngine!!.isLoaded)) {
+                    val shouldTts = storage?.isTtsInstalled(active) ?: true
+                    try {
+                        sessionManager.ensureCapabilities(active, requireStt = true, requireTts = shouldTts)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Starts downloading the language pack for [code] directly without switching active language (FIX 006).
+     */
+    fun downloadPack(code: LanguageCode) {
+        viewModelScope.launch {
+            repository.startDownload(code)
+        }
+    }
+
+    /**
+     * Cancels an in-progress download for [code].
+     */
+    fun cancelDownload(code: LanguageCode) {
+        viewModelScope.launch {
+            repository.cancelDownload(code)
+        }
+    }
 
     /**
      * Activates the selected language pack in repository and switches active inference

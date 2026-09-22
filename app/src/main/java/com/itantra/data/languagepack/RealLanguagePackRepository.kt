@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
@@ -47,25 +48,39 @@ class RealLanguagePackRepository(
     )
     private val downloadProgress = MutableStateFlow<Map<LanguageCode, Int>>(emptyMap())
     private val downloadJobs = mutableMapOf<LanguageCode, Job>()
+    private val downloadMutex = kotlinx.coroutines.sync.Mutex()
+    private val sharedSttMutex = kotlinx.coroutines.sync.Mutex()
 
     private fun isSharedSttReady(): Boolean {
         val spec = ModelFileSpecs.getSttSpec(LanguageCode.HINDI)
         val sharedDir = File(storage.packDirectory(LanguageCode.HINDI).parentFile, "shared/stt")
         if (!sharedDir.exists()) return false
-        return spec.requiredFiles.all {
+        val filesPresent = spec.requiredFiles.all {
             val f = File(sharedDir, it)
             f.exists() && f.length() > 0L
         }
+        if (!filesPresent) {
+            val marker = File(sharedDir, ".verified_v1")
+            if (marker.exists()) marker.delete()
+            return false
+        }
+        return true
     }
 
     private fun isTtsReady(code: LanguageCode): Boolean {
         val spec = ModelFileSpecs.getTtsSpec(code) ?: return false
         val dir = File(storage.packDirectory(code), "tts")
         if (!dir.exists()) return false
-        return spec.requiredFiles.all {
+        val filesPresent = spec.requiredFiles.all {
             val f = File(dir, it)
             f.exists() && f.length() > 0L
         }
+        if (!filesPresent) {
+            val marker = File(dir, ".verified_v1")
+            if (marker.exists()) marker.delete()
+            return false
+        }
+        return true
     }
 
     private fun buildInitialSttStates(): Map<LanguageCode, LanguagePackInstallState> {
@@ -161,6 +176,12 @@ class RealLanguagePackRepository(
         val sttSpec = ModelFileSpecs.getSttSpec(code)
         val manifest = getManifest(code) ?: return
 
+        // Single flight check for same language (FIX 039)
+        val isAlreadyActive = downloadMutex.withLock {
+            downloadJobs[code]?.isActive == true
+        }
+        if (isAlreadyActive) return
+
         val needSharedStt = !isSharedSttReady()
 
         if (needSharedStt) {
@@ -190,20 +211,45 @@ class RealLanguagePackRepository(
             return
         }
 
+        val totalExpectedBytes = (if (needSharedStt) manifest.sttModel.sizeBytes else 0L) + manifest.ttsModel.sizeBytes
+        var cumulativeBytesDownloaded = 0L
+
+        val onBytesRead: (Int) -> Unit = { count ->
+            cumulativeBytesDownloaded += count
+            if (totalExpectedBytes > 0) {
+                val pct = ((cumulativeBytesDownloaded * 100) / totalExpectedBytes).toInt().coerceIn(0, 99)
+                updateProgress(code, pct)
+            }
+        }
+
+        var jobRef: Job? = null
         val job = CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 1. Download shared multilingual STT if missing
+                // 1. Download shared multilingual STT if missing, single-flight protected (FIX 040)
                 if (needSharedStt) {
-                    val sttUrlBase = manifest.sttModel.downloadUrl ?: throw Exception("No STT URL")
-                    val tmpStt = File(tmpDir, "shared_stt")
-                    tmpStt.mkdirs()
+                    sharedSttMutex.withLock {
+                        if (!isSharedSttReady()) {
+                            val sttUrlBase = manifest.sttModel.downloadUrl ?: throw Exception("No STT URL")
+                            val tmpStt = File(tmpDir, "shared_stt")
+                            tmpStt.mkdirs()
 
-                    sttSpec.requiredFiles.forEach { file ->
-                        val targetFile = File(tmpStt, file)
-                        downloadFile("$sttUrlBase/$file", targetFile, code, isSecondary = false)
-                        val expectedSha = manifest.sttModel.checksumsSha256[file]
-                        if (!expectedSha.isNullOrEmpty()) {
-                            verifySha256(targetFile, expectedSha)
+                            for (file in sttSpec.requiredFiles) {
+                                val targetFile = File(tmpStt, file)
+                                downloadFile("$sttUrlBase/$file", targetFile, onBytesRead)
+                                val expectedSha = manifest.sttModel.checksumsSha256[file]
+                                if (!expectedSha.isNullOrEmpty()) {
+                                    verifySha256(targetFile, expectedSha)
+                                }
+                            }
+
+                            // Safe atomic move shared STT (FIX 041)
+                            sharedDir.mkdirs()
+                            for (file in sttSpec.requiredFiles) {
+                                val destFile = File(sharedDir, file)
+                                safeAtomicMove(File(tmpStt, file), destFile)
+                            }
+                            File(sharedDir, ".verified_v1").writeText(manifest.packVersion)
+                            LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.INSTALLED, true) }
                         }
                     }
                 }
@@ -213,31 +259,21 @@ class RealLanguagePackRepository(
                 val tmpTts = File(tmpDir, "tts")
                 tmpTts.mkdirs()
 
-                ttsSpec.requiredFiles.forEach { file ->
+                for (file in ttsSpec.requiredFiles) {
                     val targetFile = File(tmpTts, file)
-                    downloadFile("$ttsUrlBase/$file", targetFile, code, isSecondary = false)
+                    downloadFile("$ttsUrlBase/$file", targetFile, onBytesRead)
                     val expectedSha = manifest.ttsModel.checksumsSha256[file]
                     if (!expectedSha.isNullOrEmpty()) {
                         verifySha256(targetFile, expectedSha)
                     }
                 }
 
-                // 3. Atomic Move shared STT
-                if (needSharedStt) {
-                    sharedDir.mkdirs()
-                    val tmpStt = File(tmpDir, "shared_stt")
-                    sttSpec.requiredFiles.forEach { file ->
-                        val destFile = File(sharedDir, file)
-                        if (destFile.exists()) destFile.delete()
-                        Files.move(File(tmpStt, file).toPath(), destFile.toPath(), StandardCopyOption.ATOMIC_MOVE)
-                    }
-                    LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.INSTALLED, true) }
-                }
-
-                // 4. Atomic Move per-language TTS
+                // 3. Atomic Move per-language TTS with fallback (FIX 041)
                 val ttsDest = File(rootDir, "tts")
-                ttsDest.deleteRecursively()
-                Files.move(File(tmpDir, "tts").toPath(), ttsDest.toPath(), StandardCopyOption.ATOMIC_MOVE)
+                safeAtomicMove(tmpTts, ttsDest)
+                File(ttsDest, ".verified_v1").writeText(manifest.packVersion)
+
+                updateProgress(code, 100)
                 updateState(code, LanguagePackInstallState.INSTALLED, false)
 
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -257,10 +293,54 @@ class RealLanguagePackRepository(
             } finally {
                 tmpDir.deleteRecursively()
                 updateProgress(code, null)
-                downloadJobs.remove(code)
+                downloadMutex.withLock {
+                    if (downloadJobs[code] === jobRef) {
+                        downloadJobs.remove(code)
+                    }
+                }
             }
         }
-        downloadJobs[code] = job
+        jobRef = job
+        downloadMutex.withLock {
+            downloadJobs[code] = job
+        }
+    }
+
+    private fun safeAtomicMove(source: File, destination: File) {
+        try {
+            Files.move(source.toPath(), destination.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        } catch (_: Exception) {
+            // Fallback for filesystems without atomic move support (FIX 041)
+            val parent = destination.parentFile ?: source.parentFile
+            val backup = File(parent, ".backup_${System.nanoTime()}")
+            var hadBackup = false
+            if (destination.exists()) {
+                try {
+                    Files.move(destination.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                    hadBackup = true
+                } catch (_: Exception) {}
+            }
+            try {
+                if (source.isDirectory) {
+                    source.copyRecursively(destination, overwrite = true)
+                    source.deleteRecursively()
+                } else {
+                    source.inputStream().buffered().use { input ->
+                        destination.outputStream().buffered().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    source.delete()
+                }
+                if (hadBackup) backup.deleteRecursively()
+            } catch (copyEx: Exception) {
+                if (hadBackup) {
+                    if (destination.exists()) destination.deleteRecursively()
+                    Files.move(backup.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+                throw copyEx
+            }
+        }
     }
 
     private fun verifySha256(file: File, expectedSha: String) {
@@ -281,45 +361,50 @@ class RealLanguagePackRepository(
         }
     }
 
-    private suspend fun downloadFile(urlStr: String, dest: File, code: LanguageCode, isSecondary: Boolean) = withContext(Dispatchers.IO) {
-        val url = URL(urlStr)
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        connection.connectTimeout = 15000
-        connection.readTimeout = 60000
+    private suspend fun downloadFile(
+        urlStr: String,
+        dest: File,
+        onBytesRead: (Int) -> Unit
+    ) = withContext(Dispatchers.IO) {
+        var connection: HttpURLConnection? = null
+        try {
+            val url = URL(urlStr)
+            connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 15000
+            connection.readTimeout = 60000
 
-        if (connection.responseCode !in 200..299) {
-            throw Exception("HTTP Error ${connection.responseCode} for $urlStr")
-        }
+            if (connection.responseCode !in 200..299) {
+                throw Exception("HTTP Error ${connection.responseCode} for $urlStr")
+            }
 
-        val tempDest = File(dest.absolutePath + ".part")
-        val fileLength = connection.contentLength
-
-        connection.inputStream.use { input ->
-            FileOutputStream(tempDest).use { output ->
-                val data = ByteArray(8192)
-                var total: Long = 0
-                var count: Int
-                while (input.read(data).also { count = it } != -1) {
-                    ensureActive()
-                    total += count
-                    output.write(data, 0, count)
-                    if (fileLength > 0 && !isSecondary) {
-                        val progress = (total * 100 / fileLength).toInt()
-                        updateProgress(code, progress)
+            val tempDest = File(dest.absolutePath + ".part")
+            connection.inputStream.use { input ->
+                FileOutputStream(tempDest).use { output ->
+                    val data = ByteArray(8192)
+                    var count: Int
+                    while (input.read(data).also { count = it } != -1) {
+                        ensureActive()
+                        output.write(data, 0, count)
+                        onBytesRead(count)
                     }
                 }
             }
+            if (tempDest.length() == 0L) {
+                throw Exception("Downloaded file is 0 bytes: $urlStr")
+            }
+            safeAtomicMove(tempDest, dest)
+        } finally {
+            // Explicitly disconnect connection in finally (FIX 068)
+            connection?.disconnect()
         }
-        if (tempDest.length() == 0L) {
-            throw Exception("Downloaded file is 0 bytes: $urlStr")
-        }
-        Files.move(tempDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE)
     }
 
     override suspend fun cancelDownload(code: LanguageCode) {
-        downloadJobs[code]?.cancelAndJoin()
-        downloadJobs.remove(code)
+        val jobToCancel = downloadMutex.withLock {
+            downloadJobs.remove(code)
+        }
+        jobToCancel?.cancelAndJoin()
 
         val tmpDir = File(storage.packDirectory(code), ".install_tmp")
         tmpDir.deleteRecursively()
@@ -338,6 +423,9 @@ class RealLanguagePackRepository(
 
         if (activeLanguage.value == code) {
             activeLanguage.value = null
+            // Clear saved source_lang preference (FIX 042)
+            context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE)
+                .edit().remove("source_lang").apply()
         }
     }
 

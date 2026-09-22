@@ -241,4 +241,45 @@ class LanguagePackIntegrityTest {
             assertEquals("Manifest TTS files must match runtime spec for $lang", ttsSpec?.requiredFiles, manifest.ttsModel.files)
         }
     }
+
+    @Test
+    fun test_importLanguageTts_checksumMismatchRollsBackAndFails() {
+        val storage = FileLanguagePackStorage(tempFolder.root)
+        val srcDir = tempFolder.newFolder("src_tts")
+        File(srcDir, "model.onnx").writeText("corrupt content")
+        File(srcDir, "tokens.txt").writeText("tokens")
+
+        val wrongChecksums = mapOf(
+            "model.onnx" to "0000000000000000000000000000000000000000000000000000000000000000"
+        )
+        val success = storage.importLanguageTts(LanguageCode.HINDI, srcDir, expectedChecksums = wrongChecksums)
+        assertFalse("Import must fail on checksum mismatch", success)
+        assertFalse("TTS must not be installed", storage.isTtsInstalled(LanguageCode.HINDI))
+    }
+
+    @Test
+    fun test_importSharedStt_checksumMismatchRollsBackAndFails() {
+        val storage = FileLanguagePackStorage(tempFolder.root)
+        val srcDir = tempFolder.newFolder("src_stt")
+        File(srcDir, "tiny-encoder.int8.onnx").writeText("bad-encoder")
+        File(srcDir, "tiny-decoder.int8.onnx").writeText("bad-decoder")
+        File(srcDir, "tiny-tokens.txt").writeText("bad-tokens")
+
+        val wrongChecksums = mapOf(
+            "tiny-encoder.int8.onnx" to "0000000000000000000000000000000000000000000000000000000000000000"
+        )
+        val success = storage.importSharedStt(srcDir, expectedChecksums = wrongChecksums)
+        assertFalse("Shared STT import must fail on checksum mismatch", success)
+    }
+
+    @Test
+    fun test_importTranslationModels_rejectsDirectoryWithoutValidManifest() {
+        val storage = FileLanguagePackStorage(tempFolder.root)
+        val srcMtDir = tempFolder.newFolder("mt_invalid")
+        val indicEn = File(srcMtDir, "indic-en").apply { mkdirs() }
+        File(indicEn, "random.bin").writeText("random data")
+
+        val success = storage.importTranslationModels(srcMtDir)
+        assertFalse("MT import without valid manifest must fail", success)
+    }
 }

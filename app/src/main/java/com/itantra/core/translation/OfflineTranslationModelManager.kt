@@ -43,8 +43,10 @@ class OfflineTranslationModelManager(
     fun modelDir(direction: Direction): File =
         File(baseDir, direction.folderName)
 
-    fun inspect(direction: Direction): Inspection {
-        val dir = modelDir(direction)
+    fun inspect(direction: Direction): Inspection =
+        inspectDirectory(modelDir(direction), direction)
+
+    fun inspectDirectory(dir: File, direction: Direction): Inspection {
         if (!dir.exists() || !dir.isDirectory) {
             return Inspection(direction, Status.MISSING, "MODEL_DIRECTORY_MISSING", dir)
         }
@@ -75,13 +77,40 @@ class OfflineTranslationModelManager(
             return Inspection(direction, Status.INVALID, "NO_REQUIRED_FILES", dir)
         }
 
+        val canonicalDir = try {
+            dir.canonicalFile
+        } catch (_: Exception) {
+            return Inspection(direction, Status.INVALID, "CANONICAL_PATH_ERROR", dir)
+        }
+        val canonicalDirPath = canonicalDir.path.trimEnd(File.separatorChar) + File.separator
+
+        val seenPaths = mutableSetOf<String>()
         for (relativePath in manifest.requiredFiles) {
-            if (relativePath.contains("..")) {
+            if (relativePath.isBlank() || relativePath.startsWith("/") || relativePath.startsWith("\\") || relativePath.contains("..")) {
                 return Inspection(direction, Status.INVALID, "UNSAFE_PATH_$relativePath", dir)
             }
+            if (File(relativePath).isAbsolute) {
+                return Inspection(direction, Status.INVALID, "ABSOLUTE_PATH_$relativePath", dir)
+            }
+            val normalized = relativePath.replace('\\', '/')
+            if (!seenPaths.add(normalized)) {
+                return Inspection(direction, Status.INVALID, "DUPLICATE_FILE_$relativePath", dir)
+            }
+        }
 
-            val file = File(dir, relativePath)
-            if (!file.exists() || !file.isFile || file.length() <= 0L) {
+        for (relativePath in manifest.requiredFiles) {
+            val file = File(canonicalDir, relativePath)
+            val canonicalChild = try {
+                file.canonicalFile
+            } catch (_: Exception) {
+                return Inspection(direction, Status.INVALID, "CANONICAL_PATH_ERROR_$relativePath", dir)
+            }
+
+            if (!canonicalChild.path.startsWith(canonicalDirPath)) {
+                return Inspection(direction, Status.INVALID, "PATH_ESCAPE_$relativePath", dir)
+            }
+
+            if (!canonicalChild.exists() || !canonicalChild.isFile || canonicalChild.length() <= 0L) {
                 return Inspection(direction, Status.INVALID, "FILE_MISSING_$relativePath", dir)
             }
 
@@ -94,7 +123,7 @@ class OfflineTranslationModelManager(
                 return Inspection(direction, Status.INVALID, "CHECKSUM_INVALID_$relativePath", dir)
             }
 
-            val actual = sha256(file)
+            val actual = sha256(canonicalChild)
             if (!actual.equals(expected, ignoreCase = true)) {
                 return Inspection(direction, Status.INVALID, "CHECKSUM_MISMATCH_$relativePath", dir)
             }

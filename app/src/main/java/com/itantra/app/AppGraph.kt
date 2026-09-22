@@ -51,19 +51,48 @@ object AppGraph {
                 }
 
                 // Automatically keep activeLanguageSessionManager in sync with repository changes
-                try {
-                    languagePackRepository.observeActiveLanguage().collect { lang ->
-                        if (lang != null && activeLanguageSessionManager.activeLanguage.value != lang) {
-                            try {
-                                val shouldLoadTts = languagePackStorage.isTtsInstalled(lang)
-                                activeLanguageSessionManager.switchTo(lang, loadStt = true, loadTts = shouldLoadTts)
-                            } catch (e: Exception) {
-                                android.util.Log.e("AppGraph", "Failed to switch sessionManager to $lang", e)
+                launch {
+                    try {
+                        languagePackRepository.observeActiveLanguage().collect { lang ->
+                            if (lang != null && activeLanguageSessionManager.activeLanguage.value != lang) {
+                                try {
+                                    val shouldLoadTts = languagePackStorage.isTtsInstalled(lang)
+                                    activeLanguageSessionManager.switchTo(lang, loadStt = true, loadTts = shouldLoadTts)
+                                } catch (e: Exception) {
+                                    android.util.Log.e("AppGraph", "Failed to switch sessionManager to $lang", e)
+                                }
+                            } else if (lang == null && activeLanguageSessionManager.activeLanguage.value != null) {
+                                try {
+                                    activeLanguageSessionManager.releaseAll()
+                                } catch (e: Exception) {
+                                    android.util.Log.e("AppGraph", "Failed to release sessionManager on active language clear", e)
+                                }
                             }
                         }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                }
+
+                // Automatically ensure TTS capability when TTS is installed for active language (FIX 031)
+                launch {
+                    try {
+                        languagePackRepository.observePackSummaries().collect { summaries ->
+                            val currentActive = activeLanguageSessionManager.activeLanguage.value ?: return@collect
+                            val activeSummary = summaries.find { it.language.code == currentActive } ?: return@collect
+                            val ttsReadyOnDisk = activeSummary.isTtsDownloaded || languagePackStorage.isTtsInstalled(currentActive)
+                            val ttsLoaded = activeLanguageSessionManager.currentTtsEngine != null && activeLanguageSessionManager.currentTtsEngine?.isLoaded == true
+                            if (ttsReadyOnDisk && !ttsLoaded) {
+                                try {
+                                    activeLanguageSessionManager.ensureCapabilities(currentActive, requireStt = true, requireTts = true)
+                                } catch (e: Exception) {
+                                    android.util.Log.e("AppGraph", "Failed to auto-load TTS for $currentActive", e)
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }
         }
