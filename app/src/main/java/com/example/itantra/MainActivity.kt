@@ -81,6 +81,12 @@ class MainActivity : ComponentActivity() {
         onWifiDirectPermissionCallback = null
     }
 
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        android.util.Log.i("MainActivity", "POST_NOTIFICATIONS granted=$isGranted")
+    }
+
     private var onDiscoverableResult: ((Boolean) -> Unit)? = null
 
     private val discoverableLauncher = registerForActivityResult(
@@ -162,6 +168,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.itantra.app.AppGraph.init(this)
+        com.itantra.core.service.OperationalForegroundService.ensureNotificationChannels(this)
         AppGraph.bluetoothPeerTransport.registerBondReceiver(this)
         enableEdgeToEdge()
 
@@ -529,6 +536,15 @@ class MainActivity : ComponentActivity() {
 
         if (!allGranted) {
             permissionLauncher.launch(permissionsToRequest.toTypedArray())
+        }
+        requestNotificationPermissionIfNecessary()
+    }
+
+    private fun requestNotificationPermissionIfNecessary() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
 }

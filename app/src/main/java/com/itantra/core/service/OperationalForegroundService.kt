@@ -55,6 +55,38 @@ class OperationalForegroundService : Service() {
             context.startService(intent)
         }
 
+        fun ensureNotificationChannels(context: Context) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
+
+                val continuousChannel = NotificationChannel(
+                    CHANNEL_ID,
+                    "iTantra Continuous Mode",
+                    NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = "Notification for active continuous speech transceiver"
+                }
+
+                val emergencyChannel = NotificationChannel(
+                    EMERGENCY_CHANNEL_ID,
+                    "iTantra Critical Emergency Alerts",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = "High priority notifications for unresolved SOS emergency messages"
+                    setBypassDnd(
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            manager.isNotificationPolicyAccessGranted
+                        } else {
+                            true
+                        }
+                    )
+                }
+
+                manager.createNotificationChannel(continuousChannel)
+                manager.createNotificationChannel(emergencyChannel)
+            }
+        }
+
         fun triggerEmergency(context: Context, emergencyText: String) {
             val intent = Intent(context, OperationalForegroundService::class.java).apply {
                 action = ACTION_TRIGGER_EMERGENCY
@@ -65,12 +97,21 @@ class OperationalForegroundService : Service() {
             } catch (e: Exception) {
                 // If background start is restricted, notification can be shown directly
                 try {
+                    ensureNotificationChannels(context)
                     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                    val publicNotification = NotificationCompat.Builder(context, EMERGENCY_CHANNEL_ID)
+                        .setContentTitle("Critical iTantra alert")
+                        .setContentText("Unlock to view details")
+                        .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                        .build()
+
                     val builder = NotificationCompat.Builder(context, EMERGENCY_CHANNEL_ID)
                         .setContentTitle("CRITICAL SOS ALERT")
                         .setContentText(emergencyText)
                         .setSmallIcon(android.R.drawable.ic_dialog_alert)
                         .setOngoing(true)
+                        .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                        .setPublicVersion(publicNotification)
                         .setPriority(NotificationCompat.PRIORITY_MAX)
                         .setCategory(NotificationCompat.CATEGORY_ALARM)
                     manager?.notify(EMERGENCY_NOTIFICATION_ID, builder.build())
@@ -201,51 +242,27 @@ class OperationalForegroundService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val publicNotification = NotificationCompat.Builder(this, EMERGENCY_CHANNEL_ID)
+            .setContentTitle("Critical iTantra alert")
+            .setContentText("Unlock to view details")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .build()
+
         return NotificationCompat.Builder(this, EMERGENCY_CHANNEL_ID)
             .setContentTitle("CRITICAL SOS ALERT")
             .setContentText(alertText)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(publicNotification)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .build()
     }
 
     private fun createNotificationChannels() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-            val continuousChannel = NotificationChannel(
-                CHANNEL_ID,
-                "iTantra Continuous Mode",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Notification for active continuous speech transceiver"
-            }
-
-            val emergencyChannel = NotificationChannel(
-                EMERGENCY_CHANNEL_ID,
-                "iTantra Critical Emergency Alerts",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "High priority notifications for unresolved SOS emergency messages"
-                setBypassDnd(
-                    // Only bypass DND if notification policy access is granted;
-                    // unconditional setBypassDnd(true) throws SecurityException on
-                    // some devices when permission is not granted.
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        (getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)
-                            ?.isNotificationPolicyAccessGranted == true
-                    } else {
-                        true // Pre-M: no policy access concept, safe to set
-                    }
-                )
-            }
-
-            manager.createNotificationChannel(continuousChannel)
-            manager.createNotificationChannel(emergencyChannel)
-        }
+        ensureNotificationChannels(this)
     }
 
     override fun onDestroy() {

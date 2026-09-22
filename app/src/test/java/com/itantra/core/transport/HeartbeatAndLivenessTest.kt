@@ -146,6 +146,7 @@ class HeartbeatAndLivenessTest {
     fun testHB6_silenceTimeoutDisconnectsTransport() = runBlocking {
         val transport = TestPeerTransport()
         val coordinator = TransportCoordinator(transport)
+        delay(50)
 
         coordinator.setAuthenticatedLivenessEnabled(true)
         // Simulate >180s silence

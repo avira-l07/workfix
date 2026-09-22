@@ -64,14 +64,21 @@ fun SettingsScreen(
 
             item {
                 SettingsSection(icon = "🎙", title = "Voice-Activity Sensitivity (VAD)", tag = "SEC-02") {
-                    VadSensitivitySlider(
-                        value = settings.vadSensitivity,
-                        onValueChange = viewModel::setVadSensitivity,
+                    Text(
+                        "Voice-Activity Detection & Sensitivity",
+                        style = MaterialTheme.typography.labelLarge
                     )
-                    Spacer(Modifier.height(16.dp))
-                    NoiseSuppressionSlider(
-                        value = settings.noiseSuppressionDb,
-                        onValueChange = viewModel::setNoiseSuppressionDb,
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Fixed sensitivity in this build. Calibrated for standard tactical speech and background noise.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ITantraColors.TextMuted
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Dynamic noise suppression level: Not available in this build",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ITantraColors.TextMuted
                     )
                 }
             }
@@ -83,6 +90,13 @@ fun SettingsScreen(
                         "Configure the target language for outgoing voice and typed messages. Set to Auto to automatically adapt to the connected peer's advertised language.",
                         style = MaterialTheme.typography.bodySmall,
                         color = ITantraColors.TextMuted
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Offline translation routing ready; neural MT runtime/model not installed",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ITantraColors.Primary,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                     )
                     Spacer(Modifier.height(12.dp))
                     Row(
@@ -118,13 +132,7 @@ fun SettingsScreen(
                     tag = "CRITICAL",
                     tagColor = ITantraColors.StatusDanger,
                 ) {
-                    EmergencyBehaviorControls(
-                        settings = settings,
-                        onOverrideSilentChange = viewModel::setEmergencyOverrideSilent,
-                        onPlaybackVolumeChange = viewModel::setEmergencyPlaybackVolume,
-                        onTtsAnnounceChange = viewModel::setEmergencyTtsAnnounce,
-                        onRequireConfirmationChange = viewModel::setEmergencyRequireConfirmation,
-                    )
+                    EmergencyBehaviorControls()
                 }
             }
 
@@ -150,11 +158,8 @@ fun SettingsScreen(
             }
 
             item {
-                // Standing scope note, matches the one shown once on the Transceiver Hub -
-                // translation is a deliberate decision for this build, not a bug. See
-                // UnavailableTranslationEngine's doc comment for how to re-enable it later.
                 Text(
-                    "Voice transcripts only \u2014 translation not included in this build",
+                    "Offline translation routing ready; neural MT runtime/model not installed",
                     style = MaterialTheme.typography.bodySmall,
                     color = ITantraColors.TextMuted,
                     modifier = Modifier.fillMaxWidth(),
@@ -356,15 +361,10 @@ private fun SettingsSection(
 @Composable
 private fun TransportInfo() {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("Encrypted Bluetooth RFCOMM", style = MaterialTheme.typography.labelLarge)
+        Text("Encrypted Bluetooth RFCOMM and Wi-Fi Direct TCP are available.", style = MaterialTheme.typography.labelLarge)
         Text(
-            "All traffic between two devices runs over a direct Bluetooth RFCOMM link. Messages are " +
-                "end-to-end encrypted once you confirm the verification code on both devices.",
-            style = MaterialTheme.typography.bodySmall,
-            color = ITantraColors.TextMuted,
-        )
-        Text(
-            "Wi-Fi Direct and automatic transport switching are not included in this build.",
+            "Encrypted Bluetooth RFCOMM and Wi-Fi Direct TCP are available. " +
+                "Messages are end-to-end encrypted once you confirm the verification code on both devices.",
             style = MaterialTheme.typography.bodySmall,
             color = ITantraColors.TextMuted,
         )
@@ -428,48 +428,34 @@ private fun noiseSuppressionLabel(db: Int) = when {
 }
 
 @Composable
-private fun EmergencyBehaviorControls(
-    settings: AppSettings,
-    onOverrideSilentChange: (Boolean) -> Unit,
-    onPlaybackVolumeChange: (Int) -> Unit,
-    onTtsAnnounceChange: (Boolean) -> Unit,
-    onRequireConfirmationChange: (Boolean) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        SettingsToggleRow(
-            title = "Override Silent/Vibrate Mode for Emergency Alerts",
-            description = "Forces loudspeaker gain during incoming tactical distress codes.",
-            checked = settings.emergencyOverrideSilent,
-            onCheckedChange = onOverrideSilentChange,
-        )
-        Column {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Emergency Audio Playback Level", style = MaterialTheme.typography.labelLarge)
-                Text(
-                    "${settings.emergencyPlaybackVolume}%" + if (settings.emergencyPlaybackVolume == 100) " (MAX)" else "",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = ITantraColors.StatusDanger,
-                )
-            }
-            Slider(
-                value = settings.emergencyPlaybackVolume.toFloat(),
-                onValueChange = { onPlaybackVolumeChange(it.toInt()) },
-                valueRange = 80f..100f,
-                colors = SliderDefaults.colors(thumbColor = ITantraColors.StatusDanger, activeTrackColor = ITantraColors.StatusDanger),
+private fun EmergencyBehaviorControls() {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Critical Evacuation & SOS Confirmation", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+            Text(
+                "ALWAYS ACTIVE",
+                style = MaterialTheme.typography.labelSmall,
+                color = ITantraColors.StatusSuccess,
+                modifier = Modifier
+                    .background(ITantraColors.StatusSuccess.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
             )
         }
-        SettingsToggleRow(
-            title = "Text-to-Speech (TTS) Emergency Announcement",
-            description = "Reads out incoming coordinates and alert text into operator headset.",
-            checked = settings.emergencyTtsAnnounce,
-            onCheckedChange = onTtsAnnounceChange,
+        Text(
+            "Demands dual-tap safety confirmation before transmitting emergency distress codes.",
+            style = MaterialTheme.typography.bodySmall,
+            color = ITantraColors.TextMuted,
         )
-        SettingsToggleRow(
-            title = "Require Confirmation for Critical Broadcasts",
-            description = "Demands dual-tap validation before transmitting emergency evacuation codes.",
-            checked = settings.emergencyRequireConfirmation,
-            onCheckedChange = onRequireConfirmationChange,
-            badge = "SAFETY LOCK",
+        HorizontalDivider(color = ITantraColors.BorderSubtle)
+        Text(
+            "Emergency audio override & volume slider: Not available in this build (plays at system emergency level).",
+            style = MaterialTheme.typography.bodySmall,
+            color = ITantraColors.TextMuted,
+        )
+        Text(
+            "TTS emergency announcement: Plays automatically when pack is installed.",
+            style = MaterialTheme.typography.bodySmall,
+            color = ITantraColors.TextMuted,
         )
     }
 }
