@@ -204,6 +204,12 @@ class SherpaOnnxSpeechRecognizer(
             } else null
         } else null
 
+        val correctedText = if (scriptDiagnostic == "HINDI_SCRIPT_MISMATCH") {
+            HindiTransliterator.transliterate(cleanedText)
+        } else {
+            cleanedText
+        }
+
         if (com.example.itantra.BuildConfig.DEBUG) {
             android.util.Log.d(
                 "STT_LANG",
@@ -219,7 +225,7 @@ class SherpaOnnxSpeechRecognizer(
         // Phase 4: confidence = null — Whisper Tiny does not expose meaningful per-utterance
         // confidence. Never hard-code 1.0 which falsely implies perfect accuracy.
         return SpeechRecognitionResult(
-            text = cleanedText,
+            text = correctedText,
             isFinal = true,
             languageCode = resolvedLanguage,
             confidence = null,
