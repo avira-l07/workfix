@@ -14,6 +14,7 @@ import com.itantra.data.languagepack.FileLanguagePackStorage
 import com.itantra.data.languagepack.LanguagePackManifestParser
 import com.itantra.data.languagepack.RealLanguagePackRepository
 import com.itantra.domain.model.LanguageCode
+import com.itantra.domain.model.SpeechInputMode
 import com.itantra.domain.repository.LanguagePackRepository
 import com.itantra.data.benchmark.LocalBenchmarkRepository
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +27,7 @@ import android.bluetooth.BluetoothManager
 import com.itantra.core.crypto.SecureSessionManager
 import com.itantra.core.transceiver.TransceiverCoordinator
 import com.itantra.core.translation.TranslationRouter
-import com.itantra.core.translation.ProductionTranslationEngine
+import com.itantra.core.translation.MlKitOfflineTranslationEngine
 import java.io.File
 import com.example.itantra.data.settings.SettingsRepository
 import com.example.itantra.data.settings.settingsDataStore
@@ -100,6 +101,30 @@ object AppGraph {
                 languagePackRepository.setActiveLanguage(code)
             } catch (e: Exception) {
                 android.util.Log.e("AppGraph", "Failed to switch active language to $code", e)
+            }
+        }
+    }
+
+    /**
+     * Phase 1: Single API for MIC LANGUAGE chips.
+     * Sets manual STT language, speech input mode to MANUAL, active language,
+     * and ensures STT with autoDetect=false.
+     * UI chips MUST call this instead of switchActiveLanguage().
+     */
+    fun setMicLanguage(code: LanguageCode) {
+        android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: ENTER code=${code.wireCode}")
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                languagePackRepository.setManualSttLanguage(code)
+                android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: setManualSttLanguage done")
+                languagePackRepository.setSpeechInputMode(SpeechInputMode.MANUAL)
+                android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: setSpeechInputMode(MANUAL) done")
+                val activateOk = languagePackRepository.setActiveLanguage(code)
+                android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: setActiveLanguage returned $activateOk")
+                activeLanguageSessionManager.ensureStt(code, autoDetect = false)
+                android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: ensureStt completed. activeSttLanguage=${activeLanguageSessionManager.activeSttLanguage.value?.wireCode}, isSttAutoDetect=${activeLanguageSessionManager.isSttAutoDetect.value}")
+            } catch (e: Exception) {
+                android.util.Log.e("AppGraph", "Failed to set mic language to $code", e)
             }
         }
     }
@@ -186,6 +211,8 @@ object AppGraph {
             onTcpConnected = {
                 CoroutineScope(Dispatchers.IO).launch {
                     android.util.Log.i("AppGraph", "Wi-Fi Direct TCP connected — resetting session and switching transport")
+                    bluetoothPeerTransport.listenerDesired = false
+                    bluetoothPeerTransport.stopServer()
                     secureSessionManager.resetSession()
                     transportEngine.switchTransport(wifiDirectPeerTransport)
                 }
@@ -212,9 +239,7 @@ object AppGraph {
     }
 
     val translationEngine: com.itantra.core.translation.TranslationEngine by lazy {
-        ProductionTranslationEngine().also { engine ->
-            engine.init(File(context.filesDir, "translation_models"))
-        }
+        MlKitOfflineTranslationEngine(context).also { it.init() }
     }
 
     val translationRouter: TranslationRouter by lazy {

@@ -102,4 +102,66 @@ class SecureHandshakeIntegrationTest {
         assertEquals(SecureSessionState.NO_SESSION, manager.state.value)
         assertNull(manager.getStoredHello())
     }
+
+    @Test
+    fun testAsymmetricSasConfirmationTiming() {
+        val initiator = SecureSessionManager()
+        val responder = SecureSessionManager()
+
+        // 1. Handshake established -> WAITING_USER_VERIFICATION
+        val initHello = initiator.startHandshake(isInitiator = true)
+        val respHello = responder.processSecureHello(initHello)!!
+        initiator.processSecureHello(respHello)
+
+        assertEquals(SecureSessionState.WAITING_USER_VERIFICATION, initiator.state.value)
+        assertEquals(SecureSessionState.WAITING_USER_VERIFICATION, responder.state.value)
+
+        // 2. Phone A confirms first at t=10s
+        val initVerify = initiator.confirmSasMatch()
+        assertTrue(initiator.localSasConfirmed)
+        assertFalse(initiator.peerSasConfirmed)
+        assertEquals(SecureSessionState.WAITING_USER_VERIFICATION, initiator.state.value)
+
+        // Phone B receives Phone A's verify, but Phone B user has NOT confirmed yet
+        responder.processSecureVerify(initVerify)
+        assertFalse(responder.localSasConfirmed)
+        assertTrue(responder.peerSasConfirmed)
+        // Responder must remain in WAITING_USER_VERIFICATION until its own user confirms
+        assertEquals(SecureSessionState.WAITING_USER_VERIFICATION, responder.state.value)
+
+        // 3. Phone B confirms later at t=45s
+        val respVerify = responder.confirmSasMatch()
+        assertTrue(responder.localSasConfirmed)
+        assertTrue(responder.peerSasConfirmed)
+        // Responder now has both confirmations -> transitions to SECURE_VERIFIED
+        assertEquals(SecureSessionState.SECURE_VERIFIED, responder.state.value)
+
+        // Phone A receives Phone B's verify
+        initiator.processSecureVerify(respVerify)
+        assertTrue(initiator.localSasConfirmed)
+        assertTrue(initiator.peerSasConfirmed)
+        assertEquals(SecureSessionState.SECURE_VERIFIED, initiator.state.value)
+    }
+
+    @Test
+    fun testRetransmittingCachedVerifyPacketDoesNotCorruptSession() {
+        val initiator = SecureSessionManager()
+        val responder = SecureSessionManager()
+
+        val initHello = initiator.startHandshake(isInitiator = true)
+        val respHello = responder.processSecureHello(initHello)!!
+        initiator.processSecureHello(respHello)
+
+        val initVerify = initiator.confirmSasMatch()
+        val respVerify = responder.confirmSasMatch()
+
+        // Send multiple times (simulating retries within the 60s verification window)
+        responder.processSecureVerify(initVerify)
+        responder.processSecureVerify(initVerify)
+        assertEquals(SecureSessionState.SECURE_VERIFIED, responder.state.value)
+
+        initiator.processSecureVerify(respVerify)
+        initiator.processSecureVerify(respVerify)
+        assertEquals(SecureSessionState.SECURE_VERIFIED, initiator.state.value)
+    }
 }

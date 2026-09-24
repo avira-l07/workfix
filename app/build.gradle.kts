@@ -67,6 +67,11 @@ android {
             pickFirsts.add("**/libc++_shared.so")
         }
     }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+        }
+    }
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
@@ -96,6 +101,11 @@ dependencies {
 
     // Coroutines for asynchronous pipeline execution
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
+
+    // Google ML Kit on-device translation (Phase 5: Hindi↔English offline MT)
+    implementation("com.google.mlkit:translate:17.0.3")
+    // Kotlin coroutines integration for Google Play Services Tasks
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
 
     // Local AAR libraries (sherpa-onnx, etc.)
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar", "*.jar"))))

@@ -30,6 +30,8 @@ import com.example.itantra.ui.screens.chat.DedicatedChatScreen
 import com.example.itantra.ui.screens.connect.ConnectScreenContent
 import com.example.itantra.ui.screens.connect.PeerConnectionState
 import com.example.itantra.ui.screens.connect.PeerDevice
+import com.example.itantra.ui.screens.connect.TransportMode
+import com.itantra.core.crypto.SecureSessionState
 import com.example.itantra.ui.screens.diagnostics.DiagnosticsScreen
 import com.example.itantra.ui.screens.diagnostics.DiagnosticsUiState
 import com.example.itantra.ui.screens.hub.TransceiverHubScreen
@@ -626,12 +628,27 @@ fun TacticalAppScaffold(
                         // Observe real transport connection state
                         val transportState by AppGraph.transportEngine.observeConnectionState()
                             .collectAsState(initial = ConnectionState.DISCONNECTED)
+                        val liveSasRemainingSeconds by coordinator.sasRemainingSeconds.collectAsState()
+                        val liveSecureSessionState by secureSession.state.collectAsState()
 
                         var discoveredDevices by remember { mutableStateOf<List<PeerDevice>>(emptyList()) }
                         var isBtDiscovering by remember { mutableStateOf(false) }
 
                         val btAdapter = remember(context) {
                             (context.getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager)?.adapter
+                        }
+
+                        // Automatically ensure Bluetooth listener when entering Connect screen
+                        LaunchedEffect(currentDestination) {
+                            val hasConnect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                ContextCompat.checkSelfPermission(
+                                    context, Manifest.permission.BLUETOOTH_CONNECT
+                                ) == PackageManager.PERMISSION_GRANTED
+                            } else true
+                            if (hasConnect && AppGraph.transportEngine.activeTransportFlow.value == AppGraph.bluetoothPeerTransport) {
+                                AppGraph.bluetoothPeerTransport.listenerDesired = true
+                                AppGraph.bluetoothPeerTransport.ensureBluetoothListener()
+                            }
                         }
 
                         DisposableEffect(context, currentDestination) {
@@ -694,8 +711,9 @@ fun TacticalAppScaffold(
                                         btAdapter.cancelDiscovery()
                                     }
                                 } catch (ignored: Exception) {}
-                                // FIX 024: Stop RFCOMM server listener when leaving Connect screen
+                                // Stop RFCOMM server listener when leaving Connect screen
                                 coroutineScope.launch {
+                                    AppGraph.bluetoothPeerTransport.listenerDesired = false
                                     AppGraph.bluetoothPeerTransport.stopServer()
                                 }
                             }
@@ -707,7 +725,7 @@ fun TacticalAppScaffold(
                         // Bonded devices list — only read if BLUETOOTH_CONNECT is granted.
                         // On Android 14/15/16 reading bondedDevices / device.name / device.address
                         // without BLUETOOTH_CONNECT throws SecurityException.
-                        val bondedList = remember(transportState, connectedDeviceAddress, btAdapter, btLastError) {
+                        val bondedList = remember(transportState, liveSecureSessionState, connectedDeviceAddress, btAdapter, btLastError) {
                             val hasConnectPerm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                 ContextCompat.checkSelfPermission(
                                     context, Manifest.permission.BLUETOOTH_CONNECT
@@ -729,14 +747,18 @@ fun TacticalAppScaffold(
                                         signalDbm = null,
                                         batteryPercent = null,
                                         state = when {
-                                            isTargetOfCurrentSession && transportState == ConnectionState.CONNECTED ->
-                                                PeerConnectionState.CONNECTED
-                                            isTargetOfCurrentSession && (
-                                                transportState == ConnectionState.CONNECTING ||
-                                                    transportState == ConnectionState.LISTENING
-                                                ) -> PeerConnectionState.CONNECTING
-                                            // Not the current session target: show AVAILABLE so
-                                            // the CONNECT button is rendered (not "NOT CONNECTED").
+                                            isTargetOfCurrentSession -> when (transportState) {
+                                                ConnectionState.CONNECTED -> when (liveSecureSessionState) {
+                                                    SecureSessionState.HANDSHAKING, SecureSessionState.NO_SESSION -> PeerConnectionState.SECURE_HANDSHAKE
+                                                    SecureSessionState.WAITING_USER_VERIFICATION -> PeerConnectionState.VERIFY_SAS
+                                                    SecureSessionState.SECURE_VERIFIED -> PeerConnectionState.SECURE_CONNECTED
+                                                    SecureSessionState.FAILED, SecureSessionState.HANDSHAKE_TIMEOUT -> PeerConnectionState.ERROR
+                                                }
+                                                ConnectionState.CONNECTING -> PeerConnectionState.CONNECTING
+                                                ConnectionState.LISTENING -> PeerConnectionState.LISTENING
+                                                ConnectionState.ERROR -> PeerConnectionState.ERROR
+                                                ConnectionState.DISCONNECTED -> PeerConnectionState.AVAILABLE
+                                            }
                                             else -> PeerConnectionState.AVAILABLE
                                         }
                                     )
@@ -772,6 +794,9 @@ fun TacticalAppScaffold(
                             devices = liveDevices,
                             isScanning = isBtDiscovering || transportState == ConnectionState.CONNECTING || transportState == ConnectionState.LISTENING,
                             sasCode = liveSasCode,
+                            sasRemainingSeconds = liveSasRemainingSeconds,
+                            secureSessionState = liveSecureSessionState,
+                            connectedDeviceAddress = connectedDeviceAddress,
                             connectionError = btLastError.name.takeIf {
                                 btLastError != com.itantra.core.transport.peer.BluetoothError.NONE
                             },
@@ -783,6 +808,10 @@ fun TacticalAppScaffold(
                             wifiDirectInfo = wifiDirectInfo,
                             onBack = { currentDestination = AppDestination.HUB },
                             onBroadcastPing = {
+                                coroutineScope.launch {
+                                    AppGraph.bluetoothPeerTransport.listenerDesired = true
+                                    AppGraph.bluetoothPeerTransport.ensureBluetoothListener()
+                                }
                                 val mainActivity = context as? MainActivity
                                 if (mainActivity != null) {
                                     mainActivity.requestBluetoothDiscoverable(120) { discoverable ->
@@ -794,7 +823,6 @@ fun TacticalAppScaffold(
                                             return@requestBluetoothDiscoverable
                                         }
                                         coroutineScope.launch {
-                                            AppGraph.bluetoothPeerTransport.startServer()
                                             val hasScan = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                                 ContextCompat.checkSelfPermission(
                                                     context, Manifest.permission.BLUETOOTH_SCAN
@@ -817,7 +845,7 @@ fun TacticalAppScaffold(
                                     }
                                 } else {
                                     coroutineScope.launch {
-                                        AppGraph.bluetoothPeerTransport.startServer()
+                                        AppGraph.bluetoothPeerTransport.ensureBluetoothListener()
                                     }
                                 }
                             },
@@ -848,6 +876,9 @@ fun TacticalAppScaffold(
                             onSasConfirmed = {
                                 coordinator.confirmPeerVerification()
                             },
+                            onSasRejected = {
+                                coordinator.rejectPeerVerification()
+                            },
                             onOpenChat = { device ->
                                 activeChatPeerId = device.id
                                 currentDestination = AppDestination.CHAT
@@ -870,6 +901,19 @@ fun TacticalAppScaffold(
                             onOpenChatWifiDirect = { peer ->
                                 activeChatPeerId = peer.deviceAddress
                                 currentDestination = AppDestination.CHAT
+                            },
+                            onTransportModeChanged = { mode ->
+                                if (mode == TransportMode.BLUETOOTH) {
+                                    coroutineScope.launch {
+                                        AppGraph.bluetoothPeerTransport.listenerDesired = true
+                                        AppGraph.bluetoothPeerTransport.ensureBluetoothListener()
+                                    }
+                                } else {
+                                    coroutineScope.launch {
+                                        AppGraph.bluetoothPeerTransport.listenerDesired = false
+                                        AppGraph.bluetoothPeerTransport.stopServer()
+                                    }
+                                }
                             }
                         )
                     }

@@ -106,6 +106,13 @@ class BluetoothPeerTransport(
 
     private var pendingBondDevice: BluetoothDevice? = null
 
+    /**
+     * Explicit lifecycle flag indicating whether the passive RFCOMM server listener
+     * should be active (e.g. while the Connect screen is active and Bluetooth transport is selected).
+     */
+    @Volatile
+    var listenerDesired: Boolean = false
+
     fun setLastError(error: BluetoothError) {
         _lastError.value = error
     }
@@ -248,41 +255,63 @@ class BluetoothPeerTransport(
     // Server mode
     // -------------------------------------------------------------------------
 
-    suspend fun startServer() {
-        if (!hasConnectPermission()) {
-            debugLog("startServer: BLUETOOTH_CONNECT not granted")
-            _lastError.value = BluetoothError.PERMISSION_DENIED
-            stateFlow.value = ConnectionState.ERROR
+    /**
+     * Idempotently ensures that the RFCOMM server socket is actively listening.
+     * Safe against deadlocks — acquires connectionMutex internally.
+     * Does nothing if:
+     * - listenerDesired is false
+     * - already CONNECTED
+     * - already LISTENING with active serverSocket and live connectionJob
+     * - missing BLUETOOTH_CONNECT permission
+     * - Bluetooth adapter disabled
+     */
+    suspend fun ensureBluetoothListener() {
+        if (!listenerDesired) {
+            debugLog("ensureBluetoothListener: listenerDesired is false, skipping")
             return
         }
+        if (!hasConnectPermission()) {
+            debugLog("ensureBluetoothListener: BLUETOOTH_CONNECT not granted")
+            return
+        }
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+            debugLog("ensureBluetoothListener: Bluetooth adapter disabled")
+            return
+        }
+
         connectionMutex.withLock {
-            disconnectInternal()
+            if (!listenerDesired) return@withLock
+            if (stateFlow.value == ConnectionState.CONNECTED) {
+                debugLog("ensureBluetoothListener: already connected, skipping listener start")
+                return@withLock
+            }
+            if (stateFlow.value == ConnectionState.LISTENING && serverSocket != null && connectionJob?.isActive == true) {
+                debugLog("ensureBluetoothListener: already listening, idempotent skip")
+                return@withLock
+            }
+
+            try { serverSocket?.close() } catch (_: Exception) {}
+            serverSocket = null
+            connectionJob?.cancel()
+            connectionJob = null
+
             _isServer = true
             _lastError.value = BluetoothError.NONE
-
-            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
-                debugLog("startServer: Bluetooth adapter disabled")
-                _lastError.value = BluetoothError.BLUETOOTH_DISABLED
-                stateFlow.value = ConnectionState.ERROR
-                return
-            }
 
             connectionJob = scope.launch {
                 stateFlow.value = ConnectionState.LISTENING
                 debugLog("SERVER listening on UUID: $ITANTRA_UUID")
                 try {
-                    // BLUETOOTH_CONNECT runtime check done above; suppress lint.
                     @SuppressLint("MissingPermission")
                     val srv = bluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME, ITANTRA_UUID)
                     serverSocket = srv
                     val socket = withContext(Dispatchers.IO) { srv.accept() }
                     if (socket != null) {
                         debugLog("SERVER accepted connection from ${socket.remoteDevice?.address?.take(8)}***")
-                        // FIX 023: Cancel active discovery on server side when socket accepted
                         if (hasScanPermission()) {
                             try {
                                 @SuppressLint("MissingPermission")
-                                if (bluetoothAdapter?.isDiscovering == true) {
+                                if (bluetoothAdapter.isDiscovering) {
                                     bluetoothAdapter.cancelDiscovery()
                                     debugLog("SERVER cancelled active discovery on RFCOMM accept")
                                 }
@@ -296,6 +325,12 @@ class BluetoothPeerTransport(
                         _lastError.value = BluetoothError.RFCOMM_CONNECT_FAILED
                         if (stateFlow.value != ConnectionState.CONNECTED) {
                             stateFlow.value = ConnectionState.DISCONNECTED
+                            if (listenerDesired) {
+                                scope.launch {
+                                    delay(500)
+                                    ensureBluetoothListener()
+                                }
+                            }
                         }
                     }
                 }
@@ -303,11 +338,16 @@ class BluetoothPeerTransport(
         }
     }
 
+    suspend fun startServer() {
+        listenerDesired = true
+        ensureBluetoothListener()
+    }
+
     /**
-     * FIX 024: Explicitly stops the listening RFCOMM server socket without affecting
-     * an already-connected socket session.
+     * Explicitly stops the listening RFCOMM server socket and marks listenerDesired = false.
      */
     suspend fun stopServer() {
+        listenerDesired = false
         connectionMutex.withLock {
             if (_isServer && stateFlow.value == ConnectionState.LISTENING) {
                 debugLog("stopServer: stopping RFCOMM listening server socket")
@@ -467,6 +507,12 @@ class BluetoothPeerTransport(
                     debugLog("CLIENT failed — setting ERROR state")
                     stateFlow.value = ConnectionState.ERROR
                     disconnectInternal()
+                    if (listenerDesired) {
+                        scope.launch {
+                            delay(500)
+                            ensureBluetoothListener()
+                        }
+                    }
                 }
             }
         }
@@ -532,6 +578,12 @@ class BluetoothPeerTransport(
                     }
                 }
                 disconnectInternal()
+                if (listenerDesired) {
+                    scope.launch {
+                        delay(200)
+                        ensureBluetoothListener()
+                    }
+                }
             }
         }
     }
@@ -573,6 +625,9 @@ class BluetoothPeerTransport(
 
     override suspend fun disconnect() {
         connectionMutex.withLock { disconnectInternal() }
+        if (listenerDesired) {
+            ensureBluetoothListener()
+        }
     }
 
     private suspend fun disconnectOnError() {

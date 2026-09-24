@@ -72,7 +72,14 @@ class SherpaOnnxSpeechRecognizer(
                     language = if (autoDetect) "" else languageCode.wireCode,
                     task = "transcribe",
                     tailPaddings = -1
-                ),
+                ).also { whisperCfg ->
+                    android.util.Log.d(
+                        "ITANTRA_MIC_FLOW",
+                        "SherpaOnnxSpeechRecognizer.load: OfflineWhisperModelConfig built — " +
+                        "encoder=${whisperCfg.encoder} | decoder=${whisperCfg.decoder} | " +
+                        "language=\"${whisperCfg.language}\" (autoDetect=$autoDetect, languageCode=${languageCode.wireCode})"
+                    )
+                },
                 tokens = File(sttDir, spec.tokensFile).absolutePath,
                 numThreads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4),
                 // sherpa-onnx's native debug logging adds real per-inference overhead;
@@ -113,7 +120,7 @@ class SherpaOnnxSpeechRecognizer(
                 text = "",
                 isFinal = true,
                 languageCode = languageCode,
-                confidence = 0f,
+                confidence = null,
                 timestampMillis = 0L
             )
         }
@@ -176,20 +183,26 @@ class SherpaOnnxSpeechRecognizer(
         val detectedCode = whisperResult.lang.trim()
         val cleanedText = TranscriptPostProcessor.postProcess(rawText)
 
-        // Language resolution priority:
-        // 1. Whisper detected language
-        // 2. Explicit MANUAL STT language (if not in autoDetect mode)
-        // 3. Unicode script detector for unambiguous scripts
-        // 4. Configured fallback (languageCode)
+        // Language resolution priority (Phase 2 fix):
+        // MANUAL mode: manual selection ALWAYS wins — this is the UI contract.
+        // AUTO mode: Whisper detected > script detector > configured fallback.
         val whisperLang = LanguageCode.fromWireCode(detectedCode)
         val scriptLang = LanguageScriptDetector.detect(cleanedText, manualFallback = languageCode)
 
-        val resolvedLanguage = when {
-            whisperLang != null -> whisperLang
-            !autoDetect -> languageCode
-            scriptLang != null -> scriptLang
-            else -> languageCode
+        val resolvedLanguage = if (!autoDetect) {
+            // MANUAL: user explicitly selected this language — honor it unconditionally
+            languageCode
+        } else {
+            // AUTO: detector/script/fallback chain
+            whisperLang ?: scriptLang ?: languageCode
         }
+
+        // Phase 3: Script mismatch diagnostic for manual Hindi
+        val scriptDiagnostic = if (!autoDetect && languageCode == LanguageCode.HINDI && cleanedText.isNotBlank()) {
+            if (!LanguageScriptDetector.containsDevanagari(cleanedText)) {
+                "HINDI_SCRIPT_MISMATCH"
+            } else null
+        } else null
 
         if (com.example.itantra.BuildConfig.DEBUG) {
             android.util.Log.d(
@@ -198,15 +211,18 @@ class SherpaOnnxSpeechRecognizer(
                 "STT_HINT=${if (autoDetect) "<auto>" else languageCode.wireCode} " +
                 "WHISPER_DETECTED=$detectedCode " +
                 "SCRIPT_DETECTED=${scriptLang?.wireCode ?: "none"} " +
-                "RESOLVED_SOURCE_LANGUAGE=${resolvedLanguage.name}"
+                "RESOLVED_SOURCE_LANGUAGE=${resolvedLanguage.name}" +
+                (if (scriptDiagnostic != null) " SCRIPT_DIAGNOSTIC=$scriptDiagnostic" else "")
             )
         }
 
+        // Phase 4: confidence = null — Whisper Tiny does not expose meaningful per-utterance
+        // confidence. Never hard-code 1.0 which falsely implies perfect accuracy.
         return SpeechRecognitionResult(
             text = cleanedText,
             isFinal = true,
             languageCode = resolvedLanguage,
-            confidence = 1.0f,
+            confidence = null,
             timestampMillis = System.currentTimeMillis(),
             pureInferenceMs = pureInferenceMs
         )

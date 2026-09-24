@@ -269,6 +269,8 @@ class WifiDirectConnectionManager(
                                 }
                                 _state.value = WifiDirectState.AVAILABLE
                                 _connectionInfo.value = null
+                                lastHandledGroupOwner = null
+                                lastHandledRole = null
                             }
                         }
                     }
@@ -451,9 +453,7 @@ class WifiDirectConnectionManager(
 
         val config = WifiP2pConfig().apply {
             deviceAddress = peer.deviceAddress
-            // Force this device to be Group Owner (intent 15 = highest priority).
-            // Eliminates role-negotiation failures where both sides become clients.
-            groupOwnerIntent = 15
+            // Allow Android Wi-Fi P2P role negotiation without forcing symmetric GO intent
         }
 
         @SuppressLint("MissingPermission")

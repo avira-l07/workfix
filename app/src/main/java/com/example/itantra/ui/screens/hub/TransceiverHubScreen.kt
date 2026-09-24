@@ -99,7 +99,7 @@ fun TransceiverHubScreen(
 ) {
     val liveMessages by coordinator.messages.collectAsState()
     val sessionState by coordinator.secureSessionManager.state.collectAsState()
-    val activeLanguage by sessionManager.activeLanguage.collectAsState()
+    val activeLanguage by sessionManager.activeSttLanguage.collectAsState()
     val targetLanguage by AppGraph.languagePackRepository.observeTargetLanguage().collectAsState(initial = null)
     val transportConnectionState by AppGraph.transportEngine.observeConnectionState().collectAsState(initial = ConnectionState.DISCONNECTED)
     val liveMetrics by AppGraph.metricsRecorder.latest.collectAsState()
@@ -734,7 +734,8 @@ fun TransceiverHubScreen(
                             shape = RoundedCornerShape(6.dp),
                             color = if (isHindi) ITantraColors.Primary else Color(0xFFF1F5F9),
                             modifier = Modifier.clickable {
-                                AppGraph.switchActiveLanguage(LanguageCode.HINDI)
+                                android.util.Log.d("ITANTRA_MIC_FLOW", "TransceiverHubScreen: Hindi chip CLICKED. Current activeLanguage=$activeLanguage")
+                                AppGraph.setMicLanguage(LanguageCode.HINDI)
                             }
                         ) {
                             Text(
@@ -752,7 +753,8 @@ fun TransceiverHubScreen(
                             shape = RoundedCornerShape(6.dp),
                             color = if (isEnglish) ITantraColors.Primary else Color(0xFFF1F5F9),
                             modifier = Modifier.clickable {
-                                AppGraph.switchActiveLanguage(LanguageCode.ENGLISH)
+                                android.util.Log.d("ITANTRA_MIC_FLOW", "TransceiverHubScreen: English chip CLICKED. Current activeLanguage=$activeLanguage")
+                                AppGraph.setMicLanguage(LanguageCode.ENGLISH)
                             }
                         ) {
                             Text(

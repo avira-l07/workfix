@@ -152,13 +152,27 @@ class TransportCoordinator(
     override suspend fun disconnect() {
         authenticatedLivenessEnabled = false
         activeTransport.disconnect()
+        // Fail any in-flight ACK waiters instead of leaving them to time out naturally.
+        ackWaiters.values.forEach { it.cancel() }
+        ackWaiters.clear()
+        // Observers (readJob, connectionStateJob, watchdogJob) remain active for subsequent reconnections.
+    }
+
+    /**
+     * Permanent shutdown of the coordinator and all underlying coroutines.
+     */
+    fun shutdown() {
+        authenticatedLivenessEnabled = false
+        scope.launch {
+            try { activeTransport.disconnect() } catch (_: Exception) {}
+        }
         readJob?.cancel()
         heartbeatJob?.cancel()
         watchdogJob?.cancel()
         connectionStateJob?.cancel()
-        // Fail any in-flight ACK waiters instead of leaving them to time out naturally.
         ackWaiters.values.forEach { it.cancel() }
         ackWaiters.clear()
+        scope.cancel()
     }
 
     override fun notifyAckReceived(messageId: Long) {

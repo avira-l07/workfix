@@ -61,12 +61,21 @@ class ActiveLanguageSessionManager(
             val sameMode = _isSttAutoDetect.value == autoDetect
             val sameLang = _activeSttLanguage.value == language || autoDetect
 
+            android.util.Log.d(
+                "ITANTRA_MIC_FLOW",
+                "ensureStt: requested lang=${language.wireCode} autoDetect=$autoDetect | " +
+                "sttLoaded=$sttLoaded sameMode=$sameMode sameLang=$sameLang | " +
+                "current activeSttLang=${_activeSttLanguage.value?.wireCode} isSttAutoDetect=${_isSttAutoDetect.value}"
+            )
+
             if (sttLoaded && sameMode && sameLang) {
+                android.util.Log.d("ITANTRA_MIC_FLOW", "ensureStt: EARLY RETURN — engine already satisfies request, no reload")
                 return@withLock
             }
 
             // CORE_ONLY constrained device guard
             if (capabilityDetector?.determineProfile() == DeviceCapabilityDetector.CapabilityProfile.CORE_ONLY) {
+                android.util.Log.w("ITANTRA_MIC_FLOW", "ensureStt: CORE_ONLY guard fired — aborting STT load")
                 currentSttEngine?.unload()
                 currentSttEngine = null
                 _activeSttLanguage.value = null
@@ -75,12 +84,14 @@ class ActiveLanguageSessionManager(
             }
 
             // Unload previous STT only (strictly 1 STT in RAM, DO NOT UNLOAD TTS)
+            android.util.Log.d("ITANTRA_MIC_FLOW", "ensureStt: unloading previous STT engine, then creating new one for ${language.wireCode}")
             currentSttEngine?.unload()
             currentSttEngine = null
 
             _sessionState.value = LanguageSessionState.LOADING_STT
             try {
                 val newStt = engineFactory.createRecognizer(language, autoDetect)
+                android.util.Log.d("ITANTRA_MIC_FLOW", "ensureStt: engineFactory.createRecognizer returned ${if (newStt != null) newStt::class.simpleName else "null"}")
                 if (newStt != null) {
                     newStt.load()
                     currentSttEngine = newStt
@@ -88,11 +99,13 @@ class ActiveLanguageSessionManager(
                     _isSttAutoDetect.value = autoDetect
                     _activeLanguage.value = language
                     _sessionState.value = LanguageSessionState.READY
+                    android.util.Log.d("ITANTRA_MIC_FLOW", "ensureStt: SUCCESS — STT engine loaded for ${language.wireCode}")
                 } else {
                     _sessionState.value = LanguageSessionState.ERROR
                     throw IllegalStateException("STT_MODEL_NOT_INSTALLED: No recognizer available for ${language.wireCode}")
                 }
             } catch (e: Throwable) {
+                android.util.Log.e("ITANTRA_MIC_FLOW", "ensureStt: EXCEPTION loading STT for ${language.wireCode}", e)
                 currentSttEngine?.unload()
                 currentSttEngine = null
                 _sessionState.value = LanguageSessionState.ERROR
@@ -100,6 +113,7 @@ class ActiveLanguageSessionManager(
             }
         }
     }
+
 
     /**
      * Ensures only the requested [language]'s TTS engine is resident in memory.

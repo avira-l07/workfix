@@ -164,4 +164,51 @@ class TransportCoordinatorTest {
 
         assertTrue("FIX 001: IOException from transport.send() must be re-thrown", exceptionRethrown)
     }
+
+    @Test
+    fun `test TransportCoordinator remains functional across disconnect and reconnect`() = runBlocking {
+        class ReconnectingTransport : PeerTransport {
+            var connected = true
+            override val isConnected: Boolean get() = connected
+            override val isServer: Boolean = false
+            val stateFlow = MutableStateFlow(ConnectionState.CONNECTED)
+            val incomingFlow = MutableSharedFlow<ByteArray>(extraBufferCapacity = 64)
+
+            override fun observeConnectionState(): Flow<ConnectionState> = stateFlow
+            override suspend fun disconnect() {
+                connected = false
+                stateFlow.value = ConnectionState.DISCONNECTED
+            }
+            override suspend fun send(bytes: ByteArray) {}
+            override fun receive(): Flow<ByteArray> = incomingFlow
+        }
+
+        val transport = ReconnectingTransport()
+        val coordinator = TransportCoordinator(transport)
+
+        assertTrue(coordinator.isConnected)
+
+        // Disconnect link
+        coordinator.disconnect()
+        assertEquals(ConnectionState.DISCONNECTED, transport.stateFlow.value)
+
+        // Reconnect link on same transport — observers must remain active
+        transport.connected = true
+        transport.stateFlow.value = ConnectionState.CONNECTED
+
+        val received = mutableListOf<ItantraPacket>()
+        val job = launch {
+            coordinator.receive().collect { received.add(it) }
+        }
+        kotlinx.coroutines.yield()
+
+        val packet = ItantraPacket(type = PacketType.CAPABILITIES, messageId = 999L, payload = "reconnect".toByteArray())
+        val frame = PacketEncoder.encode(packet)
+        transport.incomingFlow.emit(frame.copyOfRange(4, frame.size))
+        kotlinx.coroutines.delay(200)
+
+        assertTrue("Coordinator must receive packets after link reconnection", received.isNotEmpty())
+        assertEquals(999L, received.first().messageId)
+        job.cancel()
+    }
 }

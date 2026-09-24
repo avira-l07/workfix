@@ -130,6 +130,30 @@ class SherpaOnnxSpeechSynthesizer(
         metricsRecorder.recordTtsModelLoadTime(loadTimeMs)
         Log.i("SherpaOnnxTTS", "TTS model loaded successfully for ${languageCode.wireCode} in ${loadTimeMs}ms, sampleRate=${tts?.sampleRate()}")
 
+        // Phase 14: Smoke synthesis verification — model is only READY if it can actually
+        // produce nonempty PCM for a simple test phrase.
+        val smokeText = when (languageCode) {
+            LanguageCode.HINDI -> "\u0928\u092E\u0938\u094D\u0924\u0947" // "नमस्ते"
+            else -> "Hello"
+        }
+        try {
+            val smokeResult = tts?.generate(smokeText)
+            if (smokeResult == null || smokeResult.samples.isEmpty() || smokeResult.sampleRate <= 0) {
+                try { tts?.release() } catch (_: Throwable) {}
+                tts = null
+                isLoaded = false
+                throw TtsLoadException("TTS_SMOKE_FAILED: Smoke synthesis produced empty PCM for ${languageCode.wireCode}")
+            }
+            Log.i("SherpaOnnxTTS", "TTS smoke test PASSED: ${smokeResult.samples.size} samples at ${smokeResult.sampleRate}Hz for '${smokeText}'")
+        } catch (t: TtsLoadException) {
+            throw t
+        } catch (t: Throwable) {
+            try { tts?.release() } catch (_: Throwable) {}
+            tts = null
+            isLoaded = false
+            throw TtsLoadException("TTS_SMOKE_FAILED: Smoke synthesis threw for ${languageCode.wireCode}: ${t.message}", t)
+        }
+
         isLoaded = true
     }
 

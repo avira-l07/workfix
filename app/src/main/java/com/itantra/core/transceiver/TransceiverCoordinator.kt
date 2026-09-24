@@ -59,9 +59,10 @@ class TransceiverCoordinator(
 ) {
     companion object {
         private const val ENCRYPTED_HEARTBEAT_INTERVAL_MS = 15_000L
-        private const val HELLO_RETRY_INTERVAL_MS = 1000L
-        private const val HELLO_FINAL_GRACE_MS = 1500L
-        private const val VERIFY_RETRY_INTERVAL_MS = 1000L
+        private const val HELLO_RETRY_INTERVAL_MS = 2_000L
+        private const val HANDSHAKE_TIMEOUT_MS = 60_000L
+        private const val SAS_TIMEOUT_MS = 60_000L
+        private const val VERIFY_RETRY_INTERVAL_MS = 2_000L
     }
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -186,9 +187,17 @@ class TransceiverCoordinator(
     private var currentAudioSink: SpeakerAudioSink? = null
     private var alertJob: Job? = null
 
-    // FIX 012: Retry jobs for handshake and verification phases
+    // Connection generation token to protect against stale callbacks/timeouts
+    private val connectionGeneration = java.util.concurrent.atomic.AtomicLong(0L)
+
+    private val _sasRemainingSeconds = MutableStateFlow<Int?>(null)
+    val sasRemainingSeconds: StateFlow<Int?> = _sasRemainingSeconds.asStateFlow()
+
+    // Retry jobs for handshake and verification phases
     private var handshakeRetryJob: Job? = null
     private var verifyRetryJob: Job? = null
+    private var sasTimerJob: Job? = null
+    private var cachedVerifyPacket: ItantraPacket? = null
     private var encryptedHeartbeatJob: Job? = null
 
     private var isConnected = false
@@ -276,39 +285,52 @@ class TransceiverCoordinator(
             transportEngine.observeConnectionState().collect { state ->
                 val connected = state == ConnectionState.CONNECTED
                 if (connected && !isConnected) {
+                    val gen = connectionGeneration.incrementAndGet()
                     isConnected = true
+                    handshakeRetryJob?.cancel(); handshakeRetryJob = null
+                    verifyRetryJob?.cancel(); verifyRetryJob = null
+                    sasTimerJob?.cancel(); sasTimerJob = null
+                    cachedVerifyPacket = null
+                    _sasRemainingSeconds.value = null
+
                     // Start handshake if connected. Only the client (initiator) sends the first HELLO.
                     // Responder remains in NO_SESSION, ready to process incoming SECURE_HELLO.
                     val isInitiator = !transportEngine.isServer
                     if (isInitiator) {
-                        // Send SECURE_HELLO immediately and retry up to 3 times (1s apart)
-                        // if still in HANDSHAKING state. On exhaustion mark HANDSHAKE_TIMEOUT.
-                        handshakeRetryJob?.cancel()
                         handshakeRetryJob = scope.launch {
                             val hello = secureSessionManager.startHandshake(isInitiator = true)
-                            transportEngine.send(hello)
-                            var attempts = 1
-                            while (attempts < 3 &&
-                                secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
+                            try {
+                                transportEngine.send(hello)
+                            } catch (e: Exception) {
+                                android.util.Log.w("TransceiverCoordinator", "Failed to send initial HELLO: ${e.message}")
+                            }
+                            val deadline = android.os.SystemClock.elapsedRealtime() + HANDSHAKE_TIMEOUT_MS
+                            while (isActive &&
+                                connectionGeneration.get() == gen &&
+                                secureSessionManager.state.value == SecureSessionState.HANDSHAKING &&
+                                android.os.SystemClock.elapsedRealtime() < deadline
+                            ) {
                                 delay(HELLO_RETRY_INTERVAL_MS)
+                                if (connectionGeneration.get() != gen) break
                                 if (secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
-                                    android.util.Log.w(
-                                        "TransceiverCoordinator",
-                                        "SECURE_HELLO retry attempt $attempts"
-                                    )
                                     val stored = secureSessionManager.getStoredHello()
-                                    if (stored != null) transportEngine.send(stored)
-                                    attempts++
+                                    if (stored != null) {
+                                        android.util.Log.d("TransceiverCoordinator", "Retrying cached SECURE_HELLO")
+                                        try {
+                                            transportEngine.send(stored)
+                                        } catch (e: Exception) {
+                                            android.util.Log.w("TransceiverCoordinator", "HELLO retry failed: ${e.message}")
+                                        }
+                                    }
                                 }
                             }
-                            if (secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
-                                delay(HELLO_FINAL_GRACE_MS)
-                            }
-                            // Exhausted retries — mark timeout so UI can show an error
-                            if (secureSessionManager.state.value == SecureSessionState.HANDSHAKING) {
+                            // Bounded 60s handshake window expired
+                            if (connectionGeneration.get() == gen &&
+                                secureSessionManager.state.value == SecureSessionState.HANDSHAKING
+                            ) {
                                 android.util.Log.e(
                                     "TransceiverCoordinator",
-                                    "SECURE_HELLO handshake timeout after $attempts attempts"
+                                    "SECURE_HELLO handshake timeout after 60 seconds"
                                 )
                                 secureSessionManager.setHandshakeTimeout()
                                 transportEngine.setAuthenticatedLivenessEnabled(false)
@@ -318,9 +340,13 @@ class TransceiverCoordinator(
                     }
                 } else if (!connected && isConnected) {
                     isConnected = false
+                    connectionGeneration.incrementAndGet()
                     handshakeRetryJob?.cancel(); handshakeRetryJob = null
                     verifyRetryJob?.cancel(); verifyRetryJob = null
+                    sasTimerJob?.cancel(); sasTimerJob = null
                     encryptedHeartbeatJob?.cancel(); encryptedHeartbeatJob = null
+                    cachedVerifyPacket = null
+                    _sasRemainingSeconds.value = null
                     transportEngine.setAuthenticatedLivenessEnabled(false)
                     _peerCapabilities.value = PeerCapabilities()
                     _activePeerProfile.value = null
@@ -336,18 +362,58 @@ class TransceiverCoordinator(
                     SecureSessionState.WAITING_USER_VERIFICATION -> {
                         handshakeRetryJob?.cancel()
                         handshakeRetryJob = null
+                        // Start 60-second SAS verification countdown timer for this connection generation
+                        val gen = connectionGeneration.get()
+                        sasTimerJob?.cancel()
+                        sasTimerJob = scope.launch {
+                            val deadline = android.os.SystemClock.elapsedRealtime() + SAS_TIMEOUT_MS
+                            while (isActive &&
+                                connectionGeneration.get() == gen &&
+                                secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION
+                            ) {
+                                val remaining = ((deadline - android.os.SystemClock.elapsedRealtime() + 999) / 1000).coerceAtLeast(0).toInt()
+                                _sasRemainingSeconds.value = remaining
+                                if (remaining <= 0) break
+                                delay(1000L)
+                            }
+                            if (connectionGeneration.get() == gen &&
+                                secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION
+                            ) {
+                                android.util.Log.w("TransceiverCoordinator", "SAS verification window expired (60s)")
+                                _sasRemainingSeconds.value = 0
+                                verifyRetryJob?.cancel(); verifyRetryJob = null
+                                secureSessionManager.setHandshakeTimeout()
+                                transportEngine.setAuthenticatedLivenessEnabled(false)
+                                transportEngine.disconnect()
+                            }
+                        }
                     }
                     SecureSessionState.SECURE_VERIFIED -> {
                         handshakeRetryJob?.cancel()
                         handshakeRetryJob = null
                         verifyRetryJob?.cancel()
                         verifyRetryJob = null
+                        sasTimerJob?.cancel()
+                        sasTimerJob = null
+                        _sasRemainingSeconds.value = null
+                        cachedVerifyPacket = null
                         transportEngine.setAuthenticatedLivenessEnabled(true)
                         startEncryptedHeartbeat()
+                        sendProfileHandshake()
+                        sendCapabilities()
+                        retryUnresolvedEmergencies()
                     }
                     SecureSessionState.NO_SESSION,
                     SecureSessionState.HANDSHAKE_TIMEOUT,
                     SecureSessionState.FAILED -> {
+                        handshakeRetryJob?.cancel()
+                        handshakeRetryJob = null
+                        verifyRetryJob?.cancel()
+                        verifyRetryJob = null
+                        sasTimerJob?.cancel()
+                        sasTimerJob = null
+                        _sasRemainingSeconds.value = null
+                        cachedVerifyPacket = null
                         encryptedHeartbeatJob?.cancel()
                         encryptedHeartbeatJob = null
                         transportEngine.setAuthenticatedLivenessEnabled(false)
@@ -542,9 +608,12 @@ class TransceiverCoordinator(
         if (packet.type == PacketType.SECURE_VERIFY) {
             secureSessionManager.processSecureVerify(packet)
             if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
-                // Cancel any ongoing verify retry — we're done
+                // Cancel any ongoing verify retry and timer — we're done
                 verifyRetryJob?.cancel(); verifyRetryJob = null
                 handshakeRetryJob?.cancel(); handshakeRetryJob = null
+                sasTimerJob?.cancel(); sasTimerJob = null
+                _sasRemainingSeconds.value = null
+                cachedVerifyPacket = null
                 transportEngine.setAuthenticatedLivenessEnabled(true)
                 startEncryptedHeartbeat()
                 scope.launch {
@@ -1150,7 +1219,7 @@ class TransceiverCoordinator(
                     metricsRecorder.recordSttAudioDuration(durationMillis)
 
                     if (result.text.isBlank()) {
-                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "Recognition produced no text.") }
+                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "No speech recognized \u2014 try again") }
                         return@launch
                     }
 
@@ -1459,7 +1528,7 @@ class TransceiverCoordinator(
                     }
 
                     if (result.text.isBlank()) {
-                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "Speech recognition failed.") }
+                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "No speech recognized \u2014 try again") }
                         return@withLock
                     }
 
@@ -1837,53 +1906,67 @@ class TransceiverCoordinator(
     }
 
     /**
-     * Confirms SAS match, sends SECURE_VERIFY, and retries up to 3 times (1000ms apart)
-     * until the peer responds with its own SECURE_VERIFY and state reaches SECURE_VERIFIED.
+     * Confirms SAS match, caches SECURE_VERIFY, and retries the same packet every 2s
+     * throughout the 60s verification window until the peer responds with its own SECURE_VERIFY
+     * and state reaches SECURE_VERIFIED.
      */
     fun confirmPeerVerification() {
+        val gen = connectionGeneration.get()
         verifyRetryJob?.cancel()
         verifyRetryJob = scope.launch {
-            val verifyPacket = try {
-                secureSessionManager.confirmSasMatch()
-            } catch (e: IllegalStateException) {
-                android.util.Log.e("TransceiverCoordinator", "confirmPeerVerification: ${e.message}")
-                return@launch
-            }
-            transportEngine.send(verifyPacket)
-            if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
-                verifyRetryJob = null
-                transportEngine.setAuthenticatedLivenessEnabled(true)
-                startEncryptedHeartbeat()
-                sendProfileHandshake()
-                sendCapabilities()
-                retryUnresolvedEmergencies()
-                return@launch
-            }
-            // Retry sending SECURE_VERIFY until peer responds or retries exhausted
-            var attempts = 1
-            while (attempts < 3 &&
-                secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION) {
-                delay(VERIFY_RETRY_INTERVAL_MS)
-                if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) break
-                if (secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION) {
-                    android.util.Log.w("TransceiverCoordinator", "SECURE_VERIFY retry attempt $attempts")
-                    transportEngine.send(verifyPacket)
-                    attempts++
+            val verifyPacket = cachedVerifyPacket ?: run {
+                try {
+                    val pkt = secureSessionManager.confirmSasMatch()
+                    cachedVerifyPacket = pkt
+                    pkt
+                } catch (e: IllegalStateException) {
+                    android.util.Log.e("TransceiverCoordinator", "confirmPeerVerification: ${e.message}")
+                    return@launch
                 }
             }
+            try {
+                transportEngine.send(verifyPacket)
+            } catch (e: Exception) {
+                android.util.Log.w("TransceiverCoordinator", "Initial SECURE_VERIFY send failed: ${e.message}")
+            }
             if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
                 verifyRetryJob = null
-                transportEngine.setAuthenticatedLivenessEnabled(true)
-                startEncryptedHeartbeat()
-                sendProfileHandshake()
-                sendCapabilities()
-                retryUnresolvedEmergencies()
-            } else {
-                android.util.Log.e(
-                    "TransceiverCoordinator",
-                    "SECURE_VERIFY never confirmed by peer after $attempts attempts"
-                )
+                return@launch
             }
+            // Retry sending the SAME cached verifyPacket every 2 seconds while within window
+            val deadline = android.os.SystemClock.elapsedRealtime() + SAS_TIMEOUT_MS
+            while (isActive &&
+                connectionGeneration.get() == gen &&
+                secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION &&
+                android.os.SystemClock.elapsedRealtime() < deadline
+            ) {
+                delay(VERIFY_RETRY_INTERVAL_MS)
+                if (connectionGeneration.get() != gen) break
+                if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) break
+                if (secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION) {
+                    android.util.Log.d("TransceiverCoordinator", "Retrying cached SECURE_VERIFY")
+                    try {
+                        transportEngine.send(verifyPacket)
+                    } catch (e: Exception) {
+                        android.util.Log.w("TransceiverCoordinator", "SECURE_VERIFY retry failed: ${e.message}")
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Rejects SAS verification, terminates timer and retry jobs, and disconnects transport link.
+     */
+    fun rejectPeerVerification() {
+        sasTimerJob?.cancel(); sasTimerJob = null
+        verifyRetryJob?.cancel(); verifyRetryJob = null
+        _sasRemainingSeconds.value = null
+        cachedVerifyPacket = null
+        secureSessionManager.rejectSas()
+        scope.launch {
+            transportEngine.setAuthenticatedLivenessEnabled(false)
+            transportEngine.disconnect()
         }
     }
 

@@ -3,11 +3,16 @@ package com.itantra.core.translation
 import com.itantra.domain.model.LanguageCode
 
 /**
- * Shared standing-scope-decision text for "translation isn't included in this build" - kept in
- * one place so TransceiverCoordinator (sets it) and TransceiverHubScreen (checks for it, to
- * avoid rendering it as a per-message red error) can never drift out of sync with each other.
+ * Phase 24: Updated from the stale "translation not included in this build" to reflect
+ * the current state where ML Kit offline translation is wired in.
+ * This message is shown when translation models are not yet provisioned.
  */
-const val TRANSLATION_SCOPE_NOTE = "Voice transcript only \u2014 translation not included in this build"
+const val TRANSLATION_SCOPE_NOTE = "Offline translation model not installed \u2014 provision via Diagnostics"
+
+/**
+ * Shown when translation models ARE provisioned and ready.
+ */
+const val TRANSLATION_READY_NOTE = "Offline Hindi\u2194English translation ready"
 
 class TranslationRouter(
     private val engine: TranslationEngine

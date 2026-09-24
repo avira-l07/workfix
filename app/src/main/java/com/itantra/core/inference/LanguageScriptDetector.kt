@@ -80,4 +80,42 @@ object LanguageScriptDetector {
         // Latin script or unknown: never auto-classify Latin as English here
         return null
     }
+
+    /**
+     * Phase 3: Quick check whether [text] contains any Devanagari characters.
+     * Used for script sanity validation when MIC LANGUAGE = Hindi.
+     */
+    fun containsDevanagari(text: String): Boolean {
+        return text.any { it.code in 0x0900..0x097F }
+    }
+
+    /**
+     * Phase 3: Detects script mismatch for a given expected language.
+     * Returns a diagnostic result if the text's script doesn't match expectations.
+     */
+    fun detectScriptMismatch(text: String, expectedLang: LanguageCode): ScriptMismatchResult? {
+        if (text.isBlank()) return null
+        return when (expectedLang) {
+            LanguageCode.HINDI, LanguageCode.MARATHI -> {
+                if (!containsDevanagari(text)) {
+                    val latinCount = text.count { it.code in 0x0041..0x007A }
+                    val totalAlpha = text.count { it.isLetter() }
+                    if (totalAlpha > 0 && latinCount.toFloat() / totalAlpha > 0.5f) {
+                        ScriptMismatchResult(
+                            expectedScript = "Devanagari",
+                            actualScript = "Latin",
+                            diagnostic = "HINDI_SCRIPT_MISMATCH"
+                        )
+                    } else null
+                } else null
+            }
+            else -> null
+        }
+    }
+
+    data class ScriptMismatchResult(
+        val expectedScript: String,
+        val actualScript: String,
+        val diagnostic: String
+    )
 }

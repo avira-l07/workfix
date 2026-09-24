@@ -31,7 +31,16 @@ data class PeerDevice(
     val state: PeerConnectionState,
 )
 
-enum class PeerConnectionState { CONNECTED, AVAILABLE, CONNECTING, DISCONNECTED }
+enum class PeerConnectionState {
+    AVAILABLE,
+    LISTENING,
+    CONNECTING,
+    SECURE_HANDSHAKE,
+    VERIFY_SAS,
+    SECURE_CONNECTED,
+    DISCONNECTED,
+    ERROR
+}
 
 enum class TransportMode { BLUETOOTH, WIFI_DIRECT }
 
@@ -51,33 +60,27 @@ fun ConnectScreenContent(
     wifiDirectState: com.itantra.core.transport.peer.WifiDirectState = com.itantra.core.transport.peer.WifiDirectState.OFF,
     wifiDirectError: String? = null,
     wifiDirectInfo: android.net.wifi.p2p.WifiP2pInfo? = null,
+    sasRemainingSeconds: Int? = null,
+    secureSessionState: com.itantra.core.crypto.SecureSessionState = com.itantra.core.crypto.SecureSessionState.NO_SESSION,
+    connectedDeviceAddress: String? = null,
     onBack: () -> Unit,
     onBroadcastPing: () -> Unit,
     onConnect: (PeerDevice) -> Unit,
     onSasConfirmed: (PeerDevice) -> Unit = {},
+    onSasRejected: () -> Unit = {},
     onOpenChat: (PeerDevice) -> Unit = {},
     onDiscoverWifiDirectPeers: () -> Unit = {},
     onConnectWifiDirect: (com.itantra.core.transport.peer.WifiDirectPeer) -> Unit = {},
     onDisconnectWifiDirect: () -> Unit = {},
     onOpenChatWifiDirect: (com.itantra.core.transport.peer.WifiDirectPeer) -> Unit = {},
+    onTransportModeChanged: (TransportMode) -> Unit = {},
 ) {
-    var verifyingDevice by remember { mutableStateOf<PeerDevice?>(null) }
-    var verifyingWifiPeer by remember { mutableStateOf<com.itantra.core.transport.peer.WifiDirectPeer?>(null) }
     var currentMode by remember { mutableStateOf(selectedTransportMode) }
-    var pendingVerifyDevice by remember { mutableStateOf<PeerDevice?>(null) }
-    var pendingVerifyWifiPeer by remember { mutableStateOf<com.itantra.core.transport.peer.WifiDirectPeer?>(null) }
+    var isLocallyConfirmed by remember { mutableStateOf(false) }
 
-    LaunchedEffect(sasCode) {
-        val code = sasCode
-        if (!code.isNullOrBlank()) {
-            pendingVerifyDevice?.let {
-                verifyingDevice = it
-                pendingVerifyDevice = null
-            }
-            pendingVerifyWifiPeer?.let {
-                verifyingWifiPeer = it
-                pendingVerifyWifiPeer = null
-            }
+    LaunchedEffect(sasCode, secureSessionState) {
+        if (sasCode.isNullOrBlank() || secureSessionState != com.itantra.core.crypto.SecureSessionState.WAITING_USER_VERIFICATION) {
+            isLocallyConfirmed = false
         }
     }
 
@@ -108,12 +111,18 @@ fun ConnectScreenContent(
             ) {
                 Tab(
                     selected = currentMode == TransportMode.BLUETOOTH,
-                    onClick = { currentMode = TransportMode.BLUETOOTH },
+                    onClick = {
+                        currentMode = TransportMode.BLUETOOTH
+                        onTransportModeChanged(TransportMode.BLUETOOTH)
+                    },
                     text = { Text("BLUETOOTH", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
                 )
                 Tab(
                     selected = currentMode == TransportMode.WIFI_DIRECT,
-                    onClick = { currentMode = TransportMode.WIFI_DIRECT },
+                    onClick = {
+                        currentMode = TransportMode.WIFI_DIRECT
+                        onTransportModeChanged(TransportMode.WIFI_DIRECT)
+                    },
                     text = { Text("WI-FI DIRECT", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
                 )
             }
@@ -173,10 +182,7 @@ fun ConnectScreenContent(
                         items(devices, key = { it.id }) { device ->
                             PeerDeviceCard(
                                 device = device,
-                                onConnect = {
-                                    pendingVerifyDevice = device
-                                    onConnect(device)
-                                },
+                                onConnect = { onConnect(device) },
                                 onOpenChat = { onOpenChat(device) }
                             )
                         }
@@ -253,16 +259,15 @@ fun ConnectScreenContent(
                         }
                     } else {
                         items(wifiDirectPeers, key = { it.deviceAddress }) { peer ->
+                            val isTcpConnected = wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTED
                             WifiDirectPeerCard(
                                 peer = peer,
-                                isConnected = wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTED,
+                                secureState = secureSessionState,
+                                isTcpConnected = isTcpConnected,
                                 isConnecting = wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTING ||
                                         wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.GROUP_FORMED ||
                                         wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.TCP_CONNECTING,
-                                onConnect = {
-                                    pendingVerifyWifiPeer = peer
-                                    onConnectWifiDirect(peer)
-                                },
+                                onConnect = { onConnectWifiDirect(peer) },
                                 onOpenChat = { onOpenChatWifiDirect(peer) }
                             )
                         }
@@ -298,34 +303,34 @@ fun ConnectScreenContent(
         }
     }
 
-    verifyingDevice?.let { dev ->
-        SasVerificationDialog(
-            deviceName = dev.name,
-            sasCode = sasCode ?: "GENERATING...",
-            onConfirm = {
-                onSasConfirmed(dev)
-                verifyingDevice = null
-            },
-            onDismiss = { verifyingDevice = null }
-        )
-    }
+    val shouldShowSasDialog = secureSessionState == com.itantra.core.crypto.SecureSessionState.WAITING_USER_VERIFICATION && !sasCode.isNullOrBlank()
 
-    verifyingWifiPeer?.let { peer ->
+    if (shouldShowSasDialog) {
+        val targetName = if (currentMode == TransportMode.BLUETOOTH) {
+            devices.find { it.id == connectedDeviceAddress }?.name ?: "Remote Node"
+        } else {
+            wifiDirectPeers.firstOrNull()?.deviceName ?: "Wi-Fi Direct Peer"
+        }
+        val targetPeerDevice = devices.find { it.id == connectedDeviceAddress } ?: PeerDevice(
+            id = connectedDeviceAddress ?: "peer-node",
+            name = targetName,
+            role = "Peer Operator",
+            transport = if (currentMode == TransportMode.BLUETOOTH) "Bluetooth RFCOMM" else "Wi-Fi Direct P2P",
+            state = PeerConnectionState.VERIFY_SAS
+        )
+
         SasVerificationDialog(
-            deviceName = peer.deviceName,
+            deviceName = targetName,
             sasCode = sasCode ?: "GENERATING...",
+            remainingSeconds = sasRemainingSeconds,
+            isLocallyConfirmed = isLocallyConfirmed,
             onConfirm = {
-                val dummyPeerDevice = PeerDevice(
-                    id = peer.deviceAddress,
-                    name = peer.deviceName,
-                    role = if (peer.isGroupOwner) "Group Owner" else "Peer Node",
-                    transport = "Wi-Fi Direct P2P",
-                    state = PeerConnectionState.CONNECTED
-                )
-                onSasConfirmed(dummyPeerDevice)
-                verifyingWifiPeer = null
+                isLocallyConfirmed = true
+                onSasConfirmed(targetPeerDevice)
             },
-            onDismiss = { verifyingWifiPeer = null }
+            onDismiss = {
+                onSasRejected()
+            }
         )
     }
 }
@@ -429,14 +434,14 @@ private fun PeerDeviceCard(device: PeerDevice, onConnect: () -> Unit, onOpenChat
                 Text(device.role, style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
             }
             when (device.state) {
-                PeerConnectionState.CONNECTED -> Row(
+                PeerConnectionState.SECURE_CONNECTED -> Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     AssistChip(
                         onClick = {},
                         enabled = false,
-                        label = { Text("CONNECTED") },
+                        label = { Text("SECURE CONNECTED") },
                         colors = AssistChipDefaults.assistChipColors(
                             disabledContainerColor = ITantraColors.StatusSuccess.copy(alpha = 0.12f),
                             disabledLabelColor = ITantraColors.StatusSuccess,
@@ -451,16 +456,56 @@ private fun PeerDeviceCard(device: PeerDevice, onConnect: () -> Unit, onOpenChat
                         Text("OPEN CHAT", style = MaterialTheme.typography.labelSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                     }
                 }
+                PeerConnectionState.VERIFY_SAS -> AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = { Text("VERIFY SAS") },
+                    colors = AssistChipDefaults.assistChipColors(
+                        disabledContainerColor = ITantraColors.Primary.copy(alpha = 0.15f),
+                        disabledLabelColor = ITantraColors.Primary
+                    )
+                )
+                PeerConnectionState.SECURE_HANDSHAKE -> AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = { Text("WAITING FOR SECURE HANDSHAKE…") },
+                )
                 PeerConnectionState.CONNECTING -> AssistChip(
                     onClick = {},
                     enabled = false,
                     label = { Text("CONNECTING…") },
                 )
+                PeerConnectionState.LISTENING -> AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = { Text("LISTENING") },
+                    colors = AssistChipDefaults.assistChipColors(
+                        disabledContainerColor = ITantraColors.AccentSubtle,
+                        disabledLabelColor = ITantraColors.Primary
+                    )
+                )
                 PeerConnectionState.AVAILABLE -> OutlinedButton(onClick = onConnect) {
                     Text("CONNECT")
                 }
                 PeerConnectionState.DISCONNECTED -> OutlinedButton(onClick = onConnect) {
-                    Text("RECONNECT")
+                    Text("CONNECT")
+                }
+                PeerConnectionState.ERROR -> Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    AssistChip(
+                        onClick = {},
+                        enabled = false,
+                        label = { Text("ERROR") },
+                        colors = AssistChipDefaults.assistChipColors(
+                            disabledContainerColor = ITantraColors.ErrorContainer,
+                            disabledLabelColor = ITantraColors.OnErrorContainer
+                        )
+                    )
+                    OutlinedButton(onClick = onConnect) {
+                        Text("RETRY")
+                    }
                 }
             }
         }
@@ -490,6 +535,8 @@ private fun StatChip(label: String, value: String) {
 fun SasVerificationDialog(
     deviceName: String,
     sasCode: String = "-- ---",
+    remainingSeconds: Int? = null,
+    isLocallyConfirmed: Boolean = false,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -498,7 +545,22 @@ fun SasVerificationDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Verify Device (SAS)", style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+            Column {
+                Text(
+                    "VERIFY SECURITY CODE",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+                if (remainingSeconds != null) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "$remainingSeconds seconds remaining",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (remainingSeconds <= 10) ITantraColors.OnErrorContainer else ITantraColors.Primary,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                }
+            }
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -522,29 +584,52 @@ fun SasVerificationDialog(
                         letterSpacing = 4.sp
                     )
                 }
-                Text(
-                    "E2EE cryptographic verification ensures no man-in-the-middle attack is active.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = ITantraColors.TextMuted
-                )
+                if (isLocallyConfirmed) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(ITantraColors.StatusSuccess.copy(alpha = 0.1f), RoundedCornerShape(6.dp))
+                            .padding(8.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = ITantraColors.StatusSuccess
+                        )
+                        Text(
+                            "WAITING FOR PEER TO CONFIRM…",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            color = ITantraColors.StatusSuccess
+                        )
+                    }
+                } else {
+                    Text(
+                        "E2EE cryptographic verification ensures no man-in-the-middle attack is active.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ITantraColors.TextMuted
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                enabled = isRealSas,
+                enabled = isRealSas && !isLocallyConfirmed,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ITantraColors.StatusSuccess,
-                    disabledContainerColor = ITantraColors.BorderSubtle,
-                    disabledContentColor = ITantraColors.TextMuted
+                    disabledContainerColor = if (isLocallyConfirmed) ITantraColors.StatusSuccess.copy(alpha = 0.4f) else ITantraColors.BorderSubtle,
+                    disabledContentColor = if (isLocallyConfirmed) androidx.compose.ui.graphics.Color.White else ITantraColors.TextMuted
                 )
             ) {
-                Text("CODES MATCH · TRUST")
+                Text(if (isLocallyConfirmed) "CONFIRMED LOCALLY" else "CODES MATCH · TRUST")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("CANCEL")
+                Text("REJECT / CANCEL")
             }
         }
     )
@@ -721,11 +806,16 @@ private fun WifiDirectErrorCard(error: String) {
 @Composable
 private fun WifiDirectPeerCard(
     peer: com.itantra.core.transport.peer.WifiDirectPeer,
-    isConnected: Boolean,
+    secureState: com.itantra.core.crypto.SecureSessionState,
+    isTcpConnected: Boolean,
     isConnecting: Boolean,
     onConnect: () -> Unit,
     onOpenChat: () -> Unit = {}
 ) {
+    val isSecureConnected = isTcpConnected && secureState == com.itantra.core.crypto.SecureSessionState.SECURE_VERIFIED
+    val isVerifyingSas = isTcpConnected && secureState == com.itantra.core.crypto.SecureSessionState.WAITING_USER_VERIFICATION
+    val isHandshaking = isTcpConnected && !isSecureConnected && !isVerifyingSas
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -737,8 +827,8 @@ private fun WifiDirectPeerCard(
             Column(Modifier.weight(1f)) {
                 Text(peer.deviceName, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    if (isConnected) {
-                        if (peer.isGroupOwner) "Verified Group Owner · ${peer.statusDisplay}" else "Verified Peer · ${peer.statusDisplay}"
+                    if (isSecureConnected) {
+                        if (peer.isGroupOwner) "Secure Group Owner · ${peer.statusDisplay}" else "Secure Peer · ${peer.statusDisplay}"
                     } else {
                         if (peer.isGroupOwner) "Unverified Group Owner · ${peer.statusDisplay}" else "Unverified Wi-Fi Peer · ${peer.statusDisplay}"
                     },
@@ -747,14 +837,14 @@ private fun WifiDirectPeerCard(
                 )
             }
             when {
-                isConnected -> Row(
+                isSecureConnected -> Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     AssistChip(
                         onClick = {},
                         enabled = false,
-                        label = { Text("CONNECTED") },
+                        label = { Text("SECURE CONNECTED") },
                         colors = AssistChipDefaults.assistChipColors(
                             disabledContainerColor = ITantraColors.StatusSuccess.copy(alpha = 0.12f),
                             disabledLabelColor = ITantraColors.StatusSuccess,
@@ -769,6 +859,20 @@ private fun WifiDirectPeerCard(
                         Text("OPEN CHAT", style = MaterialTheme.typography.labelSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                     }
                 }
+                isVerifyingSas -> AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = { Text("VERIFY SAS") },
+                    colors = AssistChipDefaults.assistChipColors(
+                        disabledContainerColor = ITantraColors.Primary.copy(alpha = 0.15f),
+                        disabledLabelColor = ITantraColors.Primary
+                    )
+                )
+                isHandshaking -> AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = { Text("WAITING FOR SECURE HANDSHAKE…") },
+                )
                 isConnecting -> AssistChip(
                     onClick = {},
                     enabled = false,
