@@ -1330,6 +1330,11 @@ class TransceiverCoordinator(
         }
 
         activeRecordingChunks.clear()
+        scope.launch {
+            sttMutex.withLock {
+                engine.reset()
+            }
+        }
         recordingStartTime = SystemClock.elapsedRealtime()
         val msgId = nextMessageId()
         activeRecordingMessageId = msgId
