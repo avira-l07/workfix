@@ -55,12 +55,54 @@ class OfflineReadinessChecker(
             englishStt = checkStt(LanguageCode.ENGLISH),
             hindiTts = checkTts(LanguageCode.HINDI),
             englishTts = checkTts(LanguageCode.ENGLISH),
-            hiToEnMt = checkMt("Hindi→English"),
+            hiToEnMt = checkHiToEnMt(),
             enToHiMt = checkMt("English→Hindi")
         )
     }
 
-    private fun checkStt(lang: LanguageCode): ComponentReadiness {
+    fun checkLanguageReadiness(lang: LanguageCode): Map<String, ComponentReadiness> {
+        val result = mutableMapOf<String, ComponentReadiness>()
+        result["stt"] = checkStt(lang)
+        result["tts"] = checkTts(lang)
+        if (lang != LanguageCode.ENGLISH) {
+            result["toEnMt"] = checkLanguageMt(lang, LanguageCode.ENGLISH)
+            result["fromEnMt"] = checkLanguageMt(LanguageCode.ENGLISH, lang)
+        }
+        return result
+    }
+
+    fun checkLanguageMt(source: LanguageCode, target: LanguageCode): ComponentReadiness {
+        if (source == LanguageCode.MALAYALAM || target == LanguageCode.MALAYALAM ||
+            source == LanguageCode.ODIA || target == LanguageCode.ODIA) {
+            return ComponentReadiness("${source.wireCode.uppercase()}→${target.wireCode.uppercase()} MT", ComponentStatus.NOT_INSTALLED)
+        }
+        if (source == LanguageCode.HINDI && target == LanguageCode.ENGLISH) {
+            return checkHiToEnMt()
+        }
+        val mlKitEngine = translationEngine as? MlKitOfflineTranslationEngine
+        val langToCheck = if (source != LanguageCode.ENGLISH) source else target
+        val status = if (mlKitEngine != null) {
+            val pairState = mlKitEngine.pairModelStates.value[langToCheck] ?: mlKitEngine.modelState.value
+            when (pairState) {
+                TranslationModelState.READY -> ComponentStatus.READY_OFFLINE
+                TranslationModelState.DOWNLOADING -> ComponentStatus.DOWNLOADING
+                TranslationModelState.FAILED -> ComponentStatus.FAILED
+                TranslationModelState.NOT_INSTALLED -> ComponentStatus.NOT_INSTALLED
+            }
+        } else {
+            if (translationEngine.isLoaded) ComponentStatus.READY_OFFLINE else ComponentStatus.NOT_INSTALLED
+        }
+        return ComponentReadiness("${source.wireCode.uppercase()}→${target.wireCode.uppercase()} MT", status)
+    }
+
+    private fun checkHiToEnMt(): ComponentReadiness {
+        // Hindi→English translation uses Whisper native translate mode bundled in APK assets
+        val sttReady = checkStt(LanguageCode.HINDI).status == ComponentStatus.READY_OFFLINE
+        val status = if (sttReady) ComponentStatus.READY_OFFLINE else ComponentStatus.NOT_INSTALLED
+        return ComponentReadiness("Hindi→English MT", status)
+    }
+
+    fun checkStt(lang: LanguageCode): ComponentReadiness {
         val spec = ModelFileSpecs.getSttSpec(lang)
         val packDir = storage.packDirectory(lang)
         val packsDir = packDir.parentFile
@@ -80,7 +122,7 @@ class OfflineReadinessChecker(
         return ComponentReadiness("${lang.name} STT", status)
     }
 
-    private fun checkTts(lang: LanguageCode): ComponentReadiness {
+    fun checkTts(lang: LanguageCode): ComponentReadiness {
         val installed = storage.isTtsInstalled(lang)
         val status = if (installed) ComponentStatus.READY_OFFLINE else ComponentStatus.NOT_INSTALLED
         return ComponentReadiness("${lang.name} TTS", status)

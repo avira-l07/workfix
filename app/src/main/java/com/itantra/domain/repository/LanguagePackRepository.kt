@@ -65,4 +65,12 @@ interface LanguagePackRepository {
 
     suspend fun deleteInstalledPack(code: LanguageCode)
     fun refreshStates() {}
+
+    fun observeEnabledMicLanguages(): Flow<Set<LanguageCode>> = kotlinx.coroutines.flow.flowOf(setOf(LanguageCode.HINDI, LanguageCode.ENGLISH))
+    suspend fun setEnabledMicLanguages(languages: Set<LanguageCode>) {}
+    fun getEnabledMicLanguages(): Set<LanguageCode> = setOf(LanguageCode.HINDI, LanguageCode.ENGLISH)
+
+    fun observeEnabledListenLanguages(): Flow<Set<LanguageCode>> = kotlinx.coroutines.flow.flowOf(setOf(LanguageCode.HINDI, LanguageCode.ENGLISH))
+    suspend fun setEnabledListenLanguages(languages: Set<LanguageCode>) {}
+    fun getEnabledListenLanguages(): Set<LanguageCode> = setOf(LanguageCode.HINDI, LanguageCode.ENGLISH)
 }

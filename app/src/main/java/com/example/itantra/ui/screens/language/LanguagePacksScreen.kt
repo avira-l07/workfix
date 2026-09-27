@@ -11,11 +11,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.example.itantra.ui.theme.ITantraColors
 import com.itantra.app.AppGraph
 import com.itantra.core.inference.ActiveLanguageSessionManager
+import com.itantra.core.translation.TranslationModelState
 import com.itantra.domain.model.LanguageCatalog
 import com.itantra.domain.model.LanguageCode
 import com.itantra.domain.model.LanguagePackAvailability
@@ -37,10 +44,16 @@ import com.itantra.domain.repository.LanguagePackRepository
 import com.itantra.feature.languages.LanguagePacksViewModel
 import kotlinx.coroutines.launch
 
-enum class PackStatus { READY, ACTIVE, DOWNLOADING, UPDATE_AVAILABLE, AVAILABLE }
+enum class ReadinessBadgeState {
+    READY_OFFLINE,
+    NOT_PROVISIONED,
+    DOWNLOADING,
+    FAILED,
+}
 
-data class LanguagePack(
+data class LanguagePackItem(
     val code: String,
+    val languageCode: LanguageCode,
     val nameEn: String,
     val nameNative: String,
     val version: String,
@@ -48,11 +61,16 @@ data class LanguagePack(
     val sttMb: Int,
     val ttsMb: Int,
     val region: String,
-    val status: PackStatus,
+    val readiness: ReadinessBadgeState,
     val downloadProgress: Float = 0f,
     val isTarget: Boolean = false,
+    val isActiveCore: Boolean = false,
     val isSttReady: Boolean = false,
     val isTtsReady: Boolean = false,
+    val isTranslationReady: Boolean = false,
+    val isMlOrOr: Boolean = false,
+    val isSpeakSelected: Boolean = false,
+    val isListenSelected: Boolean = false,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,59 +82,98 @@ fun LanguagePacksScreen(
         LanguagePacksViewModel(
             repository = repository,
             sessionManager = sessionManager,
-            storage = AppGraph.languagePackStorage
+            storage = AppGraph.languagePackStorage,
+            translationEngine = AppGraph.translationEngine,
         )
     },
     onBack: () -> Unit,
-    onDownloadPack: (LanguagePack) -> Unit = {},
+    onDownloadPack: (LanguagePackItem) -> Unit = {},
 ) {
     val coroutineScope = rememberCoroutineScope()
     val packSummaries by repository.observePackSummaries().collectAsState(initial = emptyList())
     val activeLangCode by repository.observeActiveLanguage().collectAsState(initial = null)
     val targetLangCode by repository.observeTargetLanguage().collectAsState(initial = null)
 
+    val enabledMicLangs by viewModel.enabledMicLanguages.collectAsState()
+    val enabledListenLangs by viewModel.enabledListenLanguages.collectAsState()
+    val stagedMicLangs by viewModel.stagedMicLanguages.collectAsState()
+    val stagedListenLangs by viewModel.stagedListenLanguages.collectAsState()
+    val translationStates by viewModel.translationStates.collectAsState()
+
+    val effectiveMicLangs = stagedMicLangs ?: enabledMicLangs
+    val effectiveListenLangs = stagedListenLangs ?: enabledListenLangs
+    val hasStagedChanges = (stagedMicLangs != null && stagedMicLangs != enabledMicLangs) ||
+            (stagedListenLangs != null && stagedListenLangs != enabledListenLangs)
+
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All") }
 
     val packs = packSummaries.map { summary ->
+        val langCode = summary.language.code
+        val isMlOrOr = (langCode == LanguageCode.MALAYALAM || langCode == LanguageCode.ODIA)
         val sttMb = ((summary.sttSizeBytes ?: (40L * 1024 * 1024)) / (1024 * 1024)).toInt()
         val ttsMb = ((summary.ttsSizeBytes ?: (45L * 1024 * 1024)) / (1024 * 1024)).toInt()
         val isSttReady = summary.isSttDownloaded
         val isTtsReady = summary.isTtsDownloaded
-        val status = when {
-            summary.language.code == activeLangCode || summary.availability == LanguagePackAvailability.ACTIVE -> PackStatus.ACTIVE
-            summary.sttInstallState == LanguagePackInstallState.DOWNLOADING || summary.ttsInstallState == LanguagePackInstallState.DOWNLOADING -> PackStatus.DOWNLOADING
-            summary.sttInstallState == LanguagePackInstallState.UPDATE_AVAILABLE || summary.ttsInstallState == LanguagePackInstallState.UPDATE_AVAILABLE -> PackStatus.UPDATE_AVAILABLE
-            summary.isDownloaded -> PackStatus.READY
-            else -> PackStatus.AVAILABLE
+
+        val pairMtState = translationStates[langCode]
+        val isTranslationReady = when {
+            isMlOrOr -> true // Transcription only
+            langCode == LanguageCode.HINDI || langCode == LanguageCode.ENGLISH -> true
+            pairMtState == TranslationModelState.READY -> true
+            else -> false
         }
-        LanguagePack(
-            code = summary.language.code.name.lowercase(),
+
+        val isDownloading = summary.sttInstallState == LanguagePackInstallState.DOWNLOADING ||
+                summary.ttsInstallState == LanguagePackInstallState.DOWNLOADING ||
+                pairMtState == TranslationModelState.DOWNLOADING
+
+        val isFailed = summary.sttInstallState == LanguagePackInstallState.ERROR ||
+                summary.sttInstallState == LanguagePackInstallState.CORRUPTED ||
+                summary.ttsInstallState == LanguagePackInstallState.ERROR ||
+                summary.ttsInstallState == LanguagePackInstallState.CORRUPTED ||
+                pairMtState == TranslationModelState.FAILED
+
+        val readiness = when {
+            isDownloading -> ReadinessBadgeState.DOWNLOADING
+            isFailed -> ReadinessBadgeState.FAILED
+            isSttReady && isTtsReady && isTranslationReady -> ReadinessBadgeState.READY_OFFLINE
+            else -> ReadinessBadgeState.NOT_PROVISIONED
+        }
+
+        LanguagePackItem(
+            code = langCode.name.lowercase(),
+            languageCode = langCode,
             nameEn = summary.language.displayName,
             nameNative = summary.language.nativeDisplayName,
             version = "v1.0.0",
             sizeMb = sttMb + ttsMb,
             sttMb = sttMb,
             ttsMb = ttsMb,
-            region = when (summary.language.code) {
+            region = when (langCode) {
                 LanguageCode.HINDI, LanguageCode.ENGLISH -> "NORTH REGION"
                 LanguageCode.MARATHI, LanguageCode.GUJARATI -> "WEST REGION"
                 LanguageCode.BENGALI, LanguageCode.ODIA -> "EAST REGION"
                 LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.KANNADA, LanguageCode.MALAYALAM -> "SOUTH REGION"
             },
-            status = status,
+            readiness = readiness,
             downloadProgress = (summary.downloadProgressPercent ?: 0) / 100f,
-            isTarget = (summary.language.code == targetLangCode),
+            isTarget = (langCode == targetLangCode),
+            isActiveCore = (langCode == activeLangCode || summary.availability == LanguagePackAvailability.ACTIVE),
             isSttReady = isSttReady,
             isTtsReady = isTtsReady,
+            isTranslationReady = isTranslationReady,
+            isMlOrOr = isMlOrOr,
+            isSpeakSelected = effectiveMicLangs.contains(langCode),
+            isListenSelected = effectiveListenLangs.contains(langCode),
         )
     }
 
     val filteredPacks = packs.filter { pack ->
         (searchQuery.isEmpty() || pack.nameEn.contains(searchQuery, ignoreCase = true) || pack.nameNative.contains(searchQuery)) &&
                 when (selectedFilter) {
-                    "Installed" -> pack.status == PackStatus.READY || pack.status == PackStatus.ACTIVE || pack.status == PackStatus.UPDATE_AVAILABLE
-                    "Available" -> pack.status == PackStatus.AVAILABLE
+                    "Installed" -> pack.readiness == ReadinessBadgeState.READY_OFFLINE || pack.isActiveCore
+                    "Available" -> pack.readiness != ReadinessBadgeState.READY_OFFLINE
                     else -> true
                 }
     }
@@ -129,7 +186,7 @@ fun LanguagePacksScreen(
                     Column {
                         Text("Language Packs", style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "On-device speech models",
+                            "On-device speech models & translation",
                             style = MaterialTheme.typography.bodySmall,
                             color = ITantraColors.TextMuted,
                         )
@@ -151,10 +208,108 @@ fun LanguagePacksScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Staged Selection / Apply & Provision Banner
+            if (hasStagedChanges) {
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = ITantraColors.Primary.copy(alpha = 0.08f),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, ITantraColors.Primary),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        "STAGED CONFIGURATION",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ITantraColors.Primary
+                                    )
+                                    Text(
+                                        "Speaking: ${effectiveMicLangs.size} • Receiving: ${effectiveListenLangs.size}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = ITantraColors.TextMuted
+                                    )
+                                }
+                                TextButton(onClick = { viewModel.resetStagedLanguages() }) {
+                                    Text("DISCARD", style = MaterialTheme.typography.labelSmall, color = ITantraColors.StatusDanger)
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = { viewModel.applyAndProvisionSelected() },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "APPLY & PROVISION SELECTED LANGUAGES",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Storage Overview
             item {
                 StorageOverviewCard(packs = packs)
             }
 
+            // Malayalam & Odia Disclosure Banner
+            item {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFFFFF8E1),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD54F)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            Icons.Filled.Info,
+                            contentDescription = null,
+                            tint = Color(0xFFE65100),
+                            modifier = Modifier.size(20.dp).padding(top = 1.dp)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                "MALAYALAM & ODIA NOTICE",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFE65100),
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                "Voice transcript only — translation not available for this language.",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFE65100),
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                "Google ML Kit does not provide on-device translation models for Malayalam (ml) or Odia (or). Offline speech recognition (STT) and voice synthesis (TTS) operate locally, but cross-language translation is bypassed.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ITantraColors.TextHeadline.copy(alpha = 0.85f),
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Active / Target Language Summary Card
             item {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
@@ -162,60 +317,88 @@ fun LanguagePacksScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.BorderSubtle),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text("MIC LANGUAGE", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
-                            Text(
-                                activeLangCode?.let { LanguageCatalog.byCode(it).displayName } ?: "None",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = ITantraColors.Primary
-                            )
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("ACTIVE MIC ENGINE", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
+                                Text(
+                                    activeLangCode?.let { LanguageCatalog.byCode(it).displayName } ?: "None",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = ITantraColors.Primary
+                                )
+                            }
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = ITantraColors.TextMuted, modifier = Modifier.size(16.dp))
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text("TRANSLATE TO", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
+                                Text(
+                                    targetLangCode?.let { LanguageCatalog.byCode(it).displayName } ?: "Auto / Peer Default",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (targetLangCode != null) ITantraColors.Primary else ITantraColors.TextHeadline
+                                )
+                            }
                         }
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = ITantraColors.TextMuted, modifier = Modifier.size(16.dp))
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("TRANSLATE TO", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
-                            Text(
-                                targetLangCode?.let { LanguageCatalog.byCode(it).displayName } ?: "Auto / Peer Default",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (targetLangCode != null) ITantraColors.Primary else ITantraColors.TextHeadline
-                            )
+
+                        Spacer(Modifier.height(8.dp))
+                        HorizontalDivider(color = ITantraColors.BorderSubtle, thickness = 0.5.dp)
+                        Spacer(Modifier.height(8.dp))
+
+                        Text("SPEAKING (MIC) SELECTED:", style = MaterialTheme.typography.labelSmall, fontSize = 10.sp, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            effectiveMicLangs.forEach { code ->
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = ITantraColors.Primary.copy(alpha = 0.1f),
+                                    border = androidx.compose.foundation.BorderStroke(0.5.dp, ITantraColors.Primary.copy(alpha = 0.3f))
+                                ) {
+                                    Text(
+                                        LanguageCatalog.byCode(code).displayName,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontSize = 11.sp,
+                                        color = ITantraColors.Primary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(6.dp))
+                        Text("RECEIVING (TTS) SELECTED:", style = MaterialTheme.typography.labelSmall, fontSize = 10.sp, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            effectiveListenLangs.forEach { code ->
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = Color(0xFFE8F5E9),
+                                    border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFF81C784))
+                                ) {
+                                    Text(
+                                        LanguageCatalog.byCode(code).displayName,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF2E7D32),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(ITantraColors.AccentSubtle, RoundedCornerShape(10.dp))
-                        .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(10.dp))
-                        .padding(12.dp),
-                ) {
-                    Text(
-                        "SCOPE NOTICE",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = ITantraColors.Primary,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        "English is the tested baseline for this build (24 acoustic benchmark WAVs). " +
-                            "The other 9 Indian languages run on the same shared multilingual Whisper-tiny " +
-                            "model but have no dedicated offline audio benchmark set yet — treat their " +
-                            "recognition accuracy as unverified until measured.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = ITantraColors.TextMuted,
-                    )
-                }
-            }
-
+            // Search query field
             item {
                 OutlinedTextField(
                     value = searchQuery,
@@ -228,6 +411,7 @@ fun LanguagePacksScreen(
                 )
             }
 
+            // Filter chips
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("All", "Installed", "Available").forEach { filter ->
@@ -263,34 +447,17 @@ fun LanguagePacksScreen(
                 items(filteredPacks, key = { it.code }) { pack ->
                     LanguagePackCard(
                         pack = pack,
-                        onActivate = {
-                            val langCode = LanguageCode.entries.find { it.name.equals(pack.code, ignoreCase = true) }
-                            if (langCode != null) {
-                                viewModel.activateLanguage(langCode)
-                            }
-                        },
+                        onToggleMic = { viewModel.toggleStagedMicLanguage(pack.languageCode) },
+                        onToggleListen = { viewModel.toggleStagedListenLanguage(pack.languageCode) },
+                        onActivate = { viewModel.activateLanguage(pack.languageCode) },
                         onDownload = {
-                            val langCode = LanguageCode.entries.find { it.name.equals(pack.code, ignoreCase = true) }
-                            if (langCode != null) {
-                                viewModel.downloadPack(langCode)
-                            }
+                            viewModel.downloadPack(pack.languageCode)
                             onDownloadPack(pack)
                         },
-                        onCancelDownload = {
-                            val langCode = LanguageCode.entries.find { it.name.equals(pack.code, ignoreCase = true) }
-                            if (langCode != null) {
-                                viewModel.cancelDownload(langCode)
-                            }
-                        },
-                        onSetTarget = {
-                            val langCode = LanguageCode.entries.find { it.name.equals(pack.code, ignoreCase = true) }
-                            if (langCode != null) {
-                                viewModel.setTargetLanguage(langCode)
-                            }
-                        },
-                        onClearTarget = {
-                            viewModel.setTargetLanguage(null)
-                        }
+                        onRetry = { viewModel.retryProvision(pack.languageCode) },
+                        onCancelDownload = { viewModel.cancelDownload(pack.languageCode) },
+                        onSetTarget = { viewModel.setTargetLanguage(pack.languageCode) },
+                        onClearTarget = { viewModel.setTargetLanguage(null) }
                     )
                 }
             }
@@ -299,7 +466,7 @@ fun LanguagePacksScreen(
 }
 
 @Composable
-private fun StorageOverviewCard(packs: List<LanguagePack>) {
+private fun StorageOverviewCard(packs: List<LanguagePackItem>) {
     val context = LocalContext.current
 
     val (freeGbStr, totalGbStr, totalBytes) = remember(context) {
@@ -315,8 +482,8 @@ private fun StorageOverviewCard(packs: List<LanguagePack>) {
         }
     }
 
-    val activePack = packs.find { it.status == PackStatus.ACTIVE }
-    val standbyPacks = packs.filter { it.status == PackStatus.READY }
+    val activePack = packs.find { it.isActiveCore }
+    val standbyPacks = packs.filter { it.readiness == ReadinessBadgeState.READY_OFFLINE && !it.isActiveCore }
     val activeMb = activePack?.sizeMb ?: 0
     val standbyMb = standbyPacks.sumOf { it.sizeMb }
     val totalInstalledMb = activeMb + standbyMb
@@ -414,28 +581,27 @@ private fun StorageOverviewCard(packs: List<LanguagePack>) {
 
 @Composable
 private fun LanguagePackCard(
-    pack: LanguagePack,
+    pack: LanguagePackItem,
+    onToggleMic: () -> Unit = {},
+    onToggleListen: () -> Unit = {},
     onActivate: () -> Unit = {},
     onDownload: () -> Unit = {},
+    onRetry: () -> Unit = {},
     onCancelDownload: () -> Unit = {},
     onSetTarget: () -> Unit = {},
     onClearTarget: () -> Unit = {},
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(
-                if (pack.status == PackStatus.READY) Modifier.clickable { onActivate() }
-                else Modifier
-            ),
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
         shape = RoundedCornerShape(12.dp),
         border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (pack.status == PackStatus.ACTIVE) ITantraColors.Primary else ITantraColors.BorderSubtle,
+            1.5.dp,
+            if (pack.isActiveCore) ITantraColors.Primary else ITantraColors.BorderSubtle,
         ),
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
+            // Header Row: Names + Diagnostics Status Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -447,23 +613,7 @@ private fun LanguagePackCard(
                     Text(pack.nameNative, style = MaterialTheme.typography.titleMedium, color = ITantraColors.Primary)
                 }
 
-                when (pack.status) {
-                    PackStatus.ACTIVE -> StatusBadge("ACTIVE CORE", ITantraColors.Primary, ITantraColors.SurfaceWhite)
-                    PackStatus.READY -> {
-                        if (pack.isSttReady && pack.isTtsReady) {
-                            StatusBadge("STT & TTS READY", ITantraColors.StatusSuccess, ITantraColors.SurfaceWhite)
-                        } else if (pack.isSttReady && !pack.isTtsReady) {
-                            StatusBadge("STT READY • TTS REQ", ITantraColors.StatusWarning, ITantraColors.SurfaceWhite)
-                        } else if (!pack.isSttReady && pack.isTtsReady) {
-                            StatusBadge("TTS READY", ITantraColors.StatusSuccess, ITantraColors.SurfaceWhite)
-                        } else {
-                            StatusBadge("READY", ITantraColors.StatusSuccess, ITantraColors.SurfaceWhite)
-                        }
-                    }
-                    PackStatus.UPDATE_AVAILABLE -> StatusBadge("UPDATE", ITantraColors.StatusWarning, ITantraColors.SurfaceWhite)
-                    PackStatus.DOWNLOADING -> StatusBadge("DOWNLOADING", ITantraColors.Primary, ITantraColors.SurfaceWhite)
-                    PackStatus.AVAILABLE -> StatusBadge("AVAILABLE", ITantraColors.TextMuted, ITantraColors.SurfaceWhite)
-                }
+                DiagnosticsBadge(pack.readiness, pack.downloadProgress)
             }
 
             Spacer(Modifier.height(4.dp))
@@ -473,42 +623,113 @@ private fun LanguagePackCard(
                 color = ITantraColors.TextMuted,
             )
 
-            Row(
-                modifier = Modifier.padding(top = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            // Malayalam / Odia Warning Disclosure Banner on Card
+            if (pack.isMlOrOr) {
+                Spacer(Modifier.height(6.dp))
                 Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = if (pack.isSttReady) Color(0xFFE8F5E9) else Color(0xFFF5F5F5),
-                    border = androidx.compose.foundation.BorderStroke(0.5.dp, if (pack.isSttReady) Color(0xFF81C784) else Color(0xFFE0E0E0))
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFFFFF8E1),
+                    border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFFFD54F)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = if (pack.isSttReady) "STT READY" else "STT MISSING",
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (pack.isSttReady) Color(0xFF2E7D32) else ITantraColors.TextMuted
-                    )
-                }
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = if (pack.isTtsReady) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
-                    border = androidx.compose.foundation.BorderStroke(0.5.dp, if (pack.isTtsReady) Color(0xFF81C784) else Color(0xFFFFB74D))
-                ) {
-                    Text(
-                        text = if (pack.isTtsReady) "TTS READY" else "TTS DOWNLOAD REQUIRED",
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (pack.isTtsReady) Color(0xFF2E7D32) else Color(0xFFE65100)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Warning,
+                            contentDescription = null,
+                            tint = Color(0xFFE65100),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "Voice transcript only — translation not available for this language",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 10.sp,
+                            color = Color(0xFFE65100),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
 
-            if (pack.status == PackStatus.DOWNLOADING) {
+            Spacer(Modifier.height(8.dp))
+
+            // Staged Selective Role Toggles: Speak (Mic) & Receive (TTS)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = pack.isSpeakSelected,
+                    onClick = onToggleMic,
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = {
+                        Icon(
+                            Icons.Filled.Mic,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = if (pack.isSpeakSelected) ITantraColors.SurfaceWhite else ITantraColors.TextHeadline
+                        )
+                    },
+                    label = {
+                        Text(
+                            "Speak (Mic)",
+                            fontWeight = if (pack.isSpeakSelected) FontWeight.Bold else FontWeight.Normal,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = ITantraColors.Primary,
+                        selectedLabelColor = ITantraColors.SurfaceWhite,
+                    )
+                )
+
+                FilterChip(
+                    selected = pack.isListenSelected,
+                    onClick = onToggleListen,
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = {
+                        Icon(
+                            Icons.Filled.GraphicEq,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = if (pack.isListenSelected) ITantraColors.SurfaceWhite else ITantraColors.TextHeadline
+                        )
+                    },
+                    label = {
+                        Text(
+                            "Receive (TTS)",
+                            fontWeight = if (pack.isListenSelected) FontWeight.Bold else FontWeight.Normal,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF2E7D32),
+                        selectedLabelColor = ITantraColors.SurfaceWhite,
+                    )
+                )
+            }
+
+            // Component Readiness Indicators (STT, TTS, MT)
+            Spacer(Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ComponentPill(label = "STT", isReady = pack.isSttReady)
+                ComponentPill(label = "TTS", isReady = pack.isTtsReady)
+                if (pack.isMlOrOr) {
+                    ComponentPill(label = "MT: BYPASS", isReady = true, isMuted = true)
+                } else {
+                    ComponentPill(label = "MT", isReady = pack.isTranslationReady)
+                }
+            }
+
+            // Progress / Download / Active Actions
+            if (pack.readiness == ReadinessBadgeState.DOWNLOADING) {
                 Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(
                     progress = { pack.downloadProgress },
@@ -521,28 +742,36 @@ private fun LanguagePackCard(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(vertical = 6.dp),
                 ) {
+                    Icon(Icons.Filled.Close, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
                     Text("CANCEL DOWNLOAD", style = MaterialTheme.typography.labelMedium)
                 }
-            }
-
-            if (pack.status == PackStatus.READY) {
-                Spacer(Modifier.height(10.dp))
+            } else if (pack.readiness == ReadinessBadgeState.FAILED) {
+                Spacer(Modifier.height(8.dp))
                 Button(
-                    onClick = onActivate,
+                    onClick = onRetry,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                ) {
+                    Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("RETRY PROVISION (${pack.sizeMb} MB)")
+                }
+            } else if (pack.readiness == ReadinessBadgeState.NOT_PROVISIONED) {
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = onDownload,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
                     contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
-                    Icon(
-                        Icons.Filled.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
+                    Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("USE THIS LANGUAGE (ACTIVATE STT)")
+                    Text("DOWNLOAD PACK (${pack.sizeMb} MB)")
                 }
-            } else if (pack.status == PackStatus.ACTIVE) {
-                Spacer(Modifier.height(10.dp))
+            } else if (pack.isActiveCore) {
+                Spacer(Modifier.height(8.dp))
                 Surface(
                     color = ITantraColors.Primary.copy(alpha = 0.08f),
                     shape = RoundedCornerShape(8.dp),
@@ -555,28 +784,24 @@ private fun LanguagePackCard(
                     ) {
                         Icon(Icons.Filled.Check, contentDescription = null, tint = ITantraColors.Primary, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("CURRENTLY ACTIVE SPEECH MODEL", style = MaterialTheme.typography.labelMedium, color = ITantraColors.Primary, fontWeight = FontWeight.Bold)
+                        Text("CURRENT ACTIVE MIC ENGINE", style = MaterialTheme.typography.labelMedium, color = ITantraColors.Primary, fontWeight = FontWeight.Bold)
                     }
                 }
-            } else if (pack.status == PackStatus.AVAILABLE || pack.status == PackStatus.UPDATE_AVAILABLE) {
-                Spacer(Modifier.height(10.dp))
+            } else if (pack.isSttReady) {
+                Spacer(Modifier.height(8.dp))
                 Button(
-                    onClick = onDownload,
+                    onClick = onActivate,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
                     contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
-                    Icon(
-                        if (pack.status == PackStatus.UPDATE_AVAILABLE) Icons.Filled.Update else Icons.Filled.Download,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
+                    Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text(if (pack.status == PackStatus.UPDATE_AVAILABLE) "UPDATE MODEL (${pack.sizeMb} MB)" else "DOWNLOAD PACK (${pack.sizeMb} MB)")
+                    Text("SET AS ACTIVE MIC ENGINE")
                 }
             }
 
-            // Target Language / Translation Outgoing Selector (FIX 030)
+            // Target Language / Translation Outgoing Selector
             Spacer(Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -622,14 +847,71 @@ private fun LanguagePackCard(
 }
 
 @Composable
-private fun StatusBadge(text: String, bgColor: androidx.compose.ui.graphics.Color, textColor: androidx.compose.ui.graphics.Color) {
-    Text(
-        text = text,
-        color = textColor,
-        fontSize = 10.sp,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier
-            .background(bgColor, RoundedCornerShape(4.dp))
-            .padding(horizontal = 6.dp, vertical = 2.dp),
-    )
+private fun DiagnosticsBadge(status: ReadinessBadgeState, progress: Float) {
+    val (label, bgColor, textColor, borderColor) = when (status) {
+        ReadinessBadgeState.READY_OFFLINE -> Quad(
+            "READY OFFLINE",
+            Color(0xFFE8F5E9),
+            Color(0xFF2E7D32),
+            Color(0xFF81C784)
+        )
+        ReadinessBadgeState.NOT_PROVISIONED -> Quad(
+            "NOT PROVISIONED",
+            Color(0xFFF5F5F5),
+            Color(0xFF757575),
+            Color(0xFFE0E0E0)
+        )
+        ReadinessBadgeState.DOWNLOADING -> Quad(
+            if (progress > 0f) "DOWNLOADING ${(progress * 100).toInt()}%" else "DOWNLOADING...",
+            Color(0xFFE3F2FD),
+            Color(0xFF1565C0),
+            Color(0xFF90CAF9)
+        )
+        ReadinessBadgeState.FAILED -> Quad(
+            "FAILED (RETRY)",
+            Color(0xFFFFEBEE),
+            Color(0xFFC62828),
+            Color(0xFFEF9A9A)
+        )
+    }
+
+    Surface(
+        shape = RoundedCornerShape(4.dp),
+        color = bgColor,
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, borderColor)
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+    }
 }
+
+@Composable
+private fun ComponentPill(label: String, isReady: Boolean, isMuted: Boolean = false) {
+    val (bgColor, borderColor, textColor) = when {
+        isMuted -> Triple(Color(0xFFFFF8E1), Color(0xFFFFD54F), Color(0xFFE65100))
+        isReady -> Triple(Color(0xFFE8F5E9), Color(0xFF81C784), Color(0xFF2E7D32))
+        else -> Triple(Color(0xFFF5F5F5), Color(0xFFE0E0E0), ITantraColors.TextMuted)
+    }
+    Surface(
+        shape = RoundedCornerShape(4.dp),
+        color = bgColor,
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, borderColor)
+    ) {
+        Text(
+            text = if (isMuted) label else if (isReady) "$label READY" else "$label MISSING",
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = textColor
+        )
+    }
+}
+
+private data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)

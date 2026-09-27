@@ -14,6 +14,7 @@ import com.itantra.domain.model.LanguageCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -39,20 +40,45 @@ class MlKitOfflineTranslationEngine(
 
     companion object {
         private const val TAG = "MlKitMT"
+
+        val ML_KIT_SUPPORTED_LANGUAGES: Set<LanguageCode> = setOf(
+            LanguageCode.HINDI,
+            LanguageCode.ENGLISH,
+            LanguageCode.BENGALI,
+            LanguageCode.GUJARATI,
+            LanguageCode.MARATHI,
+            LanguageCode.KANNADA,
+            LanguageCode.TAMIL,
+            LanguageCode.TELUGU
+        )
+
+        fun toMlKitLanguageTag(lang: LanguageCode): String? = when (lang) {
+            LanguageCode.HINDI -> TranslateLanguage.HINDI
+            LanguageCode.ENGLISH -> TranslateLanguage.ENGLISH
+            LanguageCode.BENGALI -> TranslateLanguage.BENGALI
+            LanguageCode.GUJARATI -> TranslateLanguage.GUJARATI
+            LanguageCode.MARATHI -> TranslateLanguage.MARATHI
+            LanguageCode.KANNADA -> TranslateLanguage.KANNADA
+            LanguageCode.TAMIL -> TranslateLanguage.TAMIL
+            LanguageCode.TELUGU -> TranslateLanguage.TELUGU
+            LanguageCode.MALAYALAM -> null
+            LanguageCode.ODIA -> null
+        }
     }
 
-    override val supportedSourceLanguages: Set<LanguageCode> =
-        setOf(LanguageCode.HINDI, LanguageCode.ENGLISH)
+    override val supportedSourceLanguages: Set<LanguageCode> = ML_KIT_SUPPORTED_LANGUAGES
+    override val supportedTargetLanguages: Set<LanguageCode> = ML_KIT_SUPPORTED_LANGUAGES
 
-    override val supportedTargetLanguages: Set<LanguageCode> =
-        setOf(LanguageCode.HINDI, LanguageCode.ENGLISH)
-
-    // Cached translators — created once, reused across all calls
-    private var hiToEnTranslator: Translator? = null
-    private var enToHiTranslator: Translator? = null
+    // Cached translators — created on-demand per language pair, reused across calls
+    private val translators = java.util.concurrent.ConcurrentHashMap<Pair<LanguageCode, LanguageCode>, Translator>()
 
     private val _modelState = MutableStateFlow(TranslationModelState.NOT_INSTALLED)
     val modelState: StateFlow<TranslationModelState> = _modelState
+
+    private val _pairModelStates = MutableStateFlow<Map<LanguageCode, TranslationModelState>>(
+        ML_KIT_SUPPORTED_LANGUAGES.associateWith { TranslationModelState.NOT_INSTALLED }
+    )
+    val pairModelStates: StateFlow<Map<LanguageCode, TranslationModelState>> = _pairModelStates
 
     private var _isLoaded = false
 
@@ -60,108 +86,121 @@ class MlKitOfflineTranslationEngine(
         get() = _isLoaded
 
     override fun init(modelsDir: File) {
-        // ML Kit manages its own model storage internally.
-        // We just create the translator instances here.
-        createTranslators()
-        // Check if models are already downloaded
-        checkModelReadiness()
+        init()
     }
 
     /**
      * Convenience init for when no modelsDir is needed (ML Kit manages its own storage).
      */
     fun init() {
-        createTranslators()
+        createDefaultTranslators()
         checkModelReadiness()
     }
 
-    private fun createTranslators() {
+    private fun createDefaultTranslators() {
         try {
-            val hiToEnOptions = TranslatorOptions.Builder()
-                .setSourceLanguage(TranslateLanguage.HINDI)
-                .setTargetLanguage(TranslateLanguage.ENGLISH)
-                .build()
-            hiToEnTranslator = Translation.getClient(hiToEnOptions)
-
-            val enToHiOptions = TranslatorOptions.Builder()
-                .setSourceLanguage(TranslateLanguage.ENGLISH)
-                .setTargetLanguage(TranslateLanguage.HINDI)
-                .build()
-            enToHiTranslator = Translation.getClient(enToHiOptions)
-
-            Log.i(TAG, "Translator clients created (HI→EN, EN→HI)")
+            getOrCreateTranslator(LanguageCode.HINDI, LanguageCode.ENGLISH)
+            getOrCreateTranslator(LanguageCode.ENGLISH, LanguageCode.HINDI)
+            Log.i(TAG, "Default translator clients created (HI<->EN)")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to create translator clients", e)
+            Log.e(TAG, "Failed to create default translator clients", e)
         }
     }
 
-    private fun checkModelReadiness() {
-        val modelManager = RemoteModelManager.getInstance()
-        val hiModel = TranslateRemoteModel.Builder(TranslateLanguage.HINDI).build()
-        val enModel = TranslateRemoteModel.Builder(TranslateLanguage.ENGLISH).build()
+    fun getOrCreateTranslator(source: LanguageCode, target: LanguageCode): Translator? {
+        val srcTag = toMlKitLanguageTag(source) ?: return null
+        val tgtTag = toMlKitLanguageTag(target) ?: return null
+        return translators.computeIfAbsent(source to target) {
+            val options = TranslatorOptions.Builder()
+                .setSourceLanguage(srcTag)
+                .setTargetLanguage(tgtTag)
+                .build()
+            Translation.getClient(options)
+        }
+    }
 
+    fun checkModelReadiness() {
+        val modelManager = RemoteModelManager.getInstance()
         modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
             .addOnSuccessListener { models ->
-                val hasHi = models.any { it.language == TranslateLanguage.HINDI }
-                val hasEn = models.any { it.language == TranslateLanguage.ENGLISH }
-                if (hasHi && hasEn) {
-                    _modelState.value = TranslationModelState.READY
-                    _isLoaded = true
-                    Log.i(TAG, "Both HI and EN models already downloaded — READY")
-                } else {
-                    _modelState.value = TranslationModelState.NOT_INSTALLED
-                    _isLoaded = false
-                    Log.i(TAG, "Models not yet downloaded: HI=$hasHi, EN=$hasEn")
+                val downloadedTags = models.map { it.language }.toSet()
+                val hasEn = downloadedTags.contains(TranslateLanguage.ENGLISH)
+                val newMap = mutableMapOf<LanguageCode, TranslationModelState>()
+
+                for (lang in ML_KIT_SUPPORTED_LANGUAGES) {
+                    val tag = toMlKitLanguageTag(lang)
+                    val isReady = if (lang == LanguageCode.ENGLISH) {
+                        hasEn
+                    } else {
+                        hasEn && tag != null && downloadedTags.contains(tag)
+                    }
+                    newMap[lang] = if (isReady) TranslationModelState.READY else TranslationModelState.NOT_INSTALLED
                 }
+                _pairModelStates.value = newMap
+                val hasHi = newMap[LanguageCode.HINDI] == TranslationModelState.READY
+                _modelState.value = if (hasHi) TranslationModelState.READY else TranslationModelState.NOT_INSTALLED
+                _isLoaded = hasHi || newMap.values.any { it == TranslationModelState.READY }
             }
             .addOnFailureListener { e ->
                 Log.w(TAG, "Could not check model readiness: ${e.message}")
-                _modelState.value = TranslationModelState.NOT_INSTALLED
-                _isLoaded = false
             }
     }
 
     /**
-     * Phase 7: Downloads both Hindi and English translation models for offline use.
-     *
-     * Requires Internet (Wi-Fi preferred). Call this during setup/provisioning phase.
-     * After this completes with [TranslationModelState.READY], all subsequent
-     * [translate] calls work fully offline.
+     * Downloads translation models for a specific language pair with English.
      */
-    suspend fun prepareOfflineModels(): TranslationModelState = withContext(Dispatchers.IO) {
-        _modelState.value = TranslationModelState.DOWNLOADING
+    suspend fun prepareOfflineModelForLanguage(lang: LanguageCode): TranslationModelState = withContext(Dispatchers.IO) {
+        if (!ML_KIT_SUPPORTED_LANGUAGES.contains(lang) || lang == LanguageCode.ENGLISH) {
+            return@withContext TranslationModelState.READY
+        }
+        val langTag = toMlKitLanguageTag(lang) ?: return@withContext TranslationModelState.NOT_INSTALLED
+        _pairModelStates.update { it + (lang to TranslationModelState.DOWNLOADING) }
 
-        val conditions = DownloadConditions.Builder()
-            .requireWifi()
-            .build()
-
+        val conditions = DownloadConditions.Builder().build()
         try {
-            // Download both translators' models
-            hiToEnTranslator?.downloadModelIfNeeded(conditions)?.await()
-            Log.i(TAG, "HI→EN model download complete")
+            val toEn = getOrCreateTranslator(lang, LanguageCode.ENGLISH)
+            val fromEn = getOrCreateTranslator(LanguageCode.ENGLISH, lang)
 
-            enToHiTranslator?.downloadModelIfNeeded(conditions)?.await()
-            Log.i(TAG, "EN→HI model download complete")
+            toEn?.downloadModelIfNeeded(conditions)?.await()
+            fromEn?.downloadModelIfNeeded(conditions)?.await()
 
-            _modelState.value = TranslationModelState.READY
-            _isLoaded = true
-            Log.i(TAG, "All translation models provisioned — READY OFFLINE")
+            _pairModelStates.update { it + (lang to TranslationModelState.READY) }
+            checkModelReadiness()
             TranslationModelState.READY
         } catch (e: Exception) {
-            Log.e(TAG, "Model download failed", e)
-            _modelState.value = TranslationModelState.FAILED
-            _isLoaded = false
+            Log.e(TAG, "Model download failed for $lang", e)
+            _pairModelStates.update { it + (lang to TranslationModelState.FAILED) }
             TranslationModelState.FAILED
         }
     }
 
     /**
-     * Phase 8: translate() uses only local ML Kit Translator — never calls REST/cloud.
-     * Returns MODEL_NOT_PROVISIONED if model is not downloaded.
-     * Never silently sends source-language text as translated output.
-     *
-     * Phase 10: Translation output validation.
+     * Selectively prepares offline translation models only for the specified languages.
+     * Skips Malayalam and Odia (which have no ML Kit on-device model).
      */
+    suspend fun prepareOfflineModels(languages: Set<LanguageCode>): Map<LanguageCode, TranslationModelState> = withContext(Dispatchers.IO) {
+        val results = mutableMapOf<LanguageCode, TranslationModelState>()
+        for (lang in languages) {
+            if (lang == LanguageCode.MALAYALAM || lang == LanguageCode.ODIA) {
+                results[lang] = TranslationModelState.NOT_INSTALLED
+                continue
+            }
+            if (lang == LanguageCode.ENGLISH) {
+                results[lang] = TranslationModelState.READY
+                continue
+            }
+            results[lang] = prepareOfflineModelForLanguage(lang)
+        }
+        results
+    }
+
+    /**
+     * Backward-compatible prepareOfflineModels for Hindi<->English.
+     */
+    suspend fun prepareOfflineModels(): TranslationModelState = withContext(Dispatchers.IO) {
+        prepareOfflineModelForLanguage(LanguageCode.HINDI)
+    }
+
     override suspend fun translate(
         text: String,
         sourceLang: LanguageCode,
@@ -183,24 +222,8 @@ class MlKitOfflineTranslationEngine(
             return failure(text, sourceLang, targetLang, "UNSUPPORTED_ROUTE")
         }
 
-        // Check model provisioning
-        if (!_isLoaded) {
-            // Re-check in case models were downloaded externally
-            checkModelReadiness()
-            if (!_isLoaded) {
-                return failure(text, sourceLang, targetLang, "MODEL_NOT_PROVISIONED")
-            }
-        }
-
-        val translator = when {
-            sourceLang == LanguageCode.HINDI && targetLang == LanguageCode.ENGLISH -> hiToEnTranslator
-            sourceLang == LanguageCode.ENGLISH && targetLang == LanguageCode.HINDI -> enToHiTranslator
-            else -> return failure(text, sourceLang, targetLang, "UNSUPPORTED_ROUTE")
-        }
-
-        if (translator == null) {
-            return failure(text, sourceLang, targetLang, "ENGINE_NOT_INITIALIZED")
-        }
+        val translator = getOrCreateTranslator(sourceLang, targetLang)
+            ?: return failure(text, sourceLang, targetLang, "ENGINE_NOT_INITIALIZED")
 
         return try {
             val translated = withContext(Dispatchers.IO) {
@@ -255,15 +278,14 @@ class MlKitOfflineTranslationEngine(
 
     override fun release() {
         try {
-            hiToEnTranslator?.close()
-            enToHiTranslator?.close()
+            translators.values.forEach { it.close() }
+            translators.clear()
         } catch (e: Exception) {
             Log.w(TAG, "Error closing translators: ${e.message}")
         }
-        hiToEnTranslator = null
-        enToHiTranslator = null
         _isLoaded = false
         _modelState.value = TranslationModelState.NOT_INSTALLED
+        _pairModelStates.value = ML_KIT_SUPPORTED_LANGUAGES.associateWith { TranslationModelState.NOT_INSTALLED }
         Log.i(TAG, "Translators released")
     }
 

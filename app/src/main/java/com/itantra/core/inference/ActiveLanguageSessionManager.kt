@@ -42,6 +42,9 @@ class ActiveLanguageSessionManager(
     private val _isSttAutoDetect = MutableStateFlow<Boolean>(true)
     val isSttAutoDetect: StateFlow<Boolean> = _isSttAutoDetect
 
+    private val _activeTargetLanguage = MutableStateFlow<LanguageCode?>(null)
+    val activeTargetLanguage: StateFlow<LanguageCode?> = _activeTargetLanguage
+
     @Deprecated("Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent")
     private val _activeLanguage = MutableStateFlow<LanguageCode?>(null)
     @Deprecated("Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent")
@@ -55,20 +58,25 @@ class ActiveLanguageSessionManager(
      * Reuses if already satisfied in memory.
      * If switching, unloads previous STT only (never touches TTS).
      */
-    suspend fun ensureStt(language: LanguageCode, autoDetect: Boolean = true) {
+    suspend fun ensureStt(
+        language: LanguageCode,
+        autoDetect: Boolean = true,
+        targetLanguage: LanguageCode? = _activeTargetLanguage.value
+    ) {
         switchMutex.withLock {
             val sttLoaded = currentSttEngine != null && currentSttEngine?.isLoaded == true
             val sameMode = _isSttAutoDetect.value == autoDetect
             val sameLang = _activeSttLanguage.value == language || autoDetect
+            val sameTarget = _activeTargetLanguage.value == targetLanguage
 
             android.util.Log.d(
                 "ITANTRA_MIC_FLOW",
-                "ensureStt: requested lang=${language.wireCode} autoDetect=$autoDetect | " +
-                "sttLoaded=$sttLoaded sameMode=$sameMode sameLang=$sameLang | " +
+                "ensureStt: requested lang=${language.wireCode} autoDetect=$autoDetect targetLang=${targetLanguage?.wireCode} | " +
+                "sttLoaded=$sttLoaded sameMode=$sameMode sameLang=$sameLang sameTarget=$sameTarget | " +
                 "current activeSttLang=${_activeSttLanguage.value?.wireCode} isSttAutoDetect=${_isSttAutoDetect.value}"
             )
 
-            if (sttLoaded && sameMode && sameLang) {
+            if (sttLoaded && sameMode && sameLang && sameTarget) {
                 android.util.Log.d("ITANTRA_MIC_FLOW", "ensureStt: EARLY RETURN — engine already satisfies request, no reload")
                 return@withLock
             }
@@ -79,6 +87,7 @@ class ActiveLanguageSessionManager(
                 currentSttEngine?.unload()
                 currentSttEngine = null
                 _activeSttLanguage.value = null
+                _activeTargetLanguage.value = null
                 _sessionState.value = LanguageSessionState.ERROR
                 return@withLock
             }
@@ -90,13 +99,14 @@ class ActiveLanguageSessionManager(
 
             _sessionState.value = LanguageSessionState.LOADING_STT
             try {
-                val newStt = engineFactory.createRecognizer(language, autoDetect)
+                val newStt = engineFactory.createRecognizer(language, autoDetect, targetLanguage)
                 android.util.Log.d("ITANTRA_MIC_FLOW", "ensureStt: engineFactory.createRecognizer returned ${if (newStt != null) newStt::class.simpleName else "null"}")
                 if (newStt != null) {
                     newStt.load()
                     currentSttEngine = newStt
                     _activeSttLanguage.value = language
                     _isSttAutoDetect.value = autoDetect
+                    _activeTargetLanguage.value = targetLanguage
                     _activeLanguage.value = language
                     _sessionState.value = LanguageSessionState.READY
                     android.util.Log.d("ITANTRA_MIC_FLOW", "ensureStt: SUCCESS — STT engine loaded for ${language.wireCode}")
@@ -417,6 +427,9 @@ class ActiveLanguageSessionManager(
  * safe default for tests; production wiring is in [com.itantra.app.AppGraph].
  */
 interface EngineFactory {
+    fun createRecognizer(language: LanguageCode, autoDetect: Boolean, targetLanguage: LanguageCode?): SpeechRecognizerEngine? =
+        createRecognizer(language, autoDetect)
+
     fun createRecognizer(language: LanguageCode, autoDetect: Boolean): SpeechRecognizerEngine? =
         createRecognizer(language)
 
@@ -424,6 +437,8 @@ interface EngineFactory {
     fun createSynthesizer(language: LanguageCode): SpeechSynthesizerEngine?
 
     object NoOp : EngineFactory {
+        override fun createRecognizer(language: LanguageCode, autoDetect: Boolean, targetLanguage: LanguageCode?): SpeechRecognizerEngine? =
+            throw NotImplementedError("No SpeechRecognizerEngine configured in NoOp EngineFactory")
         override fun createRecognizer(language: LanguageCode, autoDetect: Boolean): SpeechRecognizerEngine? =
             throw NotImplementedError("No SpeechRecognizerEngine configured in NoOp EngineFactory")
         override fun createRecognizer(language: LanguageCode): SpeechRecognizerEngine? =

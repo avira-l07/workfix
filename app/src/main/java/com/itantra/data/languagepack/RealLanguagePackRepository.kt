@@ -59,6 +59,20 @@ class RealLanguagePackRepository(
     private val manualSttLanguage = MutableStateFlow<LanguageCode?>(
         context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("manual_stt_lang", null)?.let { LanguageCode.fromWireCode(it) }
     )
+    private val enabledMicLanguages = MutableStateFlow<Set<LanguageCode>>(
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE)
+            .getStringSet("enabled_mic_langs", setOf("hi", "en"))
+            ?.mapNotNull { LanguageCode.fromWireCode(it) }?.toSet()
+            ?.ifEmpty { setOf(LanguageCode.HINDI, LanguageCode.ENGLISH) }
+            ?: setOf(LanguageCode.HINDI, LanguageCode.ENGLISH)
+    )
+    private val enabledListenLanguages = MutableStateFlow<Set<LanguageCode>>(
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE)
+            .getStringSet("enabled_listen_langs", setOf("hi", "en"))
+            ?.mapNotNull { LanguageCode.fromWireCode(it) }?.toSet()
+            ?.ifEmpty { setOf(LanguageCode.HINDI, LanguageCode.ENGLISH) }
+            ?: setOf(LanguageCode.HINDI, LanguageCode.ENGLISH)
+    )
     private val downloadProgress = MutableStateFlow<Map<LanguageCode, Int>>(emptyMap())
     private val downloadJobs = mutableMapOf<LanguageCode, Job>()
     private val downloadMutex = kotlinx.coroutines.sync.Mutex()
@@ -228,6 +242,28 @@ class RealLanguagePackRepository(
         }
         prefs.apply()
         return true
+    }
+
+    override fun observeEnabledMicLanguages(): Flow<Set<LanguageCode>> = enabledMicLanguages.asStateFlow()
+    override fun getEnabledMicLanguages(): Set<LanguageCode> = enabledMicLanguages.value
+
+    override suspend fun setEnabledMicLanguages(languages: Set<LanguageCode>) {
+        enabledMicLanguages.value = languages
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putStringSet("enabled_mic_langs", languages.map { it.wireCode }.toSet())
+            .apply()
+    }
+
+    override fun observeEnabledListenLanguages(): Flow<Set<LanguageCode>> = enabledListenLanguages.asStateFlow()
+    override fun getEnabledListenLanguages(): Set<LanguageCode> = enabledListenLanguages.value
+
+    override suspend fun setEnabledListenLanguages(languages: Set<LanguageCode>) {
+        enabledListenLanguages.value = languages
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putStringSet("enabled_listen_langs", languages.map { it.wireCode }.toSet())
+            .apply()
     }
 
     override suspend fun startDownload(code: LanguageCode) {
@@ -421,25 +457,54 @@ class RealLanguagePackRepository(
         }
     }
 
-    private suspend fun downloadFile(
+    internal suspend fun downloadFile(
         urlStr: String,
         dest: File,
         onBytesRead: (Int) -> Unit
     ) = withContext(Dispatchers.IO) {
+        var currentUrl = urlStr
         var connection: HttpURLConnection? = null
-        try {
-            val url = URL(urlStr)
-            connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 15000
-            connection.readTimeout = 60000
+        var redirects = 0
+        val maxRedirects = 10
 
-            if (connection.responseCode !in 200..299) {
-                throw Exception("HTTP Error ${connection.responseCode} for $urlStr")
+        try {
+            while (true) {
+                val url = URL(currentUrl)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 15000
+                    readTimeout = 60000
+                    instanceFollowRedirects = false
+                    setRequestProperty("User-Agent", "Mozilla/5.0")
+                }
+                connection = conn
+
+                val responseCode = conn.responseCode
+                if (responseCode in 300..399) {
+                    val location = conn.getHeaderField("Location")
+                    conn.disconnect()
+                    connection = null
+                    if (location.isNullOrEmpty()) {
+                        throw Exception("HTTP $responseCode redirect without Location header from $currentUrl")
+                    }
+                    redirects++
+                    if (redirects > maxRedirects) {
+                        throw Exception("Too many redirects ($redirects) starting from $urlStr")
+                    }
+                    currentUrl = URL(url, location).toExternalForm()
+                    continue
+                }
+
+                if (responseCode !in 200..299) {
+                    throw Exception("HTTP Error $responseCode for $currentUrl")
+                }
+
+                break
             }
 
+            val finalConn = requireNotNull(connection)
             val tempDest = File(dest.absolutePath + ".part")
-            connection.inputStream.use { input ->
+            finalConn.inputStream.use { input ->
                 FileOutputStream(tempDest).use { output ->
                     val data = ByteArray(8192)
                     var count: Int
@@ -451,7 +516,7 @@ class RealLanguagePackRepository(
                 }
             }
             if (tempDest.length() == 0L) {
-                throw Exception("Downloaded file is 0 bytes: $urlStr")
+                throw Exception("Downloaded file is 0 bytes: $currentUrl")
             }
             safeAtomicMove(tempDest, dest)
         } finally {

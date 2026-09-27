@@ -134,3 +134,18 @@ kotlin {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
+
+// Day 2: Exclude on-demand TTS models from release build to keep production APK lean (<1GB)
+tasks.matching { it.name == "mergeReleaseAssets" }.configureEach {
+    doLast {
+        val mergeTask = this as? com.android.build.gradle.tasks.MergeSourceSetFolders ?: return@doLast
+        val outDir = mergeTask.outputDir.orNull?.asFile ?: return@doLast
+        val onDemandLanguages = listOf("bn", "gu", "kn", "ml", "mr", "or", "ta", "te")
+        onDemandLanguages.forEach { lang ->
+            val langDir = File(outDir, "language_packs/$lang")
+            if (langDir.exists()) {
+                langDir.deleteRecursively()
+            }
+        }
+    }
+}

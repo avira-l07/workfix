@@ -17,3 +17,5 @@ app/build
 
 # Local test scratch / downloaded models exceeding GitHub 100MB limit
 /models/
+app/src/main/assets/language_packs/**/*.onnx
+

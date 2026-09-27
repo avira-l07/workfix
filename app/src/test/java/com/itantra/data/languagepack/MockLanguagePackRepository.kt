@@ -93,6 +93,21 @@ class MockLanguagePackRepository : LanguagePackRepository {
         return true
     }
 
+    private val enabledMicLanguagesFlow = MutableStateFlow(setOf(LanguageCode.HINDI, LanguageCode.ENGLISH))
+    private val enabledListenLanguagesFlow = MutableStateFlow(setOf(LanguageCode.HINDI, LanguageCode.ENGLISH))
+
+    override fun observeEnabledMicLanguages(): Flow<Set<LanguageCode>> = enabledMicLanguagesFlow
+    override suspend fun setEnabledMicLanguages(languages: Set<LanguageCode>) {
+        enabledMicLanguagesFlow.value = languages
+    }
+    override fun getEnabledMicLanguages(): Set<LanguageCode> = enabledMicLanguagesFlow.value
+
+    override fun observeEnabledListenLanguages(): Flow<Set<LanguageCode>> = enabledListenLanguagesFlow
+    override suspend fun setEnabledListenLanguages(languages: Set<LanguageCode>) {
+        enabledListenLanguagesFlow.value = languages
+    }
+    override fun getEnabledListenLanguages(): Set<LanguageCode> = enabledListenLanguagesFlow.value
+
     override fun observePackSummaries(): Flow<List<LanguagePackSummary>> =
         entriesFlow.map { entries ->
             LanguageCatalog.all.map { language ->

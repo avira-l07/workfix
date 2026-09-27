@@ -8,6 +8,7 @@ import com.itantra.core.translation.TRANSLATION_SCOPE_NOTE
 import com.itantra.core.crypto.SecureSessionState
 import android.content.Context
 import com.itantra.core.inference.ActiveLanguageSessionManager
+import com.itantra.core.inference.SherpaOnnxSpeechRecognizer
 import com.itantra.core.inference.ContinuousListenEngine
 import com.itantra.core.inference.ContinuousListenState
 import com.itantra.core.inference.MicrophoneAudioSource
@@ -1245,30 +1246,51 @@ class TransceiverCoordinator(
                     // no-op) - either way the flash added a moment that looked like the app
                     // was struggling with something, when there's nothing to wait on.
                     if (targetLang != srcLang) {
-                        val translationRes = translationRouter.routeAndTranslate(result.text, srcLang, targetLang)
-                        if (translationRes.isSuccessful && translationRes.translatedText.isNotBlank()) {
-                            finalTxt = translationRes.translatedText
-                            origTxt = result.text
+                        val isWhisperNativeTranslate = targetLang == LanguageCode.ENGLISH && (engine as? SherpaOnnxSpeechRecognizer)?.isTranslateMode == true
+                        if (isWhisperNativeTranslate) {
+                            android.util.Log.i("ITANTRA_MT_CALL", "Whisper native translate mode: ${srcLang.name} mic -> English text emitted directly ('${result.text}')")
+                            finalTxt = result.text
+                            origTxt = null
                             translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
                         } else {
-                            // FIX 008: Do NOT silently fall through to sending original text when
-                            // cross-language translation fails. Set state=ERROR so the user knows
-                            // translation could not be delivered in the peer's language.
-                            // The user can retransmit with an explicit "Send original anyway" action.
-                            val errorDetail = when {
-                                translationRes.error == "NOT_INCLUDED_IN_BUILD" -> TRANSLATION_SCOPE_NOTE
-                                translationRes.error?.startsWith("MODEL_") == true -> "Translation blocked: ${translationRes.error}"
-                                else -> "Translation failed: ${translationRes.error ?: "Unknown"}"
+                            val translationRes = translationRouter.routeAndTranslate(result.text, srcLang, targetLang)
+                            if (translationRes.isSuccessful && translationRes.translatedText.isNotBlank()) {
+                                finalTxt = translationRes.translatedText
+                                origTxt = result.text
+                                translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
+                            } else if (translationRes.error == "UNSUPPORTED_ROUTE" &&
+                                (srcLang == LanguageCode.MALAYALAM || srcLang == LanguageCode.ODIA ||
+                                 targetLang == LanguageCode.MALAYALAM || targetLang == LanguageCode.ODIA)) {
+                                val unsupportedLang = when {
+                                    targetLang == LanguageCode.MALAYALAM || targetLang == LanguageCode.ODIA -> targetLang
+                                    srcLang == LanguageCode.MALAYALAM || srcLang == LanguageCode.ODIA -> srcLang
+                                    else -> targetLang
+                                }
+                                val langName = if (unsupportedLang == LanguageCode.MALAYALAM) "Malayalam" else "Odia"
+                                finalTxt = result.text
+                                origTxt = null
+                                translationStatus = com.itantra.domain.model.TranslationStatus.BYPASSED
+                                failureDetail = "Original sent — no translation available for $langName"
+                            } else {
+                                // FIX 008: Do NOT silently fall through to sending original text when
+                                // cross-language translation fails. Set state=ERROR so the user knows
+                                // translation could not be delivered in the peer's language.
+                                // The user can retransmit with an explicit "Send original anyway" action.
+                                val errorDetail = when {
+                                    translationRes.error == "NOT_INCLUDED_IN_BUILD" -> TRANSLATION_SCOPE_NOTE
+                                    translationRes.error?.startsWith("MODEL_") == true -> "Translation blocked: ${translationRes.error}"
+                                    else -> "Translation failed: ${translationRes.error ?: "Unknown"}"
+                                }
+                                updateMessage(msgId) {
+                                    it.copy(
+                                        state = MessageState.ERROR,
+                                        text = result.text,
+                                        translationStatus = com.itantra.domain.model.TranslationStatus.FAILED,
+                                        statusDetail = errorDetail
+                                    )
+                                }
+                                return@launch
                             }
-                            updateMessage(msgId) {
-                                it.copy(
-                                    state = MessageState.ERROR,
-                                    text = result.text,
-                                    translationStatus = com.itantra.domain.model.TranslationStatus.FAILED,
-                                    statusDetail = errorDetail
-                                )
-                            }
-                            return@launch
                         }
                     }
 
@@ -1551,42 +1573,63 @@ class TransceiverCoordinator(
                     var mtLatency = 0L
                     android.util.Log.i("ITANTRA_MT_CALL", "Evaluating MT condition: targetLang=$targetLang, srcLang=$srcLang, msgId=$msgId")
                     if (targetLang != srcLang) {
-                        // No "Translating..." interim flash: with UnavailableTranslationEngine
-                        // the result is immediate, and with a real engine the STT_PROCESSING
-                        // state the message is already in covers the wait without implying a
-                        // distinct, currently-failing "translating" step.
-                        if (com.example.itantra.BuildConfig.DEBUG) android.util.Log.i("ITANTRA_MT_CALL", "BEFORE translation call: chars=${result.text.length}, srcLang=$srcLang, targetLang=$targetLang")
-                        val tMt0 = SystemClock.elapsedRealtimeNanos()
-                        val translationRes = translationRouter.routeAndTranslate(result.text, srcLang, targetLang)
-                        if (com.example.itantra.BuildConfig.DEBUG) android.util.Log.i("ITANTRA_MT_CALL", "AFTER translation call: isSuccessful=${translationRes.isSuccessful}, charsOut=${translationRes.translatedText?.length ?: 0}, error=${translationRes.error}")
-                        mtLatency = (SystemClock.elapsedRealtimeNanos() - tMt0) / 1_000_000
-
-                        if (translationRes.isSuccessful && translationRes.translatedText.isNotBlank()) {
-                            finalTxt = translationRes.translatedText
-                            origTxt = result.text
+                        val isWhisperNativeTranslate = targetLang == LanguageCode.ENGLISH && (engine as? SherpaOnnxSpeechRecognizer)?.isTranslateMode == true
+                        if (isWhisperNativeTranslate) {
+                            android.util.Log.i("ITANTRA_MT_CALL", "Whisper native translate mode: ${srcLang.name} mic -> English text emitted directly ('${result.text}')")
+                            finalTxt = result.text
+                            origTxt = null
                             translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
                         } else {
-                            // FIX 008: Do NOT silently fall through to sending the original text
-                            // when cross-language MT fails. Block transmission and set ERROR state.
-                            // The user can explicitly choose "Send original anyway" if desired.
-                            val errorDetail = when {
-                                translationRes.error == "NOT_INCLUDED_IN_BUILD" || translationRes.error == "ENGINE_NOT_LOADED" ->
-                                    TRANSLATION_SCOPE_NOTE
-                                translationRes.error?.startsWith("MODEL_") == true ->
-                                    "Translation blocked: ${translationRes.error}"
-                                else ->
-                                    "Translation failed: ${translationRes.error ?: "Unknown"}"
+                            // No "Translating..." interim flash: with UnavailableTranslationEngine
+                            // the result is immediate, and with a real engine the STT_PROCESSING
+                            // state the message is already in covers the wait without implying a
+                            // distinct, currently-failing "translating" step.
+                            if (com.example.itantra.BuildConfig.DEBUG) android.util.Log.i("ITANTRA_MT_CALL", "BEFORE translation call: chars=${result.text.length}, srcLang=$srcLang, targetLang=$targetLang")
+                            val tMt0 = SystemClock.elapsedRealtimeNanos()
+                            val translationRes = translationRouter.routeAndTranslate(result.text, srcLang, targetLang)
+                            if (com.example.itantra.BuildConfig.DEBUG) android.util.Log.i("ITANTRA_MT_CALL", "AFTER translation call: isSuccessful=${translationRes.isSuccessful}, charsOut=${translationRes.translatedText?.length ?: 0}, error=${translationRes.error}")
+                            mtLatency = (SystemClock.elapsedRealtimeNanos() - tMt0) / 1_000_000
+
+                            if (translationRes.isSuccessful && translationRes.translatedText.isNotBlank()) {
+                                finalTxt = translationRes.translatedText
+                                origTxt = result.text
+                                translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
+                            } else if (translationRes.error == "UNSUPPORTED_ROUTE" &&
+                                (srcLang == LanguageCode.MALAYALAM || srcLang == LanguageCode.ODIA ||
+                                 targetLang == LanguageCode.MALAYALAM || targetLang == LanguageCode.ODIA)) {
+                                val unsupportedLang = when {
+                                    targetLang == LanguageCode.MALAYALAM || targetLang == LanguageCode.ODIA -> targetLang
+                                    srcLang == LanguageCode.MALAYALAM || srcLang == LanguageCode.ODIA -> srcLang
+                                    else -> targetLang
+                                }
+                                val langName = if (unsupportedLang == LanguageCode.MALAYALAM) "Malayalam" else "Odia"
+                                finalTxt = result.text
+                                origTxt = null
+                                translationStatus = com.itantra.domain.model.TranslationStatus.BYPASSED
+                                failureDetail = "Original sent — no translation available for $langName"
+                            } else {
+                                // FIX 008: Do NOT silently fall through to sending the original text
+                                // when cross-language MT fails. Block transmission and set ERROR state.
+                                // The user can explicitly choose "Send original anyway" if desired.
+                                val errorDetail = when {
+                                    translationRes.error == "NOT_INCLUDED_IN_BUILD" || translationRes.error == "ENGINE_NOT_LOADED" ->
+                                        TRANSLATION_SCOPE_NOTE
+                                    translationRes.error?.startsWith("MODEL_") == true ->
+                                        "Translation blocked: ${translationRes.error}"
+                                    else ->
+                                        "Translation failed: ${translationRes.error ?: "Unknown"}"
+                                }
+                                updateMessage(msgId) {
+                                    it.copy(
+                                        state = MessageState.ERROR,
+                                        text = result.text,
+                                        translationStatus = com.itantra.domain.model.TranslationStatus.FAILED,
+                                        mtLatencyMillis = mtLatency,
+                                        statusDetail = errorDetail
+                                    )
+                                }
+                                return@withLock
                             }
-                            updateMessage(msgId) {
-                                it.copy(
-                                    state = MessageState.ERROR,
-                                    text = result.text,
-                                    translationStatus = com.itantra.domain.model.TranslationStatus.FAILED,
-                                    mtLatencyMillis = mtLatency,
-                                    statusDetail = errorDetail
-                                )
-                            }
-                            return@withLock
                         }
                     }
 
@@ -1700,6 +1743,29 @@ class TransceiverCoordinator(
                             originalText = origText,
                             translationStatus = translationStatus,
                             mtLatencyMillis = mtLatency
+                        )
+                    }
+                } else if (translationRes.error == "UNSUPPORTED_ROUTE" &&
+                    (localLang == LanguageCode.MALAYALAM || localLang == LanguageCode.ODIA ||
+                     targetLang == LanguageCode.MALAYALAM || targetLang == LanguageCode.ODIA)) {
+                    val unsupportedLang = when {
+                        targetLang == LanguageCode.MALAYALAM || targetLang == LanguageCode.ODIA -> targetLang
+                        localLang == LanguageCode.MALAYALAM || localLang == LanguageCode.ODIA -> localLang
+                        else -> targetLang
+                    }
+                    val langName = if (unsupportedLang == LanguageCode.MALAYALAM) "Malayalam" else "Odia"
+                    finalText = text
+                    origText = null
+                    translationStatus = com.itantra.domain.model.TranslationStatus.BYPASSED
+                    translationMode = com.itantra.domain.model.TranslationMode.NONE
+                    payloadLang = localLang
+                    updateMessage(msgId) {
+                        it.copy(
+                            text = finalText,
+                            originalText = origText,
+                            translationStatus = translationStatus,
+                            mtLatencyMillis = mtLatency,
+                            statusDetail = "Original sent — no translation available for $langName"
                         )
                     }
                 } else {

@@ -8,10 +8,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.itantra.ui.theme.ITantraColors
+import kotlinx.coroutines.launch
 
 /**
  * Diagnostics UI state — null values render "Not yet measured" per DESIGN_SPEC.md Rule 0.
@@ -77,6 +78,7 @@ fun DiagnosticsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item { AiBenchmarkSection(state) }
+            item { TranslationDiagnosticsSection() }
             item { CommunicationSection(state) }
             item { DeviceSection(state) }
             item {
@@ -87,6 +89,52 @@ fun DiagnosticsScreen(
                 ) {
                     Text("RUN COMPREHENSIVE ON-DEVICE DIAGNOSTICS")
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TranslationDiagnosticsSection() {
+    val mlKit = com.itantra.app.AppGraph.translationEngine as? com.itantra.core.translation.MlKitOfflineTranslationEngine
+    val modelState = mlKit?.modelState?.collectAsState()?.value ?: com.itantra.core.translation.TranslationModelState.NOT_INSTALLED
+    val coroutineScope = rememberCoroutineScope()
+    var isDownloading by remember { mutableStateOf(false) }
+
+    DiagnosticsSection(title = "Translation · Hindi ↔ English") {
+        MetricRow(
+            "Hindi → English",
+            "Whisper Native (task=\"translate\")"
+        )
+        MetricRow(
+            "English → Hindi",
+            when (modelState) {
+                com.itantra.core.translation.TranslationModelState.READY -> "READY OFFLINE"
+                com.itantra.core.translation.TranslationModelState.DOWNLOADING -> "DOWNLOADING..."
+                com.itantra.core.translation.TranslationModelState.FAILED -> "FAILED"
+                com.itantra.core.translation.TranslationModelState.NOT_INSTALLED -> "NOT PROVISIONED"
+            }
+        )
+        if (modelState != com.itantra.core.translation.TranslationModelState.READY) {
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    isDownloading = true
+                    coroutineScope.launch {
+                        mlKit?.prepareOfflineModels()
+                        isDownloading = false
+                    }
+                },
+                enabled = !isDownloading && modelState != com.itantra.core.translation.TranslationModelState.DOWNLOADING,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary)
+            ) {
+                Text(
+                    if (isDownloading || modelState == com.itantra.core.translation.TranslationModelState.DOWNLOADING)
+                        "DOWNLOADING EN→HI MODEL..."
+                    else
+                        "PROVISION EN→HI OFFLINE MODEL (WHILE ONLINE)"
+                )
             }
         }
     }

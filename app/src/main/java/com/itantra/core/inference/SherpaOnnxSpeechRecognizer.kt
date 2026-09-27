@@ -17,8 +17,13 @@ class SherpaOnnxSpeechRecognizer(
     override val languageCode: LanguageCode,
     private val storage: LanguagePackStorage,
     private val metricsRecorder: MetricsRecorder,
-    val autoDetect: Boolean = false
+    val autoDetect: Boolean = false,
+    val targetLanguage: LanguageCode? = null
 ) : SpeechRecognizerEngine {
+
+    val isTranslateMode: Boolean
+        get() = targetLanguage == LanguageCode.ENGLISH && languageCode != LanguageCode.ENGLISH
+
 
     private var recognizer: OfflineRecognizer? = null
     private val audioChunks = java.util.Collections.synchronizedList(mutableListOf<FloatArray>())
@@ -70,14 +75,14 @@ class SherpaOnnxSpeechRecognizer(
                     encoder = File(sttDir, spec.mainModelFile).absolutePath,
                     decoder = File(sttDir, spec.auxFile!!).absolutePath,
                     language = if (autoDetect) "" else languageCode.wireCode,
-                    task = "transcribe",
+                    task = if (isTranslateMode) "translate" else "transcribe",
                     tailPaddings = -1
                 ).also { whisperCfg ->
                     android.util.Log.d(
                         "ITANTRA_MIC_FLOW",
                         "SherpaOnnxSpeechRecognizer.load: OfflineWhisperModelConfig built — " +
                         "encoder=${whisperCfg.encoder} | decoder=${whisperCfg.decoder} | " +
-                        "language=\"${whisperCfg.language}\" (autoDetect=$autoDetect, languageCode=${languageCode.wireCode})"
+                        "language=\"${whisperCfg.language}\" | task=\"${whisperCfg.task}\" (autoDetect=$autoDetect, languageCode=${languageCode.wireCode}, targetLang=${targetLanguage?.wireCode})"
                     )
                 },
                 tokens = File(sttDir, spec.tokensFile).absolutePath,

@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 
 import android.bluetooth.BluetoothManager
 import com.itantra.core.crypto.SecureSessionManager
@@ -61,10 +62,16 @@ object AppGraph {
                         kotlinx.coroutines.flow.combine(
                             languagePackRepository.observeActiveLanguage(),
                             languagePackRepository.observePackSummaries(),
-                            languagePackRepository.observeSpeechInputMode()
-                        ) { activeLang, summaries, mode ->
-                            Triple(activeLang, summaries, mode)
-                        }.collectLatest { (lang, summaries, mode) ->
+                            languagePackRepository.observeSpeechInputMode(),
+                            languagePackRepository.observeTargetLanguage()
+                        ) { activeLang, summaries, mode, targetLang ->
+                            arrayOf(activeLang, summaries, mode, targetLang)
+                        }.collectLatest { arr ->
+                            val lang = arr[0] as? LanguageCode
+                            val summaries = arr[1] as List<com.itantra.domain.model.LanguagePackSummary>
+                            val mode = arr[2] as com.itantra.domain.model.SpeechInputMode
+                            val targetLang = arr[3] as? LanguageCode
+
                             if (lang == null) {
                                 try {
                                     activeLanguageSessionManager.releaseAll()
@@ -79,7 +86,7 @@ object AppGraph {
 
                             try {
                                 val isAuto = mode == com.itantra.domain.model.SpeechInputMode.AUTO
-                                activeLanguageSessionManager.ensureStt(lang, autoDetect = isAuto)
+                                activeLanguageSessionManager.ensureStt(lang, autoDetect = isAuto, targetLanguage = targetLang)
                                 if (ttsInstalled) {
                                     activeLanguageSessionManager.ensureTts(lang)
                                 }
@@ -121,7 +128,8 @@ object AppGraph {
                 android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: setSpeechInputMode(MANUAL) done")
                 val activateOk = languagePackRepository.setActiveLanguage(code)
                 android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: setActiveLanguage returned $activateOk")
-                activeLanguageSessionManager.ensureStt(code, autoDetect = false)
+                val currentTarget = languagePackRepository.observeTargetLanguage().firstOrNull()
+                activeLanguageSessionManager.ensureStt(code, autoDetect = false, targetLanguage = currentTarget)
                 android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: ensureStt completed. activeSttLanguage=${activeLanguageSessionManager.activeSttLanguage.value?.wireCode}, isSttAutoDetect=${activeLanguageSessionManager.isSttAutoDetect.value}")
             } catch (e: Exception) {
                 android.util.Log.e("AppGraph", "Failed to set mic language to $code", e)
@@ -133,6 +141,9 @@ object AppGraph {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 languagePackRepository.setTargetLanguage(code)
+                val currentMic = activeLanguageSessionManager.activeSttLanguage.value ?: LanguageCode.HINDI
+                val isAuto = activeLanguageSessionManager.isSttAutoDetect.value
+                activeLanguageSessionManager.ensureStt(currentMic, autoDetect = isAuto, targetLanguage = code)
             } catch (e: Exception) {
                 android.util.Log.e("AppGraph", "Failed to set target language to $code", e)
             }
@@ -172,6 +183,10 @@ object AppGraph {
 
     val activeLanguageSessionManager: ActiveLanguageSessionManager by lazy {
         val factory = object : EngineFactory {
+            override fun createRecognizer(language: LanguageCode, autoDetect: Boolean, targetLanguage: LanguageCode?): SpeechRecognizerEngine {
+                return SherpaOnnxSpeechRecognizer(context, language, languagePackStorage, metricsRecorder, autoDetect, targetLanguage)
+            }
+
             override fun createRecognizer(language: LanguageCode, autoDetect: Boolean): SpeechRecognizerEngine {
                 return SherpaOnnxSpeechRecognizer(context, language, languagePackStorage, metricsRecorder, autoDetect)
             }
@@ -239,7 +254,39 @@ object AppGraph {
     }
 
     val translationEngine: com.itantra.core.translation.TranslationEngine by lazy {
-        MlKitOfflineTranslationEngine(context).also { it.init() }
+        MlKitOfflineTranslationEngine(context).also { engine ->
+            engine.init()
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // Day 2 (TASK 4): Scope auto-provisioning to user's selected languages
+                    val selectedLangs = languagePackRepository.getEnabledMicLanguages() +
+                        languagePackRepository.getEnabledListenLanguages()
+                    val langsToProvision = if (selectedLangs.isEmpty()) {
+                        setOf(com.itantra.domain.model.LanguageCode.HINDI, com.itantra.domain.model.LanguageCode.ENGLISH)
+                    } else {
+                        selectedLangs + com.itantra.domain.model.LanguageCode.ENGLISH
+                    }
+                    android.util.Log.i("AppGraph", "Auto-provisioning ML Kit translation models for selected languages: $langsToProvision")
+                    engine.prepareOfflineModels(langsToProvision)
+                } catch (e: Exception) {
+                    android.util.Log.w("AppGraph", "Auto-provisioning translation models failed: ${e.message}")
+                }
+            }
+        }
+    }
+
+    fun provisionSelectedLanguages(languages: Set<com.itantra.domain.model.LanguageCode>) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                (translationEngine as? MlKitOfflineTranslationEngine)?.prepareOfflineModels(languages)
+            } catch (e: Exception) {
+                android.util.Log.w("AppGraph", "Provisioning selected languages failed: ${e.message}")
+            }
+        }
+    }
+
+    fun provisionTranslationModels() {
+        provisionSelectedLanguages(setOf(com.itantra.domain.model.LanguageCode.HINDI, com.itantra.domain.model.LanguageCode.ENGLISH))
     }
 
     val translationRouter: TranslationRouter by lazy {
