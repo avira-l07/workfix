@@ -158,7 +158,8 @@ class EmergencyPersistenceStore(
         try {
             val serialized = json.encodeToString(records.values.toList())
             val tempFile = File(storageDir, "emergency_records.json.tmp")
-            FileOutputStream(tempFile).use { it.write(cipher.encrypt(serialized.toByteArray(Charsets.UTF_8))); it.fd.sync() }
+            val encrypted = cipher.encrypt(serialized.toByteArray(Charsets.UTF_8))
+            FileOutputStream(tempFile).use { it.write(encrypted); it.fd.sync() }
             Files.move(tempFile.toPath(), storeFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
         } catch (e: Exception) {
             android.util.Log.e("EmergencyStore", "Emergency storage write failed; previous file retained")
@@ -182,7 +183,14 @@ class EmergencyPersistenceStore(
                     val list = json.decodeFromString<List<EmergencyRecord>>(content)
                     list.forEach { records[it.messageId] = it }
                     unreadableData = false
-                    if (!encrypted || targetFile == tempFile) flushToDisk()
+                    // Promote the valid recovery copy before reusing the temporary filename.
+                    // Otherwise a crash during legacy re-encryption could truncate the only copy.
+                    if (targetFile == tempFile) Files.move(tempFile.toPath(), storeFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+                    if (!encrypted) flushToDisk()
+                    else if (tempFile.exists()) {
+                        // The committed main file wins. Remove stale legacy/temp content.
+                        if (!tempFile.delete()) android.util.Log.w("EmergencyStore", "Stale recovery file could not be removed")
+                    }
                     return
                 } catch (e: Exception) {
                     unreadableData = true

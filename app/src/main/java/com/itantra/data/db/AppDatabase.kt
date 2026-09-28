@@ -6,12 +6,13 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [MessageEntity::class],
-    version = 3,
+    entities = [MessageEntity::class, VoiceNoteEntity::class],
+    version = 4,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
+    abstract fun voiceNoteDao(): VoiceNoteDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -30,6 +31,11 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE messages ADD COLUMN longitude REAL DEFAULT NULL")
                 db.execSQL("ALTER TABLE messages ADD COLUMN accuracyMeters REAL DEFAULT NULL")
                 db.execSQL("ALTER TABLE messages ADD COLUMN locationTimestampMillis INTEGER DEFAULT NULL")
+            }
+        }
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS voice_notes (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, transcribedText TEXT NOT NULL, languageWireCode TEXT NOT NULL, createdAtMillis INTEGER NOT NULL)")
             }
         }
     }

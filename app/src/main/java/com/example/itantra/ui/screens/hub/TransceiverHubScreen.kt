@@ -94,6 +94,7 @@ fun TransceiverHubScreen(
     onNavigateToLanguagePacks: () -> Unit = {},
     onNavigateToDiagnostics: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToVoiceNotes: () -> Unit = {},
     onSendEmergency: (String) -> Unit = {},
     operatorName: String = "",
 ) {
@@ -1362,12 +1363,26 @@ fun TransceiverHubScreen(
                                     letterSpacing = 0.3.sp
                                 )
                             }
-                            Text(
-                                "REV-CHRONOLOGICAL",
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 8.5.sp,
-                                color = ITantraColors.TextMuted
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                TextButton(
+                                    onClick = onNavigateToVoiceNotes,
+                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text(
+                                        "VOICE NOTES",
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 8.5.sp,
+                                        color = ITantraColors.Primary
+                                    )
+                                }
+                                Text(
+                                    "REV-CHRONOLOGICAL",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 8.5.sp,
+                                    color = ITantraColors.TextMuted
+                                )
+                            }
                         }
 
                         Spacer(Modifier.height(10.dp))

@@ -62,7 +62,8 @@ class TransceiverCoordinator(
     private val messageDao: com.itantra.data.db.MessageDao? = null,
     val deviceProfileManager: com.itantra.core.profile.DeviceProfileManager? = null,
     private val ttsCapabilityProvider: TtsCapabilityProvider? = null,
-    private val locationProvider: LocationProvider = DefaultGpsLocationProvider(context)
+    private val locationProvider: LocationProvider = DefaultGpsLocationProvider(context),
+    private val voiceNoteDao: com.itantra.data.db.VoiceNoteDao? = null
 ) {
     companion object {
         private const val ENCRYPTED_HEARTBEAT_INTERVAL_MS = 15_000L
@@ -1448,6 +1449,16 @@ class TransceiverCoordinator(
                         )
                     }
 
+                    voiceNoteDao?.let { dao ->
+                        scope.launch(Dispatchers.IO) {
+                            dao.insert(com.itantra.data.db.VoiceNoteEntity(
+                                transcribedText = finalTxt,
+                                languageWireCode = srcLang.wireCode,
+                                createdAtMillis = msg.createdAtLocal
+                            ))
+                        }
+                    }
+
                     sendVoiceMessage(msgId, com.itantra.domain.model.MessagePriority.NORMAL)
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -1771,6 +1782,16 @@ class TransceiverCoordinator(
                             speechDurationMillis = durationMillis,
                             statusDetail = failureDetail
                         )
+                    }
+
+                    voiceNoteDao?.let { dao ->
+                        scope.launch(Dispatchers.IO) {
+                            dao.insert(com.itantra.data.db.VoiceNoteEntity(
+                                transcribedText = finalTxt,
+                                languageWireCode = srcLang.wireCode,
+                                createdAtMillis = msg.createdAtLocal
+                            ))
+                        }
                     }
 
                     if (com.example.itantra.BuildConfig.DEBUG) {

@@ -46,4 +46,17 @@ class EmergencyEncryptionTest {
         assertEquals(record, EmergencyPersistenceStore(folder.root, keys).getRecord(7))
         assertTrue(file.exists())
     }
+    @Test fun legacyRecoveryCopySurvivesKeystoreWriteFailure() {
+        val temp = File(folder.root, "emergency_records.json.tmp")
+        temp.writeText(Json.encodeToString(listOf(record)))
+        val unavailable = object : KeyProvider {
+            override fun getExisting(alias: String): javax.crypto.SecretKey? = null
+            override fun getOrCreate(alias: String): javax.crypto.SecretKey = throw IllegalStateException("Keystore unavailable")
+            override fun delete(alias: String) = Unit
+        }
+        assertEquals(record, EmergencyPersistenceStore(folder.root, unavailable).getRecord(7))
+        assertEquals(listOf(record), Json.decodeFromString<List<EmergencyRecord>>(file.readText()))
+        assertEquals(record, EmergencyPersistenceStore(folder.root, keys).getRecord(7))
+        assertTrue(StoredDataCipher.isEncrypted(file.readBytes()))
+    }
 }

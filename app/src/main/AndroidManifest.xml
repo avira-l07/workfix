@@ -68,7 +68,7 @@
         </activity>
 
         <activity android:name="com.itantra.core.storage.WipeActivity"
-            android:exported="false" android:process=":wipe" />
+            android:exported="false" android:process=":wipe" android:launchMode="singleTask" />
         <service
             android:name="com.itantra.core.service.OperationalForegroundService"
             android:foregroundServiceType="microphone"

@@ -38,8 +38,8 @@ object EncryptedDatabase {
                 val original = config.callback
                 val safeCallback = object : SupportSQLiteOpenHelper.Callback(original.version) {
                     override fun onCreate(db: SupportSQLiteDatabase) = original.onCreate(db)
-                    override fun onUpgrade(db: SupportSQLiteDatabase, old: Int, new: Int) = original.onUpgrade(db, old, new)
-                    override fun onDowngrade(db: SupportSQLiteDatabase, old: Int, new: Int) = original.onDowngrade(db, old, new)
+                    override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = original.onUpgrade(db, oldVersion, newVersion)
+                    override fun onDowngrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = original.onDowngrade(db, oldVersion, newVersion)
                     override fun onConfigure(db: SupportSQLiteDatabase) = original.onConfigure(db)
                     override fun onOpen(db: SupportSQLiteDatabase) = original.onOpen(db)
                     override fun onCorruption(db: SupportSQLiteDatabase) {
@@ -50,10 +50,12 @@ object EncryptedDatabase {
                     .name(config.name).callback(safeCallback).build())
             }
             .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+            .addMigrations(AppDatabase.MIGRATION_3_4)
             .build()
 
     fun open(context: Context, keys: KeyProvider): AppDatabase {
         System.loadLibrary("sqlcipher")
+        net.zetetic.database.Logger.setTarget(net.zetetic.database.NoopTarget())
         val target = context.getDatabasePath(NAME)
         val legacy = context.getDatabasePath(LEGACY)
         val staging = context.getDatabasePath("$NAME.migrating")
@@ -63,7 +65,7 @@ object EncryptedDatabase {
         val password = raw.joinToString("") { "%02x".format(it) }.toByteArray(Charsets.US_ASCII)
         raw.fill(0)
         try {
-            if (!target.exists() && legacy.exists()) {
+            if (legacy.exists()) {
                 deleteFiles(staging)
                 target.parentFile?.mkdirs()
                 val before: Map<String, Long>
@@ -85,7 +87,10 @@ object EncryptedDatabase {
                 try {
                     validation.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(TRUNCATE)").use { check(it.moveToFirst() && it.getInt(0) == 0) }
                 } finally { validation.close() }
-                Files.move(staging.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+                // A retained legacy file means the previous attempt never committed for use.
+                // Re-export on every retry rather than trusting an interrupted/corrupt copy.
+                deleteSidecars(target)
+                Files.move(staging.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
             }
             // Handles interruption after rename but before plaintext cleanup.
             if (target.exists() && legacy.exists()) {
@@ -96,7 +101,8 @@ object EncryptedDatabase {
             val result = room(context, target.absolutePath, password)
             try {
                 result.openHelper.writableDatabase
-                if (legacy.exists()) deleteFiles(legacy)
+                // An interrupted prior cleanup may leave plaintext sidecars without the main file.
+                deleteFiles(legacy)
                 deleteFiles(staging)
                 return result
             } catch (e: Exception) { result.close(); throw e }
@@ -108,7 +114,12 @@ object EncryptedDatabase {
     }
 
     fun deleteFiles(file: File) {
-        listOf("", "-wal", "-shm", "-journal").forEach { suffix ->
+        check(!file.exists() || file.delete()) { "Could not remove storage file" }
+        deleteSidecars(file)
+    }
+
+    private fun deleteSidecars(file: File) {
+        listOf("-wal", "-shm", "-journal").forEach { suffix ->
             val candidate = File(file.path + suffix)
             check(!candidate.exists() || candidate.delete()) { "Could not remove storage file" }
         }

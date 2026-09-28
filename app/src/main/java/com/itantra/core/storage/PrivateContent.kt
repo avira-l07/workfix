@@ -17,7 +17,8 @@ class PrivateContent(keys: KeyProvider = AndroidKeyProvider()) {
     fun write(file: File, value: String) {
         file.parentFile?.mkdirs()
         val temp = File(file.path + ".tmp")
-        FileOutputStream(temp).use { it.write(cipher.encrypt(value.toByteArray())); it.fd.sync() }
+        val encrypted = cipher.encrypt(value.toByteArray())
+        FileOutputStream(temp).use { it.write(encrypted); it.fd.sync() }
         Files.move(temp.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
     }
     fun read(file: File): String {

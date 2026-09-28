@@ -83,4 +83,29 @@ class EncryptedDatabaseTest {
         val clean = EncryptedDatabase.open(context, keys)
         try { assertTrue(clean.messageDao().getAll().isEmpty()) } finally { clean.close() }
     }
+
+    @Test fun failedSchemaValidationRetainsLegacyRows() {
+        val legacy = context.getDatabasePath(EncryptedDatabase.LEGACY)
+        android.database.sqlite.SQLiteDatabase.openOrCreateDatabase(legacy, null).use {
+            it.execSQL("CREATE TABLE messages (messageId INTEGER PRIMARY KEY, text TEXT)")
+            it.execSQL("INSERT INTO messages VALUES (1, 'PRIVATE_MARKER')")
+            it.version = 3
+        }
+        var rejected = false
+        try { EncryptedDatabase.open(context, keys).close() } catch (_: StoredDataUnavailable) { rejected = true }
+        assertTrue(rejected)
+        assertTrue(legacy.exists())
+        android.database.sqlite.SQLiteDatabase.openDatabase(legacy.path, null, android.database.sqlite.SQLiteDatabase.OPEN_READONLY).use {
+            it.rawQuery("SELECT COUNT(*) FROM messages", null).use { c -> assertTrue(c.moveToFirst()); assertEquals(1, c.getInt(0)) }
+        }
+    }
+
+    @Test fun restartCleansOrphanedPlaintextSidecars() {
+        EncryptedDatabase.open(context, keys).close()
+        val base = context.getDatabasePath(EncryptedDatabase.LEGACY)
+        val sidecars = listOf("-wal", "-shm", "-journal").map { File(base.path + it).apply { writeText("PRIVATE_MARKER") } }
+        assertFalse(base.exists())
+        EncryptedDatabase.open(context, keys).close()
+        sidecars.forEach { assertFalse(it.exists()) }
+    }
 }

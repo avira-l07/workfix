@@ -13,9 +13,10 @@ interface KeyProvider {
 }
 
 class AndroidKeyProvider : KeyProvider {
+    companion object { private val creationLock = Any() }
     private fun store() = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
     override fun getExisting(alias: String) = store().getKey(alias, null) as? SecretKey
-    @Synchronized override fun getOrCreate(alias: String): SecretKey = getExisting(alias)
+    override fun getOrCreate(alias: String): SecretKey = synchronized(creationLock) { getExisting(alias)
         ?: KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").run {
             init(KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
                 .setKeySize(256).setBlockModes(KeyProperties.BLOCK_MODE_GCM)
@@ -23,5 +24,6 @@ class AndroidKeyProvider : KeyProvider {
                 .setUserAuthenticationRequired(false).build())
             generateKey()
         }
+    }
     override fun delete(alias: String) = store().deleteEntry(alias)
 }

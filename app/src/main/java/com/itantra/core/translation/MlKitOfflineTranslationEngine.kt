@@ -245,7 +245,7 @@ class MlKitOfflineTranslationEngine(
             // Phase 10: EN→HI validation — result must contain Devanagari
             if (sourceLang == LanguageCode.ENGLISH && targetLang == LanguageCode.HINDI) {
                 if (!LanguageScriptDetector.containsDevanagari(translated)) {
-                    Log.w(TAG, "EN→HI produced non-Devanagari output: ${translated.take(50)}")
+                    Log.w(TAG, "EN→HI produced non-Devanagari output; content redacted")
                     return TranslationResult(
                         originalText = text,
                         translatedText = translated,

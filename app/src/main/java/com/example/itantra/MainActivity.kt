@@ -38,6 +38,7 @@ import com.example.itantra.ui.screens.hub.TransceiverHubScreen
 import com.example.itantra.ui.screens.language.LanguagePacksScreen
 import com.example.itantra.ui.screens.settings.SettingsScreen
 import com.example.itantra.ui.screens.settings.SettingsViewModel
+import com.example.itantra.ui.screens.voicenotes.VoiceNotesScreen
 import com.example.itantra.ui.theme.*
 import com.itantra.app.AppGraph
 import com.itantra.core.audio.WavWriter
@@ -60,7 +61,8 @@ enum class AppDestination {
     CONNECT,
     LANGUAGE_PACKS,
     DIAGNOSTICS,
-    CHAT
+    CHAT,
+    VOICE_NOTES
 }
 
 class MainActivity : ComponentActivity() {
@@ -558,7 +560,7 @@ class MainActivity : ComponentActivity() {
             }
             // Process isolation is the final barrier even if a native engine cannot stop promptly.
             kotlinx.coroutines.withTimeoutOrNull(5_000) {
-                try {
+                withContext(Dispatchers.IO) { try {
                     if (appStarted) {
                         AppGraph.transceiverCoordinator.shutdownForWipe()
                         AppGraph.bluetoothPeerTransport.listenerDesired = false
@@ -567,7 +569,7 @@ class MainActivity : ComponentActivity() {
                         AppGraph.activeLanguageSessionManager.releaseAll()
                     }
                     withContext(Dispatchers.IO) { AppGraph.closeStorageForWipe() }
-                } catch (_: Exception) { }
+                } catch (_: Exception) { } }
             }
             stopService(android.content.Intent(this@MainActivity, com.itantra.core.service.OperationalForegroundService::class.java))
             launchWipeProcess()
@@ -635,10 +637,19 @@ fun TacticalAppScaffold(
     val appSettings by settingsViewModel.settings.collectAsState()
 
     val coordinator = remember { com.itantra.app.AppGraph.transceiverCoordinator }
+    var showEmergencyStorageWarning by remember { mutableStateOf(coordinator.emergencyStore.unreadableData) }
+    if (showEmergencyStorageWarning) AlertDialog(
+        onDismissRequest = { showEmergencyStorageWarning = false },
+        title = { Text("Stored emergency data could not be decrypted") },
+        text = { Text("No valid recovery copy was found. The emergency record store has started empty. You can wipe private data from Settings if the device keys are no longer available.") },
+        confirmButton = { TextButton(onClick = { showEmergencyStorageWarning = false }) { Text("Continue") } }
+    )
     val sessionManager = remember { com.itantra.app.AppGraph.activeLanguageSessionManager }
     val metricsRecorder = remember { com.itantra.app.AppGraph.metricsRecorder }
     val benchmarkRepo = remember { com.itantra.app.AppGraph.localBenchmarkRepository }
     val secureSession = remember { com.itantra.app.AppGraph.secureSessionManager }
+    val voiceNoteDao = remember { AppGraph.database.voiceNoteDao() }
+    val voiceNotes by voiceNoteDao.observeAll().collectAsState(initial = emptyList())
 
     val liveMetrics by metricsRecorder.latest.collectAsState()
     val activeLang by sessionManager.activeLanguage.collectAsState()
@@ -684,7 +695,18 @@ fun TacticalAppScaffold(
                             onNavigateToLanguagePacks = { currentDestination = AppDestination.LANGUAGE_PACKS },
                             onNavigateToDiagnostics = { currentDestination = AppDestination.DIAGNOSTICS },
                             onNavigateToSettings = { currentDestination = AppDestination.SETTINGS },
+                            onNavigateToVoiceNotes = { currentDestination = AppDestination.VOICE_NOTES },
                             operatorName = appSettings.operatorName,
+                        )
+                    }
+
+                    AppDestination.VOICE_NOTES -> {
+                        VoiceNotesScreen(
+                            notes = voiceNotes,
+                            onBack = { currentDestination = AppDestination.HUB },
+                            onDelete = { note ->
+                                coroutineScope.launch(Dispatchers.IO) { voiceNoteDao.delete(note.id) }
+                            },
                         )
                     }
 

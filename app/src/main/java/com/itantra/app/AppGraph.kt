@@ -330,7 +330,8 @@ object AppGraph {
             translationRouter,
             database.messageDao(),
             deviceProfileManager,
-            ttsProvider
+            ttsProvider,
+            voiceNoteDao = database.voiceNoteDao()
         ).apply {
             attachSettings(settingsRepository)
         }

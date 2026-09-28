@@ -24,7 +24,8 @@ class DatabasePassphrase(private val directory: File, keys: KeyProvider) {
             directory.mkdirs()
             val value = ByteArray(32).also { SecureRandom().nextBytes(it) }
             try {
-                FileOutputStream(temp).use { it.write(cipher.encrypt(value)); it.fd.sync() }
+                val wrapped = cipher.encrypt(value)
+                FileOutputStream(temp).use { it.write(wrapped); it.fd.sync() }
                 Files.move(temp.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
                 return value.copyOf()
             } finally { value.fill(0) }
