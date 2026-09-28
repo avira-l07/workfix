@@ -41,6 +41,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -79,11 +80,21 @@ class TransceiverCoordinator(
         (androidId.hashCode().toLong() and 0xFFF)
     }
 
-    private fun nextMessageId(): Long =
-        (System.currentTimeMillis() shl 12) or deviceIdSalt
+    private val lastMessageTick = java.util.concurrent.atomic.AtomicLong(0L)
+
+    private fun nextMessageId(): Long {
+        val tick = lastMessageTick.updateAndGet { previous ->
+            maxOf(System.currentTimeMillis(), previous + 1)
+        }
+        return (tick shl 12) or deviceIdSalt
+    }
 
     private val _messages = MutableStateFlow<List<TransceiverMessage>>(emptyList())
     val messages: StateFlow<List<TransceiverMessage>> = _messages.asStateFlow()
+    // Order state mutations and snapshot enqueueing together. The IO consumer never
+    // takes this lock, and persistence/alert side effects stay outside update lambdas.
+    private val messageMutationLock = Any()
+    private val persistenceQueue = Channel<TransceiverMessage>(Channel.UNLIMITED)
 
     private val _activePeerProfile = MutableStateFlow<com.itantra.domain.model.PeerProfile?>(null)
     val activePeerProfile: StateFlow<com.itantra.domain.model.PeerProfile?> = _activePeerProfile.asStateFlow()
@@ -162,16 +173,25 @@ class TransceiverCoordinator(
                             }
                         }
                         settled.filterIndexed { i, m -> m != persisted[i] }.forEach {
-                            dbWriteMutex.withLock {
-                                messageDao.insert(com.itantra.data.db.MessageEntity.fromDomain(it))
+                            messageDao.insert(com.itantra.data.db.MessageEntity.fromDomain(it))
+                        }
+                        synchronized(messageMutationLock) {
+                            _messages.update { current ->
+                                val currentIds = current.map { it.messageId }.toSet()
+                                settled.filter { it.messageId !in currentIds } + current
                             }
                         }
-                        val loadedIds = settled.map { it.messageId }.toSet()
-                        _messages.value = settled + _messages.value.filter { it.messageId !in loadedIds }
                         updateAlertJob()
                     }
                 } catch (e: Throwable) {
                     android.util.Log.e("TransceiverCoord", "Error loading persisted messages", e)
+                }
+                for (snapshot in persistenceQueue) {
+                    try {
+                        messageDao.insert(com.itantra.data.db.MessageEntity.fromDomain(snapshot))
+                    } catch (e: Exception) {
+                        android.util.Log.e("TransceiverCoord", "Error persisting message", e)
+                    }
                 }
             }
         }
@@ -185,8 +205,6 @@ class TransceiverCoordinator(
     private val queueWakeup = Channel<Unit>(Channel.CONFLATED)
 
     private val sttMutex = Mutex()
-
-    private val dbWriteMutex = Mutex()
 
     private var cooldownJob: Job? = null
     private var currentTtsJob: Job? = null
@@ -473,43 +491,22 @@ class TransceiverCoordinator(
     }
 
     private fun addMessage(msg: TransceiverMessage) {
-        _messages.value = _messages.value + msg
-        updateAlertJob()
-        if (messageDao != null) {
-            scope.launch(Dispatchers.IO) {
-                try {
-                    dbWriteMutex.withLock {
-                        messageDao.insert(com.itantra.data.db.MessageEntity.fromDomain(msg))
-                    }
-                } catch (e: Throwable) {
-                    android.util.Log.e("TransceiverCoord", "Error persisting message", e)
-                }
-            }
+        synchronized(messageMutationLock) {
+            _messages.update { it + msg }
+            if (messageDao != null) persistenceQueue.trySend(msg)
         }
+        updateAlertJob()
     }
 
     private fun updateMessage(id: Long, update: (TransceiverMessage) -> TransceiverMessage) {
-        var updatedMsg: TransceiverMessage? = null
-        _messages.value = _messages.value.map {
-            if (it.messageId == id) {
-                val u = update(it)
-                updatedMsg = u
-                u
-            } else it
+        synchronized(messageMutationLock) {
+            _messages.update { messages ->
+                messages.map { if (it.messageId == id) update(it) else it }
+            }
+            val snapshot = _messages.value.find { it.messageId == id }
+            if (messageDao != null && snapshot != null) persistenceQueue.trySend(snapshot)
         }
         updateAlertJob()
-        if (messageDao != null && updatedMsg != null) {
-            val u = updatedMsg!!
-            scope.launch(Dispatchers.IO) {
-                try {
-                    dbWriteMutex.withLock {
-                        messageDao.insert(com.itantra.data.db.MessageEntity.fromDomain(u))
-                    }
-                } catch (e: Throwable) {
-                    android.util.Log.e("TransceiverCoord", "Error updating persisted message", e)
-                }
-            }
-        }
     }
 
     private fun updateAlertJob() {
@@ -1626,7 +1623,9 @@ class TransceiverCoordinator(
                 }
             }
             // Cleanly discard micro-tap without leaving persistent error card in UI
-            _messages.value = _messages.value.filter { it.messageId != msgId }
+            synchronized(messageMutationLock) {
+                _messages.update { messages -> messages.filter { it.messageId != msgId } }
+            }
             if (messageDao != null) {
                 scope.launch(Dispatchers.IO) {
                     try {
