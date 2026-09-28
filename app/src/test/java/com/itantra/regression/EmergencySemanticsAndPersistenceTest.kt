@@ -10,13 +10,14 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class EmergencySemanticsAndPersistenceTest {
+    private val keys = com.itantra.core.storage.MemoryKeyProvider()
 
     @get:Rule
     val tempFolder = TemporaryFolder()
 
     @Test
     fun testLocalVsRemoteUnresolvedDistinctionOnRestart() {
-        val store = EmergencyPersistenceStore(tempFolder.root)
+        val store = EmergencyPersistenceStore(tempFolder.root, keys)
 
         val localSos = EmergencyRecord(
             messageId = 1001L,
@@ -59,7 +60,7 @@ class EmergencySemanticsAndPersistenceTest {
 
     @Test
     fun testResolvedRecordsDoNotTriggerAlarmOnRestart() {
-        val store = EmergencyPersistenceStore(tempFolder.root)
+        val store = EmergencyPersistenceStore(tempFolder.root, keys)
 
         val sos = EmergencyRecord(
             messageId = 3001L,
@@ -81,7 +82,7 @@ class EmergencySemanticsAndPersistenceTest {
 
     @Test
     fun testMultipleRecordsSelectsLatestRemoteUnresolved() {
-        val store = EmergencyPersistenceStore(tempFolder.root)
+        val store = EmergencyPersistenceStore(tempFolder.root, keys)
 
         val r1 = EmergencyRecord(
             messageId = 4001L,
@@ -114,7 +115,7 @@ class EmergencySemanticsAndPersistenceTest {
 
     @Test
     fun testHumanAckResolvesRecord() {
-        val store = EmergencyPersistenceStore(tempFolder.root)
+        val store = EmergencyPersistenceStore(tempFolder.root, keys)
 
         val sos = EmergencyRecord(
             messageId = 5001L,

@@ -24,6 +24,7 @@ import java.io.File
  * - AEC status fallback and half-duplex continuous mode transitions
  */
 class EmergencyAndOperationalHardeningTest {
+    private val keys = com.itantra.core.storage.MemoryKeyProvider()
 
     @get:Rule
     val tempFolder = TemporaryFolder()
@@ -101,7 +102,7 @@ class EmergencyAndOperationalHardeningTest {
     @Test
     fun testTransportAckDoesNotClearUnresolvedEmergencyState() {
         val storeDir = tempFolder.newFolder("emergency_store_test1")
-        val store = EmergencyPersistenceStore(storeDir)
+        val store = EmergencyPersistenceStore(storeDir, keys)
 
         val msgId = 1001L
         val record = EmergencyRecord(
@@ -135,7 +136,7 @@ class EmergencyAndOperationalHardeningTest {
     @Test
     fun testUnresolvedEmergencyPersistsAcrossAppRestart() {
         val storeDir = tempFolder.newFolder("emergency_store_test2")
-        val storeInstance1 = EmergencyPersistenceStore(storeDir)
+        val storeInstance1 = EmergencyPersistenceStore(storeDir, keys)
 
         val record1 = EmergencyRecord(
             messageId = 2001L,
@@ -149,7 +150,7 @@ class EmergencyAndOperationalHardeningTest {
         storeInstance1.recordTransportAck(2001L)
 
         // Simulate app kill and recreation with fresh store pointing to same directory
-        val storeInstance2 = EmergencyPersistenceStore(storeDir)
+        val storeInstance2 = EmergencyPersistenceStore(storeDir, keys)
         val unresolvedList = storeInstance2.getUnresolvedRecords()
 
         assertEquals("Must restore 1 unresolved record", 1, unresolvedList.size)
@@ -166,7 +167,7 @@ class EmergencyAndOperationalHardeningTest {
     @Test
     fun testBoundedRetryPolicyTransitionsToFailedAfterMaxRetries() {
         val storeDir = tempFolder.newFolder("emergency_store_test3")
-        val store = EmergencyPersistenceStore(storeDir)
+        val store = EmergencyPersistenceStore(storeDir, keys)
 
         val msgId = 3001L
         val record = EmergencyRecord(
@@ -259,7 +260,7 @@ class EmergencyAndOperationalHardeningTest {
     @Test
     fun testProcessDeathBetweenTempFileWriteAndRenamePreservesOriginalFile() {
         val storeDir = tempFolder.newFolder("emergency_store_crash_test")
-        val store1 = EmergencyPersistenceStore(storeDir)
+        val store1 = EmergencyPersistenceStore(storeDir, keys)
 
         val originalRecord = EmergencyRecord(
             messageId = 9001L,
@@ -286,7 +287,7 @@ class EmergencyAndOperationalHardeningTest {
         assertEquals("Committed content must remain unmodified", originalContent, storeFile.readText(Charsets.UTF_8))
 
         // On app restart (process recovery), store loads existing storeFile
-        val store2 = EmergencyPersistenceStore(storeDir)
+        val store2 = EmergencyPersistenceStore(storeDir, keys)
         val loaded = store2.getRecord(9001L)
         assertNotNull("Committed emergency record must survive simulated crash", loaded)
         assertEquals(9001L, loaded?.messageId)
@@ -309,7 +310,7 @@ class EmergencyAndOperationalHardeningTest {
         val json = kotlinx.serialization.json.Json { prettyPrint = true }
         tempFile.writeText(json.encodeToString(listOf(fallbackRecord)), Charsets.UTF_8)
 
-        val store = EmergencyPersistenceStore(storeDir)
+        val store = EmergencyPersistenceStore(storeDir, keys)
         val loaded = store.getRecord(9002L)
         assertNotNull("Store must recover records from temp file if store file was missing or empty", loaded)
         assertEquals(9002L, loaded?.messageId)
