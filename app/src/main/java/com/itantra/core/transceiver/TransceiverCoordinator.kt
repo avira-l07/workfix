@@ -501,12 +501,31 @@ class TransceiverCoordinator(
     private fun updateMessage(id: Long, update: (TransceiverMessage) -> TransceiverMessage) {
         synchronized(messageMutationLock) {
             _messages.update { messages ->
-                messages.map { if (it.messageId == id) update(it) else it }
+                messages.map { if (it.messageId == id) transitionMessage(it, update(it)) else it }
             }
             val snapshot = _messages.value.find { it.messageId == id }
             if (messageDao != null && snapshot != null) persistenceQueue.trySend(snapshot)
         }
         updateAlertJob()
+    }
+
+    private fun transitionMessage(current: TransceiverMessage, proposed: TransceiverMessage): TransceiverMessage =
+        if (current.state == MessageState.ACKNOWLEDGED) proposed.copy(state = MessageState.ACKNOWLEDGED)
+        else proposed
+
+    private fun acknowledgeRemoteCriticalMessages() {
+        synchronized(messageMutationLock) {
+            val unresolvedIds = _messages.value.filter {
+                it.source == MessageSource.REMOTE &&
+                    it.priority == com.itantra.domain.model.MessagePriority.CRITICAL &&
+                    it.state != MessageState.ACKNOWLEDGED
+            }.map { it.messageId }.toSet()
+            _messages.update { messages -> messages.map {
+                if (it.messageId in unresolvedIds) it.copy(state = MessageState.ACKNOWLEDGED) else it
+            } }
+            if (messageDao != null) _messages.value.filter { it.messageId in unresolvedIds }
+                .forEach { persistenceQueue.trySend(it) }
+        }
     }
 
     private fun updateAlertJob() {
@@ -726,6 +745,9 @@ class TransceiverCoordinator(
                     _activeEmergencyAlert.value = null
                     com.itantra.core.service.OperationalForegroundService.resolveEmergency(context)
                     emergencyStore.resolveAllEmergencies()
+                    // ALL_CLEAR is the existing global emergency-resolution control.
+                    // Resolve chat state too before addMessage can reevaluate reminders.
+                    acknowledgeRemoteCriticalMessages()
 
                     if (continuousModeJob?.isActive == true) {
                         continuousListenEngine.resetAndResume()
@@ -2284,6 +2306,10 @@ class TransceiverCoordinator(
     fun sendEmergencyCode(code: com.itantra.domain.model.EmergencyCode) {
         scope.launch {
             val msgId = nextMessageId()
+            val peerId = _activeConversationPeerId.value?.takeIf { it.isNotBlank() }
+                ?: _activePeerProfile.value?.deviceId?.takeIf { it.isNotBlank() }
+                ?: com.itantra.domain.model.BROADCAST_PEER_ID
+            val localId = deviceProfileManager?.currentDeviceId ?: ""
             val text = com.itantra.domain.model.EmergencyPhraseResolver.resolve(code, sessionManager.activeLanguage.value)
             val msg = TransceiverMessage(
                 messageId = msgId,
@@ -2292,7 +2318,10 @@ class TransceiverCoordinator(
                 text = text,
                 source = MessageSource.LOCAL,
                 createdAtLocal = System.currentTimeMillis(),
-                state = MessageState.TRANSMITTING
+                state = MessageState.TRANSMITTING,
+                peerId = peerId,
+                senderDeviceId = localId,
+                receiverDeviceId = peerId
             )
             addMessage(msg)
 

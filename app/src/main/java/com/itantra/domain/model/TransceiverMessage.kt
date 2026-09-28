@@ -40,6 +40,9 @@ enum class MessageSource {
 }
 
 const val VOICE_OUTPUT_UNAVAILABLE_NOTE = "Voice output not available — text only"
+// SOS without a known recipient belongs to the local broadcast history and is
+// visible in every conversation, including when transmission fails. No wire change.
+const val BROADCAST_PEER_ID = "BROADCAST"
 
 data class TransceiverMessage(
     val messageId: Long,

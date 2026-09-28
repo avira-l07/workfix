@@ -1,5 +1,14 @@
 package com.example.itantra.data.messages
 
+import com.itantra.domain.model.BROADCAST_PEER_ID
+import com.itantra.domain.model.MessageSource
+import com.itantra.domain.model.TransceiverMessage
+
+fun TransceiverMessage.belongsToConversation(peerId: String): Boolean =
+    (source == MessageSource.LOCAL && this.peerId == BROADCAST_PEER_ID) ||
+        this.peerId == peerId || (peerId.isNotBlank() &&
+        (senderDeviceId == peerId || receiverDeviceId == peerId))
+
 /**
  * Message Filter classification and generic filtering logic.
  */

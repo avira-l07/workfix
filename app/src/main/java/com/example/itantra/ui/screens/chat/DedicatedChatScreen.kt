@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.itantra.ui.theme.ITantraColors
+import com.example.itantra.data.messages.belongsToConversation
 import com.itantra.app.AppGraph
 import com.itantra.core.transceiver.TransceiverCoordinator
 import com.itantra.domain.model.LanguageCatalog
@@ -79,7 +80,7 @@ fun DedicatedChatScreen(
     // Isolated messages for this peer only
     val chatMessages = remember(allMessages, peerId) {
         allMessages.filter { msg ->
-            msg.peerId == peerId || (peerId.isNotBlank() && (msg.senderDeviceId == peerId || msg.receiverDeviceId == peerId))
+            msg.belongsToConversation(peerId)
         }
     }
 
