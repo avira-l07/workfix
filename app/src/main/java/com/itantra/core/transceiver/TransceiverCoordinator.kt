@@ -857,12 +857,12 @@ class TransceiverCoordinator(
         val time = locationPayload.timestampMillis
 
         if (lat.isNaN() || lat.isInfinite() || lat < -90.0 || lat > 90.0) {
-            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet ${packet.messageId}: invalid latitude $lat")
+            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet: invalid latitude")
             return
         }
 
         if (lon.isNaN() || lon.isInfinite() || lon < -180.0 || lon > 180.0) {
-            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet ${packet.messageId}: invalid longitude $lon")
+            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet: invalid longitude")
             return
         }
 
@@ -1383,7 +1383,7 @@ class TransceiverCoordinator(
                     if (targetLang != srcLang) {
                         val isWhisperNativeTranslate = targetLang == LanguageCode.ENGLISH && (engine as? SherpaOnnxSpeechRecognizer)?.isTranslateMode == true
                         if (isWhisperNativeTranslate) {
-                            android.util.Log.i("ITANTRA_MT_CALL", "Whisper native translate mode: ${srcLang.name} mic -> English text emitted directly ('${result.text}')")
+                            android.util.Log.i("ITANTRA_MT_CALL", "Whisper native translation completed")
                             finalTxt = result.text
                             origTxt = null
                             translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS
@@ -1591,24 +1591,7 @@ class TransceiverCoordinator(
             SystemClock.elapsedRealtime() - recordingStartTime
         }
 
-        // Save raw audio to debug WAV file for inspection (gated behind BuildConfig.DEBUG)
-        if (com.example.itantra.BuildConfig.DEBUG && totalSamples > 0) {
-            try {
-                val fullPcm = FloatArray(totalSamples)
-                var offset = 0
-                for (chunk in chunksSnapshot) {
-                    System.arraycopy(chunk, 0, fullPcm, offset, chunk.size)
-                    offset += chunk.size
-                }
-                val extWav = java.io.File(context.getExternalFilesDir(null), "debug_ptt.wav")
-                val cacheWav = java.io.File(context.cacheDir, "debug_ptt.wav")
-                com.itantra.core.audio.WavWriter.writeWavFile(extWav, fullPcm, 16000, 1)
-                com.itantra.core.audio.WavWriter.writeWavFile(cacheWav, fullPcm, 16000, 1)
-                android.util.Log.i("TransceiverCoordinator", "Saved debug_ptt.wav: $totalSamples samples (${durationMillis}ms) to ${extWav.absolutePath}")
-            } catch (e: Exception) {
-                android.util.Log.e("TransceiverCoordinator", "Error saving debug_ptt.wav", e)
-            }
-        }
+        // Microphone audio remains in memory; do not persist diagnostic WAV copies.
 
         var sumSquares = 0.0
         var totalSamplesCount = 0
@@ -1712,7 +1695,7 @@ class TransceiverCoordinator(
                     if (targetLang != srcLang) {
                         val isWhisperNativeTranslate = targetLang == LanguageCode.ENGLISH && (engine as? SherpaOnnxSpeechRecognizer)?.isTranslateMode == true
                         if (isWhisperNativeTranslate) {
-                            android.util.Log.i("ITANTRA_MT_CALL", "Whisper native translate mode: ${srcLang.name} mic -> English text emitted directly ('${result.text}')")
+                            android.util.Log.i("ITANTRA_MT_CALL", "Whisper native translation completed")
                             finalTxt = result.text
                             origTxt = null
                             translationStatus = com.itantra.domain.model.TranslationStatus.SUCCESS

@@ -18,6 +18,7 @@ val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(na
  * Real persistence for Settings.
  */
 class SettingsRepository(private val dataStore: DataStore<Preferences>) {
+    private val privateContent = com.itantra.core.storage.PrivateContent()
 
     private object Keys {
         val VAD_SENSITIVITY = intPreferencesKey("vad_sensitivity")
@@ -37,7 +38,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
             emergencyPlaybackVolume = prefs[Keys.EMERGENCY_PLAYBACK_VOLUME] ?: 100,
             emergencyTtsAnnounce = prefs[Keys.EMERGENCY_TTS_ANNOUNCE] ?: true,
             emergencyRequireConfirmation = prefs[Keys.EMERGENCY_REQUIRE_CONFIRMATION] ?: true,
-            operatorName = prefs[Keys.OPERATOR_NAME] ?: "",
+            operatorName = prefs[Keys.OPERATOR_NAME]?.let(privateContent::decode) ?: "",
         )
     }
 
@@ -53,7 +54,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
             prefs[Keys.EMERGENCY_PLAYBACK_VOLUME] = next.emergencyPlaybackVolume
             prefs[Keys.EMERGENCY_TTS_ANNOUNCE] = next.emergencyTtsAnnounce
             prefs[Keys.EMERGENCY_REQUIRE_CONFIRMATION] = next.emergencyRequireConfirmation
-            prefs[Keys.OPERATOR_NAME] = next.operatorName
+            prefs[Keys.OPERATOR_NAME] = privateContent.encode(next.operatorName)
         }
     }
 

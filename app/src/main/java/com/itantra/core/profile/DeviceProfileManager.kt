@@ -14,7 +14,8 @@ import java.security.SecureRandom
  * Generates an offline persistent identifier formatted as "IT-XXXX-XXXX" once on first install,
  * and maintains display name and active language settings.
  */
-class DeviceProfileManager(context: Context) {
+class DeviceProfileManager(context: Context, keys: com.itantra.core.storage.KeyProvider = com.itantra.core.storage.AndroidKeyProvider()) {
+    private val privateContent = com.itantra.core.storage.PrivateContent(keys)
 
     companion object {
         private const val PREFS_NAME = "itantra_device_profile"
@@ -43,15 +44,15 @@ class DeviceProfileManager(context: Context) {
     val profile: StateFlow<DeviceProfile>
 
     init {
-        var devId = prefs.getString(KEY_DEVICE_ID, null)
+        var devId = prefs.getString(KEY_DEVICE_ID, null)?.let(privateContent::decode)
         if (devId == null || !devId.startsWith("IT-")) {
             devId = generateNewDeviceId()
-            prefs.edit().putString(KEY_DEVICE_ID, devId).apply()
+            prefs.edit().putString(KEY_DEVICE_ID, privateContent.encode(devId)).apply()
         }
 
         val defaultName = android.os.Build.MODEL?.takeIf { it.isNotBlank() }?.let { "$it's iTantra" }
             ?: "iTantra Operator"
-        val savedName = prefs.getString(KEY_DISPLAY_NAME, defaultName) ?: defaultName
+        val savedName = prefs.getString(KEY_DISPLAY_NAME, null)?.let(privateContent::decode) ?: defaultName
         val savedLangCode = prefs.getString(KEY_ACTIVE_LANG, LanguageCode.ENGLISH.wireCode) ?: LanguageCode.ENGLISH.wireCode
         val lang = LanguageCode.fromWireCode(savedLangCode) ?: LanguageCode.ENGLISH
 
@@ -74,7 +75,7 @@ class DeviceProfileManager(context: Context) {
     fun updateDisplayName(name: String) {
         val trimmed = name.trim().take(32)
         if (trimmed.isNotBlank()) {
-            prefs.edit().putString(KEY_DISPLAY_NAME, trimmed).apply()
+            prefs.edit().putString(KEY_DISPLAY_NAME, privateContent.encode(trimmed)).apply()
             _profile.value = _profile.value.copy(displayName = trimmed)
         }
     }

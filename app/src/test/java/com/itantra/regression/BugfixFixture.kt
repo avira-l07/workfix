@@ -93,7 +93,7 @@ internal class BugfixFixture(val dao: MessageDao? = null) : Closeable {
     var location = LocationResult.Success(12.3456789123, 77.1234567891, 4.25f, 1700000000123L)
     val coordinator = TransceiverCoordinator(context, session, repository, transport,
         InMemoryMetricsRecorder(), secure, TranslationRouter(translation), dao,
-        DeviceProfileManager(context), TtsCapabilityProvider { true },
+        DeviceProfileManager(context, com.itantra.core.storage.MemoryKeyProvider()), TtsCapabilityProvider { true },
         object : LocationProvider { override suspend fun getCurrentLocation() = location })
 
     fun verify() {

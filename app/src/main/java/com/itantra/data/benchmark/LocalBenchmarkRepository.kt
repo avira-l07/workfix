@@ -10,6 +10,7 @@ import kotlinx.serialization.json.Json
 import java.io.File
 
 class LocalBenchmarkRepository(private val context: Context) {
+    private val privateContent = com.itantra.core.storage.PrivateContent()
 
     private val benchmarkDir: File
         get() = File(context.filesDir, "benchmarks").apply { mkdirs() }
@@ -24,7 +25,7 @@ class LocalBenchmarkRepository(private val context: Context) {
         val file = File(benchmarkDir, fileName)
 
         val content = json.encodeToString(session)
-        file.writeText(content)
+        privateContent.write(file, content)
         file
     }
 
@@ -35,7 +36,7 @@ class LocalBenchmarkRepository(private val context: Context) {
 
         files.mapNotNull { file ->
             try {
-                json.decodeFromString<BenchmarkSession>(file.readText())
+                json.decodeFromString<BenchmarkSession>(privateContent.read(file))
             } catch (e: Exception) {
                 null
             }
@@ -47,7 +48,7 @@ class LocalBenchmarkRepository(private val context: Context) {
         val file = File(benchmarkDir, fileName)
 
         val content = json.encodeToString(session)
-        file.writeText(content)
+        privateContent.write(file, content)
         file
     }
 
@@ -58,7 +59,7 @@ class LocalBenchmarkRepository(private val context: Context) {
 
         files.mapNotNull { file ->
             try {
-                json.decodeFromString<TtsEvaluationSession>(file.readText())
+                json.decodeFromString<TtsEvaluationSession>(privateContent.read(file))
             } catch (e: Exception) {
                 null
             }

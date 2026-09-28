@@ -173,7 +173,10 @@ class MainActivity : ComponentActivity() {
         setContent { ITantraTheme { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Opening secure storage…") } } }
         lifecycleScope.launch {
             val ready = try {
-                withContext(Dispatchers.IO) { AppGraph.prepareStorage(this@MainActivity) }
+                withContext(Dispatchers.IO) {
+                    AppGraph.prepareStorage(this@MainActivity)
+                    com.itantra.core.storage.StoragePrivacy.prepare(this@MainActivity)
+                }
                 true
             } catch (e: Exception) { false }
             if (ready) startApp() else setContent {
