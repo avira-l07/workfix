@@ -1,0 +1,3 @@
+# Proguard rules for iTantra
+-keep class com.k2fsa.sherpa.onnx.** { *; }
+-dontwarn com.k2fsa.sherpa.onnx.**
