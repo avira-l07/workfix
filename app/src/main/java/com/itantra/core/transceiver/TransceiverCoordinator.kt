@@ -936,10 +936,11 @@ class TransceiverCoordinator(
         val rawSrcLang = packet.sourceLanguage ?: packet.languageCode
         val pktTargetLang = packet.targetLanguage ?: packet.languageCode
 
-        // PHASE 4/29: when receiveLanguage is null, fall back to packet's source language
-        // so that the message stays in its original language (same-language bypass).
+        // Automatic receive preserves the language actually carried by the packet,
+        // including a translation already completed by the sender.
         val srcLang = rawSrcLang ?: pktTargetLang ?: LanguageCode.HINDI
-        val desiredReceive = currentReceiveLanguage.value ?: srcLang
+        val payloadLanguage = pktTargetLang ?: srcLang
+        val desiredReceive = currentReceiveLanguage.value ?: payloadLanguage
         val localLanguage = desiredReceive
 
         var text = if (isEmergencyCode && packet.payload.isNotEmpty()) {
@@ -968,9 +969,9 @@ class TransceiverCoordinator(
             } else {
                 // Cross-language: attempt receiver-side recovery translation (source->local).
                 // This handles the case where sender's MT failed or typed text arrived untranslated.
-                android.util.Log.i("TransceiverCoord", "FIX 027: Attempting receiver-side translation $srcLang -> $localLanguage for packet $pktLang")
+                android.util.Log.i("TransceiverCoord", "FIX 027: Attempting receiver-side translation $pktLang -> $localLanguage")
                 val translationRes = try {
-                    translationRouter.routeAndTranslate(text, srcLang, localLanguage)
+                    translationRouter.routeAndTranslate(text, pktLang, localLanguage)
                 } catch (e: Exception) {
                     android.util.Log.e("TransceiverCoord", "Receiver-side translation exception", e)
                     null
@@ -997,7 +998,7 @@ class TransceiverCoordinator(
 
         val msg = TransceiverMessage(
             messageId = packet.messageId,
-            language = packet.languageCode,
+            language = textLanguage,
             targetLanguage = if (textLanguage == localLanguage) localLanguage else pktLang,
             priority = packet.flags.toInt(),
             text = text,
