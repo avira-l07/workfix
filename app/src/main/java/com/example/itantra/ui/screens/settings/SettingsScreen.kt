@@ -28,6 +28,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     pairingSectionContent: (@Composable () -> Unit)? = null,
     isBackendWired: Boolean = true,
+    onWipe: () -> Unit = {},
 ) {
     val settings by viewModel.settings.collectAsState()
     var showResetConfirm by remember { mutableStateOf(false) }
@@ -49,6 +50,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item { DeviceIdentityBanner() }
+            item { WipeDataAction(onWipe) }
             item {
                 OperatorIdentitySection(
                     operatorName = settings.operatorName,

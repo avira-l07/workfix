@@ -170,6 +170,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (com.itantra.core.storage.WipeActivity.marker(this).exists()) {
+            launchWipeProcess()
+            return
+        }
         setContent { ITantraTheme { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Opening secure storage…") } } }
         lifecycleScope.launch {
             val ready = try {
@@ -185,6 +189,7 @@ class MainActivity : ComponentActivity() {
                         Text("Stored data cannot be decrypted")
                         Text("Your existing files have been kept. Close the app and retry after restoring access to this device’s keys.")
                         Button(onClick = { finish() }) { Text("Close") }
+                        com.example.itantra.ui.screens.settings.WipeDataAction { beginWipe() }
                     }
                 }
             }
@@ -534,6 +539,48 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private var wiping = false
+    fun beginWipe() {
+        if (wiping) return
+        wiping = true
+        setContent { ITantraTheme { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Stopping sessions for wipe…") } } }
+        lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    java.io.FileOutputStream(com.itantra.core.storage.WipeActivity.marker(this@MainActivity)).use {
+                        it.write(byteArrayOf(1)); it.fd.sync()
+                    }
+                }
+            } catch (_: Exception) {
+                wiping = false
+                setContent { ITantraTheme { Text("Cannot start wipe: storage is unavailable. Close and retry.") } }
+                return@launch
+            }
+            // Process isolation is the final barrier even if a native engine cannot stop promptly.
+            kotlinx.coroutines.withTimeoutOrNull(5_000) {
+                try {
+                    if (appStarted) {
+                        AppGraph.transceiverCoordinator.shutdownForWipe()
+                        AppGraph.bluetoothPeerTransport.listenerDesired = false
+                        AppGraph.transportEngine.disconnect()
+                        AppGraph.transportEngine.shutdown()
+                        AppGraph.activeLanguageSessionManager.releaseAll()
+                    }
+                    withContext(Dispatchers.IO) { AppGraph.closeStorageForWipe() }
+                } catch (_: Exception) { }
+            }
+            stopService(android.content.Intent(this@MainActivity, com.itantra.core.service.OperationalForegroundService::class.java))
+            launchWipeProcess()
+        }
+    }
+
+    private fun launchWipeProcess() {
+        startActivity(android.content.Intent(this, com.itantra.core.storage.WipeActivity::class.java)
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK))
+        finish()
+        android.os.Process.killProcess(android.os.Process.myPid())
+    }
+
     private fun requestRequiredPermissions() {
         val permissionsToRequest = mutableListOf<String>()
 
@@ -645,6 +692,7 @@ fun TacticalAppScaffold(
                         SettingsScreen(
                             viewModel = settingsViewModel,
                             onBack = { currentDestination = AppDestination.HUB },
+                            onWipe = { (context as? MainActivity)?.beginWipe() },
                         )
                     }
 

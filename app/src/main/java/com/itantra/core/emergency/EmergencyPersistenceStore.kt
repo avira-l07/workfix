@@ -64,6 +64,8 @@ class EmergencyPersistenceStore(
         }
     }
 
+    fun clearMemoryForWipe() = synchronized(lock) { records.clear() }
+
     fun getUnresolvedRecords(): List<EmergencyRecord> {
         synchronized(lock) {
             return records.values.filter { it.isUnresolved }

@@ -2462,4 +2462,20 @@ class TransceiverCoordinator(
     fun shutdown() {
         scope.cancel()
     }
+
+    suspend fun shutdownForWipe() {
+        val job = scope.coroutineContext[kotlinx.coroutines.Job]
+        job?.cancel()
+        job?.join()
+        persistenceQueue.cancel()
+        continuousListenEngine.stop()
+        synchronized(activeRecordingChunks) {
+            activeRecordingChunks.forEach { it.fill(0f) }
+            activeRecordingChunks.clear()
+        }
+        _messages.value = emptyList()
+        _activePeerProfile.value = null
+        emergencyStore.clearMemoryForWipe()
+        secureSessionManager.resetSession()
+    }
 }

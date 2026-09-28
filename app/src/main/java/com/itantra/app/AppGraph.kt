@@ -302,6 +302,10 @@ object AppGraph {
     }
 
     private var preparedDatabase: com.itantra.data.db.AppDatabase? = null
+    fun closeStorageForWipe() {
+        preparedDatabase?.close()
+        preparedDatabase = null
+    }
     val database: com.itantra.data.db.AppDatabase
         get() = checkNotNull(preparedDatabase) { "Storage must be prepared before starting sessions" }
 

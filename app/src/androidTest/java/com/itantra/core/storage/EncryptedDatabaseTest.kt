@@ -69,4 +69,18 @@ class EncryptedDatabaseTest {
         assertFalse(context.getDatabasePath(EncryptedDatabase.LEGACY).exists())
         assertFalse(context.getDatabasePath(EncryptedDatabase.NAME).readBytes().decodeToString().contains("PRIVATE_MARKER"))
     }
+
+    @Test fun wipeRemovesDatabaseAndEmergencyData() {
+        val db = EncryptedDatabase.open(context, keys)
+        try { db.messageDao().insert(row(1)) } finally { db.close() }
+        val files = File(root, "files").apply { mkdirs() }
+        val emergency = com.itantra.core.emergency.EmergencyPersistenceStore(files, keys)
+        emergency.saveRecord(EmergencyRecord(messageId = 9, emergencyCode = "HELP_REQUIRED", source = "LOCAL", createdAt = 1, resolvedPhrase = "private SOS"))
+        WipeFiles(files, root, File(root, "prefs"), context.noBackupFilesDir, emptyList(), emptyList(), keys).wipe()
+        assertFalse(context.getDatabasePath(EncryptedDatabase.NAME).exists())
+        assertFalse(File(files, "emergency_records.json").exists())
+        assertTrue(com.itantra.core.emergency.EmergencyPersistenceStore(files, keys).getAllRecords().isEmpty())
+        val clean = EncryptedDatabase.open(context, keys)
+        try { assertTrue(clean.messageDao().getAll().isEmpty()) } finally { clean.close() }
+    }
 }
