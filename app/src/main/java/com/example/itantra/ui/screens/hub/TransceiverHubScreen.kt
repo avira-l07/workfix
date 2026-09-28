@@ -111,6 +111,8 @@ fun TransceiverHubScreen(
     var isPttLocked by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf(MessageFilter.ALL) }
     var showEmergencyConfirm by remember { mutableStateOf(false) }
+    var showEmergencySheet by remember { mutableStateOf(false) }
+    var showHubMenu by remember { mutableStateOf(false) }
     var pendingEmergencyCode by remember { mutableStateOf<String?>(null) }
 
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -275,13 +277,20 @@ fun TransceiverHubScreen(
                                 letterSpacing = 0.5.sp
                             )
                             Text(
-                                "TALK TRANSCEIVER",
+                                when (transportConnectionState) {
+                                    ConnectionState.CONNECTED -> if (sessionState == SecureSessionState.SECURE_VERIFIED) "ENCRYPTED · PEER CONNECTED" else "PEER CONNECTED"
+                                    ConnectionState.CONNECTING, ConnectionState.LISTENING -> "SEARCHING FOR PEERS…"
+                                    ConnectionState.ERROR -> "RECONNECTING…"
+                                    ConnectionState.DISCONNECTED -> "DISCONNECTED"
+                                },
                                 style = MaterialTheme.typography.labelSmall,
                                 fontFamily = FontFamily.Monospace,
-                                color = ITantraColors.Primary,
+                                color = if (transportConnectionState == ConnectionState.CONNECTED && sessionState == SecureSessionState.SECURE_VERIFIED) ITantraColors.StatusSuccess else ITantraColors.TextMuted,
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.2.sp,
-                                fontSize = 9.5.sp
+                                letterSpacing = 0.6.sp,
+                                fontSize = 8.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -291,10 +300,50 @@ fun TransceiverHubScreen(
                     TacticalBatteryPill()
                     Spacer(Modifier.width(8.dp))
 
+                    IconButton(
+                        onClick = { showEmergencySheet = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFFEE2E2))
+                            .border(1.dp, Color(0xFFFCA5A5), RoundedCornerShape(10.dp))
+                    ) {
+                        Icon(
+                            Icons.Filled.Sos,
+                            contentDescription = "Open emergency actions",
+                            tint = ITantraColors.StatusDanger,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(4.dp))
+
+                    Box {
+                        IconButton(onClick = { showHubMenu = true }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "Hub navigation")
+                        }
+                        DropdownMenu(expanded = showHubMenu, onDismissRequest = { showHubMenu = false }) {
+                            DropdownMenuItem(
+                                text = { Text("Connect") },
+                                leadingIcon = { Icon(Icons.Filled.Hub, contentDescription = null) },
+                                onClick = { showHubMenu = false; onNavigateToConnect() }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Language packs") },
+                                leadingIcon = { Icon(Icons.Filled.Translate, contentDescription = null) },
+                                onClick = { showHubMenu = false; onNavigateToLanguagePacks() }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Diagnostics") },
+                                leadingIcon = { Icon(Icons.Filled.QueryStats, contentDescription = null) },
+                                onClick = { showHubMenu = false; onNavigateToDiagnostics() }
+                            )
+                        }
+                    }
+
                     // Settings Button
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(48.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(ITantraColors.CanvasBg)
                             .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
@@ -313,6 +362,34 @@ fun TransceiverHubScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = ITantraColors.SurfaceWhite),
             )
         },
+        bottomBar = {
+            HubBottomControls(
+                coordinator = coordinator,
+                isPttMode = isPttMode,
+                onPttModeChange = { next ->
+                    if (next != isPttMode) {
+                        isPttMode = next
+                        if (!next) {
+                            if (isTransmitting || isPttLocked) {
+                                isTransmitting = false
+                                isPttLocked = false
+                                coordinator.stopActiveRecording()
+                            }
+                            coordinator.setContinuousMode(true)
+                        } else {
+                            coordinator.setContinuousMode(false)
+                        }
+                    }
+                },
+                isTransmitting = isTransmitting,
+                isPttLocked = isPttLocked,
+                continuousListenState = continuousListenState,
+                onStart = { isTransmitting = true; coordinator.startRecording() },
+                onStop = { isTransmitting = false; isPttLocked = false; coordinator.stopActiveRecording() },
+                onLock = { isPttLocked = true },
+                onEmergency = { showEmergencySheet = true },
+            )
+        },
     ) { padding ->
         LazyColumn(
             state = listState,
@@ -326,6 +403,8 @@ fun TransceiverHubScreen(
             // per-message red error. See TRANSLATION_SCOPE_NOTE / UnavailableTranslationEngine.
             item { TranslationScopeBanner() }
 
+            // Navigation is in the top-bar overflow menu to keep the message area primary.
+            if (false) {
             // 1. Hub Spoke Entry Navigation Cards (3 Columns)
             item {
                 Row(
@@ -354,6 +433,8 @@ fun TransceiverHubScreen(
                         onClick = onNavigateToDiagnostics,
                     )
                 }
+            }
+
             }
 
             // 2. Dynamic Security Indicator & Real Peer State (Stacked Rows matching code.html / screen.png)
@@ -888,6 +969,10 @@ fun TransceiverHubScreen(
                 }
             }
 
+            // The PTT/VAD controls and emergency presets are rendered in the fixed
+            // bottom bar and SOS sheet below. Keep this legacy block intact so its
+            // handlers remain easy to audit while the new containers own the layout.
+            if (false) {
             // 6. Segmented Toggle Switch (PTT vs VAD)
             item {
                 Row(
@@ -1333,6 +1418,8 @@ fun TransceiverHubScreen(
                 }
             }
 
+            }
+
             // 9. Comms Message History Section
             item {
                 Card(
@@ -1634,6 +1721,53 @@ fun TransceiverHubScreen(
         }
     }
 
+    if (showEmergencySheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showEmergencySheet = false },
+            containerColor = ITantraColors.SurfaceWhite,
+        ) {
+            Column(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Warning, contentDescription = null, tint = ITantraColors.StatusDanger)
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text("Emergency actions", fontWeight = FontWeight.ExtraBold, color = ITantraColors.StatusDanger)
+                        Text("Every action requires confirmation before transmission.", fontSize = 11.sp, color = ITantraColors.TextMuted)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    TacticalEmergencyPresetButton("EVACUATE", "CODE-E1", Icons.AutoMirrored.Filled.DirectionsRun, ITantraColors.StatusDanger, Modifier.weight(1f)) {
+                        pendingEmergencyCode = "EVACUATION (CODE-E1)"; showEmergencySheet = false; showEmergencyConfirm = true
+                    }
+                    TacticalEmergencyPresetButton("MEDICAL SOS", "CODE-M2", Icons.Filled.MedicalServices, ITantraColors.StatusDanger, Modifier.weight(1f)) {
+                        pendingEmergencyCode = "MEDICAL SOS (CODE-M2)"; showEmergencySheet = false; showEmergencyConfirm = true
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    TacticalEmergencyPresetButton("ROUTE BLOCKED", "CODE-B3", Icons.Filled.Block, ITantraColors.StatusWarning, Modifier.weight(1f)) {
+                        pendingEmergencyCode = "ROUTE BLOCKED (CODE-B3)"; showEmergencySheet = false; showEmergencyConfirm = true
+                    }
+                    TacticalEmergencyPresetButton("ASSISTANCE REQ.", "CODE-A4", Icons.Filled.Sos, ITantraColors.Primary, Modifier.weight(1f)) {
+                        pendingEmergencyCode = "ASSISTANCE REQUIRED (CODE-A4)"; showEmergencySheet = false; showEmergencyConfirm = true
+                    }
+                }
+                Button(
+                    onClick = { pendingEmergencyCode = "CRITICAL PRIORITY BROADCAST"; showEmergencySheet = false; showEmergencyConfirm = true },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Filled.Campaign, contentDescription = null, tint = Color.White)
+                    Spacer(Modifier.width(8.dp))
+                    Text("TRIGGER CRITICAL BROADCAST", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+
     if (showEmergencyConfirm) {
         Dialog(onDismissRequest = { showEmergencyConfirm = false }) {
             Card(
@@ -1823,6 +1957,136 @@ private fun SpokeCard(
             Spacer(Modifier.height(6.dp))
             Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = ITantraColors.TextHeadline, maxLines = 1)
             Text(subtitle, fontSize = 8.5.sp, color = ITantraColors.TextMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+private fun HubBottomControls(
+    coordinator: TransceiverCoordinator,
+    isPttMode: Boolean,
+    onPttModeChange: (Boolean) -> Unit,
+    isTransmitting: Boolean,
+    isPttLocked: Boolean,
+    continuousListenState: ContinuousListenState,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    onLock: () -> Unit,
+    onEmergency: () -> Unit,
+) {
+    val isRecordingActive = if (isPttMode) isTransmitting || isPttLocked else
+        continuousListenState == ContinuousListenState.SPEECH_DETECTED || continuousListenState == ContinuousListenState.FINALIZING
+
+    Surface(color = ITantraColors.SurfaceWhite, shadowElevation = 8.dp) {
+        Column(
+            modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().background(Color(0xFFE2E8F0), RoundedCornerShape(10.dp)).padding(3.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
+                        .background(if (isPttMode) Color.White else Color.Transparent)
+                        .clickable { onPttModeChange(true) }.padding(vertical = 7.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.TouchApp, contentDescription = null, tint = if (isPttMode) ITantraColors.Primary else ITantraColors.TextMuted, modifier = Modifier.size(15.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("PUSH TO TALK", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = if (isPttMode) ITantraColors.Primary else ITantraColors.TextMuted)
+                    }
+                }
+                Box(
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
+                        .background(if (!isPttMode) Color.White else Color.Transparent)
+                        .clickable { onPttModeChange(false) }.padding(vertical = 7.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.GraphicEq, contentDescription = null, tint = if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.TextMuted, modifier = Modifier.size(15.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("CONTINUOUS VAD", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = if (!isPttMode) ITantraColors.TextHeadline else ITantraColors.TextMuted)
+                    }
+                }
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onEmergency,
+                    modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFFEE2E2)).border(1.dp, Color(0xFFFCA5A5), RoundedCornerShape(12.dp))
+                ) {
+                    Icon(Icons.Filled.Sos, contentDescription = "Open emergency actions", tint = ITantraColors.StatusDanger, modifier = Modifier.size(25.dp))
+                }
+                Spacer(Modifier.weight(1f))
+                Box(
+                    modifier = Modifier.size(124.dp).clip(CircleShape)
+                        .background(if (isRecordingActive) Color(0xFFFEE2E2) else if (!isPttMode) Color(0xFFF0FDF4) else Color(0xFFEFF6FF))
+                        .border(2.dp, if (isRecordingActive) ITantraColors.StatusDanger else if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.Primary, CircleShape)
+                        .pointerInput(coordinator, isPttMode, isPttLocked, continuousListenState) {
+                            if (!isPttMode) {
+                                awaitEachGesture {
+                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                    down.consume()
+                                    if (continuousListenState == ContinuousListenState.PAUSED) coordinator.continuousListenEngine.resumeListening()
+                                    else coordinator.continuousListenEngine.pauseListening()
+                                }
+                            } else {
+                                val lockSlidePx = 64.dp.toPx()
+                                awaitEachGesture {
+                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                    down.consume()
+                                    if (isPttLocked) {
+                                        onStop()
+                                        return@awaitEachGesture
+                                    }
+                                    onStart()
+                                    var locked = false
+                                    try {
+                                        while (true) {
+                                            val event = awaitPointerEvent()
+                                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                            if (!change.pressed) break
+                                            change.consume()
+                                            if (down.position.y - change.position.y >= lockSlidePx) { locked = true; break }
+                                        }
+                                    } finally {
+                                        if (locked) onLock() else onStop()
+                                    }
+                                }
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(if (isRecordingActive) Icons.Filled.GraphicEq else Icons.Filled.Mic, contentDescription = "Push to talk", tint = if (isRecordingActive) ITantraColors.StatusDanger else if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.Primary, modifier = Modifier.size(30.dp))
+                        Text(
+                            if (!isPttMode) when (continuousListenState) {
+                                ContinuousListenState.SPEECH_DETECTED -> "VOICE ACTIVE"
+                                ContinuousListenState.FINALIZING -> "PROCESSING"
+                                ContinuousListenState.SEGMENT_READY -> "TRANSMITTING"
+                                ContinuousListenState.PAUSED -> "PAUSED"
+                                else -> "LISTENING"
+                            } else if (isPttLocked) "TAP TO SEND" else if (isTransmitting) "TRANSMITTING" else "HOLD TO TALK",
+                            fontSize = 9.sp, fontWeight = FontWeight.Bold, color = ITantraColors.TextHeadline
+                        )
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                if (isPttLocked) {
+                    IconButton(onClick = onStop, modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(ITantraColors.StatusDanger)) {
+                        Icon(Icons.Filled.Stop, contentDescription = "Send recording", tint = Color.White)
+                    }
+                } else {
+                    Spacer(Modifier.size(52.dp))
+                }
+            }
+            Text(
+                if (!isPttMode) "Tap the microphone to pause or resume hands-free listening" else "Hold to talk · slide up to lock",
+                modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                fontFamily = FontFamily.Monospace, fontSize = 8.5.sp, color = ITantraColors.TextMuted
+            )
         }
     }
 }
