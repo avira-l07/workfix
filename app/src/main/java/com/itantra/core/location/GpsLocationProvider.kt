@@ -1,0 +1,245 @@
+package com.itantra.core.location
+
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Bundle
+import android.os.Looper
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.resume
+
+/**
+ * Result of requesting device coordinates.
+ */
+sealed class LocationResult {
+    data class Success(
+        val latitude: Double,
+        val longitude: Double,
+        val accuracyMeters: Float,
+        val timestampMillis: Long
+    ) : LocationResult()
+
+    sealed class Failure(val reason: String) : LocationResult() {
+        object PermissionDenied : Failure("LOCATION_PERMISSION_DENIED")
+        object ProviderDisabled : Failure("GPS_DISABLED")
+        object NoFixAvailable : Failure("NO_GPS_FIX")
+        data class Error(val message: String) : Failure(message)
+    }
+}
+
+/**
+ * Contract for obtaining device coordinates.
+ */
+interface LocationProvider {
+    suspend fun getCurrentLocation(): LocationResult
+}
+
+/**
+ * Internal abstraction over Android framework [LocationManager] methods,
+ * enabling deterministic lifecycle, cancellation, and leak-free verification in unit tests.
+ */
+internal interface LocationServiceAdapter {
+    fun isProviderEnabled(provider: String): Boolean
+    fun getLastKnownLocation(provider: String): Location?
+    fun requestLocationUpdates(
+        provider: String,
+        minTimeMs: Long,
+        minDistanceM: Float,
+        listener: LocationListener,
+        looper: Looper?
+    )
+    fun removeUpdates(listener: LocationListener)
+}
+
+internal class SystemLocationServiceAdapter(
+    private val locationManager: LocationManager
+) : LocationServiceAdapter {
+    override fun isProviderEnabled(provider: String): Boolean = locationManager.isProviderEnabled(provider)
+    override fun getLastKnownLocation(provider: String): Location? = locationManager.getLastKnownLocation(provider)
+    override fun requestLocationUpdates(
+        provider: String,
+        minTimeMs: Long,
+        minDistanceM: Float,
+        listener: LocationListener,
+        looper: Looper?
+    ) {
+        val resolvedLooper = looper ?: try { Looper.getMainLooper() } catch (_: Throwable) { null }
+        if (resolvedLooper != null) {
+            locationManager.requestLocationUpdates(provider, minTimeMs, minDistanceM, listener, resolvedLooper)
+        } else {
+            locationManager.requestLocationUpdates(provider, minTimeMs, minDistanceM, listener, Looper.getMainLooper())
+        }
+    }
+    override fun removeUpdates(listener: LocationListener) {
+        locationManager.removeUpdates(listener)
+    }
+}
+
+/**
+ * Android framework-based GPS provider using [LocationManager].
+ *
+ * Designed specifically for standalone, offline operation:
+ * - Direct satellite fix via [LocationManager.GPS_PROVIDER]
+ * - Does NOT silently require internet, cellular, or Google Play Services
+ * - Gracefully handles indoor no-fix, disabled GPS, or denied permissions
+ * - Guaranteed leak-free listener cleanup on all exit paths (success, timeout, external cancellation, error)
+ */
+class DefaultGpsLocationProvider internal constructor(
+    private val context: Context,
+    private val fixTimeoutMillis: Long = 10_000L,
+    private val serviceAdapterOverride: LocationServiceAdapter? = null,
+    private val permissionChecker: ((Context, String) -> Boolean)? = null
+) : LocationProvider {
+
+    constructor(context: Context, fixTimeoutMillis: Long = 10_000L) : this(context, fixTimeoutMillis, null, null)
+
+    private fun hasPermission(permission: String): Boolean {
+        return permissionChecker?.invoke(context, permission) ?: (
+            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    override suspend fun getCurrentLocation(): LocationResult {
+        // 1. Runtime permission check
+        val hasFine = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        val hasCoarse = hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+
+        if (!hasFine && !hasCoarse) {
+            return LocationResult.Failure.PermissionDenied
+        }
+
+        val locationService: LocationServiceAdapter = serviceAdapterOverride ?: run {
+            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+                ?: return LocationResult.Failure.Error("LocationManager unavailable")
+            SystemLocationServiceAdapter(lm)
+        }
+
+        // 2. Hardware GPS provider check
+        val isGpsEnabled = try {
+            locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        } catch (_: Throwable) {
+            false
+        }
+
+        if (!isGpsEnabled) {
+            return LocationResult.Failure.ProviderDisabled
+        }
+
+        // 3. Fast-path: Check for a recent last-known location (< 30 seconds old)
+        try {
+            val lastKnown = locationService.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            if (lastKnown != null && (System.currentTimeMillis() - lastKnown.time) < 30_000L) {
+                return LocationResult.Success(
+                    latitude = lastKnown.latitude,
+                    longitude = lastKnown.longitude,
+                    accuracyMeters = lastKnown.accuracy,
+                    timestampMillis = if (lastKnown.time > 0L) lastKnown.time else System.currentTimeMillis()
+                )
+            }
+        } catch (_: SecurityException) {
+            return LocationResult.Failure.PermissionDenied
+        } catch (_: Throwable) {}
+
+        // 4. Standalone satellite GPS fix with timeout and leak-free lifecycle management
+        return withTimeoutOrNull(fixTimeoutMillis) {
+            var listenerRef: LocationListener? = null
+            var isRegistered = false
+
+            fun safeRemoveUpdates() {
+                if (isRegistered) {
+                    isRegistered = false
+                    val listener = listenerRef
+                    if (listener != null) {
+                        try {
+                            locationService.removeUpdates(listener)
+                        } catch (_: Throwable) {
+                            // Suppress any SecurityException if permissions were revoked mid-flight
+                        }
+                    }
+                }
+            }
+
+            try {
+                suspendCancellableCoroutine<LocationResult> { cont ->
+                    val listener = object : LocationListener {
+                        override fun onLocationChanged(location: Location) {
+                            safeRemoveUpdates()
+                            if (cont.isActive) {
+                                cont.resume(
+                                    LocationResult.Success(
+                                        latitude = location.latitude,
+                                        longitude = location.longitude,
+                                        accuracyMeters = location.accuracy,
+                                        timestampMillis = if (location.time > 0L) location.time else System.currentTimeMillis()
+                                    )
+                                )
+                            }
+                        }
+
+                        @Deprecated("Deprecated in Java")
+                        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+                        override fun onProviderEnabled(provider: String) {}
+                        override fun onProviderDisabled(provider: String) {
+                            safeRemoveUpdates()
+                            if (cont.isActive) {
+                                cont.resume(LocationResult.Failure.ProviderDisabled)
+                            }
+                        }
+                    }
+
+                    listenerRef = listener
+
+                    // Register cancellation cleanup handler (triggers on coroutine cancellation or timeout)
+                    cont.invokeOnCancellation {
+                        safeRemoveUpdates()
+                    }
+
+                    try {
+                        val looper: Looper? = try {
+                            Looper.myLooper() ?: Looper.getMainLooper()
+                        } catch (_: Throwable) {
+                            null
+                        }
+                        locationService.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                            0L,
+                            0f,
+                            listener,
+                            looper
+                        )
+                        isRegistered = true
+                    } catch (e: SecurityException) {
+                        safeRemoveUpdates()
+                        if (cont.isActive) cont.resume(LocationResult.Failure.PermissionDenied)
+                    } catch (e: Throwable) {
+                        safeRemoveUpdates()
+                        if (cont.isActive) cont.resume(LocationResult.Failure.Error(e.message ?: "GPS request failed"))
+                    }
+                }
+            } finally {
+                // Guaranteed safety net: runs on normal resume, cancellation, or exception
+                safeRemoveUpdates()
+            }
+        } ?: run {
+            // Timeout expired: fallback to any last-known GPS location if present
+            try {
+                val lastKnown = locationService.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                if (lastKnown != null) {
+                    return LocationResult.Success(
+                        latitude = lastKnown.latitude,
+                        longitude = lastKnown.longitude,
+                        accuracyMeters = lastKnown.accuracy,
+                        timestampMillis = lastKnown.time
+                    )
+                }
+            } catch (_: Throwable) {}
+
+            LocationResult.Failure.NoFixAvailable
+        }
+    }
+}

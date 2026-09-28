@@ -146,11 +146,18 @@ class EmergencyPersistenceStore(
             val serialized = json.encodeToString(records.values.toList())
             val tempFile = File(storageDir, "emergency_records.json.tmp")
             tempFile.writeText(serialized, Charsets.UTF_8)
-            if (storeFile.exists()) {
-                storeFile.delete()
+            val renamed = tempFile.renameTo(storeFile)
+            if (!renamed) {
+                // If renameTo() fails (e.g. on certain Android storage configurations,
+                // cross-mount issues, or host OS filesystem differences), fall back to
+                // copy-then-verify rather than delete-then-rename so there is never a
+                // window with zero valid files present.
+                tempFile.copyTo(storeFile, overwrite = true)
+                if (storeFile.exists() && storeFile.length() == tempFile.length()) {
+                    tempFile.delete()
+                }
             }
-            tempFile.renameTo(storeFile)
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
@@ -158,9 +165,16 @@ class EmergencyPersistenceStore(
     private fun loadFromDisk() {
         synchronized(lock) {
             records.clear()
-            if (storeFile.exists() && storeFile.length() > 0L) {
+            val targetFile = when {
+                storeFile.exists() && storeFile.length() > 0L -> storeFile
+                else -> {
+                    val tempFile = File(storageDir, "emergency_records.json.tmp")
+                    if (tempFile.exists() && tempFile.length() > 0L) tempFile else null
+                }
+            }
+            if (targetFile != null) {
                 try {
-                    val content = storeFile.readText(Charsets.UTF_8)
+                    val content = targetFile.readText(Charsets.UTF_8)
                     val list = json.decodeFromString<List<EmergencyRecord>>(content)
                     list.forEach { records[it.messageId] = it }
                 } catch (e: Exception) {

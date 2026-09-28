@@ -1,0 +1,232 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "6d36e31fa013bee90835db31eff3274f",
+    "entities": [
+      {
+        "tableName": "messages",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageId` INTEGER NOT NULL, `languageWireCode` TEXT, `targetLanguageWireCode` TEXT, `priority` INTEGER NOT NULL, `text` TEXT NOT NULL, `originalText` TEXT, `translationStatusName` TEXT NOT NULL, `sourceName` TEXT NOT NULL, `createdAtLocal` INTEGER NOT NULL, `stateName` TEXT NOT NULL, `peerId` TEXT NOT NULL, `senderDeviceId` TEXT NOT NULL, `receiverDeviceId` TEXT NOT NULL, `isVoiceGenerated` INTEGER NOT NULL, `isLocation` INTEGER NOT NULL, `latitude` REAL, `longitude` REAL, `accuracyMeters` REAL, `locationTimestampMillis` INTEGER, `sttLatencyMillis` INTEGER NOT NULL, `mtLatencyMillis` INTEGER NOT NULL, `cryptoLatencyMillis` INTEGER NOT NULL, `payloadBytes` INTEGER NOT NULL, `semanticBytes` INTEGER NOT NULL, `secureBytes` INTEGER NOT NULL, `finalFrameBytes` INTEGER NOT NULL, `packetBytes` INTEGER NOT NULL, `rttMillis` INTEGER NOT NULL, `peerTtfaMillis` INTEGER NOT NULL, `estimatedE2eMillis` INTEGER NOT NULL, `remoteAudioStartConfMillis` INTEGER NOT NULL, `rawPcmEquivalentBytes` INTEGER NOT NULL, `speechDurationMillis` INTEGER NOT NULL, `statusDetail` TEXT, PRIMARY KEY(`messageId`))",
+        "fields": [
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "languageWireCode",
+            "columnName": "languageWireCode",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "targetLanguageWireCode",
+            "columnName": "targetLanguageWireCode",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "priority",
+            "columnName": "priority",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originalText",
+            "columnName": "originalText",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "translationStatusName",
+            "columnName": "translationStatusName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceName",
+            "columnName": "sourceName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtLocal",
+            "columnName": "createdAtLocal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stateName",
+            "columnName": "stateName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "peerId",
+            "columnName": "peerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "senderDeviceId",
+            "columnName": "senderDeviceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receiverDeviceId",
+            "columnName": "receiverDeviceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isVoiceGenerated",
+            "columnName": "isVoiceGenerated",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isLocation",
+            "columnName": "isLocation",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "accuracyMeters",
+            "columnName": "accuracyMeters",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "locationTimestampMillis",
+            "columnName": "locationTimestampMillis",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "sttLatencyMillis",
+            "columnName": "sttLatencyMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mtLatencyMillis",
+            "columnName": "mtLatencyMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cryptoLatencyMillis",
+            "columnName": "cryptoLatencyMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payloadBytes",
+            "columnName": "payloadBytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "semanticBytes",
+            "columnName": "semanticBytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "secureBytes",
+            "columnName": "secureBytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "finalFrameBytes",
+            "columnName": "finalFrameBytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packetBytes",
+            "columnName": "packetBytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rttMillis",
+            "columnName": "rttMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "peerTtfaMillis",
+            "columnName": "peerTtfaMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estimatedE2eMillis",
+            "columnName": "estimatedE2eMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "remoteAudioStartConfMillis",
+            "columnName": "remoteAudioStartConfMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rawPcmEquivalentBytes",
+            "columnName": "rawPcmEquivalentBytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speechDurationMillis",
+            "columnName": "speechDurationMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "statusDetail",
+            "columnName": "statusDetail",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "messageId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6d36e31fa013bee90835db31eff3274f')"
+    ]
+  }
+}

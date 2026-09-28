@@ -10,18 +10,34 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -99,8 +115,46 @@ fun DedicatedChatScreen(
     // Observe receive language to reflect current setting
     val receiveLanguage by AppGraph.languagePackRepository.observeReceiveLanguage().collectAsState(initial = null)
 
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (fineGranted || coarseGranted) {
+            coordinator.sendLocationMessage(targetPeerId = peerId)
+        } else {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Location permission required to share GPS coordinates")
+            }
+        }
+    }
+
+    val onShareLocation = {
+        val fineGranted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (fineGranted || coarseGranted) {
+            coordinator.sendLocationMessage(targetPeerId = peerId)
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
     Scaffold(
         containerColor = ITantraColors.CanvasBg,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -220,7 +274,24 @@ fun DedicatedChatScreen(
                             )
                         }
 
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(6.dp))
+
+                        // GPS Location Sharing Button
+                        IconButton(
+                            onClick = onShareLocation,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .background(ITantraColors.AccentSubtle, CircleShape)
+                        ) {
+                            Icon(
+                                Icons.Filled.LocationOn,
+                                contentDescription = "Share GPS Location",
+                                tint = ITantraColors.Primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        Spacer(Modifier.width(6.dp))
 
                         // Message Text Field
                         TextField(
@@ -540,6 +611,11 @@ fun DateSeparatorHeader(label: String) {
  */
 @Composable
 fun MessageBubble(message: TransceiverMessage) {
+    if (message.isLocationMessage) {
+        LocationMessageBubble(message = message, isOutgoing = message.source == MessageSource.LOCAL)
+        return
+    }
+
     val isOutgoing = message.source == MessageSource.LOCAL
     val alignment = if (isOutgoing) Alignment.End else Alignment.Start
 
@@ -654,4 +730,205 @@ fun DeliveryStatusIcon(state: MessageState) {
         }
         else -> {}
     }
+}
+
+/**
+ * Distinct bubble for GPS location sharing messages.
+ * Displays coordinates (e.g. "12.34567, 76.54321 ±4.5m"), selectable coordinates,
+ * the time the fix was taken, and how old it is ("2 min ago").
+ * Provides "Open in Maps" (geo: intent) falling back to "Copy coordinates",
+ * plus a direct copy action. Fully offline.
+ */
+@Composable
+fun LocationMessageBubble(message: TransceiverMessage, isOutgoing: Boolean) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val alignment = if (isOutgoing) Alignment.End else Alignment.Start
+
+    // Extract coordinates and accuracy
+    val lat = message.latitude ?: parseCoordinateFromText(message.text, isLat = true) ?: 0.0
+    val lon = message.longitude ?: parseCoordinateFromText(message.text, isLat = false) ?: 0.0
+    val acc = message.accuracyMeters ?: parseAccuracyFromText(message.text) ?: 0.0f
+    val fixTime = message.locationTimestampMillis ?: message.createdAtLocal
+
+    val coordinatesDisplay = "${"%.5f".format(lat)}, ${"%.5f".format(lon)} ±${"%.1f".format(acc)}m"
+    val plainCoords = "$lat, $lon"
+    val relativeAge = DateUtils.formatRelativeAge(fixTime)
+    val fixTimeStr = DateUtils.formatTime12Hour(fixTime)
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = alignment
+    ) {
+        Surface(
+            color = if (isOutgoing) ITantraColors.AccentSubtle else ITantraColors.SurfaceWhite,
+            shape = RoundedCornerShape(
+                topStart = 16.dp,
+                topEnd = 16.dp,
+                bottomStart = if (isOutgoing) 16.dp else 2.dp,
+                bottomEnd = if (isOutgoing) 2.dp else 16.dp
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.BorderSubtle),
+            modifier = Modifier.widthIn(min = 240.dp, max = 320.dp)
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                // Location Header Badge
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.LocationOn,
+                        contentDescription = "GPS Location",
+                        tint = ITantraColors.Primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = if (isOutgoing) "GPS LOCATION SHARED" else "PEER GPS LOCATION",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        color = ITantraColors.Primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Selectable Coordinates
+                SelectionContainer {
+                    Text(
+                        text = coordinatesDisplay,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ITantraColors.TextHeadline
+                    )
+                }
+
+                Spacer(Modifier.height(4.dp))
+
+                // Fix Time & Relative Age / Time unverified label
+                val bubbleTimeText = DateUtils.formatLocationBubbleTime(
+                    timestampMillis = fixTime,
+                    isTimeUnverified = message.isTimeUnverified
+                )
+                Text(
+                    text = bubbleTimeText,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 11.sp,
+                    color = if (message.isTimeUnverified) ITantraColors.StatusWarning else ITantraColors.TextMuted,
+                    fontWeight = if (message.isTimeUnverified) FontWeight.Medium else FontWeight.Normal
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                // Action Buttons: Open in Maps & Copy Coordinates
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilledTonalButton(
+                        onClick = {
+                            val uri = Uri.parse("geo:$lat,$lon?q=$lat,$lon")
+                            val mapIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            try {
+                                context.startActivity(mapIntent)
+                            } catch (e: ActivityNotFoundException) {
+                                clipboardManager.setText(AnnotatedString(plainCoords))
+                                Toast.makeText(
+                                    context,
+                                    "No map app installed. Coordinates copied to clipboard.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } catch (e: Exception) {
+                                clipboardManager.setText(AnnotatedString(plainCoords))
+                                Toast.makeText(
+                                    context,
+                                    "Could not open map. Coordinates copied to clipboard.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = ITantraColors.Primary.copy(alpha = 0.12f),
+                            contentColor = ITantraColors.Primary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(34.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.Map,
+                            contentDescription = "Open in Maps",
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = "Open in Maps",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(plainCoords))
+                            Toast.makeText(
+                                context,
+                                "Coordinates copied: $plainCoords",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = ITantraColors.TextHeadline
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.BorderSubtle),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                        modifier = Modifier.height(34.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.ContentCopy,
+                            contentDescription = "Copy Coordinates",
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(6.dp))
+
+                // Footer: Message Timestamp & Delivery Status
+                Row(
+                    modifier = Modifier.align(Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = DateUtils.formatTime12Hour(message.createdAtLocal),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        color = ITantraColors.TextMuted
+                    )
+
+                    if (isOutgoing) {
+                        Spacer(Modifier.width(4.dp))
+                        DeliveryStatusIcon(state = message.state)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun parseCoordinateFromText(text: String, isLat: Boolean): Double? {
+    val regex = Regex("""📍\s*Location:\s*([+-]?\d+(?:\.\d+)?),\s*([+-]?\d+(?:\.\d+)?)""")
+    val match = regex.find(text) ?: return null
+    return if (isLat) match.groupValues[1].toDoubleOrNull() else match.groupValues[2].toDoubleOrNull()
+}
+
+private fun parseAccuracyFromText(text: String): Float? {
+    val regex = Regex("""\(±([+-]?\d+(?:\.\d+)?)m\)""")
+    val match = regex.find(text) ?: return null
+    return match.groupValues[1].toFloatOrNull()
 }

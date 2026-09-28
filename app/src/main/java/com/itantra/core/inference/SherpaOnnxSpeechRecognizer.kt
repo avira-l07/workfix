@@ -9,6 +9,8 @@ import com.itantra.domain.model.LanguageCode
 import com.itantra.domain.model.SpeechRecognitionResult
 import com.k2fsa.sherpa.onnx.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -26,6 +28,7 @@ class SherpaOnnxSpeechRecognizer(
 
 
     private var recognizer: OfflineRecognizer? = null
+    internal val recognizerMutex = Mutex()
     private val audioChunks = java.util.Collections.synchronizedList(mutableListOf<FloatArray>())
 
     override var isLoaded: Boolean = false
@@ -112,72 +115,76 @@ class SherpaOnnxSpeechRecognizer(
     }
 
     override suspend fun finalizeUtterance(): SpeechRecognitionResult = withContext(Dispatchers.Default) {
-        val rec = recognizer ?: throw IllegalStateException("Recognizer not loaded")
+        recognizerMutex.withLock {
+            val rec = recognizer ?: throw IllegalStateException("Recognizer not loaded")
 
-        val chunks = synchronized(audioChunks) {
-            val copy = audioChunks.toList()
-            audioChunks.clear()
-            copy
+            val chunks = synchronized(audioChunks) {
+                val copy = audioChunks.toList()
+                audioChunks.clear()
+                copy
+            }
+
+            if (chunks.isEmpty()) {
+                return@withContext SpeechRecognitionResult(
+                    text = "",
+                    isFinal = true,
+                    languageCode = languageCode,
+                    confidence = null,
+                    timestampMillis = 0L
+                )
+            }
+
+            val totalSamples = chunks.sumOf { it.size }
+            // 100ms (1600 samples) silence padding: provides sufficient acoustic tail for phoneme completion
+            // without causing excessive silence that triggers autoregressive looping in Whisper.
+            val silencePadding = 1600
+            val fullWaveform = FloatArray(totalSamples + silencePadding)
+            var offset = 0
+            for (chunk in chunks) {
+                System.arraycopy(chunk, 0, fullWaveform, offset, chunk.size)
+                offset += chunk.size
+            }
+
+            val stream = rec.createStream()
+            var pureInferenceMs = 0L
+            val whisperResult = try {
+                stream.acceptWaveform(fullWaveform, sampleRate = 16000)
+                val tDecodeStart = android.os.SystemClock.elapsedRealtimeNanos()
+                rec.decode(stream)
+                pureInferenceMs = (android.os.SystemClock.elapsedRealtimeNanos() - tDecodeStart) / 1_000_000
+                rec.getResult(stream)
+            } finally {
+                stream.release()
+            }
+
+            processWhisperResult(whisperResult, pureInferenceMs)
         }
-
-        if (chunks.isEmpty()) {
-            return@withContext SpeechRecognitionResult(
-                text = "",
-                isFinal = true,
-                languageCode = languageCode,
-                confidence = null,
-                timestampMillis = 0L
-            )
-        }
-
-        val totalSamples = chunks.sumOf { it.size }
-        // 100ms (1600 samples) silence padding: provides sufficient acoustic tail for phoneme completion
-        // without causing excessive silence that triggers autoregressive looping in Whisper.
-        val silencePadding = 1600
-        val fullWaveform = FloatArray(totalSamples + silencePadding)
-        var offset = 0
-        for (chunk in chunks) {
-            System.arraycopy(chunk, 0, fullWaveform, offset, chunk.size)
-            offset += chunk.size
-        }
-
-        val stream = rec.createStream()
-        var pureInferenceMs = 0L
-        val whisperResult = try {
-            stream.acceptWaveform(fullWaveform, sampleRate = 16000)
-            val tDecodeStart = android.os.SystemClock.elapsedRealtimeNanos()
-            rec.decode(stream)
-            pureInferenceMs = (android.os.SystemClock.elapsedRealtimeNanos() - tDecodeStart) / 1_000_000
-            rec.getResult(stream)
-        } finally {
-            stream.release()
-        }
-
-        processWhisperResult(whisperResult, pureInferenceMs)
     }
 
     suspend fun decodeDirect(samples: FloatArray, silencePadding: Int = 0): SpeechRecognitionResult = withContext(Dispatchers.Default) {
-        val rec = recognizer ?: throw IllegalStateException("Recognizer not loaded")
-        val fullWaveform = if (silencePadding > 0) {
-            val arr = FloatArray(samples.size + silencePadding)
-            System.arraycopy(samples, 0, arr, 0, samples.size)
-            arr
-        } else {
-            samples
-        }
-        val stream = rec.createStream()
-        var pureInferenceMs = 0L
-        val whisperResult = try {
-            stream.acceptWaveform(fullWaveform, sampleRate = 16000)
-            val tDecodeStart = android.os.SystemClock.elapsedRealtimeNanos()
-            rec.decode(stream)
-            pureInferenceMs = (android.os.SystemClock.elapsedRealtimeNanos() - tDecodeStart) / 1_000_000
-            rec.getResult(stream)
-        } finally {
-            stream.release()
-        }
+        recognizerMutex.withLock {
+            val rec = recognizer ?: throw IllegalStateException("Recognizer not loaded")
+            val fullWaveform = if (silencePadding > 0) {
+                val arr = FloatArray(samples.size + silencePadding)
+                System.arraycopy(samples, 0, arr, 0, samples.size)
+                arr
+            } else {
+                samples
+            }
+            val stream = rec.createStream()
+            var pureInferenceMs = 0L
+            val whisperResult = try {
+                stream.acceptWaveform(fullWaveform, sampleRate = 16000)
+                val tDecodeStart = android.os.SystemClock.elapsedRealtimeNanos()
+                rec.decode(stream)
+                pureInferenceMs = (android.os.SystemClock.elapsedRealtimeNanos() - tDecodeStart) / 1_000_000
+                rec.getResult(stream)
+            } finally {
+                stream.release()
+            }
 
-        processWhisperResult(whisperResult, pureInferenceMs)
+            processWhisperResult(whisperResult, pureInferenceMs)
+        }
     }
 
     private fun processWhisperResult(
@@ -243,10 +250,19 @@ class SherpaOnnxSpeechRecognizer(
         audioChunks.clear()
     }
 
-    override suspend fun unload() = withContext(Dispatchers.IO) {
-        audioChunks.clear()
-        recognizer?.release()
-        recognizer = null
-        isLoaded = false
+    override suspend fun unload() {
+        withContext(Dispatchers.IO) {
+            recognizerMutex.withLock {
+                audioChunks.clear()
+                try {
+                    recognizer?.release()
+                } catch (t: Throwable) {
+                    android.util.Log.w("SherpaOnnxRecognizer", "Error during recognizer.release(): ${t.message}")
+                } finally {
+                    recognizer = null
+                    isLoaded = false
+                }
+            }
+        }
     }
 }

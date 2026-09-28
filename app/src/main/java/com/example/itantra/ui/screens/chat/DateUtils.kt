@@ -50,4 +50,63 @@ object DateUtils {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         return sdf.format(Date(timestampMillis))
     }
+
+    /**
+     * Returns a human-readable relative age string (e.g. "Just now", "2 min ago", "1 hr ago", "3 days ago")
+     */
+    fun formatRelativeAge(timestampMillis: Long, currentTimestampMillis: Long = System.currentTimeMillis()): String {
+        val diffMs = (currentTimestampMillis - timestampMillis).coerceAtLeast(0L)
+        val seconds = diffMs / 1000L
+        val minutes = seconds / 60L
+        val hours = minutes / 60L
+        val days = hours / 24L
+
+        return when {
+            minutes < 1 -> "Just now"
+            minutes == 1L -> "1 min ago"
+            minutes < 60 -> "$minutes min ago"
+            hours == 1L -> "1 hr ago"
+            hours < 24 -> "$hours hr ago"
+            days == 1L -> "1 day ago"
+            else -> "$days days ago"
+        }
+    }
+
+    /**
+     * Returns the location age label for the chat bubble.
+     * When [isTimeUnverified] is true, returns "Time unverified" instead of the "(x min ago)" text.
+     */
+    fun formatLocationAgeLabel(
+        timestampMillis: Long?,
+        isTimeUnverified: Boolean,
+        currentTimestampMillis: Long = System.currentTimeMillis()
+    ): String {
+        if (isTimeUnverified || timestampMillis == null || timestampMillis <= 0L) {
+            return "Time unverified"
+        }
+        return formatRelativeAge(timestampMillis, currentTimestampMillis)
+    }
+
+    /**
+     * Returns the full time string displayed on a location bubble.
+     * When [isTimeUnverified] is true, displays "Time unverified" instead of the "(x min ago)" text.
+     */
+    fun formatLocationBubbleTime(
+        timestampMillis: Long?,
+        isTimeUnverified: Boolean,
+        currentTimestampMillis: Long = System.currentTimeMillis()
+    ): String {
+        if (isTimeUnverified) {
+            return if (timestampMillis != null && timestampMillis > 0L) {
+                val timeStr = formatTime12Hour(timestampMillis)
+                "Fix taken: $timeStr (Time unverified)"
+            } else {
+                "Time unverified"
+            }
+        }
+        val time = timestampMillis ?: return "Time unverified"
+        val timeStr = formatTime12Hour(time)
+        val relativeAge = formatRelativeAge(time, currentTimestampMillis)
+        return "Fix taken: $timeStr ($relativeAge)"
+    }
 }

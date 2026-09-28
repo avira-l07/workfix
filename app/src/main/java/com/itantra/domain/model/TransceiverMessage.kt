@@ -59,6 +59,14 @@ data class TransceiverMessage(
     val receiverDeviceId: String = "",
     val isVoiceGenerated: Boolean = false,
 
+    // GPS location sharing (Day 4/5)
+    val isLocation: Boolean = false,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val accuracyMeters: Float? = null,
+    val locationTimestampMillis: Long? = null,
+    val isTimeUnverified: Boolean = false,
+
     // Metrics per message for E2E traceability
     val sttLatencyMillis: Long = 0,
     val mtLatencyMillis: Long = 0,
@@ -76,6 +84,9 @@ data class TransceiverMessage(
     val speechDurationMillis: Long = 0,
     val statusDetail: String? = null
 ) {
+    val isLocationMessage: Boolean
+        get() = isLocation || latitude != null || (text.startsWith("📍 Location:") && !text.contains("failed", ignoreCase = true))
+
     val semanticReductionPercent: Float
         get() {
             if (rawPcmEquivalentBytes == 0) return 0f

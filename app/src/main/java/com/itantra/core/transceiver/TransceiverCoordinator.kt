@@ -19,6 +19,10 @@ import com.itantra.core.transport.TransportEngine
 import com.itantra.core.transport.packet.ItantraPacket
 import com.itantra.core.transport.packet.PacketType
 import com.itantra.core.transport.packet.ProtocolLanguageMapper
+import com.itantra.core.location.DefaultGpsLocationProvider
+import com.itantra.core.location.LocationProvider
+import com.itantra.core.location.LocationResult
+import com.itantra.core.transport.packet.LocationPayload
 import com.itantra.domain.model.LanguageCode
 import com.itantra.domain.model.MessageSource
 import com.itantra.domain.model.MessageState
@@ -56,7 +60,8 @@ class TransceiverCoordinator(
     private val translationRouter: com.itantra.core.translation.TranslationRouter,
     private val messageDao: com.itantra.data.db.MessageDao? = null,
     val deviceProfileManager: com.itantra.core.profile.DeviceProfileManager? = null,
-    private val ttsCapabilityProvider: TtsCapabilityProvider? = null
+    private val ttsCapabilityProvider: TtsCapabilityProvider? = null,
+    private val locationProvider: LocationProvider = DefaultGpsLocationProvider(context)
 ) {
     companion object {
         private const val ENCRYPTED_HEARTBEAT_INTERVAL_MS = 15_000L
@@ -780,8 +785,113 @@ class TransceiverCoordinator(
                     it.copy(state = MessageState.ERROR)
                 }
             }
+            PacketType.LOCATION -> {
+                handleIncomingLocationPacket(decryptedPacket)
+            }
             else -> {}
         }
+    }
+
+    internal fun handleIncomingLocationPacket(packet: ItantraPacket) {
+        // 1. Send immediate ACK through established secure session
+        scope.launch {
+            try {
+                val ackPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.ACK, messageId = packet.messageId))
+                transportEngine.send(ackPkt)
+            } catch (e: Exception) {
+                android.util.Log.w("TransceiverCoordinator", "Could not send immediate ACK for LOCATION: ${e.message}")
+            }
+        }
+
+        // Deduplication check
+        val isDuplicate = seenMessageIds.contains(packet.messageId) ||
+                _messages.value.any { it.messageId == packet.messageId && it.source == MessageSource.REMOTE }
+        if (isDuplicate) {
+            return
+        }
+        seenMessageIds.add(packet.messageId)
+
+        // 2. Reject malformed payloads (wrong length, latitude outside -90..90,
+        //    longitude outside -180..180, NaN/Infinity values) without crashing.
+        //    Log the rejection and drop the packet; do not show a bogus location.
+        if (packet.payload.size != LocationPayload.PAYLOAD_SIZE) {
+            android.util.Log.w(
+                "TransceiverCoordinator",
+                "Dropping malformed LOCATION packet ${packet.messageId}: payload size ${packet.payload.size} != expected ${LocationPayload.PAYLOAD_SIZE}"
+            )
+            return
+        }
+
+        val locationPayload = try {
+            LocationPayload.fromBytes(packet.payload)
+        } catch (e: Exception) {
+            android.util.Log.w("TransceiverCoordinator", "Failed to decode LOCATION payload for message ${packet.messageId}", e)
+            return
+        }
+
+        val lat = locationPayload.latitude
+        val lon = locationPayload.longitude
+        val acc = locationPayload.accuracyMeters
+        val time = locationPayload.timestampMillis
+
+        if (lat.isNaN() || lat.isInfinite() || lat < -90.0 || lat > 90.0) {
+            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet ${packet.messageId}: invalid latitude $lat")
+            return
+        }
+
+        if (lon.isNaN() || lon.isInfinite() || lon < -180.0 || lon > 180.0) {
+            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet ${packet.messageId}: invalid longitude $lon")
+            return
+        }
+
+        if (acc.isNaN() || acc.isInfinite() || acc < 0f) {
+            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet ${packet.messageId}: invalid accuracy $acc")
+            return
+        }
+
+        // 3. Check for timestamp disagreement: future drift > 5 min, <= 0, or older than 7 days.
+        //    Do NOT drop: store and display the location with a visible "Time unverified" label.
+        val now = System.currentTimeMillis()
+        val maxFutureDriftMs = 5 * 60 * 1000L // 5 minutes
+        val maxPastAgeMs = 7 * 24 * 60 * 60 * 1000L // 7 days
+        val isTimeUnverified = (time <= 0L || time > now + maxFutureDriftMs || (now - time) > maxPastAgeMs)
+
+        if (isTimeUnverified) {
+            android.util.Log.w(
+                "TransceiverCoordinator",
+                "LOCATION packet ${packet.messageId} has suspect/stale timestamp $time (current time: $now). Storing with time-unverified flag."
+            )
+        }
+
+        // 4. Store the received location as a message in the existing chat/message model
+        //    marked as a location message with lat, lon, accuracy, timestamp and sender peer ID.
+        val remoteDeviceId = _activePeerProfile.value?.deviceId ?: ""
+        val activePeer = _activeConversationPeerId.value?.takeIf { it.isNotBlank() } ?: remoteDeviceId
+        val myDeviceId = deviceProfileManager?.currentDeviceId ?: ""
+
+        val displayText = "📍 Location: ${"%.5f".format(lat)}, ${"%.5f".format(lon)} (±${"%.1f".format(acc)}m)"
+
+        val locationMsg = TransceiverMessage(
+            messageId = packet.messageId,
+            language = packet.languageCode ?: LanguageCode.ENGLISH,
+            priority = packet.flags.toInt(),
+            text = displayText,
+            source = MessageSource.REMOTE,
+            createdAtLocal = now,
+            state = MessageState.DELIVERED,
+            peerId = activePeer,
+            senderDeviceId = remoteDeviceId,
+            receiverDeviceId = myDeviceId,
+            isVoiceGenerated = false,
+            isLocation = true,
+            latitude = lat,
+            longitude = lon,
+            accuracyMeters = acc,
+            locationTimestampMillis = time,
+            isTimeUnverified = isTimeUnverified,
+            statusDetail = if (isTimeUnverified) "TIME_UNVERIFIED" else null
+        )
+        addMessage(locationMsg)
     }
 
     internal fun enqueueMessagePacketForPlayback(packet: ItantraPacket) {
@@ -1829,6 +1939,115 @@ class TransceiverCoordinator(
             } catch (e: Exception) {
                 android.util.Log.e("TransceiverCoordinator", "Error sending text message", e)
                 updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "$text (Failed to send)") }
+            }
+        }
+    }
+
+    fun sendLocationMessage(
+        targetPeerId: String? = null,
+        priority: Int = com.itantra.domain.model.MessagePriority.NORMAL
+    ) {
+        scope.launch {
+            val msgId = nextMessageId()
+            val activePeer = targetPeerId ?: _activeConversationPeerId.value ?: _activePeerProfile.value?.deviceId ?: ""
+            val myDeviceId = deviceProfileManager?.currentDeviceId ?: ""
+
+            val initialMsg = TransceiverMessage(
+                messageId = msgId,
+                language = LanguageCode.ENGLISH,
+                priority = priority,
+                text = "📍 GPS: Acquiring satellite fix...",
+                source = MessageSource.LOCAL,
+                createdAtLocal = System.currentTimeMillis(),
+                state = MessageState.PACKET_ENCODING,
+                peerId = activePeer,
+                senderDeviceId = myDeviceId,
+                receiverDeviceId = activePeer,
+                isVoiceGenerated = false
+            )
+            addMessage(initialMsg)
+
+            val locationResult = try {
+                locationProvider.getCurrentLocation()
+            } catch (e: Exception) {
+                LocationResult.Failure.Error(e.message ?: "Failed to acquire location")
+            }
+
+            when (locationResult) {
+                is LocationResult.Success -> {
+                    val lat = locationResult.latitude
+                    val lon = locationResult.longitude
+                    val acc = locationResult.accuracyMeters
+                    val time = locationResult.timestampMillis
+
+                    val displayText = "📍 Location: ${"%.5f".format(lat)}, ${"%.5f".format(lon)} (±${"%.1f".format(acc)}m)"
+                    val payload = LocationPayload(lat, lon, acc, time).toBytes()
+
+                    val packet = ItantraPacket(
+                        type = PacketType.LOCATION,
+                        flags = priority.toByte(),
+                        messageId = msgId,
+                        languageCode = LanguageCode.ENGLISH,
+                        sourceLanguage = LanguageCode.ENGLISH,
+                        targetLanguage = LanguageCode.ENGLISH,
+                        translationMode = com.itantra.domain.model.TranslationMode.NONE,
+                        payload = payload
+                    )
+
+                    updateMessage(msgId) {
+                        it.copy(
+                            text = displayText,
+                            payloadBytes = payload.size,
+                            state = MessageState.TRANSMITTING
+                        )
+                    }
+
+                    try {
+                        val securePacket = secureSessionManager.encrypt(packet)
+                        val txMetrics = transportEngine.send(securePacket)
+                        val rtt = txMetrics.transmissionLatencyMillis.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0L }
+                        if (rtt > 0) {
+                            updateMessage(msgId) {
+                                it.copy(
+                                    state = MessageState.DELIVERED,
+                                    rttMillis = rtt,
+                                    packetBytes = txMetrics.packetBytes.let { b -> if (b is com.itantra.domain.model.Measurement.Measured) b.value else 0 }
+                                )
+                            }
+                        } else {
+                            updateMessage(msgId) {
+                                it.copy(
+                                    state = MessageState.SENT,
+                                    packetBytes = txMetrics.packetBytes.let { b -> if (b is com.itantra.domain.model.Measurement.Measured) b.value else 0 }
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("TransceiverCoordinator", "Error sending location packet", e)
+                        updateMessage(msgId) {
+                            it.copy(
+                                state = MessageState.ERROR,
+                                text = "$displayText (Failed to send)",
+                                statusDetail = e.message ?: "Send failed"
+                            )
+                        }
+                    }
+                }
+                is LocationResult.Failure -> {
+                    val failureDetail = when (locationResult) {
+                        is LocationResult.Failure.PermissionDenied -> "Location permission denied"
+                        is LocationResult.Failure.ProviderDisabled -> "GPS is turned off"
+                        is LocationResult.Failure.NoFixAvailable -> "GPS fix unavailable (no satellite lock)"
+                        is LocationResult.Failure.Error -> locationResult.message
+                    }
+                    updateMessage(msgId) {
+                        it.copy(
+                            state = MessageState.ERROR,
+                            text = "📍 Location share failed: $failureDetail",
+                            statusDetail = failureDetail
+                        )
+                    }
+                }
             }
         }
     }

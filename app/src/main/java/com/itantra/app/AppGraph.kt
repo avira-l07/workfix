@@ -307,7 +307,10 @@ object AppGraph {
             com.itantra.data.db.AppDatabase::class.java,
             "itantra.db"
         )
-        .addMigrations(com.itantra.data.db.AppDatabase.MIGRATION_1_2)
+        .addMigrations(
+            com.itantra.data.db.AppDatabase.MIGRATION_1_2,
+            com.itantra.data.db.AppDatabase.MIGRATION_2_3
+        )
         .build()
     }
 

@@ -27,14 +27,11 @@
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="tiramisu" />
 
-    <!-- Location permission for peer discovery:
-         - Bluetooth Classic on Android 11 and below (API <= 30)
-         - Wi-Fi Direct on Android 12L and below (API <= 32)
-         On Android 13+ (API 33+) NEARBY_WIFI_DEVICES and BLUETOOTH_SCAN (neverForLocation) replace this. -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"
-        android:maxSdkVersion="30" />
+    <!-- Location permissions:
+         - GPS coordinate acquisition for P2P location sharing (all API versions)
+         - Legacy Bluetooth Classic (API <= 30) & Wi-Fi Direct discovery (API <= 32) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- Operational Hardening: Foreground Service & WakeLock -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

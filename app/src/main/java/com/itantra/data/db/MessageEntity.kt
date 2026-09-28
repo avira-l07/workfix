@@ -25,6 +25,11 @@ data class MessageEntity(
     val senderDeviceId: String = "",
     val receiverDeviceId: String = "",
     val isVoiceGenerated: Boolean = false,
+    val isLocation: Boolean = false,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val accuracyMeters: Float? = null,
+    val locationTimestampMillis: Long? = null,
     val sttLatencyMillis: Long = 0,
     val mtLatencyMillis: Long = 0,
     val cryptoLatencyMillis: Long = 0,
@@ -63,6 +68,12 @@ data class MessageEntity(
             senderDeviceId = senderDeviceId,
             receiverDeviceId = receiverDeviceId,
             isVoiceGenerated = isVoiceGenerated,
+            isLocation = isLocation,
+            latitude = latitude,
+            longitude = longitude,
+            accuracyMeters = accuracyMeters,
+            locationTimestampMillis = locationTimestampMillis,
+            isTimeUnverified = (statusDetail == "TIME_UNVERIFIED"),
             sttLatencyMillis = sttLatencyMillis,
             mtLatencyMillis = mtLatencyMillis,
             cryptoLatencyMillis = cryptoLatencyMillis,
@@ -98,6 +109,11 @@ data class MessageEntity(
                 senderDeviceId = msg.senderDeviceId,
                 receiverDeviceId = msg.receiverDeviceId,
                 isVoiceGenerated = msg.isVoiceGenerated,
+                isLocation = msg.isLocation,
+                latitude = msg.latitude,
+                longitude = msg.longitude,
+                accuracyMeters = msg.accuracyMeters,
+                locationTimestampMillis = msg.locationTimestampMillis,
                 sttLatencyMillis = msg.sttLatencyMillis,
                 mtLatencyMillis = msg.mtLatencyMillis,
                 cryptoLatencyMillis = msg.cryptoLatencyMillis,
@@ -112,7 +128,7 @@ data class MessageEntity(
                 remoteAudioStartConfMillis = msg.remoteAudioStartConfMillis,
                 rawPcmEquivalentBytes = msg.rawPcmEquivalentBytes,
                 speechDurationMillis = msg.speechDurationMillis,
-                statusDetail = msg.statusDetail
+                statusDetail = if (msg.isTimeUnverified) "TIME_UNVERIFIED" else msg.statusDetail
             )
         }
     }

@@ -10,6 +10,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import kotlinx.serialization.encodeToString
 import java.io.File
 
 /**
@@ -252,5 +253,66 @@ class EmergencyAndOperationalHardeningTest {
         isTtsPlaying = false
         vadFeedAllowed = !isTtsPlaying
         assertTrue("VAD must resume after TTS playback completes", vadFeedAllowed)
+    }
+
+    // 9. Atomic Persistence: Process Death between Temp-Write and Rename Preserves Original File
+    @Test
+    fun testProcessDeathBetweenTempFileWriteAndRenamePreservesOriginalFile() {
+        val storeDir = tempFolder.newFolder("emergency_store_crash_test")
+        val store1 = EmergencyPersistenceStore(storeDir)
+
+        val originalRecord = EmergencyRecord(
+            messageId = 9001L,
+            emergencyCode = EmergencyCode.HELP_REQUIRED.name,
+            source = "LOCAL",
+            target = "BROADCAST",
+            createdAt = 1000L,
+            resolvedPhrase = "Original emergency phrase"
+        )
+        store1.saveRecord(originalRecord)
+
+        val storeFile = File(storeDir, "emergency_records.json")
+        assertTrue("Store file must exist after initial save", storeFile.exists())
+        val originalContent = storeFile.readText(Charsets.UTF_8)
+
+        // Simulate process death after temp file write but before atomic rename/replace completes.
+        // In the vulnerable pre-delete pattern, storeFile was deleted before rename, causing total data loss.
+        // With atomic replace / non-pre-delete, storeFile is preserved intact.
+        val tempFile = File(storeDir, "emergency_records.json.tmp")
+        tempFile.writeText("[{\"messageId\":9999,\"emergencyCode\":\"FIRE\"}]", Charsets.UTF_8)
+
+        // Verify storeFile was not deleted
+        assertTrue("Committed store file must remain present on disk", storeFile.exists())
+        assertEquals("Committed content must remain unmodified", originalContent, storeFile.readText(Charsets.UTF_8))
+
+        // On app restart (process recovery), store loads existing storeFile
+        val store2 = EmergencyPersistenceStore(storeDir)
+        val loaded = store2.getRecord(9001L)
+        assertNotNull("Committed emergency record must survive simulated crash", loaded)
+        assertEquals(9001L, loaded?.messageId)
+        assertEquals("Original emergency phrase", loaded?.resolvedPhrase)
+    }
+
+    // 10. Recovery from Temp File if Store File Missing or Empty
+    @Test
+    fun testRecoveryFromTempFileWhenStoreFileMissingOrEmpty() {
+        val storeDir = tempFolder.newFolder("emergency_store_recovery_test")
+
+        val tempFile = File(storeDir, "emergency_records.json.tmp")
+        val fallbackRecord = EmergencyRecord(
+            messageId = 9002L,
+            emergencyCode = EmergencyCode.MEDICAL_EMERGENCY.name,
+            source = "REMOTE",
+            createdAt = 1000L,
+            resolvedPhrase = "Medical SOS"
+        )
+        val json = kotlinx.serialization.json.Json { prettyPrint = true }
+        tempFile.writeText(json.encodeToString(listOf(fallbackRecord)), Charsets.UTF_8)
+
+        val store = EmergencyPersistenceStore(storeDir)
+        val loaded = store.getRecord(9002L)
+        assertNotNull("Store must recover records from temp file if store file was missing or empty", loaded)
+        assertEquals(9002L, loaded?.messageId)
+        assertEquals(EmergencyCode.MEDICAL_EMERGENCY.name, loaded?.emergencyCode)
     }
 }

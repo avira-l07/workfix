@@ -72,8 +72,14 @@ android {
             path = file("src/main/cpp/CMakeLists.txt")
         }
     }
+    sourceSets {
+        getByName("test").assets.srcDirs("$projectDir/schemas")
+        getByName("androidTest").assets.srcDirs("$projectDir/schemas")
+    }
+
     testOptions {
         unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -117,17 +123,21 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
 
     testImplementation(libs.junit)
+    testImplementation("org.xerial:sqlite-jdbc:3.45.1.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
-    // org.json is part of the Android framework; supply the standalone JVM artifact
-    // so that unit tests using JSONObject/JSONArray (e.g. ProfileHandshakeTest) don't
-    // get NullPointerException from the stubbed Android stubs at runtime.
     testImplementation("org.json:json:20231013")
+    testImplementation("androidx.room:room-testing:2.6.1")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 kotlin {
     compilerOptions {

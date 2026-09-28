@@ -68,7 +68,8 @@ enum class PacketType(val id: Byte) {
     HUMAN_ACK(11),
     ALERT_STARTED(12),
     HEARTBEAT(13), // liveness ping; TransportCoordinator handles these internally and never forwards them upward
-    PROFILE_HANDSHAKE(14); // iTantra application-level handshake exchanging device identity and profile
+    PROFILE_HANDSHAKE(14), // iTantra application-level handshake exchanging device identity and profile
+    LOCATION(15); // Device GPS coordinates for P2P location sharing
 
     companion object {
         fun fromId(id: Byte): PacketType? = entries.find { it.id == id }
