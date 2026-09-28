@@ -486,9 +486,9 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEBUG) {
             val pttFilter = android.content.IntentFilter("com.example.itantra.TEST_PTT")
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(testPttReceiver, pttFilter, android.content.Context.RECEIVER_NOT_EXPORTED)
+                androidx.core.content.ContextCompat.registerReceiver(this, testPttReceiver, pttFilter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED)
             } else {
-                registerReceiver(testPttReceiver, pttFilter)
+                androidx.core.content.ContextCompat.registerReceiver(this, testPttReceiver, pttFilter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED)
             }
             debugTestReceiver = testPttReceiver
         }
@@ -946,6 +946,7 @@ fun TacticalAppScaffold(
 
                     AppDestination.DIAGNOSTICS -> {
                         var latestBenchmarkSession by remember { mutableStateOf<com.itantra.domain.model.BenchmarkSession?>(null) }
+                        val liveContinuousState by coordinator.continuousListenEngine.state.collectAsState()
 
                         LaunchedEffect(currentDestination) {
                             val sessions = benchmarkRepo.getAllSessions()
@@ -1001,6 +1002,7 @@ fun TacticalAppScaffold(
 
                         DiagnosticsScreen(
                             state = diagnosticsState,
+                            diagnosticsEnabled = liveContinuousState == com.itantra.core.inference.ContinuousListenState.OFF,
                             onBack = { currentDestination = AppDestination.HUB },
                             onRunDiagnostics = {
                                 coroutineScope.launch(Dispatchers.Default) {

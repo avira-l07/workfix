@@ -49,6 +49,7 @@ fun DiagnosticsScreen(
     state: DiagnosticsUiState,
     onBack: () -> Unit,
     onRunDiagnostics: () -> Unit,
+    diagnosticsEnabled: Boolean = true,
 ) {
     Scaffold(
         containerColor = ITantraColors.CanvasBg,
@@ -84,10 +85,11 @@ fun DiagnosticsScreen(
             item {
                 Button(
                     onClick = onRunDiagnostics,
+                    enabled = diagnosticsEnabled,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
                 ) {
-                    Text("RUN COMPREHENSIVE ON-DEVICE DIAGNOSTICS")
+                    Text(if (diagnosticsEnabled) "RUN COMPREHENSIVE ON-DEVICE DIAGNOSTICS" else "STOP CONTINUOUS LISTENING FIRST")
                 }
             }
         }

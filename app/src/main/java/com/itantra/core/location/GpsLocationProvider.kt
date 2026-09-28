@@ -1,5 +1,6 @@
 package com.itantra.core.location
 
+import android.annotation.SuppressLint
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -9,6 +10,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
@@ -44,8 +46,11 @@ interface LocationProvider {
  * enabling deterministic lifecycle, cancellation, and leak-free verification in unit tests.
  */
 internal interface LocationServiceAdapter {
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     fun isProviderEnabled(provider: String): Boolean
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     fun getLastKnownLocation(provider: String): Location?
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     fun requestLocationUpdates(
         provider: String,
         minTimeMs: Long,
@@ -59,8 +64,11 @@ internal interface LocationServiceAdapter {
 internal class SystemLocationServiceAdapter(
     private val locationManager: LocationManager
 ) : LocationServiceAdapter {
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun isProviderEnabled(provider: String): Boolean = locationManager.isProviderEnabled(provider)
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun getLastKnownLocation(provider: String): Location? = locationManager.getLastKnownLocation(provider)
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun requestLocationUpdates(
         provider: String,
         minTimeMs: Long,
@@ -104,6 +112,7 @@ class DefaultGpsLocationProvider internal constructor(
         )
     }
 
+    @SuppressLint("MissingPermission")
     override suspend fun getCurrentLocation(): LocationResult {
         // 1. Runtime permission check
         val hasFine = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
