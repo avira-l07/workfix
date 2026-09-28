@@ -301,17 +301,13 @@ object AppGraph {
         SettingsRepository(context.settingsDataStore)
     }
 
-    val database: com.itantra.data.db.AppDatabase by lazy {
-        androidx.room.Room.databaseBuilder(
-            context,
-            com.itantra.data.db.AppDatabase::class.java,
-            "itantra.db"
-        )
-        .addMigrations(
-            com.itantra.data.db.AppDatabase.MIGRATION_1_2,
-            com.itantra.data.db.AppDatabase.MIGRATION_2_3
-        )
-        .build()
+    private var preparedDatabase: com.itantra.data.db.AppDatabase? = null
+    val database: com.itantra.data.db.AppDatabase
+        get() = checkNotNull(preparedDatabase) { "Storage must be prepared before starting sessions" }
+
+    @Synchronized fun prepareStorage(context: Context) {
+        if (preparedDatabase == null) preparedDatabase =
+            com.itantra.core.storage.EncryptedDatabase.open(context.applicationContext, com.itantra.core.storage.AndroidKeyProvider())
     }
 
     val transceiverCoordinator: TransceiverCoordinator by lazy {

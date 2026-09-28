@@ -64,6 +64,7 @@ enum class AppDestination {
 }
 
 class MainActivity : ComponentActivity() {
+    private var appStarted = false
 
     private var permissionsGranted by mutableStateOf(false)
     val destinationState = mutableStateOf(AppDestination.HUB)
@@ -161,14 +162,34 @@ class MainActivity : ComponentActivity() {
         }
         debugTestReceiver = null
         // Unregister bond receiver to avoid leaks.
-        AppGraph.bluetoothPeerTransport.unregisterBondReceiver(this)
+        if (appStarted) AppGraph.bluetoothPeerTransport.unregisterBondReceiver(this)
         // Unregister Wi-Fi Direct receiver to avoid leaks.
-        AppGraph.wifiDirectConnectionManager.unregisterReceiver(this)
+        if (appStarted) AppGraph.wifiDirectConnectionManager.unregisterReceiver(this)
         super.onDestroy()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContent { ITantraTheme { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Opening secure storage…") } } }
+        lifecycleScope.launch {
+            val ready = try {
+                withContext(Dispatchers.IO) { AppGraph.prepareStorage(this@MainActivity) }
+                true
+            } catch (e: Exception) { false }
+            if (ready) startApp() else setContent {
+                ITantraTheme {
+                    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
+                        Text("Stored data cannot be decrypted")
+                        Text("Your existing files have been kept. Close the app and retry after restoring access to this device’s keys.")
+                        Button(onClick = { finish() }) { Text("Close") }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun startApp() {
+        appStarted = true
         com.itantra.app.AppGraph.init(this)
         com.itantra.core.service.OperationalForegroundService.ensureNotificationChannels(this)
         AppGraph.bluetoothPeerTransport.registerBondReceiver(this)

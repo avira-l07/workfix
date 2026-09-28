@@ -103,6 +103,7 @@ dependencies {
     // Room persistence & SQLite (Message queue, retry state)
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
+    implementation("net.zetetic:sqlcipher-android:4.19.0@aar")
     ksp("androidx.room:room-compiler:2.6.1")
 
     // Coroutines for asynchronous pipeline execution
