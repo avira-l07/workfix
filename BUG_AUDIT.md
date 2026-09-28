@@ -120,3 +120,22 @@ These are separate from the 12 behavioral findings above. The four errors reprod
 ## Follow-up verification
 
 Add focused regressions for concurrent sends/persistence, actual MAC-to-device-ID navigation, acknowledgement during playback, ALL_CLEAR reminder suppression, translated-payload routing, and locale-dependent outgoing GPS. Then test two physical Android devices for connection/reconnection, transport switching, permissions, lock-screen/background audio, SOS acknowledgement, GPS sharing, and language switching during recording/playback. Existing passing tests do not cover all of these production integrations.
+
+## Fix status
+
+1. **FIXED** — Phase 5 stable-ID/MAC conversation matching; `Phase5And6BugfixTest`.
+2. **FIXED** — Phase 1 atomic monotonic IDs; `Phase1BugfixTest.concurrentIdsAreUniqueAndSequentialIdsIncrease` and rollback case.
+3. **FIXED** — Phase 1 atomic StateFlow message mutations; `Phase1BugfixTest.concurrentAddsAndUpdatesLoseNothing`.
+4. **FIXED** — Phase 1 ordered persistence writer; `Phase1BugfixTest.persistenceKeepsLatestSnapshotAfterRapidUpdates`.
+5. **FIXED** — Phase 3 payload-language routing and automatic receive behavior; `Phase3BugfixTest` plus existing Hindi↔English regressions.
+6. **FIXED** — Phase 2 ALL_CLEAR resolves message and durable emergency state before reminder evaluation; `Phase2BugfixTest.allClearResolvesMessagesBeforeReminderEvaluation`.
+7. **FIXED** — Phase 2 acknowledgement is terminal across playback/TTS completion; `Phase2BugfixTest.acknowledgedMessageSurvivesPlaybackAndRemoteCompletion`.
+8. **FIXED** — Phase 2 addressed and broadcast SOS identity; `Phase2BugfixTest` outgoing SOS cases.
+9. **FIXED** — Phase 4 structured GPS metadata, Locale.US display, and exact map URI; `Phase4BugfixTest.outgoingGpsKeepsExactFixUnderCommaDecimalLocale`.
+10. **FIXED** — Phase 4 LOCATION ACK waiter and no SENT regression after early ACK; `Phase4BugfixTest` transport cases.
+11. **FIXED** — Phase 6 received priority no longer implies voice origin; `Phase5And6BugfixTest.receivedPriorityDoesNotPretendToBeVoice`.
+12. **DEFERRED** — Diagnostics recognizer duplication remains a known issue; the benchmark button is disabled while continuous listening is active as requested.
+
+Lint permission and receiver-flag blockers: **FIXED**. `lintDebug` passes with zero errors; the existing 72 warnings and one hint remain intentionally unchanged.
+
+Baseline: 361 tests passed before fixes. Final: 376 tests passed, zero failures/errors/skips. Hindi↔English baseline tests pass. Git tag: `pre-bugfix-baseline`. Phase commits: `6610ac4`, `ef3ee0a`, `0c9bec3`, `67fa99e`, `02e1c3b`.
