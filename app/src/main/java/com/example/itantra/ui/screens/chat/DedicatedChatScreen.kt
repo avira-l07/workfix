@@ -80,7 +80,8 @@ fun DedicatedChatScreen(
     // Isolated messages for this peer only
     val chatMessages = remember(allMessages, peerId) {
         allMessages.filter { msg ->
-            msg.belongsToConversation(peerId)
+            msg.belongsToConversation(peerId) ||
+                activePeerProfile?.deviceId?.let { msg.belongsToConversation(it) } == true
         }
     }
 
@@ -746,13 +747,14 @@ fun LocationMessageBubble(message: TransceiverMessage, isOutgoing: Boolean) {
     val clipboardManager = LocalClipboardManager.current
     val alignment = if (isOutgoing) Alignment.End else Alignment.Start
 
-    // Extract coordinates and accuracy
-    val lat = message.latitude ?: parseCoordinateFromText(message.text, isLat = true) ?: 0.0
-    val lon = message.longitude ?: parseCoordinateFromText(message.text, isLat = false) ?: 0.0
-    val acc = message.accuracyMeters ?: parseAccuracyFromText(message.text) ?: 0.0f
+    // Coordinates come only from the fix, never locale-dependent display text.
+    val lat = message.latitude ?: return
+    val lon = message.longitude ?: return
+    val mapUri = locationMapUri(message) ?: return
+    val acc = message.accuracyMeters ?: 0.0f
     val fixTime = message.locationTimestampMillis ?: message.createdAtLocal
 
-    val coordinatesDisplay = "${"%.5f".format(lat)}, ${"%.5f".format(lon)} ±${"%.1f".format(acc)}m"
+    val coordinatesDisplay = "${"%.5f".format(java.util.Locale.US, lat)}, ${"%.5f".format(java.util.Locale.US, lon)} ±${"%.1f".format(java.util.Locale.US, acc)}m"
     val plainCoords = "$lat, $lon"
     val relativeAge = DateUtils.formatRelativeAge(fixTime)
     val fixTimeStr = DateUtils.formatTime12Hour(fixTime)
@@ -829,7 +831,7 @@ fun LocationMessageBubble(message: TransceiverMessage, isOutgoing: Boolean) {
                 ) {
                     FilledTonalButton(
                         onClick = {
-                            val uri = Uri.parse("geo:$lat,$lon?q=$lat,$lon")
+                            val uri = Uri.parse(mapUri)
                             val mapIntent = Intent(Intent.ACTION_VIEW, uri).apply {
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             }
@@ -922,14 +924,8 @@ fun LocationMessageBubble(message: TransceiverMessage, isOutgoing: Boolean) {
     }
 }
 
-private fun parseCoordinateFromText(text: String, isLat: Boolean): Double? {
-    val regex = Regex("""📍\s*Location:\s*([+-]?\d+(?:\.\d+)?),\s*([+-]?\d+(?:\.\d+)?)""")
-    val match = regex.find(text) ?: return null
-    return if (isLat) match.groupValues[1].toDoubleOrNull() else match.groupValues[2].toDoubleOrNull()
-}
-
-private fun parseAccuracyFromText(text: String): Float? {
-    val regex = Regex("""\(±([+-]?\d+(?:\.\d+)?)m\)""")
-    val match = regex.find(text) ?: return null
-    return match.groupValues[1].toFloatOrNull()
+internal fun locationMapUri(message: TransceiverMessage): String? {
+    val lat = message.latitude ?: return null
+    val lon = message.longitude ?: return null
+    return "geo:$lat,$lon?q=$lat,$lon"
 }

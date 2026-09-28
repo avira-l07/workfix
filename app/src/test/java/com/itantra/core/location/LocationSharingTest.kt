@@ -96,7 +96,7 @@ class LocationSharingTest {
     private class FakeTransportEngine : TransportEngine {
         override val isConnected: Boolean = true
         override val isServer: Boolean = true
-        val sentPackets = mutableListOf<ItantraPacket>()
+        val sentPackets = java.util.concurrent.CopyOnWriteArrayList<ItantraPacket>()
 
         override fun observeConnectionState(): Flow<ConnectionState> = flowOf(ConnectionState.CONNECTED)
         override suspend fun disconnect() {}

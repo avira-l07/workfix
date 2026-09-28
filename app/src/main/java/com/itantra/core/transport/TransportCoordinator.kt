@@ -97,21 +97,23 @@ class TransportCoordinator(
         }
 
         readJob = scope.launch {
-            activeTransport.receive().collect { frameData ->
+            while (isActive) {
                 try {
-                    val packet = PacketDecoder.decode(frameData)
-                    if (
-                        packet.type == PacketType.HEARTBEAT &&
-                        packet.securityVersion == 0.toByte()
-                    ) {
-                        // Reject unauthenticated/plain heartbeat.
-                        return@collect
+                    activeTransport.receive().collect { frameData ->
+                        try {
+                            val packet = PacketDecoder.decode(frameData)
+                            if (packet.type == PacketType.HEARTBEAT && packet.securityVersion == 0.toByte()) {
+                                return@collect
+                            }
+                            incomingFlow.emit(packet)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
-                    // Emit packet upward for decryption/authentication (including encrypted HEARTBEAT)
-                    incomingFlow.emit(packet)
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    if (isActive) delay(25)
                 }
+                if (isActive) delay(25)
             }
         }
 
@@ -202,7 +204,8 @@ class TransportCoordinator(
             val encoded = PacketEncoder.encode(packet)
             var txLatency: Long? = null
 
-            val expectsAck = packet.type == PacketType.TEXT || packet.type == PacketType.EMERGENCY_CODE
+            val expectsAck = packet.type == PacketType.TEXT || packet.type == PacketType.EMERGENCY_CODE ||
+                packet.type == PacketType.LOCATION
             val ackDeferred = if (expectsAck) CompletableDeferred<Long>() else null
             if (ackDeferred != null) {
                 // Register the waiter BEFORE sending, so an ACK that comes back before we'd

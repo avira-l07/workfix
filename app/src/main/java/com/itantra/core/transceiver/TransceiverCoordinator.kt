@@ -511,6 +511,9 @@ class TransceiverCoordinator(
 
     private fun transitionMessage(current: TransceiverMessage, proposed: TransceiverMessage): TransceiverMessage =
         if (current.state == MessageState.ACKNOWLEDGED) proposed.copy(state = MessageState.ACKNOWLEDGED)
+        else if (proposed.state == MessageState.SENT && current.state in setOf(
+            MessageState.DELIVERED, MessageState.REMOTE_PLAYING, MessageState.REMOTE_PLAYBACK_CONFIRMED
+        )) proposed.copy(state = current.state)
         else proposed
 
     private fun acknowledgeRemoteCriticalMessages() {
@@ -888,7 +891,7 @@ class TransceiverCoordinator(
         val activePeer = _activeConversationPeerId.value?.takeIf { it.isNotBlank() } ?: remoteDeviceId
         val myDeviceId = deviceProfileManager?.currentDeviceId ?: ""
 
-        val displayText = "📍 Location: ${"%.5f".format(lat)}, ${"%.5f".format(lon)} (±${"%.1f".format(acc)}m)"
+        val displayText = "📍 Location: ${"%.5f".format(java.util.Locale.US, lat)}, ${"%.5f".format(java.util.Locale.US, lon)} (±${"%.1f".format(java.util.Locale.US, acc)}m)"
 
         val locationMsg = TransceiverMessage(
             messageId = packet.messageId,
@@ -1010,7 +1013,9 @@ class TransceiverCoordinator(
             peerId = activePeer,
             senderDeviceId = remoteDeviceId,
             receiverDeviceId = myDeviceId,
-            isVoiceGenerated = isEmergencyCode || packet.flags.toInt() != 0
+            // Voice origin is not represented in ITP v1. Priority is independent
+            // of whether the sender typed or spoke the message.
+            isVoiceGenerated = false
         )
         addMessage(msg)
 
@@ -2002,7 +2007,7 @@ class TransceiverCoordinator(
                     val acc = locationResult.accuracyMeters
                     val time = locationResult.timestampMillis
 
-                    val displayText = "📍 Location: ${"%.5f".format(lat)}, ${"%.5f".format(lon)} (±${"%.1f".format(acc)}m)"
+                    val displayText = "📍 Location: ${"%.5f".format(java.util.Locale.US, lat)}, ${"%.5f".format(java.util.Locale.US, lon)} (±${"%.1f".format(java.util.Locale.US, acc)}m)"
                     val payload = LocationPayload(lat, lon, acc, time).toBytes()
 
                     val packet = ItantraPacket(
@@ -2019,6 +2024,11 @@ class TransceiverCoordinator(
                     updateMessage(msgId) {
                         it.copy(
                             text = displayText,
+                            isLocation = true,
+                            latitude = lat,
+                            longitude = lon,
+                            accuracyMeters = acc,
+                            locationTimestampMillis = time,
                             payloadBytes = payload.size,
                             state = MessageState.TRANSMITTING
                         )

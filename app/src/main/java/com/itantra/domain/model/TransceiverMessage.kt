@@ -88,7 +88,7 @@ data class TransceiverMessage(
     val statusDetail: String? = null
 ) {
     val isLocationMessage: Boolean
-        get() = isLocation || latitude != null || (text.startsWith("📍 Location:") && !text.contains("failed", ignoreCase = true))
+        get() = isLocation || (latitude != null && longitude != null)
 
     val semanticReductionPercent: Float
         get() {
