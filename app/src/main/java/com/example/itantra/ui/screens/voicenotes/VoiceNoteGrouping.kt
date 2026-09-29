@@ -33,6 +33,6 @@ object VoiceNoteGrouping {
         }
     }
 
-    fun <T> group(items: List<T>, createdAtMillis: (T) -> Long, nowMillis: Long, zone: ZoneId = ZoneId.systemDefault()): LinkedHashMap<VoiceNoteGroupKey, List<T>> =
+    fun <T> group(items: List<T>, createdAtMillis: (T) -> Long, nowMillis: Long, zone: ZoneId = ZoneId.systemDefault()): Map<VoiceNoteGroupKey, List<T>> =
         items.sortedByDescending(createdAtMillis).groupByTo(LinkedHashMap()) { keyFor(createdAtMillis(it), nowMillis, zone) }
 }
