@@ -202,7 +202,6 @@ class MainActivity : ComponentActivity() {
         appStarted = true
         com.itantra.app.AppGraph.init(this)
         com.itantra.core.service.OperationalForegroundService.ensureNotificationChannels(this)
-        AppGraph.bluetoothPeerTransport.registerBondReceiver(this)
         enableEdgeToEdge()
 
         requestRequiredPermissions()
@@ -524,19 +523,47 @@ class MainActivity : ComponentActivity() {
             debugTestReceiver = testPttReceiver
         }
 
-        // Register bond-state / Android-16 KEY_MISSING receiver so the transport
-        // can react to bond loss without relying solely on socket IO errors.
-        AppGraph.bluetoothPeerTransport.registerBondReceiver(this)
-        // Register Wi-Fi Direct receiver for peer discovery and group formation.
-        AppGraph.wifiDirectConnectionManager.registerReceiver(this)
+        // Pre-warm the heavy AppGraph lazies on IO to avoid SynchronizedLazyImpl contention
+        // on the main thread. The background coroutine started by AppGraph.init() holds those
+        // locks; if the main thread hits them (via registerBondReceiver → bluetoothPeerTransport
+        // or wifiDirectConnectionManager) before init finishes, the UI freezes for 10+ seconds.
+        // By forcing initialization here on IO we guarantee the locks are free by setContent.
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Touch each lazy in dependency order; their locks are now held on IO, not main.
+                AppGraph.languagePackStorage
+                AppGraph.languagePackRepository
+                AppGraph.activeLanguageSessionManager
+                AppGraph.bluetoothPeerTransport
+                AppGraph.wifiDirectPeerTransport
+                AppGraph.wifiDirectConnectionManager
+                AppGraph.transportEngine
+                AppGraph.secureSessionManager
+                AppGraph.translationEngine
+                AppGraph.translationRouter
+                AppGraph.deviceProfileManager
+                AppGraph.settingsRepository
+                AppGraph.transceiverCoordinator
+            } catch (e: Exception) {
+                android.util.Log.w("MainActivity", "Pre-warm of AppGraph lazies failed (non-fatal)", e)
+            }
 
-        setContent {
-            ITantraTheme(dynamicColor = false) {
-                TacticalAppScaffold(
-                    permissionsGranted = permissionsGranted,
-                    onRequestPermissions = { requestRequiredPermissions() },
-                    destinationState = destinationState
-                )
+            // Now safe to register receivers and render UI — no lazy contention possible.
+            withContext(Dispatchers.Main) {
+                // Register bond-state receiver so transport can react to bond loss.
+                AppGraph.bluetoothPeerTransport.registerBondReceiver(this@MainActivity)
+                // Register Wi-Fi Direct receiver for peer discovery and group formation.
+                AppGraph.wifiDirectConnectionManager.registerReceiver(this@MainActivity)
+
+                setContent {
+                    ITantraTheme(dynamicColor = false) {
+                        TacticalAppScaffold(
+                            permissionsGranted = permissionsGranted,
+                            onRequestPermissions = { requestRequiredPermissions() },
+                            destinationState = destinationState
+                        )
+                    }
+                }
             }
         }
     }
