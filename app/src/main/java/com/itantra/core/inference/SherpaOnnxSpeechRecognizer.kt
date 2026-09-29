@@ -14,6 +14,17 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 
+/** Convert iTantra's stable language code to Whisper's token code. */
+internal fun whisperLanguageCode(code: LanguageCode): String = when (code) {
+    LanguageCode.ODIA -> "od"
+    else -> code.wireCode
+}
+
+internal fun languageCodeFromWhisper(code: String): LanguageCode? = when (code.trim().lowercase()) {
+    "od" -> LanguageCode.ODIA
+    else -> LanguageCode.fromWireCode(code)
+}
+
 class SherpaOnnxSpeechRecognizer(
     private val context: Context,
     override val languageCode: LanguageCode,
@@ -77,7 +88,7 @@ class SherpaOnnxSpeechRecognizer(
                 whisper = OfflineWhisperModelConfig(
                     encoder = File(sttDir, spec.mainModelFile).absolutePath,
                     decoder = File(sttDir, spec.auxFile!!).absolutePath,
-                    language = if (autoDetect) "" else languageCode.wireCode,
+                    language = if (autoDetect) "" else whisperLanguageCode(languageCode),
                     task = if (isTranslateMode) "translate" else "transcribe",
                     tailPaddings = -1
                 ).also { whisperCfg ->
@@ -198,7 +209,7 @@ class SherpaOnnxSpeechRecognizer(
         // Language resolution priority (Phase 2 fix):
         // MANUAL mode: manual selection ALWAYS wins — this is the UI contract.
         // AUTO mode: Whisper detected > script detector > configured fallback.
-        val whisperLang = LanguageCode.fromWireCode(detectedCode)
+        val whisperLang = languageCodeFromWhisper(detectedCode)
         val scriptLang = LanguageScriptDetector.detect(cleanedText, manualFallback = languageCode)
 
         val resolvedLanguage = if (!autoDetect) {
@@ -209,18 +220,17 @@ class SherpaOnnxSpeechRecognizer(
             whisperLang ?: scriptLang ?: languageCode
         }
 
-        // Phase 3: Script mismatch diagnostic for manual Hindi
-        val scriptDiagnostic = if (!autoDetect && languageCode == LanguageCode.HINDI && cleanedText.isNotBlank()) {
-            if (!LanguageScriptDetector.containsDevanagari(cleanedText)) {
-                "HINDI_SCRIPT_MISMATCH"
-            } else null
+        // Native Whisper translation deliberately returns English text, so a script
+        // check would reject valid output there. For direct transcription, reject
+        // Latin hallucinations (or another script) instead of sending them as the
+        // selected Indic language.
+        val scriptDiagnostic = if (!isTranslateMode && !autoDetect && cleanedText.isNotBlank()) {
+            LanguageScriptDetector.detectScriptMismatch(cleanedText, languageCode)?.diagnostic
         } else null
 
-        val correctedText = if (scriptDiagnostic == "HINDI_SCRIPT_MISMATCH") {
-            HindiTransliterator.transliterate(cleanedText)
-        } else {
-            cleanedText
-        }
+        // A script mismatch is not evidence of romanized Hindi. Converting arbitrary
+        // English output to Devanagari cannot repair recognition and corrupts the
+        // valid English output of Whisper's native translation mode.
 
         if (com.example.itantra.BuildConfig.DEBUG) {
             android.util.Log.d(
@@ -237,12 +247,13 @@ class SherpaOnnxSpeechRecognizer(
         // Phase 4: confidence = null — Whisper Tiny does not expose meaningful per-utterance
         // confidence. Never hard-code 1.0 which falsely implies perfect accuracy.
         return SpeechRecognitionResult(
-            text = correctedText,
+            text = cleanedText,
             isFinal = true,
             languageCode = resolvedLanguage,
             confidence = null,
             timestampMillis = System.currentTimeMillis(),
-            pureInferenceMs = pureInferenceMs
+            pureInferenceMs = pureInferenceMs,
+            diagnostic = scriptDiagnostic
         )
     }
 

@@ -30,4 +30,7 @@ data class SpeechRecognitionResult(
 
     /** Pure model inference/decode time (excluding buffering, waveform conversion, padding). Used for RTF. */
     val pureInferenceMs: Long = 0L,
+
+    /** Optional safety diagnostic. When present, the text must not be transmitted as valid speech. */
+    val diagnostic: String? = null,
 )

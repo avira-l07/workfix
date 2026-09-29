@@ -28,7 +28,7 @@ class SttLanguageResolutionTest {
         whisperDetectedCode: String,
         text: String
     ): LanguageCode {
-        val whisperLang = LanguageCode.fromWireCode(whisperDetectedCode)
+        val whisperLang = languageCodeFromWhisper(whisperDetectedCode)
         val scriptLang = LanguageScriptDetector.detect(text, manualFallback = configuredLang)
 
         return if (!autoDetect) {
@@ -213,5 +213,39 @@ class SttLanguageResolutionTest {
     fun `detectScriptMismatch returns null for English`() {
         val result = LanguageScriptDetector.detectScriptMismatch("Hello world", LanguageCode.ENGLISH)
         assertNull("Should not flag script mismatch for English", result)
+    }
+
+    @Test
+    fun `all Indic languages reject Latin hallucinations`() {
+        val expected = mapOf(
+            LanguageCode.HINDI to "hi",
+            LanguageCode.MARATHI to "mr",
+            LanguageCode.BENGALI to "bn",
+            LanguageCode.GUJARATI to "gu",
+            LanguageCode.KANNADA to "kn",
+            LanguageCode.MALAYALAM to "ml",
+            LanguageCode.TAMIL to "ta",
+            LanguageCode.TELUGU to "te",
+            LanguageCode.ODIA to "or"
+        )
+        expected.forEach { (language, _) ->
+            val result = LanguageScriptDetector.detectScriptMismatch("some romanized output", language)
+            assertEquals("${language.name}_SCRIPT_MISMATCH", result?.diagnostic)
+        }
+    }
+
+    @Test
+    fun `unrelated script is rejected but mixed native text is retained`() {
+        assertNotNull(LanguageScriptDetector.detectScriptMismatch("ラミhi", LanguageCode.BENGALI))
+        assertNotNull(LanguageScriptDetector.detectScriptMismatch("வணக்கம்", LanguageCode.HINDI))
+        assertNull(LanguageScriptDetector.detectScriptMismatch("नमस्ते John", LanguageCode.HINDI))
+        assertNull(LanguageScriptDetector.detectScriptMismatch("123", LanguageCode.HINDI))
+    }
+
+    @Test
+    fun `Odia maps to Whisper od token while storage remains or`() {
+        assertEquals("od", whisperLanguageCode(LanguageCode.ODIA))
+        assertEquals(LanguageCode.ODIA, languageCodeFromWhisper("od"))
+        assertEquals(LanguageCode.ODIA, languageCodeFromWhisper("OD"))
     }
 }

@@ -97,20 +97,35 @@ object LanguageScriptDetector {
         if (text.isBlank()) return null
         return when (expectedLang) {
             LanguageCode.HINDI, LanguageCode.MARATHI -> {
-                if (!containsDevanagari(text)) {
-                    val latinCount = text.count { it.code in 0x0041..0x007A }
-                    val totalAlpha = text.count { it.isLetter() }
-                    if (totalAlpha > 0 && latinCount.toFloat() / totalAlpha > 0.5f) {
-                        ScriptMismatchResult(
-                            expectedScript = "Devanagari",
-                            actualScript = "Latin",
-                            diagnostic = "HINDI_SCRIPT_MISMATCH"
-                        )
-                    } else null
-                } else null
+                mismatchIfNoScript(text, expectedLang, "Devanagari", 0x0900..0x097F)
             }
-            else -> null
+            LanguageCode.BENGALI -> mismatchIfNoScript(text, expectedLang, "Bengali", 0x0980..0x09FF)
+            LanguageCode.GUJARATI -> mismatchIfNoScript(text, expectedLang, "Gujarati", 0x0A80..0x0AFF)
+            LanguageCode.ODIA -> mismatchIfNoScript(text, expectedLang, "Odia", 0x0B00..0x0B7F)
+            LanguageCode.TAMIL -> mismatchIfNoScript(text, expectedLang, "Tamil", 0x0B80..0x0BFF)
+            LanguageCode.TELUGU -> mismatchIfNoScript(text, expectedLang, "Telugu", 0x0C00..0x0C7F)
+            LanguageCode.KANNADA -> mismatchIfNoScript(text, expectedLang, "Kannada", 0x0C80..0x0CFF)
+            LanguageCode.MALAYALAM -> mismatchIfNoScript(text, expectedLang, "Malayalam", 0x0D00..0x0D7F)
+            LanguageCode.ENGLISH -> null
         }
+    }
+
+    private fun mismatchIfNoScript(
+        text: String,
+        expectedLang: LanguageCode,
+        expectedScript: String,
+        range: IntRange
+    ): ScriptMismatchResult? {
+        if (text.any { it.code in range }) return null
+        val latinCount = text.count { it in 'A'..'Z' || it in 'a'..'z' }
+        val totalAlpha = text.count { it.isLetter() }
+        return if (totalAlpha > 0) {
+            ScriptMismatchResult(
+                expectedScript = expectedScript,
+                actualScript = if (latinCount == totalAlpha) "Latin" else "Other",
+                diagnostic = "${expectedLang.name}_SCRIPT_MISMATCH"
+            )
+        } else null
     }
 
     data class ScriptMismatchResult(

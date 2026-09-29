@@ -6,6 +6,7 @@ import com.itantra.core.inference.SpeechRecognizerEngine
 import com.itantra.core.inference.SpeechSynthesizerEngine
 import com.itantra.data.languagepack.MockLanguagePackRepository
 import com.itantra.domain.model.LanguageCode
+import com.itantra.domain.model.SpeechInputMode
 import com.itantra.domain.model.SpeechRecognitionResult
 import com.itantra.domain.model.SpeechSynthesisRequest
 import com.itantra.domain.model.SpeechSynthesisResult
@@ -71,6 +72,23 @@ class LanguagePacksViewModelTest {
         // ViewModel must only request the repository change.
         // Engine lifecycle is exclusively managed by AppGraph's lifecycle observer.
         assertEquals(LanguageCode.HINDI, repo.observeActiveLanguage().firstOrNull())
+        assertEquals(SpeechInputMode.MANUAL, repo.observeSpeechInputMode().firstOrNull())
+        assertEquals(LanguageCode.HINDI, repo.observeManualSttLanguage().firstOrNull())
+    }
+
+    @Test
+    fun activatingAlreadySelectedHindiDisablesAutoDetectionAndPreservesTarget() = runTest(testDispatcher) {
+        val repo = MockLanguagePackRepository()
+        repo.setSpeechInputMode(SpeechInputMode.AUTO)
+        repo.setTargetLanguage(LanguageCode.ENGLISH)
+        val viewModel = LanguagePacksViewModel(repo)
+
+        viewModel.activateLanguage(LanguageCode.HINDI)
+        advanceUntilIdle()
+
+        assertEquals(SpeechInputMode.MANUAL, repo.observeSpeechInputMode().firstOrNull())
+        assertEquals(LanguageCode.HINDI, repo.observeManualSttLanguage().firstOrNull())
+        assertEquals(LanguageCode.ENGLISH, repo.observeTargetLanguage().firstOrNull())
     }
 
     @Test

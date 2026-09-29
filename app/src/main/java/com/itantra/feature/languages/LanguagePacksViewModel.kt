@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.itantra.core.inference.ActiveLanguageSessionManager
 import com.itantra.domain.model.LanguageCode
+import com.itantra.domain.model.SpeechInputMode
 import com.itantra.domain.model.LanguagePackSummary
 import com.itantra.domain.repository.LanguagePackRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -61,7 +62,10 @@ class LanguagePacksViewModel(
      */
     fun activateLanguage(code: LanguageCode) {
         viewModelScope.launch {
-            repository.setActiveLanguage(code)
+            if (repository.setActiveLanguage(code)) {
+                repository.setManualSttLanguage(code)
+                repository.setSpeechInputMode(SpeechInputMode.MANUAL)
+            }
         }
     }
 

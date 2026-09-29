@@ -1360,6 +1360,17 @@ class TransceiverCoordinator(
                         return@launch
                     }
 
+                    if (result.diagnostic != null) {
+                        updateMessage(msgId) {
+                            it.copy(
+                                state = MessageState.ERROR,
+                                text = "",
+                                statusDetail = "Speech did not match selected ${result.languageCode.name.lowercase()} language \u2014 please retry"
+                            )
+                        }
+                        return@launch
+                    }
+
                     if (secureSessionManager.state.value != SecureSessionState.SECURE_VERIFIED) {
                         updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = result.text, statusDetail = "Secure Link Required") }
                         return@launch
@@ -1477,8 +1488,14 @@ class TransceiverCoordinator(
         val engine = sessionManager.currentSttEngine
         val sttLang = sessionManager.activeSttLanguage.value ?: LanguageCode.HINDI
         if (engine == null || !engine.isLoaded) {
+            val unavailableText = if (sessionManager.sessionState.value ==
+                com.itantra.core.inference.LanguageSessionState.LOADING_STT) {
+                "Speech model is loading — wait, then hold to talk again"
+            } else {
+                "Microphone model unavailable — select a mic language in Language Packs"
+            }
             val lastMsg = _messages.value.lastOrNull()
-            if (lastMsg != null && lastMsg.state == MessageState.ERROR && lastMsg.text == "STT Pack Required") {
+            if (lastMsg != null && lastMsg.state == MessageState.ERROR && lastMsg.text == unavailableText) {
                 return
             }
             val msgId = nextMessageId()
@@ -1488,7 +1505,7 @@ class TransceiverCoordinator(
                     language = sttLang,
                     targetLanguage = currentTargetLanguage.value,
                     priority = 0,
-                    text = "STT Pack Required",
+                    text = unavailableText,
                     source = MessageSource.LOCAL,
                     createdAtLocal = System.currentTimeMillis(),
                     state = MessageState.ERROR
@@ -1683,6 +1700,17 @@ class TransceiverCoordinator(
 
                     if (result.text.isBlank()) {
                         updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "No speech recognized \u2014 try again") }
+                        return@withLock
+                    }
+
+                    if (result.diagnostic != null) {
+                        updateMessage(msgId) {
+                            it.copy(
+                                state = MessageState.ERROR,
+                                text = "",
+                                statusDetail = "Speech did not match selected ${result.languageCode.name.lowercase()} language \u2014 please retry"
+                            )
+                        }
                         return@withLock
                     }
 

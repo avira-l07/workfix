@@ -93,6 +93,9 @@ fun LanguagePacksScreen(
     val packSummaries by repository.observePackSummaries().collectAsState(initial = emptyList())
     val activeLangCode by repository.observeActiveLanguage().collectAsState(initial = null)
     val targetLangCode by repository.observeTargetLanguage().collectAsState(initial = null)
+    val micLanguage by sessionManager.activeSttLanguage.collectAsState()
+    val micAutoDetect by sessionManager.isSttAutoDetect.collectAsState()
+    val sessionState by sessionManager.sessionState.collectAsState()
 
     val enabledMicLangs by viewModel.enabledMicLanguages.collectAsState()
     val enabledListenLangs by viewModel.enabledListenLanguages.collectAsState()
@@ -117,12 +120,7 @@ fun LanguagePacksScreen(
         val isTtsReady = summary.isTtsDownloaded
 
         val pairMtState = translationStates[langCode]
-        val isTranslationReady = when {
-            isMlOrOr -> true // Transcription only
-            langCode == LanguageCode.HINDI || langCode == LanguageCode.ENGLISH -> true
-            pairMtState == TranslationModelState.READY -> true
-            else -> false
-        }
+        val isTranslationReady = isOfflineTranslationReady(langCode, translationStates)
 
         val isDownloading = summary.sttInstallState == LanguagePackInstallState.DOWNLOADING ||
                 summary.ttsInstallState == LanguagePackInstallState.DOWNLOADING ||
@@ -137,7 +135,7 @@ fun LanguagePacksScreen(
         val readiness = when {
             isDownloading -> ReadinessBadgeState.DOWNLOADING
             isFailed -> ReadinessBadgeState.FAILED
-            isSttReady && isTtsReady && isTranslationReady -> ReadinessBadgeState.READY_OFFLINE
+            isSttReady && isTtsReady && (isTranslationReady || isMlOrOr) -> ReadinessBadgeState.READY_OFFLINE
             else -> ReadinessBadgeState.NOT_PROVISIONED
         }
 
@@ -159,7 +157,8 @@ fun LanguagePacksScreen(
             readiness = readiness,
             downloadProgress = (summary.downloadProgressPercent ?: 0) / 100f,
             isTarget = (langCode == targetLangCode),
-            isActiveCore = (langCode == activeLangCode || summary.availability == LanguagePackAvailability.ACTIVE),
+            isActiveCore = !micAutoDetect && langCode == micLanguage &&
+                sessionState == com.itantra.core.inference.LanguageSessionState.READY,
             isSttReady = isSttReady,
             isTtsReady = isTtsReady,
             isTranslationReady = isTranslationReady,
@@ -326,7 +325,12 @@ fun LanguagePacksScreen(
                             Column {
                                 Text("ACTIVE MIC ENGINE", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
                                 Text(
-                                    activeLangCode?.let { LanguageCatalog.byCode(it).displayName } ?: "None",
+                                    when (sessionState) {
+                                        com.itantra.core.inference.LanguageSessionState.LOADING_STT -> "Loading microphone model…"
+                                        com.itantra.core.inference.LanguageSessionState.ERROR -> "Microphone model unavailable"
+                                        else -> if (micAutoDetect && micLanguage != null) "Auto-detect" else
+                                            micLanguage?.let { LanguageCatalog.byCode(it).displayName } ?: "None"
+                                    },
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = ITantraColors.Primary
@@ -346,6 +350,14 @@ fun LanguagePacksScreen(
 
                         Spacer(Modifier.height(8.dp))
                         HorizontalDivider(color = ITantraColors.BorderSubtle, thickness = 0.5.dp)
+                        if (!micAutoDetect && micLanguage != null && micLanguage == targetLangCode) {
+                            Text(
+                                "Microphone and target are the same: speech is transcribed without translation. Choose English as the target for Hindi → English.",
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ITantraColors.TextBody
+                            )
+                        }
                         Spacer(Modifier.height(8.dp))
 
                         Text("SPEAKING (MIC) SELECTED:", style = MaterialTheme.typography.labelSmall, fontSize = 10.sp, color = ITantraColors.TextMuted, fontWeight = FontWeight.Bold)
@@ -761,16 +773,18 @@ private fun LanguagePackCard(
             } else if (pack.readiness == ReadinessBadgeState.NOT_PROVISIONED) {
                 Spacer(Modifier.height(8.dp))
                 Button(
-                    onClick = onDownload,
+                    onClick = onRetry,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
                     contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
                     Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("DOWNLOAD PACK (${pack.sizeMb} MB)")
+                    Text("PREPARE MISSING MODELS")
                 }
-            } else if (pack.isActiveCore) {
+            }
+
+            if (pack.isActiveCore) {
                 Spacer(Modifier.height(8.dp))
                 Surface(
                     color = ITantraColors.Primary.copy(alpha = 0.08f),
