@@ -16,6 +16,7 @@ def main():
     parser.add_argument('--model-dir', type=Path, required=True)
     parser.add_argument('--prefix', required=True)
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--tasks', nargs='+', default=['transcribe', 'translate'])
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     tts_dir = root / 'app/src/main/assets/language_packs/hi/tts'
@@ -26,11 +27,12 @@ def main():
     phrases = ['मैं कौन हूँ', 'नमस्ते आप कैसे हैं', 'मुझे पानी चाहिए']
     audio = [(text, tts.generate(text)) for text in phrases]
     results = []
-    for task in ['transcribe', 'translate']:
+    prefix = args.prefix + '-' if args.prefix else ''
+    for task in args.tasks:
         recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
-            encoder=str(args.model_dir / f'{args.prefix}-encoder.int8.onnx'),
-            decoder=str(args.model_dir / f'{args.prefix}-decoder.int8.onnx'),
-            tokens=str(args.model_dir / f'{args.prefix}-tokens.txt'),
+            encoder=str(args.model_dir / f'{prefix}encoder.int8.onnx'),
+            decoder=str(args.model_dir / f'{prefix}decoder.int8.onnx'),
+            tokens=str(args.model_dir / f'{prefix}tokens.txt'),
             language='hi', task=task, num_threads=2)
         for reference, sample in audio:
             stream = recognizer.create_stream()

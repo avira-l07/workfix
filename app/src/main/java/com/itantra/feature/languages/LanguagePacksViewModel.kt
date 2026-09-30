@@ -128,10 +128,6 @@ class LanguagePacksViewModel(
     fun retryProvision(code: LanguageCode) {
         viewModelScope.launch {
             repository.startDownload(code)
-            if (code != LanguageCode.MALAYALAM && code != LanguageCode.ODIA) {
-                val toProvision = setOf(code, LanguageCode.ENGLISH)
-                provisioner?.invoke(toProvision) ?: com.itantra.app.AppGraph.provisionSelectedLanguages(toProvision)
-            }
         }
     }
 

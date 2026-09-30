@@ -193,8 +193,8 @@ class PipelineGeneralizationTest {
     }
 
     @Test
-    fun `test cross-language to English sets task translate for all source languages`() {
-        // Any non-English language targeting English should use Whisper native translate mode
+    fun `test English target uses native translation except Hindi specialized transcription`() {
+        // The Hindi fine-tune transcribes; the existing MT stage handles its English target.
         val toEnglishSources = listOf(
             LanguageCode.HINDI, // Baseline
             LanguageCode.TAMIL,
@@ -209,8 +209,9 @@ class PipelineGeneralizationTest {
 
         for (src in toEnglishSources) {
             val recognizer = createRecognizer(src, LanguageCode.ENGLISH)
-            assertTrue(
-                "Cross-language $src -> ENGLISH must enable Whisper native translate mode (task=translate)",
+            assertEquals(
+                "Only Hindi specialized STT must stay in transcription mode",
+                src != LanguageCode.HINDI,
                 recognizer.isTranslateMode
             )
         }
@@ -248,7 +249,7 @@ class PipelineGeneralizationTest {
 
     @Test
     fun `test Whisper native translate bypass applies to all non-Hindi sources targeting English`() {
-        val testSources = listOf(LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.BENGALI, LanguageCode.HINDI)
+        val testSources = listOf(LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.BENGALI)
 
         for (src in testSources) {
             val engine = createRecognizer(src, LanguageCode.ENGLISH)
@@ -592,10 +593,10 @@ class PipelineGeneralizationTest {
     // =========================================================================
 
     @Test
-    fun `test Hindi to English baseline preserves Whisper native translate and router routing`() = runBlocking {
+    fun `test Hindi specialized transcription retains Hindi to English MT routing`() = runBlocking {
         // 1. Whisper task selection
         val hiToEnRecognizer = createRecognizer(LanguageCode.HINDI, LanguageCode.ENGLISH)
-        assertTrue("Hindi -> English must be translate mode", hiToEnRecognizer.isTranslateMode)
+        assertFalse("Hindi fine-tune must transcribe before the MT stage", hiToEnRecognizer.isTranslateMode)
 
         // 2. TranslationRouter route
         val mtEngine = ConfigurableTranslationEngine()

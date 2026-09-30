@@ -16,6 +16,9 @@ data class ModelFileSpec(
 }
 
 object ModelFileSpecs {
+    // Language codes present in the published Whisper encoder metadata.
+    val supportedSttLanguages: Set<LanguageCode> = LanguageCode.entries.toSet() - LanguageCode.ODIA
+
     fun getSttSpec(lang: LanguageCode): ModelFileSpec {
         // We use a shared multilingual Whisper model for all languages.
         return ModelFileSpec(

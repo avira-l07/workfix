@@ -1,0 +1,20 @@
+[
+  {
+    "model": "",
+    "task": "transcribe",
+    "input": "मैं कौन हूँ",
+    "output": "मैं कहानूं"
+  },
+  {
+    "model": "",
+    "task": "transcribe",
+    "input": "नमस्ते आप कैसे हैं",
+    "output": "नमस्ते आप कैसे हैं"
+  },
+  {
+    "model": "",
+    "task": "transcribe",
+    "input": "मुझे पानी चाहिए",
+    "output": "मुझे पानी चाहिए"
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "repo": "ippocode/indic-asr-onnx",
+  "revision": "1f6243ec6dffc4de2db84fe1446576d1ff52c252",
+  "files": [
+    {
+      "file": "decoder.int8.onnx",
+      "bytes": 262200764,
+      "sha256": "9f2ab915e2b46236f4cc191fe1fb6519c7a75a5c3d4bfe6bce5e8e920e6fd99a"
+    },
+    {
+      "file": "encoder.int8.onnx",
+      "bytes": 112413411,
+      "sha256": "37a8f9a573a30b8b0c55e0d5cd577096c666a6208529c4026b6c49a55e0dea7b"
+    },
+    {
+      "file": "tokens.txt",
+      "bytes": 816730,
+      "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+    }
+  ],
+  "source_model": "vasista22/whisper-hindi-small",
+  "license": "Apache-2.0",
+  "language": "hi",
+  "task": "transcribe",
+  "validated_report": "tools/stt_results/hindi-small-test.json"
+}

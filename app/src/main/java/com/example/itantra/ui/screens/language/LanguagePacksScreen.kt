@@ -116,7 +116,8 @@ fun LanguagePacksScreen(
         val isMlOrOr = (langCode == LanguageCode.MALAYALAM || langCode == LanguageCode.ODIA)
         val sttMb = ((summary.sttSizeBytes ?: (40L * 1024 * 1024)) / (1024 * 1024)).toInt()
         val ttsMb = ((summary.ttsSizeBytes ?: (45L * 1024 * 1024)) / (1024 * 1024)).toInt()
-        val isSttReady = summary.isSttDownloaded
+        val isSttReady = summary.isSttDownloaded &&
+            langCode in com.itantra.core.inference.ModelFileSpecs.supportedSttLanguages
         val isTtsReady = summary.isTtsDownloaded
 
         val pairMtState = translationStates[langCode]
@@ -135,7 +136,7 @@ fun LanguagePacksScreen(
         val readiness = when {
             isDownloading -> ReadinessBadgeState.DOWNLOADING
             isFailed -> ReadinessBadgeState.FAILED
-            isSttReady && isTtsReady && (isTranslationReady || isMlOrOr) -> ReadinessBadgeState.READY_OFFLINE
+            isSttReady && isTtsReady -> ReadinessBadgeState.READY_OFFLINE
             else -> ReadinessBadgeState.NOT_PROVISIONED
         }
 
@@ -144,7 +145,7 @@ fun LanguagePacksScreen(
             languageCode = langCode,
             nameEn = summary.language.displayName,
             nameNative = summary.language.nativeDisplayName,
-            version = "v1.0.0",
+            version = if (langCode == LanguageCode.HINDI) "Hindi Small v1" else "v1.0.0",
             sizeMb = sttMb + ttsMb,
             sttMb = sttMb,
             ttsMb = ttsMb,
@@ -292,14 +293,14 @@ fun LanguagePacksScreen(
                             )
                             Spacer(Modifier.height(2.dp))
                             Text(
-                                "Voice transcript only — translation not available for this language.",
+                                "Malayalam: transcription only. Odia: speech recognition unavailable.",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFFE65100),
                             )
                             Spacer(Modifier.height(2.dp))
                             Text(
-                                "Google ML Kit does not provide on-device translation models for Malayalam (ml) or Odia (or). Offline speech recognition (STT) and voice synthesis (TTS) operate locally, but cross-language translation is bypassed.",
+                                "Offline translation is unavailable for Malayalam and Odia. The bundled Whisper model supports Malayalam transcription but does not support Odia speech recognition. TTS readiness is shown separately.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = ITantraColors.TextHeadline.copy(alpha = 0.85f),
                             )
@@ -656,7 +657,9 @@ private fun LanguagePackCard(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            "Voice transcript only — translation not available for this language",
+                            if (pack.languageCode == LanguageCode.ODIA)
+                                "Speech recognition and translation unavailable; TTS is separate"
+                            else "Voice transcript only — translation not available for this language",
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 10.sp,
                             color = Color(0xFFE65100),

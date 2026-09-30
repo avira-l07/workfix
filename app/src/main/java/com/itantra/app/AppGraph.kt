@@ -49,9 +49,7 @@ object AppGraph {
                     val langToActivate = savedLang ?: LanguageCode.HINDI
                     languagePackRepository.setActiveLanguage(langToActivate)
 
-                    val modeStr = prefs.getString("speech_input_mode", "AUTO")
-                    val isAuto = modeStr != "MANUAL"
-                    activeLanguageSessionManager.ensureStt(langToActivate, autoDetect = isAuto)
+                    // The observer below owns engine loading, including mode and target.
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -128,9 +126,8 @@ object AppGraph {
                 android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: setSpeechInputMode(MANUAL) done")
                 val activateOk = languagePackRepository.setActiveLanguage(code)
                 android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: setActiveLanguage returned $activateOk")
-                val currentTarget = languagePackRepository.observeTargetLanguage().firstOrNull()
-                activeLanguageSessionManager.ensureStt(code, autoDetect = false, targetLanguage = currentTarget)
-                android.util.Log.d("ITANTRA_MIC_FLOW", "AppGraph.setMicLanguage: ensureStt completed. activeSttLanguage=${activeLanguageSessionManager.activeSttLanguage.value?.wireCode}, isSttAutoDetect=${activeLanguageSessionManager.isSttAutoDetect.value}")
+                // The repository observer loads the complete selection. A second
+                // loader here could overwrite a newer target or language selection.
             } catch (e: Exception) {
                 android.util.Log.e("AppGraph", "Failed to set mic language to $code", e)
             }
@@ -141,9 +138,7 @@ object AppGraph {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 languagePackRepository.setTargetLanguage(code)
-                val currentMic = activeLanguageSessionManager.activeSttLanguage.value ?: LanguageCode.HINDI
-                val isAuto = activeLanguageSessionManager.isSttAutoDetect.value
-                activeLanguageSessionManager.ensureStt(currentMic, autoDetect = isAuto, targetLanguage = code)
+                // Engine changes are serialized through the repository observer.
             } catch (e: Exception) {
                 android.util.Log.e("AppGraph", "Failed to set target language to $code", e)
             }

@@ -3,6 +3,7 @@ package com.itantra.data.languagepack
 import android.content.Context
 import android.os.StatFs
 import com.itantra.core.inference.ModelFileSpecs
+import com.itantra.core.inference.HindiSttModel
 import com.itantra.core.storage.LanguagePackStorage
 import com.itantra.domain.model.LanguageCatalog
 import com.itantra.domain.model.LanguageCode
@@ -52,9 +53,9 @@ class RealLanguagePackRepository(
         context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("receive_lang", null)?.let { LanguageCode.fromWireCode(it) }
     )
     private val speechInputMode = MutableStateFlow(
-        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("speech_input_mode", "AUTO")?.let {
-            try { com.itantra.domain.model.SpeechInputMode.valueOf(it) } catch (_: Exception) { com.itantra.domain.model.SpeechInputMode.AUTO }
-        } ?: com.itantra.domain.model.SpeechInputMode.AUTO
+        com.itantra.domain.model.SpeechInputMode.fromSavedValue(
+            context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("speech_input_mode", null)
+        )
     )
     private val manualSttLanguage = MutableStateFlow<LanguageCode?>(
         context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("manual_stt_lang", null)?.let { LanguageCode.fromWireCode(it) }
@@ -130,7 +131,12 @@ class RealLanguagePackRepository(
     override fun observePackSummaries(): Flow<List<LanguagePackSummary>> {
         return combine(sttStates, ttsStates, activeLanguage, downloadProgress) { currentStt, currentTts, active, progressMap ->
             LanguageCatalog.all.map { lang ->
-                val sttState = currentStt[lang.code] ?: LanguagePackInstallState.NOT_INSTALLED
+                val hindiReady = lang.code == LanguageCode.HINDI && HindiSttModel.isInstalled(
+                    requireNotNull(storage.packDirectory(lang.code).parentFile)
+                )
+                val sttState = if (lang.code == LanguageCode.HINDI) {
+                    if (hindiReady) LanguagePackInstallState.INSTALLED else LanguagePackInstallState.NOT_INSTALLED
+                } else currentStt[lang.code] ?: LanguagePackInstallState.NOT_INSTALLED
                 val ttsState = currentTts[lang.code] ?: LanguagePackInstallState.NOT_INSTALLED
                 val isFullyInstalled = (sttState == LanguagePackInstallState.INSTALLED && ttsState == LanguagePackInstallState.INSTALLED)
 
@@ -141,7 +147,9 @@ class RealLanguagePackRepository(
                 }
 
                 var sttSize = 0L
-                if (sttState == LanguagePackInstallState.INSTALLED) {
+                if (lang.code == LanguageCode.HINDI) {
+                    sttSize = HindiSttModel.totalBytes
+                } else if (sttState == LanguagePackInstallState.INSTALLED) {
                     val sharedDir = File(storage.packDirectory(lang.code).parentFile, "shared/stt")
                     ModelFileSpecs.getSttSpec(lang.code).requiredFiles.forEach { f ->
                         val file = File(sharedDir, f)
@@ -192,7 +200,10 @@ class RealLanguagePackRepository(
     }
 
     override suspend fun setActiveLanguage(code: LanguageCode): Boolean {
-        if (!storage.isSharedSttInstalled() && !storage.isInstalled(code)) {
+        val hindiReady = code == LanguageCode.HINDI && HindiSttModel.isInstalled(
+            requireNotNull(storage.packDirectory(code).parentFile)
+        )
+        if (!hindiReady && !storage.isSharedSttInstalled() && !storage.isInstalled(code)) {
             return false
         }
         activeLanguage.value = code
@@ -279,7 +290,11 @@ class RealLanguagePackRepository(
 
             lateinit var createdJob: Job
             createdJob = CoroutineScope(Dispatchers.IO).launch(start = CoroutineStart.LAZY) {
-                val needSharedStt = !isSharedSttReady()
+                val needSharedStt = code != LanguageCode.HINDI && !isSharedSttReady()
+                val needHindiStt = code == LanguageCode.HINDI && !HindiSttModel.isInstalled(
+                    requireNotNull(storage.packDirectory(code).parentFile)
+                )
+                val needTts = !isTtsReady(code)
 
                 if (needSharedStt) {
                     LanguageCatalog.all.forEach { updateState(it.code, LanguagePackInstallState.DOWNLOADING, true) }
@@ -298,7 +313,8 @@ class RealLanguagePackRepository(
                     val statFs = StatFs(parentDir.absolutePath)
                     val availableBytes = statFs.availableBlocksLong * statFs.blockSizeLong
                     val requiredBytes = (if (needSharedStt) manifest.sttModel.sizeBytes else 0L) +
-                        manifest.ttsModel.sizeBytes + 50_000_000L
+                        (if (needHindiStt) HindiSttModel.totalBytes else 0L) +
+                        (if (needTts) manifest.ttsModel.sizeBytes else 0L) + 50_000_000L
 
                     if (availableBytes < requiredBytes) {
                         if (needSharedStt) {
@@ -309,7 +325,9 @@ class RealLanguagePackRepository(
                         return@launch
                     }
 
-                    val totalExpectedBytes = (if (needSharedStt) manifest.sttModel.sizeBytes else 0L) + manifest.ttsModel.sizeBytes
+                    val totalExpectedBytes = (if (needSharedStt) manifest.sttModel.sizeBytes else 0L) +
+                        (if (needHindiStt) HindiSttModel.totalBytes else 0L) +
+                        (if (needTts) manifest.ttsModel.sizeBytes else 0L)
                     var cumulativeBytesDownloaded = 0L
 
                     val onBytesRead: (Int) -> Unit = { count ->
@@ -349,24 +367,35 @@ class RealLanguagePackRepository(
                         }
                     }
 
-                    // 2. Download per-language TTS
-                    val ttsUrlBase = manifest.ttsModel.downloadUrl ?: throw Exception("No TTS URL")
-                    val tmpTts = File(tmpDir, "tts")
-                    tmpTts.mkdirs()
-
-                    for (file in ttsSpec.requiredFiles) {
-                        val targetFile = File(tmpTts, file)
-                        downloadFile("$ttsUrlBase/$file", targetFile, onBytesRead)
-                        val expectedSha = manifest.ttsModel.checksumsSha256[file]
-                        if (!expectedSha.isNullOrEmpty()) {
-                            verifySha256(targetFile, expectedSha)
+                    // Hindi transcription uses its own pinned model. Download only
+                    // when Hindi is selected; the shared Tiny model is unnecessary.
+                    if (needHindiStt) {
+                        val stagedHindi = File(tmpDir, "hindi_stt")
+                        check(stagedHindi.mkdirs()) { "Cannot stage Hindi speech download" }
+                        for ((name, expected) in HindiSttModel.files) {
+                            val targetFile = File(stagedHindi, name)
+                            downloadFile("${HindiSttModel.downloadUrl}/$name", targetFile, onBytesRead)
+                            check(targetFile.length() == expected.bytes) { "Incomplete Hindi speech download: $name" }
+                            verifySha256(targetFile, expected.sha256)
                         }
+                        HindiSttModel.installDownloaded(parentDir, stagedHindi)
                     }
 
-                    // 3. Atomic Move per-language TTS with fallback (FIX 041)
-                    val ttsDest = File(rootDir, "tts")
-                    safeAtomicMove(tmpTts, ttsDest)
-                    File(ttsDest, ".verified_v1").writeText(manifest.packVersion)
+                    // Download TTS only when missing, preserving an existing pack.
+                    if (needTts) {
+                        val ttsUrlBase = manifest.ttsModel.downloadUrl ?: throw Exception("No TTS URL")
+                        val tmpTts = File(tmpDir, "tts")
+                        check(tmpTts.mkdirs()) { "Cannot stage TTS download" }
+                        for (file in ttsSpec.requiredFiles) {
+                            val targetFile = File(tmpTts, file)
+                            downloadFile("$ttsUrlBase/$file", targetFile, onBytesRead)
+                            val expectedSha = manifest.ttsModel.checksumsSha256[file]
+                            if (!expectedSha.isNullOrEmpty()) verifySha256(targetFile, expectedSha)
+                        }
+                        val ttsDest = File(rootDir, "tts")
+                        safeAtomicMove(tmpTts, ttsDest)
+                        File(ttsDest, ".verified_v1").writeText(manifest.packVersion)
+                    }
 
                     updateProgress(code, 100)
                     updateState(code, LanguagePackInstallState.INSTALLED, false)

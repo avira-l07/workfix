@@ -1,0 +1,15 @@
+{
+  "variant": "debug",
+  "versionCode": 3,
+  "versionName": "1.2-on-demand",
+  "path": "D:\\new itantra\\app\\build\\outputs\\apk\\debug\\app-debug.apk",
+  "bytes": 87272152,
+  "sha256": "90089e1234d5d21f8970dc9bfdf92bd265f762240fe13d9a5946fc1c79a53c8b",
+  "language_model_onnx_files": 0,
+  "vad_asset_present": true,
+  "speech_and_onnx_libraries_present": true,
+  "apk_signature_v2_verified": true,
+  "certificate": "Android Debug",
+  "unit_tests_passed": 407,
+  "device_tested": false
+}

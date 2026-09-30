@@ -18,8 +18,8 @@ android {
         applicationId = "com.example.itantra"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.2-on-demand"
 
         ndk {
             // Restricting to arm64-v8a only will crash on launch (UnsatisfiedLinkError) on any
@@ -73,6 +73,9 @@ android {
         }
     }
     sourceSets {
+        // Sherpa and ONNX native libraries come from the patched AAR. The legacy
+        // jniLibs copies otherwise silently override that runtime in the APK.
+        getByName("main").jniLibs.setSrcDirs(emptyList<String>())
         getByName("test").assets.srcDirs("$projectDir/schemas")
         getByName("androidTest").assets.srcDirs("$projectDir/schemas")
     }

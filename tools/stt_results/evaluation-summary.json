@@ -1,0 +1,162 @@
+{
+  "scope": "Desktop results and local file sizes only; no device performance or TTS listener evaluation.",
+  "results": {
+    "tiny": {
+      "languages": {
+        "hi": {
+          "count": 20,
+          "wer": 1.0833333333333333,
+          "cer": 1.0596718050721035,
+          "rtf": 0.05587709813890755,
+          "load_seconds": 0.6773500999843236,
+          "decode_ms_mean": 627.4439350017929,
+          "decode_ms_median": 572.4045499955537,
+          "decode_ms_max": 1196.2957000068855
+        },
+        "en": {
+          "count": 20,
+          "wer": 0.12041884816753927,
+          "cer": 0.05870020964360587,
+          "rtf": 0.037904562810102585,
+          "load_seconds": 0.49940189998596907,
+          "decode_ms_mean": 328.5946550007793,
+          "decode_ms_median": 299.03760000888724,
+          "decode_ms_max": 746.3087000069208
+        }
+      },
+      "desktop_peak_process_bytes": null
+    },
+    "small": {
+      "languages": {
+        "hi": {
+          "count": 20,
+          "wer": 0.8988095238095238,
+          "cer": 0.6877175534559921,
+          "rtf": 0.5939532754476886,
+          "load_seconds": 2.2081404000055045,
+          "decode_ms_mean": 6669.501330002095,
+          "decode_ms_median": 5672.288650021073,
+          "decode_ms_max": 14844.139299995732
+        },
+        "en": {
+          "count": 20,
+          "wer": 0.05759162303664921,
+          "cer": 0.01729559748427673,
+          "rtf": 0.25952791152345783,
+          "load_seconds": 1.8145479999948293,
+          "decode_ms_mean": 2249.8474649968557,
+          "decode_ms_median": 2066.1663500068244,
+          "decode_ms_max": 4759.632299974328
+        }
+      },
+      "desktop_peak_process_bytes": 1280589824
+    },
+    "small-repaired": {
+      "languages": {
+        "hi": {
+          "count": 20,
+          "wer": 0.5436507936507936,
+          "cer": 0.2744903033316758,
+          "rtf": 1.7073583306621334,
+          "load_seconds": 2.3418911999906413,
+          "decode_ms_mean": 19171.926695005095,
+          "decode_ms_median": 17797.784150010557,
+          "decode_ms_max": 42909.7974000033
+        },
+        "en": {
+          "count": 20,
+          "wer": 0.05759162303664921,
+          "cer": 0.01729559748427673,
+          "rtf": 0.31860182027967326,
+          "load_seconds": 1.889232500019716,
+          "decode_ms_mean": 2761.9591800044873,
+          "decode_ms_median": 2508.0562500079395,
+          "decode_ms_max": 5512.618699984159
+        }
+      },
+      "desktop_peak_process_bytes": 1283125248
+    }
+  },
+  "storage": {
+    "bundled_language_assets": {
+      "bytes": 1244107755,
+      "file_count": 33
+    },
+    "bundled_stt": {
+      "bytes": 103692000,
+      "file_count": 3
+    },
+    "bundled_tts_by_language": {
+      "hi": {
+        "bytes": 114043612,
+        "file_count": 2
+      },
+      "en": {
+        "bytes": 114017331,
+        "file_count": 2
+      },
+      "bn": {
+        "bytes": 114045156,
+        "file_count": 2
+      },
+      "gu": {
+        "bytes": 114034326,
+        "file_count": 2
+      },
+      "mr": {
+        "bytes": 114044398,
+        "file_count": 2
+      },
+      "kn": {
+        "bytes": 114045931,
+        "file_count": 2
+      },
+      "ml": {
+        "bytes": 114052927,
+        "file_count": 2
+      },
+      "ta": {
+        "bytes": 114032763,
+        "file_count": 2
+      },
+      "te": {
+        "bytes": 114038199,
+        "file_count": 2
+      },
+      "or": {
+        "bytes": 114046707,
+        "file_count": 2
+      }
+    },
+    "existing_apk": {
+      "bytes": 1221892259,
+      "is_current_source_build": false
+    }
+  },
+  "unit_tests_from_existing_xml": {
+    "tests": 402,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "internal_candidate_checks_not_official_thresholds": {
+    "hindi_wer_at_most_35_percent": false,
+    "hindi_relative_improvement_at_least_25_percent": true,
+    "english_wer_at_most_20_percent": true,
+    "english_regression_at_most_3_percentage_points": true,
+    "desktop_rtf_at_most_3_each_language": true
+  },
+  "candidate_passes_internal_desktop_gate": false,
+  "unmeasured": [
+    "Android CPU/RAM",
+    "installed Android storage",
+    "microphone endpoint latency",
+    "received-text-to-audible-TTS latency",
+    "two-phone latency",
+    "human TTS intelligibility",
+    "seven additional supported languages"
+  ],
+  "unsupported": [
+    "Odia STT in evaluated model family"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "hindi": {
+    "repo": "ippocode/indic-asr-onnx",
+    "revision": "1f6243ec6dffc4de2db84fe1446576d1ff52c252",
+    "files": [
+      {
+        "file": "decoder.int8.onnx",
+        "bytes": 262200764,
+        "sha256": "9f2ab915e2b46236f4cc191fe1fb6519c7a75a5c3d4bfe6bce5e8e920e6fd99a"
+      },
+      {
+        "file": "encoder.int8.onnx",
+        "bytes": 112413411,
+        "sha256": "37a8f9a573a30b8b0c55e0d5cd577096c666a6208529c4026b6c49a55e0dea7b"
+      },
+      {
+        "file": "tokens.txt",
+        "bytes": 816730,
+        "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+      }
+    ]
+  },
+  "native_source_commit": "11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+  "native_patch_sha256": "ceca83c5895154f2d44a57ccc10596c572e37e6cf3a8535dd9f5019f9d4e0bfb",
+  "android_library_build_id": "c710c614905eb3702cfbc3084c3166de741f3bb8",
+  "desktop_module_sha256": "a875ec3e73db44765111ee44819ac9aad826c7be8ac52f856f341e9571b0fe3f"
+}

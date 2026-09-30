@@ -1,0 +1,12 @@
+Hindi STT model
+Source model: vasista22/whisper-hindi-small (Speech Lab, IIT Madras).
+Sherpa-ONNX INT8 export: ippocode/indic-asr-onnx,
+revision 1f6243ec6dffc4de2db84fe1446576d1ff52c252.
+Model cards declare Apache-2.0 licensing.
+https://huggingface.co/vasista22/whisper-hindi-small
+https://huggingface.co/ippocode/indic-asr-onnx
+
+Sherpa-ONNX runtime: k2-fsa/sherpa-onnx v1.13.8, Apache-2.0.
+Local modifications join Whisper byte tokens before Unicode cleanup and raise
+the bounded decoding token allowance for Indic scripts. Rebuild provenance and
+patch are in tools/STT_REPAIR.md and tools/sherpa-whisper-repair.patch.

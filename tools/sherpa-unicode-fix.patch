@@ -1,0 +1,146 @@
+From 2edc882fe0ba07882daf2cde8bc3bfa5dd968d3b Mon Sep 17 00:00:00 2001
+From: Paolo Antinori <sonicaaaa@gmail.com>
+Date: Sun, 20 Sep 2026 08:56:54 +0200
+Subject: [PATCH] Fix character loss for byte-level-BPE tokens in
+ whisper/cohere recognizers (#3965)
+
+ApplyInverseTextNormalization() always calls RemoveInvalidUtf8Sequences().
+Whisper and cohere tokenizers are byte-level-BPE, so a single multi-byte
+UTF-8 character can be split across two tokens and each fragment alone is
+invalid UTF-8. Applying ITN per token deleted those dangling bytes, which
+silently dropped whole characters from the output text (observed with
+whisper and Hebrew: FLEURS he_il WER improves from 49.5% to 35.4% with this
+change; all previously corrupted words decode correctly).
+
+Concatenate the tokens first and apply ITN and the homophone replacer once
+on the complete text (per segment for the segment-timestamps path).
+---
+ ...ffline-recognizer-cohere-transcribe-impl.h |  7 ++++--
+ .../csrc/offline-recognizer-whisper-impl.h    | 24 +++++++++++++------
+ .../offline-recognizer-whisper-tpl-impl.h     |  7 ++++--
+ sherpa-onnx/csrc/text-utils-test.cc           | 13 ++++++++++
+ 4 files changed, 40 insertions(+), 11 deletions(-)
+
+diff --git a/sherpa-onnx/csrc/offline-recognizer-cohere-transcribe-impl.h b/sherpa-onnx/csrc/offline-recognizer-cohere-transcribe-impl.h
+index e6d2dc5616..25deed1a8c 100644
+--- a/sherpa-onnx/csrc/offline-recognizer-cohere-transcribe-impl.h
++++ b/sherpa-onnx/csrc/offline-recognizer-cohere-transcribe-impl.h
+@@ -215,14 +215,17 @@ class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
+         continue;
+       }
+ 
++      // See offline-recognizer-whisper-impl.h: ITN must run on the
++      // concatenated text, not on individual byte-level-BPE tokens.
+       std::string s = sym_table[i];
+-      s = ApplyInverseTextNormalization(s);
+-      s = ApplyHomophoneReplacer(std::move(s));
+ 
+       text += s;
+       r.tokens.push_back(s);
+     }
+ 
++    text = ApplyInverseTextNormalization(text);
++    text = ApplyHomophoneReplacer(std::move(text));
++
+     r.text = text;
+ 
+     return r;
+diff --git a/sherpa-onnx/csrc/offline-recognizer-whisper-impl.h b/sherpa-onnx/csrc/offline-recognizer-whisper-impl.h
+index 47a40d1123..7a5b31835c 100644
+--- a/sherpa-onnx/csrc/offline-recognizer-whisper-impl.h
++++ b/sherpa-onnx/csrc/offline-recognizer-whisper-impl.h
+@@ -172,14 +172,24 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
+         continue;
+       }
+ 
++      // NOTE: We must not apply inverse text normalization (ITN) or the
++      // homophone replacer to individual tokens here. Tokens from
++      // byte-level-BPE vocabularies can split a single multi-byte UTF-8
++      // character across two token boundaries, so a token on its own may
++      // contain invalid UTF-8. ApplyInverseTextNormalization() always calls
++      // RemoveInvalidUtf8Sequences(), which would silently delete such
++      // dangling bytes and thus whole characters from the output text
++      // (seen with whisper + Hebrew). Concatenate first, then normalize
++      // the complete text once.
+       std::string s = sym_table[i];
+-      s = ApplyInverseTextNormalization(s);
+-      s = ApplyHomophoneReplacer(std::move(s));
+ 
+       text += s;
+       r.tokens.push_back(s);
+     }
+ 
++    text = ApplyInverseTextNormalization(text);
++    text = ApplyHomophoneReplacer(std::move(text));
++
+     r.text = text;
+     r.lang = src.lang;
+ 
+@@ -202,16 +212,16 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
+         duration = std::max(0.0f, duration);
+         r.segment_durations.push_back(duration);
+ 
+-        // Convert token IDs to text
++        // Convert token IDs to text; ITN runs on the complete segment for
++        // the same byte-level-BPE reason as above.
+         std::string seg_text;
+         for (int32_t tok_id : seg.token_ids) {
+           if (sym_table.Contains(tok_id)) {
+-            std::string s = sym_table[tok_id];
+-            s = ApplyInverseTextNormalization(s);
+-            s = ApplyHomophoneReplacer(std::move(s));
+-            seg_text += s;
++            seg_text += sym_table[tok_id];
+           }
+         }
++        seg_text = ApplyInverseTextNormalization(seg_text);
++        seg_text = ApplyHomophoneReplacer(std::move(seg_text));
+         r.segment_texts.push_back(std::move(seg_text));
+       }
+     }
+diff --git a/sherpa-onnx/csrc/offline-recognizer-whisper-tpl-impl.h b/sherpa-onnx/csrc/offline-recognizer-whisper-tpl-impl.h
+index fc8700f400..129e8987e0 100644
+--- a/sherpa-onnx/csrc/offline-recognizer-whisper-tpl-impl.h
++++ b/sherpa-onnx/csrc/offline-recognizer-whisper-tpl-impl.h
+@@ -99,14 +99,17 @@ class OfflineRecognizerWhisperTplImpl : public OfflineRecognizerImpl {
+         continue;
+       }
+ 
++      // See offline-recognizer-whisper-impl.h: ITN must run on the
++      // concatenated text, not on individual byte-level-BPE tokens.
+       std::string s = sym_table[i];
+-      s = ApplyInverseTextNormalization(s);
+-      s = ApplyHomophoneReplacer(std::move(s));
+ 
+       text += s;
+       r.tokens.push_back(s);
+     }
+ 
++    text = ApplyInverseTextNormalization(text);
++    text = ApplyHomophoneReplacer(std::move(text));
++
+     r.text = text;
+     r.lang = src.lang;
+ 
+diff --git a/sherpa-onnx/csrc/text-utils-test.cc b/sherpa-onnx/csrc/text-utils-test.cc
+index 1fef71e40d..06d6b79047 100644
+--- a/sherpa-onnx/csrc/text-utils-test.cc
++++ b/sherpa-onnx/csrc/text-utils-test.cc
+@@ -135,4 +135,17 @@ TEST(RemoveInvalidUtf8Sequences, DebugSpaceFollowedByInvalidByte) {
+   EXPECT_EQ(output, " ");  // Expect `0xc4` to be removed, leaving only space
+ }
+ 
++TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
++  // Whisper byte-level-BPE tokens can split a multi-byte UTF-8 character
++  // across two tokens. Each fragment alone is invalid UTF-8 and is
++  // stripped; the character only survives when the fragments are joined
++  // first. Recognizer implementations must therefore concatenate tokens
++  // before calling this function (see the whisper Convert()).
++  std::string frag1 = "\xd7";  // leading byte of a Hebrew letter
++  std::string frag2 = "\xa8";  // continuation byte (frag1+frag2 is a letter)
++  EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1), "");
++  EXPECT_EQ(RemoveInvalidUtf8Sequences(frag2), "");
++  EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1 + frag2), "\xd7\xa8");
++}
++
+ }  // namespace sherpa_onnx

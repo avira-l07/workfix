@@ -101,6 +101,7 @@ fun TransceiverHubScreen(
     val liveMessages by coordinator.messages.collectAsState()
     val sessionState by coordinator.secureSessionManager.state.collectAsState()
     val activeLanguage by sessionManager.activeSttLanguage.collectAsState()
+    val micAutoDetect by sessionManager.isSttAutoDetect.collectAsState()
     val targetLanguage by AppGraph.languagePackRepository.observeTargetLanguage().collectAsState(initial = null)
     val transportConnectionState by AppGraph.transportEngine.observeConnectionState().collectAsState(initial = ConnectionState.DISCONNECTED)
     val liveMetrics by AppGraph.metricsRecorder.latest.collectAsState()
@@ -797,7 +798,7 @@ fun TransceiverHubScreen(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            "MIC LANGUAGE:",
+                            if (micAutoDetect) "MIC: AUTO-DETECT" else "MIC LANGUAGE:",
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
                             fontSize = 9.5.sp,
@@ -811,7 +812,7 @@ fun TransceiverHubScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Hindi Chip
-                        val isHindi = (activeLanguage == LanguageCode.HINDI || activeLanguage == null)
+                        val isHindi = !micAutoDetect && activeLanguage == LanguageCode.HINDI
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = if (isHindi) ITantraColors.Primary else Color(0xFFF1F5F9),
@@ -830,7 +831,7 @@ fun TransceiverHubScreen(
                         }
 
                         // English Chip
-                        val isEnglish = (activeLanguage == LanguageCode.ENGLISH)
+                        val isEnglish = !micAutoDetect && activeLanguage == LanguageCode.ENGLISH
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = if (isEnglish) ITantraColors.Primary else Color(0xFFF1F5F9),

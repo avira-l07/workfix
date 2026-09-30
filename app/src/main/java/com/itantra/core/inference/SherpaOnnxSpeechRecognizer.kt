@@ -14,16 +14,14 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/** Convert iTantra's stable language code to Whisper's token code. */
-internal fun whisperLanguageCode(code: LanguageCode): String = when (code) {
-    LanguageCode.ODIA -> "od"
-    else -> code.wireCode
+/** Only pass language tokens actually supported by this Whisper export. */
+internal fun whisperLanguageCode(code: LanguageCode): String {
+    require(code in ModelFileSpecs.supportedSttLanguages) { "Unsupported Whisper language: $code" }
+    return code.wireCode
 }
 
-internal fun languageCodeFromWhisper(code: String): LanguageCode? = when (code.trim().lowercase()) {
-    "od" -> LanguageCode.ODIA
-    else -> LanguageCode.fromWireCode(code)
-}
+internal fun languageCodeFromWhisper(code: String): LanguageCode? =
+    LanguageCode.fromWireCode(code.trim())?.takeIf { it in ModelFileSpecs.supportedSttLanguages }
 
 class SherpaOnnxSpeechRecognizer(
     private val context: Context,
@@ -34,8 +32,12 @@ class SherpaOnnxSpeechRecognizer(
     val targetLanguage: LanguageCode? = null
 ) : SpeechRecognizerEngine {
 
+    private val usesHindiModel = HindiSttModel.selected(languageCode, autoDetect)
+
     val isTranslateMode: Boolean
-        get() = targetLanguage == LanguageCode.ENGLISH && languageCode != LanguageCode.ENGLISH
+        // The Hindi fine-tune is a transcription model. Translation stays in the
+        // existing text-translation stage rather than asking it to emit English.
+        get() = !usesHindiModel && targetLanguage == LanguageCode.ENGLISH && languageCode != LanguageCode.ENGLISH
 
 
     private var recognizer: OfflineRecognizer? = null
@@ -48,9 +50,18 @@ class SherpaOnnxSpeechRecognizer(
     override suspend fun load() = withContext(Dispatchers.IO) {
         if (isLoaded) return@withContext
 
-        val spec = ModelFileSpecs.getSttSpec(languageCode) ?: throw UnsupportedOperationException("No STT spec for language ${languageCode}")
+        require(languageCode in ModelFileSpecs.supportedSttLanguages) {
+            "${languageCode.name} speech recognition is not supported by the installed Whisper model"
+        }
+
+        val spec = if (usesHindiModel) HindiSttModel.spec() else ModelFileSpecs.getSttSpec(languageCode)
         val packsDir = storage.packDirectory(languageCode).parentFile // language_packs dir
         val packDir = storage.packDirectory(languageCode)
+        if (usesHindiModel) {
+            check(packsDir != null && HindiSttModel.isInstalled(packsDir)) {
+                "Hindi speech model is not prepared. Free storage and restart the app to finish installation."
+            }
+        }
 
         // Handle shared STT models
         val sttDir = if (spec.isShared && spec.sharedPath != null) {
@@ -224,9 +235,9 @@ class SherpaOnnxSpeechRecognizer(
         // check would reject valid output there. For direct transcription, reject
         // Latin hallucinations (or another script) instead of sending them as the
         // selected Indic language.
-        val scriptDiagnostic = if (!isTranslateMode && !autoDetect && cleanedText.isNotBlank()) {
-            LanguageScriptDetector.detectScriptMismatch(cleanedText, languageCode)?.diagnostic
-        } else null
+        val scriptDiagnostic = speechOutputDiagnostic(
+            cleanedText, detectedCode, resolvedLanguage, autoDetect, isTranslateMode
+        )
 
         // A script mismatch is not evidence of romanized Hindi. Converting arbitrary
         // English output to Devanagari cannot repair recognition and corrupts the

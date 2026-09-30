@@ -1,0 +1,14 @@
+{
+  "status": "shipped_in_on_demand_debug_apk",
+  "versionCode": 3,
+  "apk": "app/build/outputs/apk/debug/app-debug.apk",
+  "manual_hindi_model": "Whisper Hindi Small INT8",
+  "manual_hindi_source": "https://huggingface.co/ippocode/indic-asr-onnx",
+  "manual_hindi_source_revision": "1f6243ec6dffc4de2db84fe1446576d1ff52c252",
+  "other_languages_and_auto_model": "Whisper Tiny multilingual INT8",
+  "bundled_language_model_files": 0,
+  "hindi_model_download_bytes": 375430905,
+  "hindi_held_out_test_wer": 0.1376720901126408,
+  "phone_tested": false,
+  "note": "This is status documentation, not an Android runtime configuration file."
+}

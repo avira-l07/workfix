@@ -3,6 +3,7 @@ package com.itantra.data.languagepack
 import android.content.Context
 import android.util.Log
 import com.itantra.core.inference.ModelFileSpecs
+import com.itantra.core.inference.HindiSttModel
 import com.itantra.core.storage.LanguagePackStorage
 import com.itantra.domain.model.LanguageCode
 import java.io.File
@@ -24,12 +25,19 @@ class AssetLanguagePackStorage(
         val TRUSTED_STT_SHA256 = mapOf(
             "tiny-encoder.int8.onnx" to "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434",
             "tiny-decoder.int8.onnx" to "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925",
-            "tiny-tokens.txt" to "c99891a107067b649a03fdf23c4b475fd0ad981da7f9aae84e72fb9f2d53c785"
+            "tiny-tokens.txt" to "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
         )
     }
 
     init {
         extractBundledAssetsIfNeeded()
+    }
+
+    fun ensureHindiStt() {
+        val root = requireNotNull(delegate.packDirectory(LanguageCode.HINDI).parentFile)
+        HindiSttModel.install(root) { name ->
+            context.assets.open("language_packs/${HindiSttModel.relativePath}/$name")
+        }
     }
 
     private fun getExpectedSttSha256(fileName: String): String? {
@@ -115,6 +123,23 @@ class AssetLanguagePackStorage(
                         Log.i(TAG, "Extracting bundled STT asset: $assetPath -> ${destFile.absolutePath}")
                         copyAssetToFile(assetPath, destFile, expectedSha)
                     }
+                }
+            }
+
+            // Hindi-only STT has its own versioned, checksum-verified directory.
+            // Failure must not prevent other languages or TTS from being prepared.
+            val bundledHindi = HindiSttModel.files.keys.all { name ->
+                try {
+                    context.assets.open("language_packs/${HindiSttModel.relativePath}/$name").use { true }
+                } catch (_: Exception) {
+                    false
+                }
+            }
+            if (bundledHindi) {
+                try {
+                    ensureHindiStt()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Hindi speech model preparation failed", e)
                 }
             }
 
@@ -219,6 +244,10 @@ class AssetLanguagePackStorage(
     }
 
     override fun isInstalled(code: LanguageCode): Boolean {
+        if (code == LanguageCode.HINDI) {
+            val root = requireNotNull(delegate.packDirectory(code).parentFile)
+            return com.itantra.core.inference.HindiSttModel.isInstalled(root)
+        }
         // A language is usable for PTT voice transceiver if shared multilingual STT is installed,
         // or if both STT and TTS are installed.
         return isSharedSttInstalled() || delegate.isInstalled(code)

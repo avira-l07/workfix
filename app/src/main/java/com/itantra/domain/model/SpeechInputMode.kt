@@ -9,5 +9,10 @@ package com.itantra.domain.model
  */
 enum class SpeechInputMode {
     AUTO,
-    MANUAL
+    MANUAL;
+
+    companion object {
+        fun fromSavedValue(value: String?): SpeechInputMode =
+            entries.firstOrNull { it.name == value } ?: MANUAL
+    }
 }

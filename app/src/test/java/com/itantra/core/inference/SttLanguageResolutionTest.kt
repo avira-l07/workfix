@@ -243,9 +243,10 @@ class SttLanguageResolutionTest {
     }
 
     @Test
-    fun `Odia maps to Whisper od token while storage remains or`() {
-        assertEquals("od", whisperLanguageCode(LanguageCode.ODIA))
-        assertEquals(LanguageCode.ODIA, languageCodeFromWhisper("od"))
-        assertEquals(LanguageCode.ODIA, languageCodeFromWhisper("OD"))
+    fun `unsupported Odia never reaches the native decoder as an invalid token`() {
+        assertThrows(IllegalArgumentException::class.java) { whisperLanguageCode(LanguageCode.ODIA) }
+        assertNull(languageCodeFromWhisper("od"))
+        assertNull(languageCodeFromWhisper("or"))
+        assertEquals("hi", whisperLanguageCode(LanguageCode.HINDI))
     }
 }
