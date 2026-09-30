@@ -329,7 +329,8 @@ class MultiLanguageRoutingTest {
             assertEquals("Manifest languageCode must match", lang.wireCode, manifest.languageCode)
             assertEquals("Manifest schemaVersion must be 1", 1, manifest.schemaVersion)
 
-            val sttSpec = ModelFileSpecs.getSttSpec(lang)
+            val sttSpec = com.itantra.core.inference.AdditionalSttModel.forLanguage(lang)?.spec()
+                ?: ModelFileSpecs.getSttSpec(lang)
             assertEquals("STT files must match spec", sttSpec.requiredFiles, manifest.sttModel.files)
 
             val ttsSpec = ModelFileSpecs.getTtsSpec(lang)

@@ -61,6 +61,11 @@ interface LanguagePackRepository {
 
     suspend fun startDownload(code: LanguageCode)
 
+    /** Provision only the speech direction(s) selected by the user. */
+    suspend fun startDownloadComponents(code: LanguageCode, stt: Boolean, tts: Boolean) {
+        if (stt || tts) startDownload(code)
+    }
+
     suspend fun cancelDownload(code: LanguageCode)
 
     suspend fun deleteInstalledPack(code: LanguageCode)

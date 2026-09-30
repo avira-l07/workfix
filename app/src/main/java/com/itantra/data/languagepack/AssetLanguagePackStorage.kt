@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.itantra.core.inference.ModelFileSpecs
 import com.itantra.core.inference.HindiSttModel
+import com.itantra.core.inference.AdditionalSttModel
 import com.itantra.core.storage.LanguagePackStorage
 import com.itantra.domain.model.LanguageCode
 import java.io.File
@@ -143,6 +144,34 @@ class AssetLanguagePackStorage(
                 }
             }
 
+            // Demo/all variants may bundle the four selected CTC recognizers.
+            // The default small APK has no such assets and takes the download path.
+            for (code in listOf(LanguageCode.HINDI, LanguageCode.ENGLISH, LanguageCode.TAMIL, LanguageCode.TELUGU)) {
+                val model = requireNotNull(AdditionalSttModel.forLanguage(code))
+                val root = requireNotNull(delegate.packDirectory(code).parentFile)
+                if (AdditionalSttModel.isInstalled(root, model)) continue
+                val bundled = model.files.keys.all { name ->
+                    runCatching {
+                        context.assets.open("language_packs/${model.relativePath}/$name").use { true }
+                    }.getOrDefault(false)
+                }
+                if (!bundled) continue
+                val staged = File(root, ".${code.wireCode}_ctc_asset_${System.nanoTime()}")
+                try {
+                    check(staged.mkdirs()) { "Cannot stage bundled ${code.name} speech model" }
+                    for (name in model.files.keys) {
+                        context.assets.open("language_packs/${model.relativePath}/$name").use { input ->
+                            FileOutputStream(File(staged, name)).use { output -> input.copyTo(output) }
+                        }
+                    }
+                    AdditionalSttModel.installDownloaded(root, model, staged)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Bundled ${code.name} CTC model extraction failed", e)
+                } finally {
+                    staged.deleteRecursively()
+                }
+            }
+
             // 2. Bundled TTS extraction across all canonical languages
             for (code in com.itantra.domain.model.LanguageCatalog.all.map { it.code }) {
                 val ttsSpec = ModelFileSpecs.getTtsSpec(code) ?: continue
@@ -244,9 +273,10 @@ class AssetLanguagePackStorage(
     }
 
     override fun isInstalled(code: LanguageCode): Boolean {
-        if (code == LanguageCode.HINDI) {
+        val additional = AdditionalSttModel.forLanguage(code)
+        if (additional != null) {
             val root = requireNotNull(delegate.packDirectory(code).parentFile)
-            return com.itantra.core.inference.HindiSttModel.isInstalled(root)
+            return AdditionalSttModel.isInstalled(root, additional)
         }
         // A language is usable for PTT voice transceiver if shared multilingual STT is installed,
         // or if both STT and TTS are installed.

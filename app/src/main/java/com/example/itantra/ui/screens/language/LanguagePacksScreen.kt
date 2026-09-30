@@ -133,10 +133,13 @@ fun LanguagePacksScreen(
                 summary.ttsInstallState == LanguagePackInstallState.CORRUPTED ||
                 pairMtState == TranslationModelState.FAILED
 
+        val selectedRoleReady = (langCode !in effectiveMicLangs || isSttReady) &&
+            (langCode !in effectiveListenLangs || isTtsReady) &&
+            (langCode in effectiveMicLangs || langCode in effectiveListenLangs)
         val readiness = when {
             isDownloading -> ReadinessBadgeState.DOWNLOADING
             isFailed -> ReadinessBadgeState.FAILED
-            isSttReady && isTtsReady -> ReadinessBadgeState.READY_OFFLINE
+            selectedRoleReady || (isSttReady && isTtsReady) -> ReadinessBadgeState.READY_OFFLINE
             else -> ReadinessBadgeState.NOT_PROVISIONED
         }
 
@@ -145,7 +148,13 @@ fun LanguagePacksScreen(
             languageCode = langCode,
             nameEn = summary.language.displayName,
             nameNative = summary.language.nativeDisplayName,
-            version = if (langCode == LanguageCode.HINDI) "Hindi Small v1" else "v1.0.0",
+            version = when (langCode) {
+                LanguageCode.HINDI -> "Hindi IndicConformer CTC v2"
+                LanguageCode.ENGLISH -> "English FastConformer CTC v2"
+                LanguageCode.TAMIL -> "Tamil IndicConformer CTC v2"
+                LanguageCode.TELUGU -> "Telugu IndicConformer CTC v2"
+                else -> "v1.0.0"
+            },
             sizeMb = sttMb + ttsMb,
             sttMb = sttMb,
             ttsMb = ttsMb,
@@ -468,6 +477,7 @@ fun LanguagePacksScreen(
                             onDownloadPack(pack)
                         },
                         onRetry = { viewModel.retryProvision(pack.languageCode) },
+                        onProvisionTranslation = { viewModel.provisionTranslation(pack.languageCode) },
                         onCancelDownload = { viewModel.cancelDownload(pack.languageCode) },
                         onSetTarget = { viewModel.setTargetLanguage(pack.languageCode) },
                         onClearTarget = { viewModel.setTargetLanguage(null) }
@@ -600,6 +610,7 @@ private fun LanguagePackCard(
     onActivate: () -> Unit = {},
     onDownload: () -> Unit = {},
     onRetry: () -> Unit = {},
+    onProvisionTranslation: () -> Unit = {},
     onCancelDownload: () -> Unit = {},
     onSetTarget: () -> Unit = {},
     onClearTarget: () -> Unit = {},
@@ -743,6 +754,15 @@ private fun LanguagePackCard(
                 }
             }
 
+            if (!pack.isMlOrOr && pack.languageCode != LanguageCode.ENGLISH &&
+                pack.isSttReady && pack.isTtsReady && !pack.isTranslationReady &&
+                pack.readiness != ReadinessBadgeState.DOWNLOADING) {
+                Spacer(Modifier.height(6.dp))
+                OutlinedButton(onClick = onProvisionTranslation, modifier = Modifier.fillMaxWidth()) {
+                    Text("PREPARE OFFLINE TRANSLATION")
+                }
+            }
+
             // Progress / Download / Active Actions
             if (pack.readiness == ReadinessBadgeState.DOWNLOADING) {
                 Spacer(Modifier.height(8.dp))
@@ -867,7 +887,7 @@ private fun LanguagePackCard(
 private fun DiagnosticsBadge(status: ReadinessBadgeState, progress: Float) {
     val (label, bgColor, textColor, borderColor) = when (status) {
         ReadinessBadgeState.READY_OFFLINE -> Quad(
-            "READY OFFLINE",
+            "SPEECH READY",
             Color(0xFFE8F5E9),
             Color(0xFF2E7D32),
             Color(0xFF81C784)

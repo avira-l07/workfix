@@ -1,5 +1,8 @@
 # Essential evaluation status — 29 September 2026
 
+> Historical record for build 1.2 only. For the current four-language CTC
+> build and measurements, read [FOUR_LANGUAGE_MODEL_REPORT.md](FOUR_LANGUAGE_MODEL_REPORT.md).
+
 ## Implemented repair
 
 Build **1.2-on-demand** (version code 3) uses a Hindi-specific Whisper Small

@@ -76,18 +76,20 @@ class OfflineReadinessChecker(
             source == LanguageCode.ODIA || target == LanguageCode.ODIA) {
             return ComponentReadiness("${source.wireCode.uppercase()}→${target.wireCode.uppercase()} MT", ComponentStatus.NOT_INSTALLED)
         }
-        if (source == LanguageCode.HINDI && target == LanguageCode.ENGLISH) {
-            return checkHiToEnMt()
+        if (source == target) {
+            return ComponentReadiness("${source.wireCode.uppercase()}→${target.wireCode.uppercase()} MT", ComponentStatus.READY_OFFLINE)
         }
         val mlKitEngine = translationEngine as? MlKitOfflineTranslationEngine
-        val langToCheck = if (source != LanguageCode.ENGLISH) source else target
         val status = if (mlKitEngine != null) {
-            val pairState = mlKitEngine.pairModelStates.value[langToCheck] ?: mlKitEngine.modelState.value
-            when (pairState) {
-                TranslationModelState.READY -> ComponentStatus.READY_OFFLINE
-                TranslationModelState.DOWNLOADING -> ComponentStatus.DOWNLOADING
-                TranslationModelState.FAILED -> ComponentStatus.FAILED
-                TranslationModelState.NOT_INSTALLED -> ComponentStatus.NOT_INSTALLED
+            val states = mlKitEngine.pairModelStates.value
+            val required = setOf(source, target, LanguageCode.ENGLISH).map {
+                states[it] ?: TranslationModelState.NOT_INSTALLED
+            }
+            when {
+                required.any { it == TranslationModelState.FAILED } -> ComponentStatus.FAILED
+                required.any { it == TranslationModelState.DOWNLOADING } -> ComponentStatus.DOWNLOADING
+                required.all { it == TranslationModelState.READY } -> ComponentStatus.READY_OFFLINE
+                else -> ComponentStatus.NOT_INSTALLED
             }
         } else {
             if (translationEngine.isLoaded) ComponentStatus.READY_OFFLINE else ComponentStatus.NOT_INSTALLED
@@ -95,17 +97,20 @@ class OfflineReadinessChecker(
         return ComponentReadiness("${source.wireCode.uppercase()}→${target.wireCode.uppercase()} MT", status)
     }
 
-    private fun checkHiToEnMt(): ComponentReadiness {
-        // Hindi→English translation uses Whisper native translate mode bundled in APK assets
-        val sttReady = checkStt(LanguageCode.HINDI).status == ComponentStatus.READY_OFFLINE
-        val status = if (sttReady) ComponentStatus.READY_OFFLINE else ComponentStatus.NOT_INSTALLED
-        return ComponentReadiness("Hindi→English MT", status)
-    }
+    private fun checkHiToEnMt(): ComponentReadiness =
+        checkLanguageMt(LanguageCode.HINDI, LanguageCode.ENGLISH)
 
     fun checkStt(lang: LanguageCode): ComponentReadiness {
-        val spec = ModelFileSpecs.getSttSpec(lang)
         val packDir = storage.packDirectory(lang)
-        val packsDir = packDir.parentFile
+        val packsDir = requireNotNull(packDir.parentFile)
+        val dedicatedReady = AdditionalSttModel.forLanguage(lang)?.let { AdditionalSttModel.isInstalled(packsDir, it) }
+        if (dedicatedReady != null) {
+            return ComponentReadiness(
+                "${lang.name} STT",
+                if (dedicatedReady) ComponentStatus.READY_OFFLINE else ComponentStatus.NOT_INSTALLED,
+            )
+        }
+        val spec = ModelFileSpecs.getSttSpec(lang)
 
         val sttDir = if (spec.isShared && spec.sharedPath != null) {
             java.io.File(packsDir, spec.sharedPath)

@@ -5,6 +5,7 @@ Modes: minimal (all downloaded), demo (Hindi/English speech bundled), all.
 """
 import argparse
 import hashlib
+import json
 from pathlib import Path
 import shutil
 
@@ -60,12 +61,32 @@ def main(mode):
     if mode not in ('minimal', 'demo', 'all'):
         raise ValueError(mode)
     tiny = mode != 'minimal'
-    hindi = mode != 'minimal'
+    # The multilingual Tiny pack remains only for automatic detection and
+    # languages without a dedicated manual recognizer.
     for name in ('tiny-encoder.int8.onnx', 'tiny-decoder.int8.onnx'):
         relocate(Path('shared/stt') / name, tiny)
     tiny_tokens(tiny)
     for name in ('encoder.int8.onnx', 'decoder.int8.onnx', 'tokens.txt'):
-        relocate(Path('shared/stt-hi-v1') / name, hindi)
+        relocate(Path('shared/stt-hi-v1') / name, False)
+    for code in ('ta', 'te'):
+        for name in ('encoder.int8.onnx', 'decoder.int8.onnx', 'tokens.txt'):
+            relocate(Path(f'shared/stt-{code}-v1') / name, False)
+    for code in ('hi', 'en', 'ta', 'te'):
+        manifest = json.loads((ASSETS / f'{code}_dev_manifest.json').read_text(encoding='utf-8'))
+        for name, expected in manifest['sttModel']['checksumsSha256'].items():
+            relative = Path(f'shared/stt-{code}-ctc-v2') / name
+            asset = ASSETS / relative
+            backup = BACKUP / relative
+            bundle = mode == 'all' or (mode == 'demo' and code in ('hi', 'en'))
+            if bundle and not asset.exists() and not backup.exists():
+                candidate = ROOT / 'tools/stt_models/indicconformer-candidates' / (
+                    f'{code}/{name}' if name == 'model.int8.onnx' or code == 'en' else name
+                )
+                if not candidate.exists() or checksum(candidate) != expected:
+                    raise FileNotFoundError(f'Fetch the pinned {code} candidate before bundling {relative}')
+                backup.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(candidate, backup)
+            relocate(relative, bundle)
     for code in ('hi', 'en', 'bn', 'gu', 'mr', 'kn', 'ml', 'ta', 'te', 'or'):
         relocate(Path(code) / 'tts/model.onnx', mode == 'all' or (mode == 'demo' and code in ('hi', 'en')))
     print(f'Model bundle: {mode}; ignored backup: {BACKUP}')

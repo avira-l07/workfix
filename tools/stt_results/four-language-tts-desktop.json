@@ -1,0 +1,201 @@
+{
+  "scope": "desktop synthetic audio only; no listener ratings or Android latency",
+  "languages": {
+    "hi": {
+      "phrase": "कृपया पानी और चिकित्सा सहायता भेजें।",
+      "model_bytes": 114043140,
+      "model_sha256": "c44b4179e7ff0da4d76eac3929fc1dbd67c51f02da8fca083c445e17450c3f75",
+      "tokens_bytes": 472,
+      "tokens_sha256": "aa9abf8320da4ca80b153c51e2d3b6b52cb41e930ccc16dec570e70726ab3dd6",
+      "load_seconds": 0.8765393999929074,
+      "mean_synthesis_seconds": 0.9693747399956919,
+      "median_synthesis_seconds": 0.9085048999986611,
+      "mean_rtf": 0.3583723246824342,
+      "peak_desktop_working_set_bytes": 286474240,
+      "trials": [
+        {
+          "synthesis_seconds": 0.8332291999831796,
+          "audio_seconds": 2.7049375,
+          "rtf": 0.3080400933415946,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 43279
+        },
+        {
+          "synthesis_seconds": 0.8018027000071015,
+          "audio_seconds": 2.7049375,
+          "rtf": 0.296421895148077,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 43279
+        },
+        {
+          "synthesis_seconds": 0.9085048999986611,
+          "audio_seconds": 2.7049375,
+          "rtf": 0.3358690912446817,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 43279
+        },
+        {
+          "synthesis_seconds": 1.1362257000000682,
+          "audio_seconds": 2.7049375,
+          "rtf": 0.4200561750502805,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 43279
+        },
+        {
+          "synthesis_seconds": 1.1671111999894492,
+          "audio_seconds": 2.7049375,
+          "rtf": 0.4314743686275373,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 43279
+        }
+      ]
+    },
+    "en": {
+      "phrase": "Please send water and medical assistance.",
+      "model_bytes": 114017028,
+      "model_sha256": "409bafdb550948dc5c0b216e21b341732ef3cefead8008b512b034f1bdb27132",
+      "tokens_bytes": 303,
+      "tokens_sha256": "dff08580748be688d9112d62d6352422c56d372dfe34b24ea3f66fa1b75cfaa9",
+      "load_seconds": 0.7691274999815505,
+      "mean_synthesis_seconds": 0.9169041200017091,
+      "median_synthesis_seconds": 0.911839999986114,
+      "mean_rtf": 0.35540641310207244,
+      "peak_desktop_working_set_bytes": 286474240,
+      "trials": [
+        {
+          "synthesis_seconds": 0.9398443000100087,
+          "audio_seconds": 2.579875,
+          "rtf": 0.3642983865536155,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 41278
+        },
+        {
+          "synthesis_seconds": 0.911839999986114,
+          "audio_seconds": 2.579875,
+          "rtf": 0.3534434807834155,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 41278
+        },
+        {
+          "synthesis_seconds": 0.8947524999966845,
+          "audio_seconds": 2.579875,
+          "rtf": 0.34682009787167384,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 41278
+        },
+        {
+          "synthesis_seconds": 0.9484123000002,
+          "audio_seconds": 2.579875,
+          "rtf": 0.36761947768795,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 41278
+        },
+        {
+          "synthesis_seconds": 0.8896715000155382,
+          "audio_seconds": 2.579875,
+          "rtf": 0.34485062261370736,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 41278
+        }
+      ]
+    },
+    "ta": {
+      "phrase": "தயவுசெய்து தண்ணீர் மற்றும் மருத்துவ உதவியை அனுப்புங்கள்.",
+      "model_bytes": 114032388,
+      "model_sha256": "c44055b2e7c5719ca26708f6eb03680b0f1bbf6fdcb0df6480478f872f1f6e34",
+      "tokens_bytes": 375,
+      "tokens_sha256": "0b3f692319bb5fae8658e2f84bf252bca92450d0207bbba7273caa1a182d81b8",
+      "load_seconds": 0.728937500010943,
+      "mean_synthesis_seconds": 1.5484113199985585,
+      "median_synthesis_seconds": 1.4560597999952734,
+      "mean_rtf": 0.40285836902575634,
+      "peak_desktop_working_set_bytes": 304791552,
+      "trials": [
+        {
+          "synthesis_seconds": 1.4560597999952734,
+          "audio_seconds": 3.8435625,
+          "rtf": 0.37883078524032676,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 61497
+        },
+        {
+          "synthesis_seconds": 1.4414937999972608,
+          "audio_seconds": 3.8435625,
+          "rtf": 0.37504107192149494,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 61497
+        },
+        {
+          "synthesis_seconds": 1.5301049000117928,
+          "audio_seconds": 3.8435625,
+          "rtf": 0.3980954908400196,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 61497
+        },
+        {
+          "synthesis_seconds": 1.4229139999952167,
+          "audio_seconds": 3.8435625,
+          "rtf": 0.37020706701015443,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 61497
+        },
+        {
+          "synthesis_seconds": 1.8914840999932494,
+          "audio_seconds": 3.8435625,
+          "rtf": 0.49211743011678605,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 61497
+        }
+      ]
+    },
+    "te": {
+      "phrase": "దయచేసి నీరు మరియు వైద్య సహాయం పంపండి.",
+      "model_bytes": 114037764,
+      "model_sha256": "a8ec6093c0ec3c6dcb7edc0c4cd6c08e312cd3299b00d0aa4988d2a7fea2baa5",
+      "tokens_bytes": 435,
+      "tokens_sha256": "528152cb4121272e6e71f7a1d91c8d4922b92fae414ae599db608cb92a738bb7",
+      "load_seconds": 1.1004298999905586,
+      "mean_synthesis_seconds": 1.7752720599994063,
+      "median_synthesis_seconds": 1.4711927000025753,
+      "mean_rtf": 0.425731095489898,
+      "peak_desktop_working_set_bytes": 310583296,
+      "trials": [
+        {
+          "synthesis_seconds": 2.3754894000012428,
+          "audio_seconds": 4.1699375,
+          "rtf": 0.569670264842397,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 66719
+        },
+        {
+          "synthesis_seconds": 2.2614434999995865,
+          "audio_seconds": 4.1699375,
+          "rtf": 0.5423207182360855,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 66719
+        },
+        {
+          "synthesis_seconds": 1.4531202999933157,
+          "audio_seconds": 4.1699375,
+          "rtf": 0.3484753188730804,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 66719
+        },
+        {
+          "synthesis_seconds": 1.3151144000003114,
+          "audio_seconds": 4.1699375,
+          "rtf": 0.315379882792083,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 66719
+        },
+        {
+          "synthesis_seconds": 1.4711927000025753,
+          "audio_seconds": 4.1699375,
+          "rtf": 0.352809292705844,
+          "sample_rate_hz": 16000,
+          "pcm_samples": 66719
+        }
+      ]
+    }
+  }
+}

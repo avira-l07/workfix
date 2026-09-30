@@ -71,6 +71,13 @@ class SelectiveLanguageProvisioningTest {
         val expectedDownloads = setOf(LanguageCode.BENGALI, LanguageCode.GUJARATI)
         assertEquals(expectedDownloads, repo.downloadCalls.toSet())
         assertEquals(2, repo.downloadCalls.size)
+        assertEquals(
+            setOf(
+                Triple(LanguageCode.BENGALI, true, false),
+                Triple(LanguageCode.GUJARATI, false, true),
+            ),
+            repo.componentDownloadCalls.toSet(),
+        )
 
         // ML Kit provisioner should have received selected languages (Hindi, English, Bengali, Gujarati)
         val expectedMlKit = setOf(LanguageCode.HINDI, LanguageCode.ENGLISH, LanguageCode.BENGALI, LanguageCode.GUJARATI)

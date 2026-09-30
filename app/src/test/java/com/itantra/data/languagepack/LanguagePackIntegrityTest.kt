@@ -233,7 +233,8 @@ class LanguagePackIntegrityTest {
             assertNotNull("Manifest failed to parse for $lang", manifest)
             requireNotNull(manifest)
 
-            val sttSpec = ModelFileSpecs.getSttSpec(lang)
+            val sttSpec = com.itantra.core.inference.AdditionalSttModel.forLanguage(lang)?.spec()
+                ?: ModelFileSpecs.getSttSpec(lang)
             assertEquals("Manifest STT files must match runtime spec for $lang", sttSpec.requiredFiles, manifest.sttModel.files)
 
             val ttsSpec = ModelFileSpecs.getTtsSpec(lang)

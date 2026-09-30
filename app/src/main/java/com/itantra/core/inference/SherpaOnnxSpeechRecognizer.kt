@@ -32,12 +32,11 @@ class SherpaOnnxSpeechRecognizer(
     val targetLanguage: LanguageCode? = null
 ) : SpeechRecognizerEngine {
 
-    private val usesHindiModel = HindiSttModel.selected(languageCode, autoDetect)
+    private val additionalModel = AdditionalSttModel.forLanguage(languageCode, autoDetect)
 
     val isTranslateMode: Boolean
-        // The Hindi fine-tune is a transcription model. Translation stays in the
-        // existing text-translation stage rather than asking it to emit English.
-        get() = !usesHindiModel && targetLanguage == LanguageCode.ENGLISH && languageCode != LanguageCode.ENGLISH
+        // CTC emits source-language text; cross-language conversion stays in ML Kit.
+        get() = additionalModel == null && targetLanguage == LanguageCode.ENGLISH && languageCode != LanguageCode.ENGLISH
 
 
     private var recognizer: OfflineRecognizer? = null
@@ -54,12 +53,12 @@ class SherpaOnnxSpeechRecognizer(
             "${languageCode.name} speech recognition is not supported by the installed Whisper model"
         }
 
-        val spec = if (usesHindiModel) HindiSttModel.spec() else ModelFileSpecs.getSttSpec(languageCode)
+        val spec = additionalModel?.spec() ?: ModelFileSpecs.getSttSpec(languageCode)
         val packsDir = storage.packDirectory(languageCode).parentFile // language_packs dir
         val packDir = storage.packDirectory(languageCode)
-        if (usesHindiModel) {
-            check(packsDir != null && HindiSttModel.isInstalled(packsDir)) {
-                "Hindi speech model is not prepared. Free storage and restart the app to finish installation."
+        if (additionalModel != null) {
+            check(packsDir != null && AdditionalSttModel.isInstalled(packsDir, additionalModel)) {
+                "${languageCode.name} speech model is not prepared. Download it in Language Packs."
             }
         }
 
@@ -90,32 +89,34 @@ class SherpaOnnxSpeechRecognizer(
         val memoryBefore = getProcessPssBytes()
         val t0 = SystemClock.elapsedRealtimeNanos()
 
+        val selectedModelConfig = if (additionalModel != null) {
+            OfflineModelConfig(
+                nemo = OfflineNemoEncDecCtcModelConfig(model = File(sttDir, spec.mainModelFile).absolutePath),
+                tokens = File(sttDir, spec.tokensFile).absolutePath,
+                numThreads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4),
+                modelType = "nemo_ctc",
+                debug = false,
+            )
+        } else {
+            OfflineModelConfig(
+                whisper = OfflineWhisperModelConfig(
+                    encoder = File(sttDir, spec.mainModelFile).absolutePath,
+                    decoder = File(sttDir, requireNotNull(spec.auxFile)).absolutePath,
+                    language = if (autoDetect) "" else whisperLanguageCode(languageCode),
+                    task = if (isTranslateMode) "translate" else "transcribe",
+                    tailPaddings = -1
+                ),
+                tokens = File(sttDir, spec.tokensFile).absolutePath,
+                numThreads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4),
+                debug = false,
+            )
+        }
         val config = OfflineRecognizerConfig(
             featConfig = FeatureConfig(
                 sampleRate = 16000,
                 featureDim = 80
             ),
-            modelConfig = OfflineModelConfig(
-                whisper = OfflineWhisperModelConfig(
-                    encoder = File(sttDir, spec.mainModelFile).absolutePath,
-                    decoder = File(sttDir, spec.auxFile!!).absolutePath,
-                    language = if (autoDetect) "" else whisperLanguageCode(languageCode),
-                    task = if (isTranslateMode) "translate" else "transcribe",
-                    tailPaddings = -1
-                ).also { whisperCfg ->
-                    android.util.Log.d(
-                        "ITANTRA_MIC_FLOW",
-                        "SherpaOnnxSpeechRecognizer.load: OfflineWhisperModelConfig built — " +
-                        "encoder=${whisperCfg.encoder} | decoder=${whisperCfg.decoder} | " +
-                        "language=\"${whisperCfg.language}\" | task=\"${whisperCfg.task}\" (autoDetect=$autoDetect, languageCode=${languageCode.wireCode}, targetLang=${targetLanguage?.wireCode})"
-                    )
-                },
-                tokens = File(sttDir, spec.tokensFile).absolutePath,
-                numThreads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4),
-                // sherpa-onnx's native debug logging adds real per-inference overhead;
-                // was left on, which skews exactly the latency numbers we're trying to measure.
-                debug = false
-            ),
+            modelConfig = selectedModelConfig,
             decodingMethod = "greedy_search"
         )
 

@@ -127,8 +127,21 @@ class LanguagePacksViewModel(
 
     fun retryProvision(code: LanguageCode) {
         viewModelScope.launch {
-            repository.startDownload(code)
+            val micSelected = code in (_stagedMicLanguages.value ?: enabledMicLanguages.value)
+            val listenSelected = code in (_stagedListenLanguages.value ?: enabledListenLanguages.value)
+            repository.startDownloadComponents(
+                code,
+                stt = micSelected || !listenSelected,
+                tts = listenSelected || !micSelected,
+            )
         }
+    }
+
+    /** MT is separate from the STT/TTS pack and can be retried independently. */
+    fun provisionTranslation(code: LanguageCode) {
+        if (code == LanguageCode.MALAYALAM || code == LanguageCode.ODIA) return
+        val languages = setOf(code, LanguageCode.ENGLISH)
+        provisioner?.invoke(languages) ?: com.itantra.app.AppGraph.provisionSelectedLanguages(languages)
     }
 
     /**
@@ -148,12 +161,13 @@ class LanguagePacksViewModel(
             val allSelected = finalMic + finalListen
             val summaries = repository.observePackSummaries().firstOrNull() ?: emptyList()
 
-            // 1. Trigger selective TTS download only for selected languages not already downloaded
+            // 1. Download only the speech direction(s) selected for each language.
             for (code in allSelected) {
                 val summary = summaries.find { it.language.code == code }
-                val isDownloaded = summary?.isTtsDownloaded == true
-                if (!isDownloaded) {
-                    repository.startDownload(code)
+                val needsStt = code in finalMic && summary?.isSttDownloaded != true
+                val needsTts = code in finalListen && summary?.isTtsDownloaded != true
+                if (needsStt || needsTts) {
+                    repository.startDownloadComponents(code, needsStt, needsTts)
                 }
             }
 

@@ -193,8 +193,8 @@ class PipelineGeneralizationTest {
     }
 
     @Test
-    fun `test English target uses native translation except Hindi specialized transcription`() {
-        // The Hindi fine-tune transcribes; the existing MT stage handles its English target.
+    fun `test English target uses text translation for specialized Indic speech models`() {
+        // The language-specific fine-tunes transcribe; the MT stage handles English targets.
         val toEnglishSources = listOf(
             LanguageCode.HINDI, // Baseline
             LanguageCode.TAMIL,
@@ -210,8 +210,8 @@ class PipelineGeneralizationTest {
         for (src in toEnglishSources) {
             val recognizer = createRecognizer(src, LanguageCode.ENGLISH)
             assertEquals(
-                "Only Hindi specialized STT must stay in transcription mode",
-                src != LanguageCode.HINDI,
+                "Specialized STT must stay in transcription mode",
+                src !in setOf(LanguageCode.HINDI, LanguageCode.TAMIL, LanguageCode.TELUGU),
                 recognizer.isTranslateMode
             )
         }
@@ -248,7 +248,7 @@ class PipelineGeneralizationTest {
     // =========================================================================
 
     @Test
-    fun `test Whisper native translate bypass applies to all non-Hindi sources targeting English`() {
+    fun `test Whisper native translate bypass applies only to shared multilingual speech models`() {
         val testSources = listOf(LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.BENGALI)
 
         for (src in testSources) {
@@ -257,7 +257,11 @@ class PipelineGeneralizationTest {
 
             // Evaluates generalized condition in TransceiverCoordinator:
             val isWhisperNativeTranslate = targetLang == LanguageCode.ENGLISH && engine.isTranslateMode
-            assertTrue("Whisper native translate must bypass translationRouter for $src -> ENGLISH", isWhisperNativeTranslate)
+            assertEquals(
+                "Dedicated Indic models must use the text translation router",
+                src == LanguageCode.BENGALI,
+                isWhisperNativeTranslate,
+            )
         }
     }
 

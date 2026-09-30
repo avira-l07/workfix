@@ -161,10 +161,13 @@ class MockLanguagePackRepository : LanguagePackRepository {
 
     var simulateDownloads: Boolean = false
     val downloadCalls = mutableListOf<LanguageCode>()
+    val componentDownloadCalls = mutableListOf<Triple<LanguageCode, Boolean, Boolean>>()
     val cancelCalls = mutableListOf<LanguageCode>()
     val deleteCalls = mutableListOf<LanguageCode>()
 
-    override suspend fun startDownload(code: LanguageCode) {
+    override suspend fun startDownload(code: LanguageCode) = startDownloadComponents(code, stt = true, tts = true)
+
+    override suspend fun startDownloadComponents(code: LanguageCode, stt: Boolean, tts: Boolean) {
         if (!simulateDownloads) {
             throw NotImplementedError(
                 "Language pack download is not implemented in Task 01. " +
@@ -172,6 +175,7 @@ class MockLanguagePackRepository : LanguagePackRepository {
             )
         }
         downloadCalls.add(code)
+        componentDownloadCalls.add(Triple(code, stt, tts))
     }
 
     override suspend fun cancelDownload(code: LanguageCode) {
