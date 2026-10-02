@@ -1,0 +1,560 @@
+{
+  "screens": [
+    "hub",
+    "connect",
+    "chat",
+    "notes",
+    "packs",
+    "settings",
+    "diagnostics",
+    "sos"
+  ],
+  "viewports": [
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 1280,
+      "height": 900
+    }
+  ],
+  "palettes": [
+    "ocean",
+    "forest",
+    "iris",
+    "ember"
+  ],
+  "modes": [
+    "light",
+    "dark"
+  ],
+  "layoutsChecked": 128,
+  "overflows": [],
+  "errors": [],
+  "contrast": [
+    {
+      "palette": "ocean",
+      "mode": "light",
+      "name": "body text",
+      "ratio": 12.876,
+      "foreground": "rgb(32, 45, 67)",
+      "background": "rgb(244, 247, 251)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "light",
+      "name": "muted text",
+      "ratio": 5.195,
+      "foreground": "rgb(89, 105, 129)",
+      "background": "rgb(244, 247, 251)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "light",
+      "name": "surface text",
+      "ratio": 13.836,
+      "foreground": "rgb(32, 45, 67)",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "light",
+      "name": "muted surface text",
+      "ratio": 5.582,
+      "foreground": "rgb(89, 105, 129)",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "light",
+      "name": "primary button",
+      "ratio": 6.211,
+      "foreground": "rgb(255, 255, 255)",
+      "background": "rgb(52, 87, 204)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "light",
+      "name": "success status",
+      "ratio": 5.26,
+      "foreground": "rgb(29, 113, 85)",
+      "background": "rgb(230, 245, 237)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "light",
+      "name": "failure status",
+      "ratio": 5.255,
+      "foreground": "rgb(184, 52, 69)",
+      "background": "rgb(255, 240, 242)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "light",
+      "name": "warning status",
+      "ratio": 5.96,
+      "foreground": "rgb(128, 85, 20)",
+      "background": "rgb(255, 244, 221)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "dark",
+      "name": "body text",
+      "ratio": 16.054,
+      "foreground": "rgb(237, 242, 255)",
+      "background": "rgb(16, 23, 34)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "dark",
+      "name": "muted text",
+      "ratio": 9.509,
+      "foreground": "rgb(173, 190, 213)",
+      "background": "rgb(16, 23, 34)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "dark",
+      "name": "surface text",
+      "ratio": 14.438,
+      "foreground": "rgb(237, 242, 255)",
+      "background": "rgb(23, 33, 49)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "dark",
+      "name": "muted surface text",
+      "ratio": 8.552,
+      "foreground": "rgb(173, 190, 213)",
+      "background": "rgb(23, 33, 49)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "dark",
+      "name": "primary button",
+      "ratio": 8.064,
+      "foreground": "rgb(18, 32, 59)",
+      "background": "rgb(155, 181, 255)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "dark",
+      "name": "success status",
+      "ratio": 7.514,
+      "foreground": "rgb(139, 214, 181)",
+      "background": "rgb(25, 56, 47)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "dark",
+      "name": "failure status",
+      "ratio": 7.868,
+      "foreground": "rgb(255, 177, 186)",
+      "background": "rgb(67, 38, 47)"
+    },
+    {
+      "palette": "ocean",
+      "mode": "dark",
+      "name": "warning status",
+      "ratio": 8.148,
+      "foreground": "rgb(237, 206, 146)",
+      "background": "rgb(62, 51, 32)"
+    },
+    {
+      "palette": "forest",
+      "mode": "light",
+      "name": "body text",
+      "ratio": 12.042,
+      "foreground": "rgb(33, 53, 45)",
+      "background": "rgb(243, 247, 243)"
+    },
+    {
+      "palette": "forest",
+      "mode": "light",
+      "name": "muted text",
+      "ratio": 5.242,
+      "foreground": "rgb(86, 108, 94)",
+      "background": "rgb(243, 247, 243)"
+    },
+    {
+      "palette": "forest",
+      "mode": "light",
+      "name": "surface text",
+      "ratio": 13.029,
+      "foreground": "rgb(33, 53, 45)",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "palette": "forest",
+      "mode": "light",
+      "name": "muted surface text",
+      "ratio": 5.672,
+      "foreground": "rgb(86, 108, 94)",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "palette": "forest",
+      "mode": "light",
+      "name": "primary button",
+      "ratio": 6.619,
+      "foreground": "rgb(255, 255, 255)",
+      "background": "rgb(23, 105, 80)"
+    },
+    {
+      "palette": "forest",
+      "mode": "light",
+      "name": "success status",
+      "ratio": 5.26,
+      "foreground": "rgb(29, 113, 85)",
+      "background": "rgb(230, 245, 237)"
+    },
+    {
+      "palette": "forest",
+      "mode": "light",
+      "name": "failure status",
+      "ratio": 5.255,
+      "foreground": "rgb(184, 52, 69)",
+      "background": "rgb(255, 240, 242)"
+    },
+    {
+      "palette": "forest",
+      "mode": "light",
+      "name": "warning status",
+      "ratio": 5.96,
+      "foreground": "rgb(128, 85, 20)",
+      "background": "rgb(255, 244, 221)"
+    },
+    {
+      "palette": "forest",
+      "mode": "dark",
+      "name": "body text",
+      "ratio": 15.564,
+      "foreground": "rgb(233, 245, 235)",
+      "background": "rgb(17, 28, 24)"
+    },
+    {
+      "palette": "forest",
+      "mode": "dark",
+      "name": "muted text",
+      "ratio": 9.75,
+      "foreground": "rgb(177, 199, 184)",
+      "background": "rgb(17, 28, 24)"
+    },
+    {
+      "palette": "forest",
+      "mode": "dark",
+      "name": "surface text",
+      "ratio": 13.7,
+      "foreground": "rgb(233, 245, 235)",
+      "background": "rgb(25, 40, 33)"
+    },
+    {
+      "palette": "forest",
+      "mode": "dark",
+      "name": "muted surface text",
+      "ratio": 8.583,
+      "foreground": "rgb(177, 199, 184)",
+      "background": "rgb(25, 40, 33)"
+    },
+    {
+      "palette": "forest",
+      "mode": "dark",
+      "name": "primary button",
+      "ratio": 8.559,
+      "foreground": "rgb(18, 51, 36)",
+      "background": "rgb(162, 216, 184)"
+    },
+    {
+      "palette": "forest",
+      "mode": "dark",
+      "name": "success status",
+      "ratio": 7.514,
+      "foreground": "rgb(139, 214, 181)",
+      "background": "rgb(25, 56, 47)"
+    },
+    {
+      "palette": "forest",
+      "mode": "dark",
+      "name": "failure status",
+      "ratio": 7.868,
+      "foreground": "rgb(255, 177, 186)",
+      "background": "rgb(67, 38, 47)"
+    },
+    {
+      "palette": "forest",
+      "mode": "dark",
+      "name": "warning status",
+      "ratio": 8.148,
+      "foreground": "rgb(237, 206, 146)",
+      "background": "rgb(62, 51, 32)"
+    },
+    {
+      "palette": "iris",
+      "mode": "light",
+      "name": "body text",
+      "ratio": 13.003,
+      "foreground": "rgb(50, 39, 62)",
+      "background": "rgb(248, 245, 251)"
+    },
+    {
+      "palette": "iris",
+      "mode": "light",
+      "name": "muted text",
+      "ratio": 5.403,
+      "foreground": "rgb(111, 95, 123)",
+      "background": "rgb(248, 245, 251)"
+    },
+    {
+      "palette": "iris",
+      "mode": "light",
+      "name": "surface text",
+      "ratio": 14.043,
+      "foreground": "rgb(50, 39, 62)",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "palette": "iris",
+      "mode": "light",
+      "name": "muted surface text",
+      "ratio": 5.835,
+      "foreground": "rgb(111, 95, 123)",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "palette": "iris",
+      "mode": "light",
+      "name": "primary button",
+      "ratio": 6.514,
+      "foreground": "rgb(255, 255, 255)",
+      "background": "rgb(112, 69, 183)"
+    },
+    {
+      "palette": "iris",
+      "mode": "light",
+      "name": "success status",
+      "ratio": 5.26,
+      "foreground": "rgb(29, 113, 85)",
+      "background": "rgb(230, 245, 237)"
+    },
+    {
+      "palette": "iris",
+      "mode": "light",
+      "name": "failure status",
+      "ratio": 5.255,
+      "foreground": "rgb(184, 52, 69)",
+      "background": "rgb(255, 240, 242)"
+    },
+    {
+      "palette": "iris",
+      "mode": "light",
+      "name": "warning status",
+      "ratio": 5.96,
+      "foreground": "rgb(128, 85, 20)",
+      "background": "rgb(255, 244, 221)"
+    },
+    {
+      "palette": "iris",
+      "mode": "dark",
+      "name": "body text",
+      "ratio": 15.39,
+      "foreground": "rgb(244, 237, 255)",
+      "background": "rgb(27, 23, 37)"
+    },
+    {
+      "palette": "iris",
+      "mode": "dark",
+      "name": "muted text",
+      "ratio": 9.311,
+      "foreground": "rgb(198, 183, 213)",
+      "background": "rgb(27, 23, 37)"
+    },
+    {
+      "palette": "iris",
+      "mode": "dark",
+      "name": "surface text",
+      "ratio": 13.992,
+      "foreground": "rgb(244, 237, 255)",
+      "background": "rgb(36, 31, 49)"
+    },
+    {
+      "palette": "iris",
+      "mode": "dark",
+      "name": "muted surface text",
+      "ratio": 8.466,
+      "foreground": "rgb(198, 183, 213)",
+      "background": "rgb(36, 31, 49)"
+    },
+    {
+      "palette": "iris",
+      "mode": "dark",
+      "name": "primary button",
+      "ratio": 8.595,
+      "foreground": "rgb(42, 22, 75)",
+      "background": "rgb(204, 177, 255)"
+    },
+    {
+      "palette": "iris",
+      "mode": "dark",
+      "name": "success status",
+      "ratio": 7.514,
+      "foreground": "rgb(139, 214, 181)",
+      "background": "rgb(25, 56, 47)"
+    },
+    {
+      "palette": "iris",
+      "mode": "dark",
+      "name": "failure status",
+      "ratio": 7.868,
+      "foreground": "rgb(255, 177, 186)",
+      "background": "rgb(67, 38, 47)"
+    },
+    {
+      "palette": "iris",
+      "mode": "dark",
+      "name": "warning status",
+      "ratio": 8.148,
+      "foreground": "rgb(237, 206, 146)",
+      "background": "rgb(62, 51, 32)"
+    },
+    {
+      "palette": "ember",
+      "mode": "light",
+      "name": "body text",
+      "ratio": 12.424,
+      "foreground": "rgb(61, 44, 38)",
+      "background": "rgb(252, 247, 241)"
+    },
+    {
+      "palette": "ember",
+      "mode": "light",
+      "name": "muted text",
+      "ratio": 5.426,
+      "foreground": "rgb(120, 97, 83)",
+      "background": "rgb(252, 247, 241)"
+    },
+    {
+      "palette": "ember",
+      "mode": "light",
+      "name": "surface text",
+      "ratio": 13.235,
+      "foreground": "rgb(61, 44, 38)",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "palette": "ember",
+      "mode": "light",
+      "name": "muted surface text",
+      "ratio": 5.78,
+      "foreground": "rgb(120, 97, 83)",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "palette": "ember",
+      "mode": "light",
+      "name": "primary button",
+      "ratio": 5.812,
+      "foreground": "rgb(255, 255, 255)",
+      "background": "rgb(172, 68, 41)"
+    },
+    {
+      "palette": "ember",
+      "mode": "light",
+      "name": "success status",
+      "ratio": 5.26,
+      "foreground": "rgb(29, 113, 85)",
+      "background": "rgb(230, 245, 237)"
+    },
+    {
+      "palette": "ember",
+      "mode": "light",
+      "name": "failure status",
+      "ratio": 5.255,
+      "foreground": "rgb(184, 52, 69)",
+      "background": "rgb(255, 240, 242)"
+    },
+    {
+      "palette": "ember",
+      "mode": "light",
+      "name": "warning status",
+      "ratio": 5.96,
+      "foreground": "rgb(128, 85, 20)",
+      "background": "rgb(255, 244, 221)"
+    },
+    {
+      "palette": "ember",
+      "mode": "dark",
+      "name": "body text",
+      "ratio": 15.75,
+      "foreground": "rgb(255, 242, 232)",
+      "background": "rgb(33, 25, 20)"
+    },
+    {
+      "palette": "ember",
+      "mode": "dark",
+      "name": "muted text",
+      "ratio": 9.587,
+      "foreground": "rgb(211, 189, 171)",
+      "background": "rgb(33, 25, 20)"
+    },
+    {
+      "palette": "ember",
+      "mode": "dark",
+      "name": "surface text",
+      "ratio": 14.003,
+      "foreground": "rgb(255, 242, 232)",
+      "background": "rgb(44, 35, 29)"
+    },
+    {
+      "palette": "ember",
+      "mode": "dark",
+      "name": "muted surface text",
+      "ratio": 8.524,
+      "foreground": "rgb(211, 189, 171)",
+      "background": "rgb(44, 35, 29)"
+    },
+    {
+      "palette": "ember",
+      "mode": "dark",
+      "name": "primary button",
+      "ratio": 8.635,
+      "foreground": "rgb(59, 28, 16)",
+      "background": "rgb(246, 178, 152)"
+    },
+    {
+      "palette": "ember",
+      "mode": "dark",
+      "name": "success status",
+      "ratio": 7.514,
+      "foreground": "rgb(139, 214, 181)",
+      "background": "rgb(25, 56, 47)"
+    },
+    {
+      "palette": "ember",
+      "mode": "dark",
+      "name": "failure status",
+      "ratio": 7.868,
+      "foreground": "rgb(255, 177, 186)",
+      "background": "rgb(67, 38, 47)"
+    },
+    {
+      "palette": "ember",
+      "mode": "dark",
+      "name": "warning status",
+      "ratio": 8.148,
+      "foreground": "rgb(237, 206, 146)",
+      "background": "rgb(62, 51, 32)"
+    }
+  ],
+  "passed": [
+    "All four palettes in light/dark mode across eight screens at 390 and 1280 px; theme retained during navigation",
+    "Body, muted, surface, primary button, and status-token contrast is at least 4.5:1",
+    "Appearance preference persists across reload",
+    "System mode follows OS changes immediately and after reload",
+    "Explicit light/dark choices override the OS color scheme",
+    "Reduced motion removes or minimizes animation and transitions",
+    "Compact fixed talk dock stays within the viewport and is absent while hidden or on another screen",
+    "No browser runtime errors"
+  ],
+  "output": "D:\\new itantra\\itantra_light_ui\\review\\themes"
+}

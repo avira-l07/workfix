@@ -331,7 +331,8 @@ class MultiLanguageRoutingTest {
 
             val sttSpec = com.itantra.core.inference.AdditionalSttModel.forLanguage(lang)?.spec()
                 ?: ModelFileSpecs.getSttSpec(lang)
-            assertEquals("STT files must match spec", sttSpec.requiredFiles, manifest.sttModel.files)
+            assertEquals("STT files must match spec", sttSpec.requiredFiles,
+                manifest.sttModel.files.map { it.substringAfterLast('/') })
 
             val ttsSpec = ModelFileSpecs.getTtsSpec(lang)
             assertNotNull("TTS spec must exist for $lang", ttsSpec)

@@ -290,7 +290,9 @@ class BenchmarkViewModel(
                 androidVersion = Build.VERSION.RELEASE ?: "",
                 abi = Build.SUPPORTED_ABIS.firstOrNull() ?: "",
                 threadCount = 1,
-                modelVersion = "Whisper Tiny Multilingual INT8 ONNX",
+                modelVersion = com.itantra.domain.model.LanguageCode.fromWireCode(_state.value.selectedLanguage)
+                    ?.let { com.itantra.core.inference.AdditionalSttModel.forLanguage(it)?.displayName }
+                    ?: "Whisper Tiny Multilingual INT8 ONNX",
                 noiseCondition = _state.value.noiseCondition,
                 totalUtterances = results.size,
                 totalReferenceWords = corpusMetrics.totalReferenceWords,

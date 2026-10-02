@@ -11,10 +11,8 @@ import kotlinx.serialization.Serializable
  * [schemaVersion] before trusting any other field, and should reject (not
  * guess-fill) manifests with an unrecognized major schema version.
  *
- * NOTE (Task 01): no real model files are referenced by any manifest
- * shipped with this task. See app/src/main/assets/language_packs/ for the
- * one example development manifest, which points at placeholder sizes and
- * a non-resolving example URL.
+ * The bundled manifests contain pinned model metadata. Dedicated STT downloads
+ * resolve paths from AdditionalSttModel and validate the same checksums.
  */
 @Serializable
 data class LanguagePackManifest(
@@ -76,7 +74,7 @@ data class ModelAssetInfo(
      *  entry may exist before its file is hosted anywhere. */
     val downloadUrl: String? = null,
 
-    /** List of remote filenames to download. The first file is considered primary. */
+    /** Paths relative to [downloadUrl]. They may include a remote folder. */
     val files: List<String> = emptyList(),
 
     val sizeBytes: Long,

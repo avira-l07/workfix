@@ -11,12 +11,12 @@
     "format": "onnx",
     "quantization": "int8",
     "checksumsSha256": {
-      "model.int8.onnx": "915c71e04dd7e5378a4057fdebb252b3a587188e4e99db6d7ce0909ad5ad05fa",
+      "hi/model.int8.onnx": "915c71e04dd7e5378a4057fdebb252b3a587188e4e99db6d7ce0909ad5ad05fa",
       "tokens.txt": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
     },
     "downloadUrl": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a",
     "files": [
-      "model.int8.onnx",
+      "hi/model.int8.onnx",
       "tokens.txt"
     ],
     "sizeBytes": 197663198

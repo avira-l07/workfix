@@ -44,7 +44,9 @@ class RealLanguagePackRepository(
     private val sttStates = MutableStateFlow(buildInitialSttStates())
     private val ttsStates = MutableStateFlow(buildInitialTtsStates())
     private val activeLanguage = MutableStateFlow<LanguageCode?>(
-        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("source_lang", null)?.let { LanguageCode.fromWireCode(it) }
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("source_lang", null)
+            ?.let { LanguageCode.fromWireCode(it) }
+            ?.takeIf { it in ModelFileSpecs.supportedSttLanguages }
     )
     private val targetLanguage = MutableStateFlow<LanguageCode?>(
         context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("target_lang", null)?.let { LanguageCode.fromWireCode(it) }
@@ -58,12 +60,15 @@ class RealLanguagePackRepository(
         )
     )
     private val manualSttLanguage = MutableStateFlow<LanguageCode?>(
-        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("manual_stt_lang", null)?.let { LanguageCode.fromWireCode(it) }
+        context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).getString("manual_stt_lang", null)
+            ?.let { LanguageCode.fromWireCode(it) }
+            ?.takeIf { it in ModelFileSpecs.supportedSttLanguages }
     )
     private val enabledMicLanguages = MutableStateFlow<Set<LanguageCode>>(
         context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE)
             .getStringSet("enabled_mic_langs", setOf("hi", "en"))
-            ?.mapNotNull { LanguageCode.fromWireCode(it) }?.toSet()
+            ?.mapNotNull { LanguageCode.fromWireCode(it) }
+            ?.filter { it in ModelFileSpecs.supportedSttLanguages }?.toSet()
             ?.ifEmpty { setOf(LanguageCode.HINDI, LanguageCode.ENGLISH) }
             ?: setOf(LanguageCode.HINDI, LanguageCode.ENGLISH)
     )
@@ -128,7 +133,8 @@ class RealLanguagePackRepository(
         val sharedReady = isSharedSttReady()
         val state = if (sharedReady) LanguagePackInstallState.INSTALLED else LanguagePackInstallState.NOT_INSTALLED
         return LanguageCatalog.all.associate { lang ->
-            lang.code to state
+            lang.code to if (lang.code in ModelFileSpecs.supportedSttLanguages) state
+                else LanguagePackInstallState.NOT_INSTALLED
         }
     }
 
@@ -147,6 +153,7 @@ class RealLanguagePackRepository(
                     requireNotNull(storage.packDirectory(lang.code).parentFile), additionalModel
                 )
                 val sttState = when {
+                    lang.code !in ModelFileSpecs.supportedSttLanguages -> LanguagePackInstallState.NOT_INSTALLED
                     additionalModel != null && additionalReady -> LanguagePackInstallState.INSTALLED
                     additionalModel != null -> when (currentStt[lang.code]) {
                         LanguagePackInstallState.DOWNLOADING, LanguagePackInstallState.ERROR,
@@ -189,7 +196,8 @@ class RealLanguagePackRepository(
                     sttInstallState = sttState,
                     ttsInstallState = ttsState,
                     availability = availability,
-                    sttSizeBytes = if (sttSize > 0) sttSize else expectedSizes[lang.code]?.first,
+                    sttSizeBytes = if (lang.code !in ModelFileSpecs.supportedSttLanguages) null
+                        else if (sttSize > 0) sttSize else expectedSizes[lang.code]?.first,
                     ttsSizeBytes = if (ttsSize > 0) ttsSize else expectedSizes[lang.code]?.second,
                     downloadProgressPercent = progressMap[lang.code]
                 )
@@ -218,6 +226,7 @@ class RealLanguagePackRepository(
     }
 
     override suspend fun setActiveLanguage(code: LanguageCode): Boolean {
+        if (code !in ModelFileSpecs.supportedSttLanguages) return false
         val packsRoot = requireNotNull(storage.packDirectory(code).parentFile)
         val sttReady = AdditionalSttModel.forLanguage(code)?.let { AdditionalSttModel.isInstalled(packsRoot, it) }
             ?: storage.isSharedSttInstalled()
@@ -260,6 +269,7 @@ class RealLanguagePackRepository(
     }
 
     override suspend fun setManualSttLanguage(code: LanguageCode?): Boolean {
+        if (code != null && code !in ModelFileSpecs.supportedSttLanguages) return false
         manualSttLanguage.value = code
         val prefs = context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE).edit()
         if (code == null) {
@@ -275,10 +285,12 @@ class RealLanguagePackRepository(
     override fun getEnabledMicLanguages(): Set<LanguageCode> = enabledMicLanguages.value
 
     override suspend fun setEnabledMicLanguages(languages: Set<LanguageCode>) {
-        enabledMicLanguages.value = languages
+        val supported = languages.intersect(ModelFileSpecs.supportedSttLanguages)
+            .ifEmpty { setOf(LanguageCode.HINDI, LanguageCode.ENGLISH) }
+        enabledMicLanguages.value = supported
         context.getSharedPreferences("lang_prefs", Context.MODE_PRIVATE)
             .edit()
-            .putStringSet("enabled_mic_langs", languages.map { it.wireCode }.toSet())
+            .putStringSet("enabled_mic_langs", supported.map { it.wireCode }.toSet())
             .apply()
     }
 
@@ -296,7 +308,8 @@ class RealLanguagePackRepository(
     override suspend fun startDownload(code: LanguageCode) = startDownloadComponents(code, stt = true, tts = true)
 
     override suspend fun startDownloadComponents(code: LanguageCode, stt: Boolean, tts: Boolean) {
-        if (!stt && !tts) return
+        val supportedStt = stt && code in ModelFileSpecs.supportedSttLanguages
+        if (!supportedStt && !tts) return
         val ttsSpec = ModelFileSpecs.getTtsSpec(code) ?: return
         val sttSpec = ModelFileSpecs.getSttSpec(code)
         val manifest = getManifest(code) ?: return
@@ -310,8 +323,8 @@ class RealLanguagePackRepository(
             lateinit var createdJob: Job
             createdJob = CoroutineScope(Dispatchers.IO).launch(start = CoroutineStart.LAZY) {
                 val additionalModel = AdditionalSttModel.forLanguage(code)
-                val needSharedStt = stt && additionalModel == null && !isSharedSttReady()
-                val needAdditionalStt = stt && additionalModel != null && !AdditionalSttModel.isInstalled(
+                val needSharedStt = supportedStt && additionalModel == null && !isSharedSttReady()
+                val needAdditionalStt = supportedStt && additionalModel != null && !AdditionalSttModel.isInstalled(
                     requireNotNull(storage.packDirectory(code).parentFile), additionalModel
                 )
                 val needTts = tts && !isTtsReady(code)

@@ -45,8 +45,12 @@ class OfflineReadinessChecker(
         val enToHiMt: ComponentReadiness
     ) {
         val allReady: Boolean
-            get() = listOf(hindiStt, englishStt, hindiTts, englishTts, hiToEnMt, enToHiMt)
-                .all { it.status == ComponentStatus.READY_OFFLINE }
+            get() = hindiStt.status == ComponentStatus.READY_OFFLINE &&
+                    englishStt.status == ComponentStatus.READY_OFFLINE &&
+                    hindiTts.status == ComponentStatus.READY_OFFLINE &&
+                    englishTts.status == ComponentStatus.READY_OFFLINE &&
+                    hiToEnMt.status == ComponentStatus.READY_OFFLINE &&
+                    enToHiMt.status == ComponentStatus.READY_OFFLINE
     }
 
     fun checkReadiness(): OfflineReadinessReport {

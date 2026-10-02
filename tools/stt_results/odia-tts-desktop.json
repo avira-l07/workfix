@@ -1,0 +1,140 @@
+{
+  "scope": "Desktop generation only; one thread to match Android config. No human rating or phone latency.",
+  "model_bytes": 114046212,
+  "model_sha256": "ab867f39b00f1fcb39dc97f5079150959b50df50d7f10e75232c56b52f19c021",
+  "tokens_bytes": 495,
+  "tokens_sha256": "bc90e5423446ca730aef6b56a4656cb07421c7538429a50b9c396fe0758fd587",
+  "load_seconds": 1.5567154999589548,
+  "peak_desktop_working_set_bytes": 301842432,
+  "phrases": {
+    "help": {
+      "text": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ।",
+      "mean_synthesis_seconds": 1.1818421600037254,
+      "median_synthesis_seconds": 1.0382632000255398,
+      "mean_rtf": 1.1243465317127195,
+      "trials": [
+        {
+          "synthesis_seconds": 1.0382632000255398,
+          "audio_seconds": 1.0530625,
+          "rtf": 0.9859464182093084,
+          "pcm_samples": 16849,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 1.674375400005374,
+          "audio_seconds": 1.0324375,
+          "rtf": 1.6217692596456195,
+          "pcm_samples": 16519,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 1.1978677999577485,
+          "audio_seconds": 1.0655625,
+          "rtf": 1.1241647486259592,
+          "pcm_samples": 17049,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 1.003482600033749,
+          "audio_seconds": 1.0599375,
+          "rtf": 0.946737519932778,
+          "pcm_samples": 16959,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 0.9952217999962159,
+          "audio_seconds": 1.05525,
+          "rtf": 0.943114712149932,
+          "pcm_samples": 16884,
+          "sample_rate_hz": 16000
+        }
+      ]
+    },
+    "medical": {
+      "text": "ତୁରନ୍ତ ଡାକ୍ତରୀ ସହାୟତା ଆବଶ୍ୟକ।",
+      "mean_synthesis_seconds": 2.4546668000053615,
+      "median_synthesis_seconds": 2.459080900007393,
+      "mean_rtf": 1.0014851011013959,
+      "trials": [
+        {
+          "synthesis_seconds": 2.4825352000189014,
+          "audio_seconds": 2.489625,
+          "rtf": 0.9971522618944223,
+          "pcm_samples": 39834,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 2.5059560000081547,
+          "audio_seconds": 2.4621875,
+          "rtf": 1.017776266026919,
+          "pcm_samples": 39395,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 2.3776074000052176,
+          "audio_seconds": 2.40875,
+          "rtf": 0.9870710534531262,
+          "pcm_samples": 38540,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 2.4481544999871403,
+          "audio_seconds": 2.4253125,
+          "rtf": 1.009418167756584,
+          "pcm_samples": 38805,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 2.459080900007393,
+          "audio_seconds": 2.4689375,
+          "rtf": 0.9960077563759282,
+          "pcm_samples": 39503,
+          "sample_rate_hz": 16000
+        }
+      ]
+    },
+    "rescue": {
+      "text": "ଦୟାକରି ତୁରନ୍ତ ଏକ ଉଦ୍ଧାରକାରୀ ଦଳ ପଠାନ୍ତୁ।",
+      "mean_synthesis_seconds": 2.776745519996621,
+      "median_synthesis_seconds": 2.7605424000066705,
+      "mean_rtf": 0.9375326696779748,
+      "trials": [
+        {
+          "synthesis_seconds": 2.676689400046598,
+          "audio_seconds": 2.929,
+          "rtf": 0.9138577671719352,
+          "pcm_samples": 46864,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 2.7605424000066705,
+          "audio_seconds": 2.9218125,
+          "rtf": 0.9448047744359607,
+          "pcm_samples": 46749,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 2.909962799982168,
+          "audio_seconds": 2.9520625,
+          "rtf": 0.985738885942343,
+          "pcm_samples": 47233,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 2.867872199974954,
+          "audio_seconds": 2.9526875,
+          "rtf": 0.9712752196007718,
+          "pcm_samples": 47243,
+          "sample_rate_hz": 16000
+        },
+        {
+          "synthesis_seconds": 2.668660799972713,
+          "audio_seconds": 3.0604375,
+          "rtf": 0.8719867012388631,
+          "pcm_samples": 48967,
+          "sample_rate_hz": 16000
+        }
+      ]
+    }
+  }
+}

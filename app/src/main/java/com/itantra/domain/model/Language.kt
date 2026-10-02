@@ -46,6 +46,7 @@ object LanguageCatalog {
         }
     }
 
-    fun byCode(code: LanguageCode): Language =
-        all.first { it.code == code }
+    private val byCodeMap = all.associateBy { it.code }
+
+    fun byCode(code: LanguageCode): Language = byCodeMap.getValue(code)
 }

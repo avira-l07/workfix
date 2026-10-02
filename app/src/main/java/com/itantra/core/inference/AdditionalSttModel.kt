@@ -65,6 +65,13 @@ object AdditionalSttModel {
                 "tokens.txt" to indicTokens,
             ),
         ),
+        LanguageCode.ODIA to Model(
+            LanguageCode.ODIA, "shared/stt-or-ctc-v2", "IndicConformer Odia INT8 · device unverified", "or",
+            linkedMapOf(
+                "model.int8.onnx" to FileCheck(197584928, "31730e06bd186bca5c3214003c2a0b5eeb3234d079b5b81aa72547adbe1c9be7"),
+                "tokens.txt" to indicTokens,
+            ),
+        ),
     )
 
     fun forLanguage(language: LanguageCode, autoDetect: Boolean = false): Model? =

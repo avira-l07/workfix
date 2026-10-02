@@ -1,0 +1,114 @@
+{
+  "threads": 1,
+  "scope": "Windows desktop synthesis only",
+  "languages": {
+    "ta": {
+      "model_bytes": 114032763,
+      "load_ms": 970.401500002481,
+      "mean_synthesis_ms": 1955.7532800245099,
+      "p95_synthesis_ms_nearest_rank": 2189.1708000330254,
+      "rtf": 0.48931448051302184,
+      "sample_rate_hz": 16000,
+      "desktop_process_peak_bytes": 291471360,
+      "trials": [
+        {
+          "synthesis_ms": 1950.7949000108056,
+          "sample_rate_hz": 16000,
+          "audio_ms": 3926.4375
+        },
+        {
+          "synthesis_ms": 2189.1708000330254,
+          "sample_rate_hz": 16000,
+          "audio_ms": 4269.25
+        },
+        {
+          "synthesis_ms": 1902.479900047183,
+          "sample_rate_hz": 16000,
+          "audio_ms": 3882.9375
+        },
+        {
+          "synthesis_ms": 1783.6712999851443,
+          "sample_rate_hz": 16000,
+          "audio_ms": 3710.125
+        },
+        {
+          "synthesis_ms": 1952.649500046391,
+          "sample_rate_hz": 16000,
+          "audio_ms": 4195.875
+        }
+      ]
+    },
+    "te": {
+      "model_bytes": 114038199,
+      "load_ms": 757.245899992995,
+      "mean_synthesis_ms": 2175.3364000003785,
+      "p95_synthesis_ms_nearest_rank": 2225.0164999859408,
+      "rtf": 0.5380800069260294,
+      "sample_rate_hz": 16000,
+      "desktop_process_peak_bytes": 294776832,
+      "trials": [
+        {
+          "synthesis_ms": 2158.471999980975,
+          "sample_rate_hz": 16000,
+          "audio_ms": 3967.8125
+        },
+        {
+          "synthesis_ms": 2212.805600021966,
+          "sample_rate_hz": 16000,
+          "audio_ms": 3968.3125
+        },
+        {
+          "synthesis_ms": 2225.0164999859408,
+          "sample_rate_hz": 16000,
+          "audio_ms": 4276.4375
+        },
+        {
+          "synthesis_ms": 2073.216999997385,
+          "sample_rate_hz": 16000,
+          "audio_ms": 3958.125
+        },
+        {
+          "synthesis_ms": 2207.170900015626,
+          "sample_rate_hz": 16000,
+          "audio_ms": 4043.1875
+        }
+      ]
+    },
+    "or": {
+      "model_bytes": 114046707,
+      "load_ms": 782.932800007984,
+      "mean_synthesis_ms": 1612.9864800255746,
+      "p95_synthesis_ms_nearest_rank": 1791.488400020171,
+      "rtf": 0.5605099467113461,
+      "sample_rate_hz": 16000,
+      "desktop_process_peak_bytes": 301658112,
+      "trials": [
+        {
+          "synthesis_ms": 1622.8511000517756,
+          "sample_rate_hz": 16000,
+          "audio_ms": 2875.0
+        },
+        {
+          "synthesis_ms": 1791.488400020171,
+          "sample_rate_hz": 16000,
+          "audio_ms": 2808.125
+        },
+        {
+          "synthesis_ms": 1618.6258000088856,
+          "sample_rate_hz": 16000,
+          "audio_ms": 2917.0625
+        },
+        {
+          "synthesis_ms": 1563.194000045769,
+          "sample_rate_hz": 16000,
+          "audio_ms": 2893.5
+        },
+        {
+          "synthesis_ms": 1468.7731000012718,
+          "sample_rate_hz": 16000,
+          "audio_ms": 2894.875
+        }
+      ]
+    }
+  }
+}

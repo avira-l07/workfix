@@ -1,0 +1,42 @@
+[
+  {
+    "language": "hi",
+    "asset": "benchmark/five_self_test/hi.wav",
+    "reference": "कुछ अणुओं में अस्थिर केंद्रक होता है जिसका मतलब यह है कि उनमें थोड़े या बिना किसी झटके से टूटने की प्रवृत्ति होती है",
+    "sha256": "217f3abbd8e9cd3767d6e8b87d49fbf82421fc920a103de026b4586d7e644dc5",
+    "source": "https://huggingface.co/datasets/google/fleurs",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "language": "en",
+    "asset": "benchmark/five_self_test/en.wav",
+    "reference": "when you call someone who is thousands of miles away you are using a satellite",
+    "sha256": "048169439c0328b758349af74aeb54a82a7a476e309709eb791dced06db25d48",
+    "source": "https://huggingface.co/datasets/google/fleurs",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "language": "ta",
+    "asset": "benchmark/five_self_test/ta.wav",
+    "reference": "இந்த விதிகள் திருத்தப்படுவதற்கு முன்னர் அனைத்து மாநிலங்களின் ஒருமித்த ஒப்புதலையும் கோரியது மற்றும் பெரும்பாலும் அவர்களின் பிரதிநிதிகள் அங்கு இல்லாததால் மாநில அரசு மத்திய அரசை மிகவும் சாதாரணமாக எடுத்துக் கொண்டது",
+    "sha256": "0e5739221abb30c8e4dbef9c5e0772ebe208a3b4f8f1f9aca767360050d10ecf",
+    "source": "https://huggingface.co/datasets/google/fleurs",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "language": "te",
+    "asset": "benchmark/five_self_test/te.wav",
+    "reference": "చాలా సందర్భాల్లో విదేశాల్లో ఒక గ్యాప్ ఇయర్ కోర్సులో చేరడం వల్ల మీ స్వంత దేశంలో తిరిగి ఉన్నత విద్యకు వెళ్లే మీ అవకాశాలను మెరుగుపరుచుకోవచ్చు",
+    "sha256": "31c67dc8ac73afc639cc92b807341b95127f46f89c12b3bdd27a97c6f5d3a1e1",
+    "source": "https://huggingface.co/datasets/google/fleurs",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "language": "or",
+    "asset": "benchmark/five_self_test/or.wav",
+    "reference": "ହାତୀ ଓ ଜିରାଫ୍ ଭଳି ପଶୁମାନଙ୍କର କାର୍ ଏବଂ ଭଲ ଦେଖାଯାଉଥିବା ମାନକ ସରଞ୍ଜାମକୁ ନିକଟରୁ ଦେଖିବା ପାଇଁ ପାଖକୁ ଆସିବାର ପ୍ରବୃତ୍ତି ଥାଏ",
+    "sha256": "b810480697b74eaea66c46ac9af98c82a0b88b3e7588d52c3869541615784419",
+    "source": "https://huggingface.co/datasets/google/fleurs",
+    "license": "CC-BY-4.0"
+  }
+]

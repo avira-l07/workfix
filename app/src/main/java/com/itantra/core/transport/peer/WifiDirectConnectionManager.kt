@@ -101,6 +101,11 @@ class WifiDirectConnectionManager(
     private val _connectionInfo = MutableStateFlow<WifiP2pInfo?>(null)
     val connectionInfo: StateFlow<WifiP2pInfo?> = _connectionInfo.asStateFlow()
 
+    // Only a peer explicitly selected on this device can be named in the UI.
+    // Incoming connections have no known peer identity until separately identified.
+    private val _selectedPeerAddress = MutableStateFlow<String?>(null)
+    val selectedPeerAddress: StateFlow<String?> = _selectedPeerAddress.asStateFlow()
+
     private val _thisDevice = MutableStateFlow<WifiDirectPeer?>(null)
     val thisDevice: StateFlow<WifiDirectPeer?> = _thisDevice.asStateFlow()
 
@@ -129,6 +134,7 @@ class WifiDirectConnectionManager(
                 debugLog("Wi-Fi P2P Channel disconnected")
                 _state.value = WifiDirectState.ERROR
                 _lastError.value = WifiDirectError.P2P_DISABLED
+                _selectedPeerAddress.value = null
             }
             _state.value = WifiDirectState.AVAILABLE
         }
@@ -152,6 +158,7 @@ class WifiDirectConnectionManager(
                             _state.value = WifiDirectState.AVAILABLE
                         }
                         _connectionInfo.value = null
+                        _selectedPeerAddress.value = null
                         lastHandledGroupOwner = null
                         lastHandledRole = null
                         if (wasActive) {
@@ -162,6 +169,7 @@ class WifiDirectConnectionManager(
                         // FIX 016: Error path routes through terminal disconnect
                         _state.value = WifiDirectState.ERROR
                         _lastError.value = peerTransport.lastError.value
+                        _selectedPeerAddress.value = null
                         debugLog("TCP socket ERROR: ${_lastError.value} — restoring default transport")
                         lastHandledGroupOwner = null
                         lastHandledRole = null
@@ -227,6 +235,7 @@ class WifiDirectConnectionManager(
                             _state.value = WifiDirectState.OFF
                             _lastError.value = WifiDirectError.P2P_DISABLED
                             _peers.value = emptyList()
+                            _selectedPeerAddress.value = null
                         } else if (_state.value == WifiDirectState.OFF || _lastError.value == WifiDirectError.P2P_DISABLED) {
                             _state.value = WifiDirectState.AVAILABLE
                             _lastError.value = WifiDirectError.NONE
@@ -269,6 +278,7 @@ class WifiDirectConnectionManager(
                                 }
                                 _state.value = WifiDirectState.AVAILABLE
                                 _connectionInfo.value = null
+                                _selectedPeerAddress.value = null
                                 lastHandledGroupOwner = null
                                 lastHandledRole = null
                             }
@@ -448,6 +458,7 @@ class WifiDirectConnectionManager(
         }
 
         _state.value = WifiDirectState.CONNECTING
+        _selectedPeerAddress.value = peer.deviceAddress
         _lastError.value = WifiDirectError.NONE
         debugLog("Connecting to peer: ${peer.maskedAddress} (${peer.deviceName})")
 
@@ -469,6 +480,7 @@ class WifiDirectConnectionManager(
                 cancelGroupFormationTimer()
                 _state.value = WifiDirectState.ERROR
                 _lastError.value = WifiDirectError.CONNECT_REQUEST_FAILED
+                _selectedPeerAddress.value = null
             }
         })
     }
@@ -490,6 +502,7 @@ class WifiDirectConnectionManager(
                 }
                 _state.value = WifiDirectState.ERROR
                 _lastError.value = WifiDirectError.GROUP_FORMATION_FAILED
+                _selectedPeerAddress.value = null
             }
         }
     }
@@ -598,6 +611,7 @@ class WifiDirectConnectionManager(
 
         _state.value = WifiDirectState.AVAILABLE
         _connectionInfo.value = null
+        _selectedPeerAddress.value = null
         _peers.value = emptyList()
         lastHandledGroupOwner = null
         lastHandledRole = null

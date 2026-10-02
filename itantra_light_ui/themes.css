@@ -1,0 +1,116 @@
+/* Every surface and status has a light and dark value. Accent is independent of status. */
+:root {
+  color-scheme: light;
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-subtle: #edf2f8;
+  --ink: #202d43;
+  --muted: #596981;
+  --line: #dce4ef;
+  --strong-line: #c6d2e3;
+  --accent: #3457cc;
+  --accent-hover: #2748b3;
+  --accent-soft: #e9efff;
+  --accent-tint: #f3f6ff;
+  --on-accent: #ffffff;
+  --secondary: #277462;
+  --secondary-soft: #e4f3ed;
+  --green: #1d7155;
+  --green-soft: #e6f5ed;
+  --red: #b83445;
+  --red-soft: #fff0f2;
+  --red-button: #b83445;
+  --on-red: #ffffff;
+  --amber: #805514;
+  --amber-soft: #fff4dd;
+  --purple: #7451a5;
+  --purple-soft: #f0eafb;
+  --blue: var(--accent);
+  --blue-dark: var(--accent-hover);
+  --blue-soft: var(--accent-soft);
+  --focus: color-mix(in srgb, var(--accent) 55%, transparent);
+  --radius: 22px;
+  --sidebar: 232px;
+  --preview: 36px;
+  --shadow: 0 8px 28px #183c6510;
+  --shadow-strong: 0 14px 45px #183c6526;
+  --backdrop: #13253e66;
+  --on-toast: #ffffff;
+  --toast: #24364d;
+  --accent-shadow: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #101722;
+  --surface: #172131;
+  --surface-raised: #1e2b3e;
+  --surface-subtle: #1b283a;
+  --ink: #edf2ff;
+  --muted: #adbed5;
+  --line: #2c3c52;
+  --strong-line: #435773;
+  --accent: #9bb5ff;
+  --accent-hover: #b4c7ff;
+  --accent-soft: #223353;
+  --accent-tint: #19263d;
+  --on-accent: #12203b;
+  --secondary: #93d6c0;
+  --secondary-soft: #213c35;
+  --green: #8bd6b5;
+  --green-soft: #19382f;
+  --red: #ffb1ba;
+  --red-soft: #43262f;
+  --red-button: #ffb1ba;
+  --on-red: #421821;
+  --amber: #edce92;
+  --amber-soft: #3e3320;
+  --purple: #c8afea;
+  --purple-soft: #342c48;
+  --shadow: 0 8px 28px #0000001a;
+  --shadow-strong: 0 16px 50px #00000050;
+  --backdrop: #030810a6;
+  --toast: #e0e9f9;
+  --on-toast: #1b2940;
+  --accent-shadow: #00000024;
+}
+:root[data-palette="forest"] {
+  --bg: #f3f7f3; --surface-subtle: #eaf1eb; --ink: #21352d; --muted: #566c5e;
+  --line: #dae5dc; --strong-line: #bacfc1;
+  --accent: #176950; --accent-hover: #0c543e; --accent-soft: #e1f1e8; --accent-tint: #f0f7f2;
+  --secondary: #826018; --secondary-soft: #f6eedb;
+}
+:root[data-palette="forest"][data-theme="dark"] {
+  --bg: #111c18; --surface: #192821; --surface-raised: #21352c; --surface-subtle: #1c2e26;
+  --ink: #e9f5eb; --muted: #b1c7b8; --line: #30493b; --strong-line: #506e5c;
+  --accent: #a2d8b8; --accent-hover: #bce9ce; --accent-soft: #244534; --accent-tint: #1a3025;
+  --on-accent: #123324; --secondary: #e0c28e; --secondary-soft: #3b3323;
+}
+:root[data-palette="iris"] {
+  --bg: #f8f5fb; --surface-subtle: #f0eaf6; --ink: #32273e; --muted: #6f5f7b;
+  --line: #e7ddee; --strong-line: #cfbedc;
+  --accent: #7045b7; --accent-hover: #5b359c; --accent-soft: #f0e7fc; --accent-tint: #f8f2fc;
+  --secondary: #a0466b; --secondary-soft: #f9e8ef;
+}
+:root[data-palette="iris"][data-theme="dark"] {
+  --bg: #1b1725; --surface: #241f31; --surface-raised: #302940; --surface-subtle: #2a2338;
+  --ink: #f4edff; --muted: #c6b7d5; --line: #40334f; --strong-line: #685578;
+  --accent: #ccb1ff; --accent-hover: #dfccff; --accent-soft: #402e5a; --accent-tint: #2e233f;
+  --on-accent: #2a164b; --secondary: #edb3c9; --secondary-soft: #472e3e;
+}
+:root[data-palette="ember"] {
+  --bg: #fcf7f1; --surface-subtle: #f6ece3; --ink: #3d2c26; --muted: #786153;
+  --line: #ebdfd2; --strong-line: #d7c0ad;
+  --accent: #ac4429; --accent-hover: #91351e; --accent-soft: #fbe9e0; --accent-tint: #fff5ec;
+  --secondary: #52704a; --secondary-soft: #ebf1e3;
+}
+:root[data-palette="ember"][data-theme="dark"] {
+  --bg: #211914; --surface: #2c231d; --surface-raised: #3b2e25; --surface-subtle: #34271f;
+  --ink: #fff2e8; --muted: #d3bdab; --line: #503c2d; --strong-line: #7c5e47;
+  --accent: #f6b298; --accent-hover: #ffccb7; --accent-soft: #533526; --accent-tint: #3a281f;
+  --on-accent: #3b1c10; --secondary: #b9ce9c; --secondary-soft: #323d29;
+}
+.theme-transition *, .theme-transition *::before, .theme-transition *::after {
+  transition: background-color 280ms ease, color 240ms ease, border-color 240ms ease, box-shadow 280ms ease !important;
+}
+@media(prefers-reduced-motion:reduce){.theme-transition *, .theme-transition *::before, .theme-transition *::after{transition:none!important}}

@@ -63,7 +63,8 @@ class TransceiverCoordinator(
     val deviceProfileManager: com.itantra.core.profile.DeviceProfileManager? = null,
     private val ttsCapabilityProvider: TtsCapabilityProvider? = null,
     private val locationProvider: LocationProvider = DefaultGpsLocationProvider(context),
-    private val voiceNoteDao: com.itantra.data.db.VoiceNoteDao? = null
+    private val voiceNoteDao: com.itantra.data.db.VoiceNoteDao? = null,
+    private val peerDao: com.itantra.data.db.PeerDao? = null
 ) {
     companion object {
         private const val ENCRYPTED_HEARTBEAT_INTERVAL_MS = 15_000L
@@ -71,6 +72,10 @@ class TransceiverCoordinator(
         private const val HANDSHAKE_TIMEOUT_MS = 60_000L
         private const val SAS_TIMEOUT_MS = 60_000L
         private const val VERIFY_RETRY_INTERVAL_MS = 2_000L
+        private val FIVE_VOICE_LANGUAGES = setOf(
+            LanguageCode.HINDI, LanguageCode.ENGLISH, LanguageCode.TAMIL,
+            LanguageCode.TELUGU, LanguageCode.ODIA,
+        )
     }
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -687,6 +692,16 @@ class TransceiverCoordinator(
                             activeLanguage = payload.supportedLanguages.firstOrNull()
                         )
                     _activePeerProfile.value = updated
+                    // Persist only the identity received inside the verified encrypted session.
+                    scope.launch(Dispatchers.IO) {
+                        peerDao?.rememberVerifiedPeer(
+                            com.itantra.data.db.PeerEntity(
+                                deviceId = payload.deviceId,
+                                displayName = payload.displayName.ifBlank { payload.deviceId },
+                                lastSeenMillis = updated.lastSeen,
+                            )
+                        )
+                    }
 
                     if (!hasSentHandshake) {
                         hasSentHandshake = true
@@ -805,7 +820,10 @@ class TransceiverCoordinator(
             }
             PacketType.TTS_FAILED -> {
                 updateMessage(decryptedPacket.messageId) {
-                    it.copy(state = MessageState.ERROR)
+                    if (it.language in FIVE_VOICE_LANGUAGES) {
+                        it.copy(state = MessageState.ERROR,
+                            statusDetail = "Peer received text but could not play speech")
+                    } else it.copy(state = MessageState.ERROR)
                 }
             }
             PacketType.LOCATION -> {
@@ -1064,11 +1082,13 @@ class TransceiverCoordinator(
             }
             if (!ttsInstalled) {
                 updateMessage(msg.messageId) {
-                    it.copy(
-                        state = MessageState.DELIVERED,
-                        statusDetail = "TTS_MODEL_NOT_INSTALLED"
-                    )
+                    if (finalLanguage in FIVE_VOICE_LANGUAGES) {
+                        it.copy(state = MessageState.DELIVERED,
+                            statusDetail = "Voice unavailable: install ${finalLanguage.name.lowercase()} Receive (TTS) pack")
+                    } else it.copy(state = MessageState.DELIVERED,
+                        statusDetail = "TTS_MODEL_NOT_INSTALLED")
                 }
+                if (finalLanguage in FIVE_VOICE_LANGUAGES) sendTtsFailed(packet.messageId)
                 return
             }
             try {
@@ -1103,10 +1123,10 @@ class TransceiverCoordinator(
             }
             android.util.Log.w("RX_TTS", "Voice unavailable for packet=${packet.messageId}: $reason")
             updateMessage(msg.messageId) {
-                it.copy(
-                    state = MessageState.DELIVERED,
-                    statusDetail = reason
-                )
+                it.copy(state = MessageState.DELIVERED,
+                    statusDetail = if (finalLanguage in FIVE_VOICE_LANGUAGES)
+                        "Voice unavailable: ${finalLanguage.name.lowercase()} TTS could not load ($reason)"
+                    else reason)
             }
             sendTtsFailed(packet.messageId)
             return

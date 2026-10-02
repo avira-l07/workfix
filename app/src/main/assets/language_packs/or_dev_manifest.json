@@ -2,26 +2,24 @@
   "schemaVersion": 1,
   "languageCode": "or",
   "displayName": "Odia",
-  "packVersion": "1.0.0",
-  "downloadSizeBytes": 217656610,
-  "installedSizeBytes": 217656610,
+  "packVersion": "2.0.0",
+  "downloadSizeBytes": 311699240,
+  "installedSizeBytes": 311699240,
   "minimumAppVersion": 1,
   "sttModel": {
-    "modelId": "whisper-tiny-multilingual",
+    "modelId": "indicconformer-ctc-or-int8",
     "format": "onnx",
     "quantization": "int8",
     "checksumsSha256": {
-      "tiny-encoder.int8.onnx": "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434",
-      "tiny-decoder.int8.onnx": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925",
-      "tiny-tokens.txt": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+      "or/model.int8.onnx": "31730e06bd186bca5c3214003c2a0b5eeb3234d079b5b81aa72547adbe1c9be7",
+      "tokens.txt": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
     },
-    "downloadUrl": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main",
+    "downloadUrl": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a",
     "files": [
-      "tiny-encoder.int8.onnx",
-      "tiny-decoder.int8.onnx",
-      "tiny-tokens.txt"
+      "or/model.int8.onnx",
+      "tokens.txt"
     ],
-    "sizeBytes": 103609903
+    "sizeBytes": 197652533
   },
   "ttsModel": {
     "modelId": "mms-tts-or",

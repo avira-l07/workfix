@@ -136,6 +136,7 @@ class SherpaOnnxSpeechSynthesizer(
             LanguageCode.HINDI -> "\u0928\u092E\u0938\u094D\u0924\u0947" // "नमस्ते"
             LanguageCode.TAMIL -> "வணக்கம்"
             LanguageCode.TELUGU -> "నమస్కారం"
+            LanguageCode.ODIA -> "ସାହାଯ୍ୟ ଆବଶ୍ୟକ"
             else -> "Hello"
         }
         try {

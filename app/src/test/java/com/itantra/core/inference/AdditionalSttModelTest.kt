@@ -12,18 +12,21 @@ import org.junit.rules.TemporaryFolder
 class AdditionalSttModelTest {
     @get:Rule val temp = TemporaryFolder()
 
-    @Test fun `four manual languages use distinct pinned CTC packs`() {
+    @Test fun `five manual languages use distinct pinned CTC packs`() {
         val tamil = requireNotNull(AdditionalSttModel.forLanguage(LanguageCode.TAMIL))
         val telugu = requireNotNull(AdditionalSttModel.forLanguage(LanguageCode.TELUGU))
         val hindi = requireNotNull(AdditionalSttModel.forLanguage(LanguageCode.HINDI))
         val english = requireNotNull(AdditionalSttModel.forLanguage(LanguageCode.ENGLISH))
+        val odia = requireNotNull(AdditionalSttModel.forLanguage(LanguageCode.ODIA))
         assertNotEquals(tamil.relativePath, telugu.relativePath)
         assertNotEquals(tamil.files["model.int8.onnx"]?.sha256, telugu.files["model.int8.onnx"]?.sha256)
         assertNotEquals(hindi.relativePath, english.relativePath)
+        assertNotEquals(hindi.relativePath, odia.relativePath)
         assertEquals(listOf("model.int8.onnx", "tokens.txt"), tamil.spec().requiredFiles)
         assertNull(tamil.spec().auxFile)
         assertTrue(tamil.downloadUrlFor("tokens.txt").endsWith("/tokens.txt"))
         assertTrue(english.downloadUrlFor("tokens.txt").endsWith("/en/tokens.txt"))
+        assertTrue(odia.downloadUrlFor("tokens.txt").endsWith("/tokens.txt"))
         assertNull(AdditionalSttModel.forLanguage(LanguageCode.TAMIL, autoDetect = true))
         assertNull(AdditionalSttModel.forLanguage(LanguageCode.TELUGU, autoDetect = true))
         assertNull(AdditionalSttModel.forLanguage(LanguageCode.ENGLISH, autoDetect = true))
@@ -49,15 +52,18 @@ class AdditionalSttModelTest {
         assertTrue(AdditionalSttModel.isInstalled(root, model))
     }
 
-    @Test fun `four download manifests match the pinned runtime model files`() {
-        for (code in listOf(LanguageCode.HINDI, LanguageCode.ENGLISH, LanguageCode.TAMIL, LanguageCode.TELUGU)) {
+    @Test fun `five download manifests match the pinned runtime model files`() {
+        for (code in listOf(LanguageCode.HINDI, LanguageCode.ENGLISH, LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.ODIA)) {
             val model = requireNotNull(AdditionalSttModel.forLanguage(code))
             val raw = File("src/main/assets/language_packs/${code.wireCode}_dev_manifest.json").readText()
             val manifest = requireNotNull(LanguagePackManifestParser.parseOrNull(raw))
-            assertEquals(model.files.keys.toList(), manifest.sttModel.files)
+            assertEquals(model.files.keys.toList(), manifest.sttModel.files.map { it.substringAfterLast('/') })
             assertEquals(model.totalBytes, manifest.sttModel.sizeBytes)
-            for ((name, check) in model.files) {
-                assertEquals(check.sha256, manifest.sttModel.checksumsSha256[name])
+            for (remotePath in manifest.sttModel.files) {
+                val name = remotePath.substringAfterLast('/')
+                val check = model.files.getValue(name)
+                assertEquals(check.sha256, manifest.sttModel.checksumsSha256[remotePath])
+                assertEquals(model.downloadUrlFor(name), "${manifest.sttModel.downloadUrl}/$remotePath")
             }
         }
     }

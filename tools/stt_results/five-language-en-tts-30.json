@@ -1,0 +1,225 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114017331,
+  "model_sha256": "409bafdb550948dc5c0b216e21b341732ef3cefead8008b512b034f1bdb27132",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 1004.0639200014994,
+    "p95_synthesis_ms_nearest_rank": 1237.0288000092842,
+    "rtf": 0.8588058554469716,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 223985664
+  },
+  "rows": [
+    {
+      "phrase": "We need help",
+      "repetition": 0,
+      "synthesis_ms": 631.8256999948062,
+      "audio_ms": 852.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Send clean water",
+      "repetition": 0,
+      "synthesis_ms": 872.6199000375345,
+      "audio_ms": 1488.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "The road is blocked",
+      "repetition": 0,
+      "synthesis_ms": 1047.7019000099972,
+      "audio_ms": 1172.125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We are safe",
+      "repetition": 0,
+      "synthesis_ms": 897.2454000031576,
+      "audio_ms": 1023.875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Call a doctor",
+      "repetition": 0,
+      "synthesis_ms": 953.5824000486173,
+      "audio_ms": 1271.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We need help",
+      "repetition": 1,
+      "synthesis_ms": 991.344400041271,
+      "audio_ms": 996.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Send clean water",
+      "repetition": 1,
+      "synthesis_ms": 1202.7745000086725,
+      "audio_ms": 1529.0625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "The road is blocked",
+      "repetition": 1,
+      "synthesis_ms": 1154.7230999567546,
+      "audio_ms": 1223.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We are safe",
+      "repetition": 1,
+      "synthesis_ms": 971.912200038787,
+      "audio_ms": 1086.8125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Call a doctor",
+      "repetition": 1,
+      "synthesis_ms": 982.1048000012524,
+      "audio_ms": 1161.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We need help",
+      "repetition": 2,
+      "synthesis_ms": 1041.0890000057407,
+      "audio_ms": 1012.9375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Send clean water",
+      "repetition": 2,
+      "synthesis_ms": 1276.9126999774016,
+      "audio_ms": 1473.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "The road is blocked",
+      "repetition": 2,
+      "synthesis_ms": 1165.435199975036,
+      "audio_ms": 1167.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We are safe",
+      "repetition": 2,
+      "synthesis_ms": 1027.1413999726065,
+      "audio_ms": 1025.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Call a doctor",
+      "repetition": 2,
+      "synthesis_ms": 863.8896999764256,
+      "audio_ms": 1179.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We need help",
+      "repetition": 3,
+      "synthesis_ms": 895.2612999710254,
+      "audio_ms": 829.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Send clean water",
+      "repetition": 3,
+      "synthesis_ms": 1090.0201999465935,
+      "audio_ms": 1256.4375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "The road is blocked",
+      "repetition": 3,
+      "synthesis_ms": 950.3696999745443,
+      "audio_ms": 1444.9375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We are safe",
+      "repetition": 3,
+      "synthesis_ms": 601.101300038863,
+      "audio_ms": 915.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Call a doctor",
+      "repetition": 3,
+      "synthesis_ms": 761.3396000233479,
+      "audio_ms": 1026.0625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We need help",
+      "repetition": 4,
+      "synthesis_ms": 1020.8299999940209,
+      "audio_ms": 1044.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Send clean water",
+      "repetition": 4,
+      "synthesis_ms": 1235.7122999965213,
+      "audio_ms": 1469.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "The road is blocked",
+      "repetition": 4,
+      "synthesis_ms": 1211.933400016278,
+      "audio_ms": 1229.9375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We are safe",
+      "repetition": 4,
+      "synthesis_ms": 954.1139000211842,
+      "audio_ms": 1020.6875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Call a doctor",
+      "repetition": 4,
+      "synthesis_ms": 1065.4827000107616,
+      "audio_ms": 1142.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We need help",
+      "repetition": 5,
+      "synthesis_ms": 991.1460999865085,
+      "audio_ms": 1307.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Send clean water",
+      "repetition": 5,
+      "synthesis_ms": 1237.0288000092842,
+      "audio_ms": 1343.6875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "The road is blocked",
+      "repetition": 5,
+      "synthesis_ms": 1206.4023000421003,
+      "audio_ms": 1237.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "We are safe",
+      "repetition": 5,
+      "synthesis_ms": 790.5141999945045,
+      "audio_ms": 908.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "Call a doctor",
+      "repetition": 5,
+      "synthesis_ms": 1030.3594999713823,
+      "audio_ms": 1235.125,
+      "sample_rate_hz": 16000
+    }
+  ]
+}

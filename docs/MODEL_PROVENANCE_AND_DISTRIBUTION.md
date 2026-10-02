@@ -1,0 +1,16 @@
+# Model sources and distribution review
+
+Checked on 1 October 2026. This is a source inventory for the current build, not a claim that every language or licence has passed final review.
+
+| Component | Source used by iTantra | Published terms | Action before broad distribution |
+|---|---|---|---|
+| Four selected STT models plus Odia candidate | [IndicConformer / NeMo ONNX exporter](https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx), pinned revision and SHA-256 in `AdditionalSttModel.kt` | Exporter card identifies Indian source weights as MIT and English source as CC BY 4.0; the exporter repository is marked Apache 2.0 | Preserve the source and licence notices, verify the applicable upstream terms per model, and keep the pinned hashes in release evidence. |
+| Fallback multilingual STT | [sherpa-onnx Whisper Tiny export](https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny) | Check the exact model/export notices before distributing its weights | Record the source and exact downloaded revision/hash; this model is a fallback for five languages and its accuracy is not field validated. |
+| TTS in all ten manifests | [Meta MMS TTS ONNX exports](https://huggingface.co/willwade/mms-tts-multilingual-models-onnx) from [Meta MMS TTS](https://huggingface.co/facebook/mms-tts) | Both model pages identify CC BY-NC 4.0 | Credit Meta and the ONNX exporter; link the [licence](https://creativecommons.org/licenses/by-nc/4.0/). The noncommercial restriction needs a rights decision or a replacement before commercial distribution. |
+| Optional cross-language translation | [Google ML Kit on-device Translation](https://developers.google.com/ml-kit/language/translation) | [ML Kit terms](https://developers.google.com/ml-kit/terms) and [translation usage guidelines](https://developers.google.com/ml-kit/language/translation/translation-terms) | Apply Google's relevant attribution rules to translated results and review the fit with SIH26173's open-source framework wording. The scope of that wording for optional MT is an interpretation to resolve, not a proven disqualification. |
+
+The app now names the sources in Settings and links to their model/terms pages. The language-pack storage card no longer attributes every model to AI4Bharat. All downloaded model files are verified against expected SHA-256 hashes, but TTS URLs currently use `/resolve/main`; an upstream update could make a new download fail its checksum. Pin TTS revisions before a long-lived release.
+
+The IndicConformer exporter includes an [Odia STT candidate](https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx). Its source-tokenizer issue is described as repaired in the export. iTantra offers it on demand after a [small desktop WER/script check](ODIA_STT_CANDIDATE.md); Android performance and field accuracy remain unverified. Its TTS/text functions remain available.
+
+The [official SIH26173 problem statement](https://sih.gov.in/sih2026PS) asks for offline Android STT and TTS over a compact Wi-Fi/Bluetooth text link. It does not require optional cross-language MT, a satellite gateway, or a multi-hop mesh. Do not claim those as demonstrated until measured.

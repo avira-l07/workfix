@@ -103,6 +103,7 @@ class LanguagePacksViewModel(
     val stagedListenLanguages: StateFlow<Set<LanguageCode>?> = _stagedListenLanguages
 
     fun toggleStagedMicLanguage(code: LanguageCode) {
+        if (code !in com.itantra.core.inference.ModelFileSpecs.supportedSttLanguages) return
         val current = _stagedMicLanguages.value ?: enabledMicLanguages.value
         _stagedMicLanguages.value = if (current.contains(code)) {
             if (current.size > 1) current - code else current // keep at least 1
@@ -127,7 +128,8 @@ class LanguagePacksViewModel(
 
     fun retryProvision(code: LanguageCode) {
         viewModelScope.launch {
-            val micSelected = code in (_stagedMicLanguages.value ?: enabledMicLanguages.value)
+            val micSelected = code in com.itantra.core.inference.ModelFileSpecs.supportedSttLanguages &&
+                code in (_stagedMicLanguages.value ?: enabledMicLanguages.value)
             val listenSelected = code in (_stagedListenLanguages.value ?: enabledListenLanguages.value)
             repository.startDownloadComponents(
                 code,
@@ -149,7 +151,9 @@ class LanguagePacksViewModel(
      * TTS download + ML Kit provisioning only for the selected languages.
      */
     fun applyAndProvisionSelected() {
-        val finalMic = _stagedMicLanguages.value ?: enabledMicLanguages.value
+        val finalMic = (_stagedMicLanguages.value ?: enabledMicLanguages.value)
+            .intersect(com.itantra.core.inference.ModelFileSpecs.supportedSttLanguages)
+            .ifEmpty { setOf(LanguageCode.HINDI, LanguageCode.ENGLISH) }
         val finalListen = _stagedListenLanguages.value ?: enabledListenLanguages.value
 
         viewModelScope.launch {

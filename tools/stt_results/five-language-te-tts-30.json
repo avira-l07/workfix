@@ -1,0 +1,225 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114038199,
+  "model_sha256": "a8ec6093c0ec3c6dcb7edc0c4cd6c08e312cd3299b00d0aa4988d2a7fea2baa5",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 1311.9312133310207,
+    "p95_synthesis_ms_nearest_rank": 1702.5611999561079,
+    "rtf": 0.9182772393060209,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 251559936
+  },
+  "rows": [
+    {
+      "phrase": "సహాయం కావాలి",
+      "repetition": 0,
+      "synthesis_ms": 1276.9661000347696,
+      "audio_ms": 1420.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "నీరు పంపండి",
+      "repetition": 0,
+      "synthesis_ms": 835.2584000094794,
+      "audio_ms": 1039.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "రహదారి మూసివేశారు",
+      "repetition": 0,
+      "synthesis_ms": 1336.3126999465749,
+      "audio_ms": 1446.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "మేము సురక్షితంగా ఉన్నాము",
+      "repetition": 0,
+      "synthesis_ms": 1540.5373999965377,
+      "audio_ms": 1754.9375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "వైద్యుడిని పిలవండి",
+      "repetition": 0,
+      "synthesis_ms": 1237.4040000140667,
+      "audio_ms": 1342.875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "సహాయం కావాలి",
+      "repetition": 1,
+      "synthesis_ms": 1397.7577000041492,
+      "audio_ms": 1390.6875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "నీరు పంపండి",
+      "repetition": 1,
+      "synthesis_ms": 965.8851000131108,
+      "audio_ms": 989.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "రహదారి మూసివేశారు",
+      "repetition": 1,
+      "synthesis_ms": 1324.5938000036404,
+      "audio_ms": 1514.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "మేము సురక్షితంగా ఉన్నాము",
+      "repetition": 1,
+      "synthesis_ms": 1702.5611999561079,
+      "audio_ms": 1888.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "వైద్యుడిని పిలవండి",
+      "repetition": 1,
+      "synthesis_ms": 1039.355099957902,
+      "audio_ms": 1381.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "సహాయం కావాలి",
+      "repetition": 2,
+      "synthesis_ms": 1323.4953999635763,
+      "audio_ms": 1400.625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "నీరు పంపండి",
+      "repetition": 2,
+      "synthesis_ms": 897.8028999990784,
+      "audio_ms": 1080.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "రహదారి మూసివేశారు",
+      "repetition": 2,
+      "synthesis_ms": 1302.4855999974534,
+      "audio_ms": 1583.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "మేము సురక్షితంగా ఉన్నాము",
+      "repetition": 2,
+      "synthesis_ms": 1552.4290000321344,
+      "audio_ms": 1733.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "వైద్యుడిని పిలవండి",
+      "repetition": 2,
+      "synthesis_ms": 1039.4212999963202,
+      "audio_ms": 1177.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "సహాయం కావాలి",
+      "repetition": 3,
+      "synthesis_ms": 1687.994499981869,
+      "audio_ms": 1445.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "నీరు పంపండి",
+      "repetition": 3,
+      "synthesis_ms": 1260.2374999551103,
+      "audio_ms": 1092.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "రహదారి మూసివేశారు",
+      "repetition": 3,
+      "synthesis_ms": 1330.4959000088274,
+      "audio_ms": 1632.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "మేము సురక్షితంగా ఉన్నాము",
+      "repetition": 3,
+      "synthesis_ms": 1804.155699966941,
+      "audio_ms": 1808.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "వైద్యుడిని పిలవండి",
+      "repetition": 3,
+      "synthesis_ms": 1122.318700014148,
+      "audio_ms": 1371.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "సహాయం కావాలి",
+      "repetition": 4,
+      "synthesis_ms": 1586.9467000011355,
+      "audio_ms": 1370.8125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "నీరు పంపండి",
+      "repetition": 4,
+      "synthesis_ms": 1213.829700020142,
+      "audio_ms": 1056.125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "రహదారి మూసివేశారు",
+      "repetition": 4,
+      "synthesis_ms": 1308.122300019022,
+      "audio_ms": 1614.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "మేము సురక్షితంగా ఉన్నాము",
+      "repetition": 4,
+      "synthesis_ms": 1411.4025000017136,
+      "audio_ms": 1677.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "వైద్యుడిని పిలవండి",
+      "repetition": 4,
+      "synthesis_ms": 1103.4085999708623,
+      "audio_ms": 1414.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "సహాయం కావాలి",
+      "repetition": 5,
+      "synthesis_ms": 1500.0850000069477,
+      "audio_ms": 1415.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "నీరు పంపండి",
+      "repetition": 5,
+      "synthesis_ms": 1170.3261000220664,
+      "audio_ms": 1081.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "రహదారి మూసివేశారు",
+      "repetition": 5,
+      "synthesis_ms": 1455.078000028152,
+      "audio_ms": 1486.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "మేము సురక్షితంగా ఉన్నాము",
+      "repetition": 5,
+      "synthesis_ms": 1686.8891000049189,
+      "audio_ms": 1893.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "వైద్యుడిని పిలవండి",
+      "repetition": 5,
+      "synthesis_ms": 944.3804000038654,
+      "audio_ms": 1360.0,
+      "sample_rate_hz": 16000
+    }
+  ]
+}

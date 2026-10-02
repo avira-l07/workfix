@@ -1,0 +1,225 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114043612,
+  "model_sha256": "c44b4179e7ff0da4d76eac3929fc1dbd67c51f02da8fca083c445e17450c3f75",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 767.4814333343724,
+    "p95_synthesis_ms_nearest_rank": 1086.7926999926567,
+    "rtf": 0.8171179437596735,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 236474368
+  },
+  "rows": [
+    {
+      "phrase": "मदद चाहिए",
+      "repetition": 0,
+      "synthesis_ms": 391.81409997399896,
+      "audio_ms": 713.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "पानी भेजिए",
+      "repetition": 0,
+      "synthesis_ms": 447.2585000330582,
+      "audio_ms": 909.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "रास्ता बंद है",
+      "repetition": 0,
+      "synthesis_ms": 505.7924999855459,
+      "audio_ms": 945.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "हम सुरक्षित हैं",
+      "repetition": 0,
+      "synthesis_ms": 718.2523999945261,
+      "audio_ms": 1052.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "डॉक्टर को बुलाइए",
+      "repetition": 0,
+      "synthesis_ms": 780.4273999645375,
+      "audio_ms": 973.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "मदद चाहिए",
+      "repetition": 1,
+      "synthesis_ms": 684.1338999802247,
+      "audio_ms": 728.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "पानी भेजिए",
+      "repetition": 1,
+      "synthesis_ms": 792.8273999714293,
+      "audio_ms": 933.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "रास्ता बंद है",
+      "repetition": 1,
+      "synthesis_ms": 753.2311000395566,
+      "audio_ms": 886.4375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "हम सुरक्षित हैं",
+      "repetition": 1,
+      "synthesis_ms": 911.3035000045784,
+      "audio_ms": 1110.625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "डॉक्टर को बुलाइए",
+      "repetition": 1,
+      "synthesis_ms": 853.2828000024892,
+      "audio_ms": 1280.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "मदद चाहिए",
+      "repetition": 2,
+      "synthesis_ms": 664.5143000059761,
+      "audio_ms": 698.9375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "पानी भेजिए",
+      "repetition": 2,
+      "synthesis_ms": 788.6636000475846,
+      "audio_ms": 945.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "रास्ता बंद है",
+      "repetition": 2,
+      "synthesis_ms": 740.4160000151023,
+      "audio_ms": 844.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "हम सुरक्षित हैं",
+      "repetition": 2,
+      "synthesis_ms": 1037.5230999779887,
+      "audio_ms": 1013.875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "डॉक्टर को बुलाइए",
+      "repetition": 2,
+      "synthesis_ms": 862.1745000127703,
+      "audio_ms": 1101.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "मदद चाहिए",
+      "repetition": 3,
+      "synthesis_ms": 655.08639998734,
+      "audio_ms": 696.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "पानी भेजिए",
+      "repetition": 3,
+      "synthesis_ms": 731.054599978961,
+      "audio_ms": 853.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "रास्ता बंद है",
+      "repetition": 3,
+      "synthesis_ms": 749.8308999929577,
+      "audio_ms": 882.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "हम सुरक्षित हैं",
+      "repetition": 3,
+      "synthesis_ms": 1086.7926999926567,
+      "audio_ms": 1063.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "डॉक्टर को बुलाइए",
+      "repetition": 3,
+      "synthesis_ms": 855.0416000070982,
+      "audio_ms": 1096.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "मदद चाहिए",
+      "repetition": 4,
+      "synthesis_ms": 655.9597000014037,
+      "audio_ms": 688.625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "पानी भेजिए",
+      "repetition": 4,
+      "synthesis_ms": 816.6272999951616,
+      "audio_ms": 811.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "रास्ता बंद है",
+      "repetition": 4,
+      "synthesis_ms": 836.0437999945134,
+      "audio_ms": 998.9375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "हम सुरक्षित हैं",
+      "repetition": 4,
+      "synthesis_ms": 822.9856999823824,
+      "audio_ms": 991.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "डॉक्टर को बुलाइए",
+      "repetition": 4,
+      "synthesis_ms": 775.5877000163309,
+      "audio_ms": 1168.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "मदद चाहिए",
+      "repetition": 5,
+      "synthesis_ms": 667.5904000294395,
+      "audio_ms": 718.6875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "पानी भेजिए",
+      "repetition": 5,
+      "synthesis_ms": 732.8239000053145,
+      "audio_ms": 845.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "रास्ता बंद है",
+      "repetition": 5,
+      "synthesis_ms": 780.6233000010252,
+      "audio_ms": 930.125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "हम सुरक्षित हैं",
+      "repetition": 5,
+      "synthesis_ms": 1094.225600012578,
+      "audio_ms": 1032.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "डॉक्टर को बुलाइए",
+      "repetition": 5,
+      "synthesis_ms": 832.5543000246398,
+      "audio_ms": 1264.0,
+      "sample_rate_hz": 16000
+    }
+  ]
+}

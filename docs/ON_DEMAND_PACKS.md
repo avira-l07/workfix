@@ -19,18 +19,21 @@ while downloads are staged and installed.
 | English | 174.6 MB CTC | 114.0 MB | 288.6 MB |
 | Tamil | 197.7 MB CTC | 114.0 MB | 311.7 MB |
 | Telugu | 197.7 MB CTC | 114.0 MB | 311.7 MB |
+| Odia candidate | 197.7 MB CTC | 114.0 MB | 311.7 MB |
 | Another supported language, after shared Tiny is installed | Reuses Tiny | About 114 MB | About 114 MB |
 
 The installer size and later model downloads are separate. Hindi plus English
 requires about **600 MB** of model files in internal app storage. All four voice
-languages require about **1.224 GB** of speech files, plus translation models, in
+languages require about **1.224 GB** of speech files; adding Odia uses about
+**312 MB** more, plus translation models, in
 addition to the APK and temporary download space. A Hindi-plus-English bundled
 demo APK would be substantially larger than the suggested 400–500 MB. Use the
 small default APK unless the demonstration must work before any download.
 
 Offline **translation** is a separate component. Its **MT READY** badge must be
 checked for the relevant languages; STT and TTS readiness alone do not imply
-translation readiness. Odia STT is currently unsupported. Other language
+translation readiness. Odia STT has a dedicated on-demand CTC candidate with
+small desktop evidence; Android performance is unverified. Other language
 accuracy and phone performance still require device testing by the owner.
 
 To switch packaging modes locally, run
@@ -44,8 +47,9 @@ python tools/configure_model_bundle.py minimal
 ./gradlew.bat testDebugUnitTest assembleDebug
 ```
 
-All four use dedicated CTC models only when explicitly selected as the mic
-language; Auto still needs the shared Tiny model. Four-way voice translation
+The four established languages and the Odia candidate use dedicated CTC models
+only when explicitly selected as the mic language; Auto still needs the shared
+Tiny model. Four-way voice translation
 requires device testing. See `docs/FOUR_LANGUAGE_VOICE.md` for setup and
 `docs/FOUR_LANGUAGE_MODEL_REPORT.md` for accuracy, speed, storage and licensing
 limits.

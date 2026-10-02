@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.itantra.ui.theme.ITantraColors
+import com.itantra.core.inference.FiveLanguageSelfTest
 import kotlinx.coroutines.launch
 
 /**
@@ -23,6 +24,15 @@ import kotlinx.coroutines.launch
  *                        cannot produce valid Hindi WER (e.g. script mismatch).
  */
 data class DiagnosticsUiState(
+    val installedSttCount: Int = 0,
+    val installedTtsCount: Int = 0,
+    val installedSpeechPairCount: Int = 0,
+    val catalogLanguageCount: Int = 10,
+    val latestVoiceFrameBytes: Int? = null,
+    val latestVoicePcmBytes: Int? = null,
+    val latestVoiceReductionPercent: Double? = null,
+    val activeLink: String = "Disconnected",
+    val lastPacketAckMillis: Long? = null,
     // Primary Hindi metrics (app's actual use language)
     val wordErrorRatePercent: String? = null,   // Hindi WER — null when not yet measured
     val hindiWerNote: String? = null,           // Explains N/A or script-mismatch status
@@ -40,6 +50,8 @@ data class DiagnosticsUiState(
     val processPssMb: String? = null,
     val ramMb: String? = null,
     val batteryPercent: String? = null,
+    val bluetoothStatus: String? = null,
+    val wifiDirectStatus: String? = null,
     val temperatureC: String? = null,
 )
 
@@ -49,6 +61,12 @@ fun DiagnosticsScreen(
     state: DiagnosticsUiState,
     onBack: () -> Unit,
     onRunDiagnostics: () -> Unit,
+    onRunFiveLanguageSelfTest: () -> Unit,
+    fiveLanguageSelfTestResults: List<FiveLanguageSelfTest.Result> = emptyList(),
+    fiveLanguageSelfTestRunning: Boolean = false,
+    fiveLanguageSelfTestEnabled: Boolean = true,
+    fiveLanguageSelfTestError: String? = null,
+    onExportEvidence: () -> Unit,
     diagnosticsEnabled: Boolean = true,
 ) {
     Scaffold(
@@ -78,7 +96,64 @@ fun DiagnosticsScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            item { QuickStatSummary(state) }
             item { AiBenchmarkSection(state) }
+            item {
+                DiagnosticsSection(title = "Five-language desktop reference · 30 clips each") {
+                    Text("Clean FLEURS speech on Windows, 2 Oct 2026. Phone and two-device results: Not verified.",
+                        style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
+                    MetricRow("Hindi STT WER / CER", "9.1% / 3.9%")
+                    MetricRow("English STT WER / CER", "6.9% / 3.8%")
+                    MetricRow("Tamil STT WER / CER", "21.8% / 8.7%")
+                    MetricRow("Telugu STT WER / CER", "22.7% / 7.1%")
+                    MetricRow("Odia STT WER / CER", "19.3% / 5.1%")
+                    Text("Tamil, Telugu and Odia remain above the 15% WER target.",
+                        style = MaterialTheme.typography.bodySmall, color = ITantraColors.StatusWarning)
+                }
+            }
+            item {
+                DiagnosticsSection(title = "Five-language phone self-test") {
+                    Text(
+                        "Runs one bundled recording and speaks one phrase in each language. Listen to the five voices. This is not a two-phone validation or a 30-utterance WER test.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ITantraColors.TextMuted,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = onRunFiveLanguageSelfTest,
+                        enabled = fiveLanguageSelfTestEnabled && !fiveLanguageSelfTestRunning,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
+                    ) {
+                        Text(if (fiveLanguageSelfTestRunning) "RUNNING SELF-TEST…"
+                            else if (!fiveLanguageSelfTestEnabled) "DISCONNECT AND STOP LISTENING FIRST"
+                            else "RUN FIVE-LANGUAGE SELF-TEST")
+                    }
+                    fiveLanguageSelfTestError?.let {
+                        Text("Self-test stopped: $it", style = MaterialTheme.typography.bodySmall,
+                            color = ITantraColors.StatusWarning)
+                    }
+                    fiveLanguageSelfTestResults.forEach { result ->
+                        Spacer(Modifier.height(8.dp))
+                        Text(result.language.name.lowercase().replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.titleSmall, color = ITantraColors.TextHeadline)
+                        Text("STT: ${result.script} · " +
+                            "${result.sttDecodeMs?.let { "$it ms" } ?: "Not measured"}",
+                            style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextHeadline)
+                        Text("TTS: ${if (result.ttsGenerated) "PCM generated; listen to confirm" else "Failed / not verified"} · " +
+                            "${result.ttsSynthesisMs?.let { "$it ms" } ?: "Not measured"}",
+                            style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextHeadline)
+                        result.ttsSampleRateHz?.let { MetricRow("TTS sample rate", "$it Hz") }
+                        result.sampledProcessPssMb?.let { MetricRow("Sampled process PSS", "$it MB") }
+                        if (result.sttText.isNotBlank()) Text("Heard: ${result.sttText}",
+                            style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
+                        result.sttError?.let { Text("STT: $it", style = MaterialTheme.typography.bodySmall,
+                            color = ITantraColors.StatusWarning) }
+                        result.ttsError?.let { Text("TTS: $it", style = MaterialTheme.typography.bodySmall,
+                            color = ITantraColors.StatusWarning) }
+                    }
+                }
+            }
             item { TranslationDiagnosticsSection() }
             item { CommunicationSection(state) }
             item { DeviceSection(state) }
@@ -89,10 +164,76 @@ fun DiagnosticsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
                 ) {
-                    Text(if (diagnosticsEnabled) "RUN COMPREHENSIVE ON-DEVICE DIAGNOSTICS" else "STOP CONTINUOUS LISTENING FIRST")
+                    Text(if (diagnosticsEnabled) "RUN ENGLISH STT BENCHMARK" else "STOP CONTINUOUS LISTENING FIRST")
                 }
             }
+            item {
+                OutlinedButton(onClick = onExportEvidence, modifier = Modifier.fillMaxWidth()) {
+                    Text("EXPORT FIELD TEST SUMMARY")
+                }
+            }
+            item {
+                Text(
+                    "Exports saved measurement summaries only. Two-phone audible delay and human voice ratings require the field test.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ITantraColors.TextMuted,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun QuickStatSummary(s: DiagnosticsUiState) = DiagnosticsSection(title = "Quick Stat Summary") {
+    Text(
+        "Your five category weights total 100%. They are priorities, not an achieved app score.",
+        style = MaterialTheme.typography.bodySmall,
+        color = ITantraColors.TextMuted,
+    )
+    Spacer(Modifier.height(8.dp))
+
+    val frame = s.latestVoiceFrameBytes
+    val pcm = s.latestVoicePcmBytes
+    val reduction = s.latestVoiceReductionPercent
+    QuickStatRow(
+        "Low-Bitrate Voice Compression", 25,
+        if (frame != null && pcm != null && reduction != null)
+            "$frame B frame / $pcm B raw PCM · ${String.format(java.util.Locale.US, "%.1f", reduction)}% fewer bytes"
+        else "Not measured on this device yet",
+        "Same-message comparison with raw PCM; not a radio throughput test.",
+    )
+    QuickStatRow(
+        "Offline Indic STT & TTS Pipeline", 25,
+        "${s.installedSpeechPairCount}/${s.catalogLanguageCount} speech pairs installed · STT ${s.installedSttCount} · TTS ${s.installedTtsCount}",
+        "Desktop STT evidence: 4 selected + Odia candidate. Installed files are not proof of phone accuracy or translation.",
+    )
+    QuickStatRow(
+        "P2P Transport & Turnaround Latency", 20,
+        "${s.activeLink} · last packet ACK ${s.lastPacketAckMillis?.let { "$it ms" } ?: "not measured"}",
+        "Speech-end to audible remote playback: not measured.",
+    )
+    QuickStatRow(
+        "Live Two-Device Offline Demo", 15,
+        "Not verified",
+        "Requires a real two-phone offline voice exchange and listener check.",
+    )
+    QuickStatRow(
+        "Disaster Resilience & Architecture Roadmap", 15,
+        "Direct peer path and SOS in app",
+        "Field resilience unverified; mesh and satellite gateway are not implemented.",
+    )
+}
+
+@Composable
+private fun QuickStatRow(title: String, weight: Int, value: String, note: String) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(title, style = MaterialTheme.typography.labelMedium, color = ITantraColors.TextHeadline,
+                modifier = Modifier.weight(1f).padding(end = 8.dp))
+            Text("$weight% weight", style = MaterialTheme.typography.labelSmall, color = ITantraColors.Primary)
+        }
+        Text(value, style = MaterialTheme.typography.bodyMedium, color = ITantraColors.TextHeadline)
+        Text(note, style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
     }
 }
 
@@ -106,7 +247,12 @@ private fun TranslationDiagnosticsSection() {
     DiagnosticsSection(title = "Translation · Hindi ↔ English") {
         MetricRow(
             "Hindi → English",
-            "Whisper Native (task=\"translate\")"
+            when (modelState) {
+                com.itantra.core.translation.TranslationModelState.READY -> "READY OFFLINE (ML Kit)"
+                com.itantra.core.translation.TranslationModelState.DOWNLOADING -> "DOWNLOADING..."
+                com.itantra.core.translation.TranslationModelState.FAILED -> "FAILED"
+                com.itantra.core.translation.TranslationModelState.NOT_INSTALLED -> "NOT PROVISIONED"
+            }
         )
         MetricRow(
             "English → Hindi",
@@ -163,12 +309,12 @@ private fun AiBenchmarkSection(s: DiagnosticsUiState) = DiagnosticsSection(title
     MetricRow("English WER (ref only)", s.englishWerPercent?.let { "$it%" })
     MetricRow("Character Error Rate", s.characterErrorRatePercent?.let { "$it%" })
     MetricRow("Real-Time Factor", s.realTimeFactor)
-    MetricRow("Active Model", s.activeModel)
+    MetricRow("Model / latest benchmark", s.activeModel)
+    MetricRow("STT finalization", s.latencyMs?.let { "$it ms" })
 }
 
 @Composable
 private fun CommunicationSection(s: DiagnosticsUiState) = DiagnosticsSection(title = "Communication · Link Health") {
-    MetricRow("Latency", s.latencyMs?.let { "$it ms" })
     MetricRow("Packet Loss", s.packetLossPercent?.let { "$it%" })
     MetricRow("Retries / TX", s.retriesPerTx)
     MetricRow("Delivery Ratio", s.deliveryRatioPercent?.let { "$it%" })
@@ -182,6 +328,8 @@ private fun DeviceSection(s: DiagnosticsUiState) = DiagnosticsSection(title = "D
         MetricRow("Process PSS", "$it MB")
     }
     MetricRow("Battery", s.batteryPercent?.let { "$it%" })
+    MetricRow("Bluetooth hardware", s.bluetoothStatus)
+    MetricRow("Wi-Fi Direct hardware", s.wifiDirectStatus)
     MetricRow("Temperature", s.temperatureC?.let { "$it °C" })
 }
 

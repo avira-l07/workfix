@@ -1,0 +1,27 @@
+{
+  "scope": "Gross-error proxy only. The selected STT and TTS are both fallible; no human listener scores.",
+  "rows": [
+    {
+      "sample": "help",
+      "input_text": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ।",
+      "stt_output": "ଥତାାହାଯ୍ୟର ଆବଶ୍ୟକ",
+      "word_errors": 1,
+      "reference_words": 2
+    },
+    {
+      "sample": "medical",
+      "input_text": "ତୁରନ୍ତ ଡାକ୍ତରୀ ସହାୟତା ଆବଶ୍ୟକ।",
+      "stt_output": "ତତୁରନ୍ତ ଡାକ୍ତରୀ ସହାୟତା ଅବଶ୍ୟ",
+      "word_errors": 2,
+      "reference_words": 4
+    },
+    {
+      "sample": "rescue",
+      "input_text": "ଦୟାକରି ତୁରନ୍ତ ଏକ ଉଦ୍ଧାରକାରୀ ଦଳ ପଠାନ୍ତୁ।",
+      "stt_output": "ଦୟକରି ତୁରନ୍ତ ଏକ ଉଦ୍ଧାରକାରୀ ଦଳ ପଠାନ୍ତୁ",
+      "word_errors": 1,
+      "reference_words": 6
+    }
+  ],
+  "aggregate_wer": 0.3333333333333333
+}

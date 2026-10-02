@@ -1,0 +1,27 @@
+{
+  "screens": 8,
+  "widths": [
+    1440,
+    820,
+    720,
+    390,
+    360,
+    320
+  ],
+  "overflows": [],
+  "errors": [],
+  "passed": [
+    "PTT transcript; delete cancel/confirm; sent messages preserved",
+    "Typed message and escaped content",
+    "Discovery; reject mismatched code; verify peer",
+    "Retry delivery and message filter",
+    "Missing model; cancel download; retry failed download; native-script sample",
+    "SOS confirmation; device delivery separated from human acknowledgement",
+    "Profile edit; hold-to-wipe duration; model packs retained",
+    "Date buckets: today, yesterday, 6/10 days, previous month, 13 months",
+    "Reduced motion",
+    "Pointer slide-to-lock/cancel; hands-free start/pause; fixed talk dock",
+    "Narrow modal layout; Escape dismissal; disconnected SOS blocks sending"
+  ],
+  "output": "D:\\new itantra\\itantra_light_ui\\review"
+}

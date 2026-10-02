@@ -27,6 +27,8 @@ import kotlinx.coroutines.launch
 import com.example.itantra.data.settings.SettingsRepository
 import com.example.itantra.data.settings.settingsDataStore
 import com.example.itantra.ui.screens.chat.DedicatedChatScreen
+import com.example.itantra.ui.screens.messages.MessagesScreen
+import com.example.itantra.ui.screens.messages.buildConversationSummaries
 import com.example.itantra.ui.screens.connect.ConnectScreenContent
 import com.example.itantra.ui.screens.connect.PeerConnectionState
 import com.example.itantra.ui.screens.connect.PeerDevice
@@ -43,6 +45,8 @@ import com.example.itantra.ui.theme.*
 import com.itantra.app.AppGraph
 import com.itantra.core.audio.WavWriter
 import com.itantra.core.inference.SherpaOnnxSpeechRecognizer
+import com.itantra.core.inference.AdditionalSttModel
+import com.itantra.core.inference.FiveLanguageSelfTest
 import com.itantra.core.metrics.TextNormalizer
 import com.itantra.core.metrics.WordErrorRateCalculator
 import com.itantra.core.transport.ConnectionState
@@ -50,10 +54,13 @@ import com.itantra.domain.model.*
 import com.itantra.feature.benchmark.BenchmarkSentenceDef
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.itantra.data.benchmark.FieldEvidenceExport
 
 /** Shared Json parser – reuse to avoid per-call instance allocation warnings. */
 private val BenchmarkJson = Json { ignoreUnknownKeys = true }
+private val FieldEvidenceJson = Json { prettyPrint = true }
 
 enum class AppDestination {
     HUB,
@@ -62,6 +69,7 @@ enum class AppDestination {
     LANGUAGE_PACKS,
     DIAGNOSTICS,
     CHAT,
+    MESSAGES,
     VOICE_NOTES
 }
 
@@ -70,6 +78,41 @@ class MainActivity : ComponentActivity() {
 
     private var permissionsGranted by mutableStateOf(false)
     val destinationState = mutableStateOf(AppDestination.HUB)
+
+    private val fieldEvidenceLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        lifecycleScope.launch {
+            try {
+                val report = withContext(Dispatchers.IO) {
+                    FieldEvidenceExport.from(
+                        exportedAtMillis = System.currentTimeMillis(),
+                        appVersion = BuildConfig.VERSION_NAME,
+                        deviceManufacturer = Build.MANUFACTURER.orEmpty(),
+                        deviceModel = Build.MODEL.orEmpty(),
+                        androidVersion = Build.VERSION.RELEASE.orEmpty(),
+                        sttRuns = AppGraph.localBenchmarkRepository.getAllSessions(),
+                        ttsRuns = AppGraph.localBenchmarkRepository.getAllTtsEvaluations(),
+                        messages = AppGraph.database.messageDao().getAll(),
+                    )
+                }
+                withContext(Dispatchers.IO) {
+                    val stream = contentResolver.openOutputStream(uri)
+                        ?: error("Document provider did not open the selected file")
+                    stream.bufferedWriter(Charsets.UTF_8).use { it.write(FieldEvidenceJson.encodeToString(report)) }
+                }
+                android.widget.Toast.makeText(this@MainActivity, "Field test summary saved", android.widget.Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                android.util.Log.e("FieldEvidence", "Could not export field test summary", e)
+                android.widget.Toast.makeText(this@MainActivity, "Could not save field test summary", android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    fun exportFieldEvidence() {
+        fieldEvidenceLauncher.launch("itantra-field-test-summary.json")
+    }
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -433,7 +476,8 @@ class MainActivity : ComponentActivity() {
                                     androidVersion = android.os.Build.VERSION.RELEASE ?: "14",
                                     abi = android.os.Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a",
                                     threadCount = 2,
-                                    modelVersion = "Whisper Tiny Multilingual (INT8 ONNX)",
+                                    modelVersion = AdditionalSttModel.forLanguage(LanguageCode.ENGLISH)?.displayName
+                                        ?: "Whisper Tiny Multilingual INT8 ONNX",
                                     totalUtterances = benchmarkResults.size,
                                     totalReferenceWords = corpusWer.totalReferenceWords,
                                     substitutions = corpusWer.totalSubstitutions,
@@ -676,6 +720,8 @@ fun TacticalAppScaffold(
     val benchmarkRepo = remember { com.itantra.app.AppGraph.localBenchmarkRepository }
     val secureSession = remember { com.itantra.app.AppGraph.secureSessionManager }
     val voiceNoteDao = remember { AppGraph.database.voiceNoteDao() }
+    val peerDao = remember { AppGraph.database.peerDao() }
+    val messageDao = remember { AppGraph.database.messageDao() }
     val voiceNotes by voiceNoteDao.observeAll().collectAsState(initial = emptyList())
 
     val liveMetrics by metricsRecorder.latest.collectAsState()
@@ -684,11 +730,14 @@ fun TacticalAppScaffold(
 
     var currentDestination by destinationState
     var activeChatPeerId by remember { mutableStateOf("") }
+    var activeChatTransportAddress by remember { mutableStateOf("") }
+    var activeChatTransportName by remember { mutableStateOf("Direct") }
+    var chatReturnDestination by remember { mutableStateOf(AppDestination.CONNECT) }
 
     // Intercept back button when inside a spoke screen
     BackHandler(enabled = currentDestination != AppDestination.HUB) {
         if (currentDestination == AppDestination.CHAT) {
-            currentDestination = AppDestination.CONNECT
+            currentDestination = chatReturnDestination
         } else {
             currentDestination = AppDestination.HUB
         }
@@ -723,6 +772,7 @@ fun TacticalAppScaffold(
                             onNavigateToDiagnostics = { currentDestination = AppDestination.DIAGNOSTICS },
                             onNavigateToSettings = { currentDestination = AppDestination.SETTINGS },
                             onNavigateToVoiceNotes = { currentDestination = AppDestination.VOICE_NOTES },
+                            onNavigateToMessages = { currentDestination = AppDestination.MESSAGES },
                             operatorName = appSettings.operatorName,
                         )
                     }
@@ -734,6 +784,26 @@ fun TacticalAppScaffold(
                             onDelete = { note ->
                                 coroutineScope.launch(Dispatchers.IO) { voiceNoteDao.delete(note.id) }
                             },
+                        )
+                    }
+
+                    AppDestination.MESSAGES -> {
+                        val savedPeers by remember(peerDao) { peerDao.observeAll() }.collectAsState(initial = emptyList())
+                        val savedMessages by remember(messageDao) { messageDao.observeAll() }.collectAsState(initial = emptyList())
+                        val currentPeer by coordinator.activePeerProfile.collectAsState()
+                        val currentSecurity by secureSession.state.collectAsState()
+                        val connectedId = currentPeer?.deviceId?.takeIf { currentSecurity == SecureSessionState.SECURE_VERIFIED }
+                        MessagesScreen(
+                            conversations = buildConversationSummaries(savedPeers, savedMessages, connectedId),
+                            onOpenConversation = { conversation ->
+                                activeChatPeerId = conversation.peerId
+                                activeChatTransportAddress = conversation.transportAddress
+                                activeChatTransportName = conversation.transportName
+                                chatReturnDestination = AppDestination.MESSAGES
+                                currentDestination = AppDestination.CHAT
+                            },
+                            onFindDevices = { currentDestination = AppDestination.CONNECT },
+                            onBack = { currentDestination = AppDestination.HUB },
                         )
                     }
 
@@ -751,6 +821,7 @@ fun TacticalAppScaffold(
                             .collectAsState(initial = ConnectionState.DISCONNECTED)
                         val liveSasRemainingSeconds by coordinator.sasRemainingSeconds.collectAsState()
                         val liveSecureSessionState by secureSession.state.collectAsState()
+                        val activePeerProfile by coordinator.activePeerProfile.collectAsState()
 
                         var discoveredDevices by remember { mutableStateOf<List<PeerDevice>>(emptyList()) }
                         var isBtDiscovering by remember { mutableStateOf(false) }
@@ -758,6 +829,7 @@ fun TacticalAppScaffold(
                         val btAdapter = remember(context) {
                             (context.getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager)?.adapter
                         }
+                        val bluetoothHardwareStatus = com.example.itantra.ui.components.rememberBluetoothHardwareStatus()
 
                         // Automatically ensure Bluetooth listener when entering Connect screen
                         LaunchedEffect(currentDestination) {
@@ -908,6 +980,7 @@ fun TacticalAppScaffold(
                         val wifiDirectPeers by AppGraph.wifiDirectConnectionManager.peers.collectAsState()
                         val wifiDirectError by AppGraph.wifiDirectConnectionManager.lastError.collectAsState()
                         val wifiDirectInfo by AppGraph.wifiDirectConnectionManager.connectionInfo.collectAsState()
+                        val selectedWifiPeerAddress by AppGraph.wifiDirectConnectionManager.selectedPeerAddress.collectAsState()
 
                         ConnectScreenContent(
                             channelName = "TAC-RELIEF-04",
@@ -918,9 +991,11 @@ fun TacticalAppScaffold(
                             sasRemainingSeconds = liveSasRemainingSeconds,
                             secureSessionState = liveSecureSessionState,
                             connectedDeviceAddress = connectedDeviceAddress,
+                            selectedWifiPeerAddress = selectedWifiPeerAddress,
                             connectionError = btLastError.name.takeIf {
                                 btLastError != com.itantra.core.transport.peer.BluetoothError.NONE
                             },
+                            bluetoothHardwareStatus = bluetoothHardwareStatus,
                             wifiDirectPeers = wifiDirectPeers,
                             wifiDirectState = wifiDirectState,
                             wifiDirectError = wifiDirectError.takeIf {
@@ -1001,7 +1076,22 @@ fun TacticalAppScaffold(
                                 coordinator.rejectPeerVerification()
                             },
                             onOpenChat = { device ->
-                                activeChatPeerId = device.id
+                                val verifiedPeer = activePeerProfile?.takeIf { liveSecureSessionState == SecureSessionState.SECURE_VERIFIED }
+                                activeChatPeerId = verifiedPeer?.deviceId ?: device.id
+                                activeChatTransportAddress = device.id
+                                activeChatTransportName = "Bluetooth"
+                                chatReturnDestination = AppDestination.CONNECT
+                                verifiedPeer?.deviceId?.takeIf { it.isNotBlank() }?.let { id ->
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        peerDao.rememberVerifiedPeer(com.itantra.data.db.PeerEntity(
+                                            deviceId = id,
+                                            displayName = verifiedPeer.displayName.ifBlank { device.name },
+                                            transportAddress = device.id,
+                                            transportName = "Bluetooth",
+                                            lastSeenMillis = System.currentTimeMillis(),
+                                        ))
+                                    }
+                                }
                                 currentDestination = AppDestination.CHAT
                             },
                             onDiscoverWifiDirectPeers = {
@@ -1020,7 +1110,22 @@ fun TacticalAppScaffold(
                                 AppGraph.wifiDirectConnectionManager.disconnect()
                             },
                             onOpenChatWifiDirect = { peer ->
-                                activeChatPeerId = peer.deviceAddress
+                                val verifiedPeer = activePeerProfile?.takeIf { liveSecureSessionState == SecureSessionState.SECURE_VERIFIED }
+                                activeChatPeerId = verifiedPeer?.deviceId ?: peer.deviceAddress
+                                activeChatTransportAddress = peer.deviceAddress
+                                activeChatTransportName = "Wi-Fi Direct"
+                                chatReturnDestination = AppDestination.CONNECT
+                                verifiedPeer?.deviceId?.takeIf { it.isNotBlank() }?.let { id ->
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        peerDao.rememberVerifiedPeer(com.itantra.data.db.PeerEntity(
+                                            deviceId = id,
+                                            displayName = verifiedPeer.displayName.ifBlank { peer.deviceName },
+                                            transportAddress = peer.deviceAddress,
+                                            transportName = "Wi-Fi Direct",
+                                            lastSeenMillis = System.currentTimeMillis(),
+                                        ))
+                                    }
+                                }
                                 currentDestination = AppDestination.CHAT
                             },
                             onTransportModeChanged = { mode ->
@@ -1049,25 +1154,58 @@ fun TacticalAppScaffold(
 
                     AppDestination.CHAT -> {
                         val activePeer by coordinator.activePeerProfile.collectAsState()
+                        val currentSecurity by secureSession.state.collectAsState()
+                        val savedPeers by remember(peerDao) { peerDao.observeAll() }.collectAsState(initial = emptyList())
+                        // The secure session can finish before its profile packet arrives. Once the
+                        // verified identity is known, replace the temporary transport-address key.
+                        LaunchedEffect(activePeer?.deviceId, currentSecurity, activeChatPeerId, chatReturnDestination) {
+                            val stableId = activePeer?.deviceId?.takeIf { it.isNotBlank() }
+                            if (chatReturnDestination == AppDestination.CONNECT &&
+                                currentSecurity == SecureSessionState.SECURE_VERIFIED &&
+                                activeChatTransportAddress.isNotBlank() &&
+                                activeChatPeerId == activeChatTransportAddress &&
+                                stableId != null
+                            ) {
+                                activeChatPeerId = stableId
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    peerDao.rememberVerifiedPeer(com.itantra.data.db.PeerEntity(
+                                        deviceId = stableId,
+                                        displayName = activePeer?.displayName?.ifBlank { stableId } ?: stableId,
+                                        transportAddress = activeChatTransportAddress,
+                                        transportName = activeChatTransportName,
+                                        lastSeenMillis = System.currentTimeMillis(),
+                                    ))
+                                }
+                            }
+                        }
+                        val savedPeer = savedPeers.firstOrNull { it.deviceId == activeChatPeerId || it.transportAddress == activeChatPeerId }
+                        val matchedActivePeer = activePeer?.takeIf { it.deviceId == activeChatPeerId || it.deviceId == savedPeer?.deviceId }
                         DedicatedChatScreen(
-                            peerProfile = activePeer?.let { p ->
-                                com.itantra.domain.model.PeerProfile(
-                                    deviceId = p.deviceId,
-                                    bluetoothAddress = activeChatPeerId,
-                                    displayName = p.displayName,
-                                    isConnected = p.isConnected,
-                                    activeLanguage = p.activeLanguage
-                                )
-                            },
+                            peerProfile = com.itantra.domain.model.PeerProfile(
+                                deviceId = savedPeer?.deviceId ?: matchedActivePeer?.deviceId ?: activeChatPeerId,
+                                bluetoothAddress = savedPeer?.transportAddress?.ifBlank { activeChatTransportAddress } ?: activeChatTransportAddress,
+                                displayName = savedPeer?.displayName ?: matchedActivePeer?.displayName.orEmpty(),
+                                isConnected = matchedActivePeer?.isConnected == true,
+                                activeLanguage = matchedActivePeer?.activeLanguage,
+                            ),
                             peerId = activeChatPeerId,
                             coordinator = coordinator,
-                            onBack = { currentDestination = AppDestination.CONNECT }
+                            onBack = { currentDestination = chatReturnDestination },
+                            onReconnect = { currentDestination = AppDestination.CONNECT },
                         )
                     }
 
                     AppDestination.DIAGNOSTICS -> {
                         var latestBenchmarkSession by remember { mutableStateOf<com.itantra.domain.model.BenchmarkSession?>(null) }
+                        var fiveSelfTestResults by remember { mutableStateOf<List<FiveLanguageSelfTest.Result>>(emptyList()) }
+                        var fiveSelfTestRunning by remember { mutableStateOf(false) }
+                        var fiveSelfTestError by remember { mutableStateOf<String?>(null) }
                         val liveContinuousState by coordinator.continuousListenEngine.state.collectAsState()
+                        val packs by AppGraph.languagePackRepository.observePackSummaries().collectAsState(initial = emptyList())
+                        val diagnosticMessages by coordinator.messages.collectAsState()
+                        val linkState by AppGraph.transportEngine.observeConnectionState()
+                            .collectAsState(initial = ConnectionState.DISCONNECTED)
+                        val activeTransport by AppGraph.transportEngine.activeTransportFlow.collectAsState()
 
                         LaunchedEffect(currentDestination) {
                             val sessions = benchmarkRepo.getAllSessions()
@@ -1077,11 +1215,39 @@ fun TacticalAppScaffold(
                         }
 
                         val battery = com.example.itantra.ui.components.rememberBatteryState()
-                        val diagnosticsState = remember(liveMetrics, activeLang, latestBenchmarkSession, battery) {
+                        val bluetoothStatus = com.example.itantra.ui.components.rememberBluetoothHardwareStatus()
+                        val wifiDirectHardwareState by AppGraph.wifiDirectConnectionManager.state.collectAsState()
+                        val wifiDirectStatus = when (wifiDirectHardwareState) {
+                            com.itantra.core.transport.peer.WifiDirectState.OFF -> "Off — turn on Wi-Fi in Android settings"
+                            com.itantra.core.transport.peer.WifiDirectState.PERMISSION_REQUIRED -> "Nearby Wi-Fi permission needed"
+                            com.itantra.core.transport.peer.WifiDirectState.ERROR -> "Unavailable — check Connect for details"
+                            else -> "On · ${wifiDirectHardwareState.name.lowercase().replace('_', ' ')}"
+                        }
+                        val latestVoiceWithFrame = diagnosticMessages.asReversed().firstOrNull {
+                            it.source == MessageSource.LOCAL && it.measuredWireReductionVsPcmPercent != null
+                        }
+                        val packetAckMillis = (liveMetrics.transport.transmissionLatencyMillis as? Measurement.Measured<Long>)?.value
+                        val linkName = if (linkState == ConnectionState.CONNECTED) {
+                            if (activeTransport is com.itantra.core.transport.peer.WifiDirectPeerTransport) "Wi-Fi Direct connected"
+                            else "Bluetooth connected"
+                        } else "Disconnected"
+                        val diagnosticsState = remember(liveMetrics, activeLang, latestBenchmarkSession, battery, bluetoothStatus,
+                            wifiDirectStatus, packs, latestVoiceWithFrame, linkName) {
                             DiagnosticsUiState(
+                                installedSttCount = packs.count { it.isSttDownloaded },
+                                installedTtsCount = packs.count { it.isTtsDownloaded },
+                                installedSpeechPairCount = packs.count { it.isSttDownloaded && it.isTtsDownloaded },
+                                catalogLanguageCount = LanguageCatalog.all.size,
+                                latestVoiceFrameBytes = latestVoiceWithFrame?.let {
+                                    it.finalFrameBytes.takeIf { bytes -> bytes > 0 } ?: it.packetBytes.takeIf { bytes -> bytes > 0 }
+                                },
+                                latestVoicePcmBytes = latestVoiceWithFrame?.rawPcmEquivalentBytes,
+                                latestVoiceReductionPercent = latestVoiceWithFrame?.measuredWireReductionVsPcmPercent,
+                                activeLink = linkName,
+                                lastPacketAckMillis = packetAckMillis,
                                 // Hindi WER: null because no Hindi audio corpus exists yet in assets/benchmark/audio/
                                 wordErrorRatePercent = null,
-                                hindiWerNote = "Hindi unmeasured \u2014 no Hindi audio corpus in assets/benchmark/audio/. Audio corpus required for empirical Hindi WER.",
+                                hindiWerNote = "On-device Hindi WER has not been measured in this APK.",
                                 // English WER from empirical benchmark measurement (secondary reference)
                                 englishWerPercent = latestBenchmarkSession?.let {
                                     if (it.language == "en") String.format(java.util.Locale.US, "%.1f", it.corpusWer * 100f)
@@ -1116,7 +1282,9 @@ fun TacticalAppScaffold(
                                     null
                                 },
                                 ramMb = "${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024)}",
-                                batteryPercent = "${battery.levelPercent}",
+                                batteryPercent = battery.levelPercent.takeIf { it >= 0 }?.toString(),
+                                bluetoothStatus = bluetoothStatus,
+                                wifiDirectStatus = wifiDirectStatus,
                                 temperatureC = null,
                             )
                         }
@@ -1124,7 +1292,36 @@ fun TacticalAppScaffold(
                         DiagnosticsScreen(
                             state = diagnosticsState,
                             diagnosticsEnabled = liveContinuousState == com.itantra.core.inference.ContinuousListenState.OFF,
+                            fiveLanguageSelfTestResults = fiveSelfTestResults,
+                            fiveLanguageSelfTestRunning = fiveSelfTestRunning,
+                            fiveLanguageSelfTestError = fiveSelfTestError,
+                            fiveLanguageSelfTestEnabled = liveContinuousState == com.itantra.core.inference.ContinuousListenState.OFF &&
+                                linkState == ConnectionState.DISCONNECTED,
+                            onRunFiveLanguageSelfTest = {
+                                if (!fiveSelfTestRunning) {
+                                    fiveSelfTestResults = emptyList()
+                                    fiveSelfTestError = null
+                                    fiveSelfTestRunning = true
+                                    coroutineScope.launch(Dispatchers.Default) {
+                                        try {
+                                            FiveLanguageSelfTest.run(context, sessionManager) { result ->
+                                                withContext(Dispatchers.Main) {
+                                                    fiveSelfTestResults = fiveSelfTestResults + result
+                                                }
+                                            }
+                                        } catch (error: Exception) {
+                                            android.util.Log.e("FIVE_LANGUAGE_SELF_TEST", "Self-test stopped", error)
+                                            withContext(Dispatchers.Main) {
+                                                fiveSelfTestError = error.message ?: "Self-test stopped unexpectedly"
+                                            }
+                                        } finally {
+                                            withContext(Dispatchers.Main) { fiveSelfTestRunning = false }
+                                        }
+                                    }
+                                }
+                            },
                             onBack = { currentDestination = AppDestination.HUB },
+                            onExportEvidence = { (context as? MainActivity)?.exportFieldEvidence() },
                             onRunDiagnostics = {
                                 coroutineScope.launch(Dispatchers.Default) {
                                     try {
@@ -1210,7 +1407,8 @@ fun TacticalAppScaffold(
                                                 androidVersion = android.os.Build.VERSION.RELEASE ?: "14",
                                                 abi = android.os.Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a",
                                                 threadCount = 2,
-                                                modelVersion = "Whisper Tiny Multilingual (INT8 ONNX)",
+                                                modelVersion = AdditionalSttModel.forLanguage(LanguageCode.ENGLISH)?.displayName
+                                                    ?: "Whisper Tiny Multilingual INT8 ONNX",
                                                 totalUtterances = benchmarkResults.size,
                                                 totalReferenceWords = corpusWer.totalReferenceWords,
                                                 substitutions = corpusWer.totalSubstitutions,

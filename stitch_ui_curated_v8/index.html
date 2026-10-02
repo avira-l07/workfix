@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iTantra — curated Stitch UI references</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #0b1120; color: #e5edf5; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { padding: 28px max(20px, calc((100vw - 1200px) / 2)); border-bottom: 1px solid #334155; background: #111a2c; }
+    h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 36px); }
+    header p { margin: 0; color: #b8c5d6; line-height: 1.5; max-width: 70ch; }
+    main { max-width: 1240px; margin: auto; padding: 24px 20px 60px; }
+    .notice { padding: 14px 18px; border: 1px solid #b98526; border-radius: 12px; background: #332913; line-height: 1.5; }
+    .notice a { color: #f6d795; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 24px; }
+    article { background: #162136; border: 1px solid #344761; border-radius: 14px; overflow: hidden; }
+    article img { display: block; width: 100%; height: 390px; object-fit: contain; object-position: top; background: #070b14; }
+    article .body { padding: 16px; }
+    h2 { font-size: 20px; margin: 0 0 7px; }
+    article p { color: #b8c5d6; line-height: 1.45; min-height: 64px; margin: 0 0 16px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .actions a { display: inline-flex; align-items: center; min-height: 44px; padding: 9px 13px; border-radius: 8px; border: 1px solid #3b82a5; color: #c8f3ff; text-decoration: none; font-weight: 600; }
+    .actions a:hover, .actions a:focus-visible { background: #123549; outline: 2px solid #22d3ee; }
+    footer { max-width: 1240px; margin: 0 auto; padding: 0 20px 32px; color: #9db0c6; }
+    footer a { color: #bdeefa; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>iTantra UI references</h1>
+    <p>One selected Stitch concept for each of the eight app views. These are visual references from ZIP (8), not working Android screens.</p>
+  </header>
+  <main>
+    <div class="notice">Before implementation, read the <a href="README.md">screen-by-screen corrections</a>. Some prototype controls and telemetry labels still differ from the app.</div>
+    <div class="grid">
+      <article><img src="hub/screen.png" alt="Hub concept screenshot"><div class="body"><h2>Hub</h2><p>Messages, voice pipeline, PTT, connection states, and shortcuts.</p><div class="actions"><a href="hub/code.html">Open prototype</a><a href="hub/screen.png">View screenshot</a></div></div></article>
+      <article><img src="connect/screen.png" alt="Connect concept screenshot"><div class="body"><h2>Connect</h2><p>Bluetooth and Wi-Fi Direct discovery with peer verification.</p><div class="actions"><a href="connect/code.html">Open prototype</a><a href="connect/screen.png">View screenshot</a></div></div></article>
+      <article><img src="chat/screen.png" alt="Chat concept screenshot"><div class="body"><h2>Chat</h2><p>One-to-one text, speech transcripts, location, and retry.</p><div class="actions"><a href="chat/code.html">Open prototype</a><a href="chat/screen.png">View screenshot</a></div></div></article>
+      <article><img src="voice_notes/screen.png" alt="Voice Notes concept screenshot"><div class="body"><h2>Voice Notes</h2><p>Local text transcripts grouped by date with confirmed delete.</p><div class="actions"><a href="voice_notes/code.html">Open prototype</a><a href="voice_notes/screen.png">View screenshot</a></div></div></article>
+      <article><img src="language_packs/screen.png" alt="Language Packs concept screenshot"><div class="body"><h2>Language Packs</h2><p>Ten-language catalog and STT, translation, and TTS readiness.</p><div class="actions"><a href="language_packs/code.html">Open prototype</a><a href="language_packs/screen.png">View screenshot</a></div></div></article>
+      <article><img src="sos/screen.png" alt="SOS concept screenshot"><div class="body"><h2>SOS</h2><p>Emergency presets, confirmation, delivery, and acknowledgement.</p><div class="actions"><a href="sos/code.html">Open prototype</a><a href="sos/screen.png">View screenshot</a></div></div></article>
+      <article><img src="settings/screen.png" alt="Settings concept screenshot"><div class="body"><h2>Settings</h2><p>Operator configuration, language links, and private-data wipe.</p><div class="actions"><a href="settings/code.html">Open prototype</a><a href="settings/screen.png">View screenshot</a></div></div></article>
+      <article><img src="diagnostics/screen.png" alt="Diagnostics concept screenshot"><div class="body"><h2>Diagnostics</h2><p>Model readiness and measured on-device diagnostics.</p><div class="actions"><a href="diagnostics/code.html">Open prototype</a><a href="diagnostics/screen.png">View screenshot</a></div></div></article>
+    </div>
+  </main>
+  <footer>Selected from Stitch ZIP (8). Source files were copied intact; the review notes are in <a href="README.md">README.md</a>.</footer>
+</body>
+</html>

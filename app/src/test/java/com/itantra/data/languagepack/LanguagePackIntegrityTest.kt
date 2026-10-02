@@ -235,7 +235,8 @@ class LanguagePackIntegrityTest {
 
             val sttSpec = com.itantra.core.inference.AdditionalSttModel.forLanguage(lang)?.spec()
                 ?: ModelFileSpecs.getSttSpec(lang)
-            assertEquals("Manifest STT files must match runtime spec for $lang", sttSpec.requiredFiles, manifest.sttModel.files)
+            assertEquals("Manifest STT files must match runtime spec for $lang", sttSpec.requiredFiles,
+                manifest.sttModel.files.map { it.substringAfterLast('/') })
 
             val ttsSpec = ModelFileSpecs.getTtsSpec(lang)
             assertNotNull(ttsSpec)

@@ -326,7 +326,8 @@ object AppGraph {
             database.messageDao(),
             deviceProfileManager,
             ttsProvider,
-            voiceNoteDao = database.voiceNoteDao()
+            voiceNoteDao = database.voiceNoteDao(),
+            peerDao = database.peerDao()
         ).apply {
             attachSettings(settingsRepository)
         }

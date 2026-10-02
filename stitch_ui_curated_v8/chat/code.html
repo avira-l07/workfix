@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<meta content="mobile_tab" name="shell-type"/>
+<title>iTantra Tactical Chat - ALPHA-01</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            obsidian: "#080C14",
+            card: "#0F172A",
+            borderLine: "#1E293B",
+            cyanAccent: "#00F0FF",
+            emeraldAccent: "#10B981",
+            crimsonAccent: "#EF4444"
+          },
+          fontFamily: {
+            mono: ["'JetBrains Mono'", "monospace"],
+            sans: ["'Inter'", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    @layer base {
+      html, body {
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        background-color: #080C14;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 16px);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+      }
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-[#080C14] font-sans text-slate-200 antialiased flex flex-col min-h-screen selection:bg-[#00F0FF]/30 selection:text-[#00F0FF]">
+<!-- TOP BAR (Back button, Peer Ravi + ALPHA-01 chip, Online status, ML Kit pill, SOS, Profile) -->
+<header class="fixed top-0 inset-x-0 z-50 bg-[#080C14]/95 backdrop-blur-md border-b border-[#1E293B] pt-safe shadow-lg">
+<div class="px-4 py-2.5 flex items-center justify-between gap-2">
+<!-- Back & Peer Profile Details -->
+<div class="flex items-center gap-2 min-w-0">
+<button aria-label="Go back" class="w-12 h-12 rounded-lg bg-[#0F172A] border border-[#1E293B] text-slate-300 hover:text-[#00F0FF] flex items-center justify-center flex-shrink-0 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-mono text-[16px] font-bold text-white tracking-tight truncate">Ravi</span>
+<span class="font-mono text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-[#1E293B] text-[#00F0FF] border border-[#00F0FF]/30">ALPHA-01</span>
+</div>
+<div class="flex items-center gap-1.5 text-[11px] font-mono leading-none mt-0.5">
+<span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+<span class="text-[#10B981] font-medium truncate">Online (RFCOMM Direct)</span>
+</div>
+</div>
+</div>
+<!-- Action items: Language Pill, SOS, Profile -->
+<div class="flex items-center gap-2 flex-shrink-0">
+<!-- Active language pill -->
+<div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#0F172A] border border-[#1E293B] text-[11px] font-mono text-slate-300">
+<span class="material-symbols-outlined text-[14px] text-[#00F0FF]">translate</span>
+<span>HI ➔ EN <span class="text-slate-400 font-normal">(Google ML Kit)</span></span>
+</div>
+<!-- Emergency SOS Button -->
+<button aria-label="Emergency SOS broadcast" class="h-12 px-3 rounded-lg bg-[#EF4444] hover:bg-red-600 text-white font-mono text-[13px] font-bold flex items-center justify-center gap-1 active:scale-95 transition-all shadow-[0_0_12px_rgba(239,68,68,0.4)]">
+<span class="material-symbols-outlined text-[20px]">sos</span>
+<span>SOS</span>
+</button>
+<!-- Profile Icon Button -->
+<button aria-label="User profile" class="w-12 h-12 rounded-lg bg-[#0F172A] border border-[#1E293B] text-[#00F0FF] flex items-center justify-center flex-shrink-0 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[22px]">person</span>
+</button>
+</div>
+</div>
+<!-- Mobile-visible Language Pill sub-strip -->
+<div class="sm:hidden px-4 pb-2 pt-0.5 flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0F172A] border border-[#1E293B] text-[10.5px] font-mono text-slate-300">
+<span class="material-symbols-outlined text-[13px] text-[#00F0FF]">translate</span>
+<span>HI ➔ EN <span class="text-slate-400 font-sans">(Google ML Kit)</span></span>
+</div>
+<span class="font-mono text-[10px] text-slate-400 tracking-wider">DIRECT P2P ENCRYPTED</span>
+</div>
+</header>
+<!-- MAIN SCROLL CONTAINER -->
+<main class="flex-1 w-full pt-28 sm:pt-20 pb-44 px-4 max-w-2xl mx-auto flex flex-col gap-4">
+<!-- Timeline Today Separator -->
+<div class="flex items-center justify-center my-1">
+<div class="flex items-center gap-2 bg-[#0F172A] border border-[#1E293B] px-3.5 py-1 rounded-full text-slate-400 font-mono text-[11px] tracking-wider uppercase shadow-sm">
+<span class="material-symbols-outlined text-[13px] text-[#00F0FF]">lock</span>
+<span>TODAY</span>
+</div>
+</div>
+<!-- 1. INBOUND VOICE TRANSCRIPT -->
+<div class="flex flex-col items-start w-full max-w-[92%] gap-1">
+<div class="flex items-center gap-1.5 px-1 font-mono text-[11px] text-slate-400 uppercase tracking-wide">
+<span class="font-bold text-[#00F0FF]">Ravi</span>
+<span>•</span>
+<span class="text-[#00F0FF]/90 font-medium">VOICE TRANSCRIPT (HI) • 2:30 PM</span>
+</div>
+<div class="w-full bg-[#0F172A] border border-[#1E293B] rounded-xl p-3 flex flex-col gap-2.5 shadow-sm">
+<!-- Audio waveform micro bar -->
+<div class="flex items-center gap-2.5 bg-[#080C14] border border-[#1E293B] p-2 rounded-lg">
+<button aria-label="Play voice note" class="w-8 h-8 rounded-md bg-[#00F0FF] text-[#080C14] flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px] font-bold">play_arrow</span>
+</button>
+<div class="flex items-center gap-1 flex-1 h-5 overflow-hidden">
+<span class="w-1 bg-[#00F0FF]/60 h-2.5 rounded-full"></span>
+<span class="w-1 bg-[#00F0FF] h-4 rounded-full"></span>
+<span class="w-1 bg-[#00F0FF] h-5 rounded-full"></span>
+<span class="w-1 bg-[#00F0FF]/80 h-3 rounded-full"></span>
+<span class="w-1 bg-[#00F0FF] h-4 rounded-full"></span>
+<span class="w-1 bg-[#00F0FF] h-5 rounded-full"></span>
+<span class="w-1 bg-[#00F0FF]/70 h-3.5 rounded-full"></span>
+<span class="w-1 bg-[#00F0FF]/40 h-2 rounded-full"></span>
+</div>
+<span class="font-mono text-[11px] text-slate-400">0:04</span>
+</div>
+<!-- Hindi source transcript -->
+<div class="text-slate-100 font-sans text-[14px] leading-relaxed select-text">
+          "हम प्राथमिक चिकित्सा केंद्र पर हैं और अतिरिक्त पट्टियों की आवश्यकता है।"
+        </div>
+<!-- ML Kit Translated Box -->
+<div class="bg-[#080C14] border border-[#1E293B] rounded-lg p-2.5 flex flex-col gap-1">
+<div class="flex items-center gap-1 font-mono text-[10px] text-[#00F0FF] uppercase tracking-wider font-semibold">
+<span class="material-symbols-outlined text-[13px]">auto_awesome</span>
+<span>AUTO-TRANSLATED (GOOGLE ML KIT):</span>
+</div>
+<p class="font-sans text-[13.5px] text-[#00F0FF] font-medium leading-normal select-text">
+            "We are at the primary aid station and need additional bandages."
+          </p>
+</div>
+</div>
+</div>
+<!-- 2. INBOUND LOCATION FIX CARD -->
+<div class="flex flex-col items-start w-full max-w-[94%] gap-1">
+<div class="flex items-center gap-1.5 px-1 font-mono text-[11px] text-slate-400 uppercase tracking-wide">
+<span class="font-bold text-[#00F0FF]">Ravi</span>
+<span>•</span>
+<span class="text-[#10B981] font-semibold">PEER GPS FIX • 2:31 PM</span>
+</div>
+<div class="w-full bg-[#0F172A] border border-[#1E293B] rounded-xl p-3.5 flex flex-col gap-2.5 shadow-md">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<div class="w-9 h-9 rounded-lg bg-[#10B981]/20 border border-[#10B981]/40 text-[#10B981] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">pin_drop</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-mono text-[13px] font-bold text-white uppercase tracking-tight">WGS-84 Coordinates</span>
+<span class="font-mono text-[11px] text-slate-400">Accuracy: ±4.5m (Fix: 2 min ago)</span>
+</div>
+</div>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-[#10B981]/15 text-[#10B981] font-mono text-[10px] font-bold border border-[#10B981]/30 uppercase">
+            VALID
+          </span>
+</div>
+<!-- Coordinates Readout (Selectable & Monospaced) -->
+<div class="bg-[#080C14] border border-[#1E293B] p-3 rounded-lg flex items-center justify-between gap-2">
+<div class="flex flex-col select-all">
+<span class="font-mono text-[10px] text-slate-400 uppercase tracking-wider">LATITUDE / LONGITUDE</span>
+<span class="font-mono text-[15px] sm:text-[16px] text-[#00F0FF] font-bold tracking-wide" id="coordsDisplay">28.61390° N, 77.20902° E</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 text-[20px]">my_location</span>
+</div>
+<!-- Action Buttons (Strictly Copy Coords and External Maps) -->
+<div class="grid grid-cols-2 gap-2 pt-0.5">
+<button aria-label="Copy peer coordinates to clipboard" class="h-12 px-3 rounded-lg bg-[#080C14] hover:bg-[#1E293B] border border-[#1E293B] text-[#00F0FF] font-mono text-[12px] font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all" id="copyCoordsBtn" onclick="copyCoordinates()">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+<span id="copyCoordsLabel">Copy Coords</span>
+</button>
+<button aria-label="Open coordinates in external navigation application" class="h-12 px-3 rounded-lg bg-[#00F0FF] hover:bg-[#00F0FF]/90 text-[#080C14] font-mono text-[12px] font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-[0_0_12px_rgba(0,240,255,0.25)]" onclick="openExternalMaps()">
+<span class="material-symbols-outlined text-[18px] font-bold">open_in_new</span>
+<span>External Maps</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 3. INBOUND TEXT WITH NEUTRAL FALLBACK -->
+<div class="flex flex-col items-start w-full max-w-[92%] gap-1">
+<div class="flex items-center gap-1.5 px-1 font-mono text-[11px] text-slate-400 uppercase tracking-wide">
+<span class="font-bold text-[#00F0FF]">Ravi</span>
+<span>•</span>
+<span>2:31 PM</span>
+</div>
+<div class="w-full bg-[#0F172A] border border-[#1E293B] rounded-xl p-3 flex flex-col gap-2 shadow-sm">
+<div class="text-slate-100 font-sans text-[14px] leading-relaxed select-text">
+          "स्टॉक खत्म हो रहा है, क्या बैकअप टीम आ रही है?"
+        </div>
+<!-- Calm grey fallback note -->
+<div class="bg-[#080C14] border border-[#1E293B] rounded-lg p-2.5 flex items-start gap-2 text-slate-400">
+<span class="material-symbols-outlined text-[17px] text-slate-400 flex-shrink-0 mt-0.5">info</span>
+<p class="font-sans text-[12px] text-slate-400 leading-snug">
+<strong class="text-slate-300 font-medium">Original Text</strong> — Sent as original. Target language pack not installed on this device.
+          </p>
+</div>
+</div>
+</div>
+<!-- 4. OUTBOUND DELIVERED MESSAGE -->
+<div class="flex flex-col items-end w-full max-w-[90%] self-end gap-1">
+<div class="flex items-center gap-1.5 px-1 font-mono text-[11px] text-slate-400">
+<span>2:32 PM</span>
+<span>•</span>
+<span class="font-bold text-[#10B981]">You</span>
+</div>
+<div class="w-full bg-[#0F172A] border border-[#1E293B] rounded-xl p-3 flex flex-col gap-1.5 text-slate-100 shadow-sm">
+<p class="font-sans text-[14px] text-slate-100 select-text leading-relaxed">
+          Medical kit dispatched with Field Team 2.
+        </p>
+<div class="flex items-center justify-end gap-1 text-[#10B981] font-mono text-[11px] pt-0.5">
+<span class="material-symbols-outlined text-[14px] font-bold">done_all</span>
+<span>✓✓ Peer Transport ACK Received</span>
+</div>
+</div>
+</div>
+<!-- 5. OUTBOUND FAILED MESSAGE -->
+<div class="flex flex-col items-end w-full max-w-[90%] self-end gap-1">
+<div class="flex items-center gap-1.5 px-1 font-mono text-[11px] text-slate-400">
+<span>2:33 PM</span>
+<span>•</span>
+<span class="font-bold text-[#EF4444]">Failed</span>
+</div>
+<div class="w-full bg-[#0F172A] border border-[#EF4444]/40 rounded-xl p-3 flex flex-col gap-2.5 shadow-sm">
+<p class="font-sans text-[14px] text-slate-100 select-text leading-relaxed">
+          Confirm when supplies arrive.
+        </p>
+<div class="flex items-center justify-between gap-2 pt-1 border-t border-[#1E293B]">
+<div class="flex items-center gap-1.5 text-[#EF4444] font-mono text-[11px] font-semibold">
+<span class="material-symbols-outlined text-[16px]">error</span>
+<span>Transmission Failed</span>
+</div>
+<!-- Distinct high-contrast retry send button (min 48dp) -->
+<button aria-label="Retry sending failed message" class="h-12 px-4 rounded-lg bg-[#EF4444] hover:bg-red-600 text-white font-mono text-[12px] font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-[0_0_12px_rgba(239,68,68,0.35)]" id="retrySendBtn" onclick="handleRetrySend()">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+<span id="retryLabel">Retry Send</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BOTTOM INPUT DECK (HUD Dock) -->
+<footer class="fixed bottom-16 inset-x-0 z-40 bg-[#080C14]/95 backdrop-blur-xl border-t border-[#1E293B] px-3 py-2 flex flex-col gap-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.7)]">
+<!-- Status text: Direct P2P Ready • Bluetooth RFCOMM -->
+<div class="flex items-center justify-between px-1 text-[11px] font-mono">
+<span class="flex items-center gap-1.5 text-[#10B981] font-medium">
+<span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+        Direct P2P Ready • Bluetooth RFCOMM
+      </span>
+<span class="text-slate-400">ONLINE</span>
+</div>
+<!-- Active Input Controls -->
+<div class="flex items-center gap-2 w-full max-w-2xl mx-auto">
+<!-- Location share GPS icon button (Min 48dp) -->
+<button aria-label="Append tactical GPS coordinates" class="w-12 h-12 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] border border-[#1E293B] text-[#00F0FF] flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform shadow-sm" onclick="insertCurrentCoords()">
+<span class="material-symbols-outlined text-[22px]">location_searching</span>
+</button>
+<!-- Text input box -->
+<div class="flex-1 min-w-0 bg-[#0F172A] border border-[#1E293B] rounded-lg flex items-center px-3 h-12 focus-within:border-[#00F0FF] transition-colors">
+<input class="w-full bg-transparent text-slate-100 font-sans text-[14px] placeholder:text-slate-500 focus:outline-none" id="tacticalMessageInput" placeholder="Type tactical message..." type="text"/>
+</div>
+<!-- Hold-to-record mic button (min 56dp) -->
+<button aria-label="Hold to record tactical voice message" class="w-14 h-14 rounded-xl bg-[#0F172A] border border-[#1E293B] text-[#00F0FF] flex flex-col items-center justify-center flex-shrink-0 active:scale-95 transition-all shadow-md select-none touch-none" id="recordMicBtn">
+<span class="material-symbols-outlined text-[24px]" id="micIcon">mic</span>
+<span class="font-mono text-[9px] font-bold uppercase tracking-wider mt-0.5" id="micStatusText">HOLD</span>
+</button>
+<!-- Electric cyan Send button (Min 48dp) -->
+<button aria-label="Send tactical message" class="w-12 h-12 rounded-lg bg-[#00F0FF] hover:bg-[#00F0FF]/90 text-[#080C14] flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform shadow-[0_0_14px_rgba(0,240,255,0.4)]" id="sendMessageBtn" onclick="sendTacticalMessage()">
+<span class="material-symbols-outlined text-[22px] font-bold">send</span>
+</button>
+</div>
+</footer>
+<!-- BOTTOM NAVIGATION BAR (HUB, CONNECT, CHAT [active cyan], NOTES) -->
+<nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-[#080C14] border-t border-[#1E293B]">
+<div class="flex justify-around items-center h-16 px-2 max-w-2xl mx-auto">
+<!-- HUB -->
+<a class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-12 rounded-lg text-slate-400 hover:text-slate-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">radar</span>
+<span class="font-mono text-[10px] font-semibold tracking-wider uppercase">HUB</span>
+</a>
+<!-- CONNECT -->
+<a class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-12 rounded-lg text-slate-400 hover:text-slate-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">hub</span>
+<span class="font-mono text-[10px] font-semibold tracking-wider uppercase">CONNECT</span>
+</a>
+<!-- CHAT (ACTIVE CYAN) -->
+<a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-12 rounded-lg text-[#00F0FF] bg-[#0F172A] border border-[#00F0FF]/30 transition-all shadow-[0_0_8px_rgba(0,240,255,0.15)]" href="#">
+<span class="material-symbols-outlined text-[22px]">forum</span>
+<span class="font-mono text-[10px] font-bold tracking-wider uppercase">CHAT</span>
+</a>
+<!-- NOTES -->
+<a class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-12 rounded-lg text-slate-400 hover:text-slate-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">edit_note</span>
+<span class="font-mono text-[10px] font-semibold tracking-wider uppercase">NOTES</span>
+</a>
+</div>
+</nav>
+<!-- INTERACTION SCRIPTS -->
+<script>
+    // Copy coordinates
+    function copyCoordinates() {
+      const coords = "28.61390, 77.20902";
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(coords);
+      }
+      const label = document.getElementById('copyCoordsLabel');
+      if (label) {
+        const orig = label.innerText;
+        label.innerText = 'Copied!';
+        setTimeout(() => {
+          label.innerText = orig;
+        }, 1800);
+      }
+    }
+
+    // External Maps trigger
+    function openExternalMaps() {
+      const lat = 28.61390;
+      const lon = 77.20902;
+      const url = `https://maps.google.com/?q=${lat},${lon}`;
+      window.open(url, '_blank');
+    }
+
+    // Retry failed message
+    function handleRetrySend() {
+      const btn = document.getElementById('retrySendBtn');
+      const label = document.getElementById('retryLabel');
+      if (!btn || !label) return;
+
+      label.innerText = 'Retrying...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        label.innerText = 'Sent ✓';
+        btn.className = "h-12 px-4 rounded-lg bg-[#10B981] text-white font-mono text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all";
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) icon.innerText = 'check';
+      }, 1200);
+    }
+
+    // Insert coordinates macro
+    function insertCurrentCoords() {
+      const input = document.getElementById('tacticalMessageInput');
+      if (!input) return;
+      input.value = "[GPS: 28.61390° N, 77.20902° E] " + input.value;
+      input.focus();
+    }
+
+    // Send tactical message
+    function sendTacticalMessage() {
+      const input = document.getElementById('tacticalMessageInput');
+      if (!input || !input.value.trim()) return;
+      input.value = '';
+      const btn = document.getElementById('sendMessageBtn');
+      if (btn) {
+        btn.classList.add('scale-95');
+        setTimeout(() => btn.classList.remove('scale-95'), 150);
+      }
+    }
+
+    // Press-and-Hold visual states for tactical mic (crimson + timer indicator)
+    (function setupMic() {
+      const micBtn = document.getElementById('recordMicBtn');
+      const micText = document.getElementById('micStatusText');
+      if (!micBtn || !micText) return;
+
+      let isRecording = false;
+      let recordTimer = null;
+      let seconds = 0;
+
+      function startRecording(e) {
+        e.preventDefault();
+        isRecording = true;
+        seconds = 0;
+        micBtn.classList.remove('bg-[#0F172A]', 'text-[#00F0FF]', 'border-[#1E293B]');
+        micBtn.classList.add('bg-[#EF4444]', 'text-white', 'border-[#EF4444]', 'shadow-[0_0_16px_rgba(239,68,68,0.7)]', 'scale-105');
+        micText.innerText = '00:00';
+
+        recordTimer = setInterval(() => {
+          seconds++;
+          const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+          const secs = String(seconds % 60).padStart(2, '0');
+          micText.innerText = `${mins}:${secs}`;
+        }, 1000);
+      }
+
+      function stopRecording(e) {
+        if (!isRecording) return;
+        isRecording = false;
+        clearInterval(recordTimer);
+        micBtn.classList.remove('bg-[#EF4444]', 'text-white', 'border-[#EF4444]', 'shadow-[0_0_16px_rgba(239,68,68,0.7)]', 'scale-105');
+        micBtn.classList.add('bg-[#0F172A]', 'text-[#00F0FF]', 'border-[#1E293B]');
+        micText.innerText = 'HOLD';
+      }
+
+      micBtn.addEventListener('mousedown', startRecording);
+      micBtn.addEventListener('mouseup', stopRecording);
+      micBtn.addEventListener('mouseleave', stopRecording);
+      micBtn.addEventListener('touchstart', startRecording, { passive: false });
+      micBtn.addEventListener('touchend', stopRecording);
+    })();
+  </script>
+</body></html>

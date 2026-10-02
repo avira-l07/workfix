@@ -211,7 +211,7 @@ class PipelineGeneralizationTest {
             val recognizer = createRecognizer(src, LanguageCode.ENGLISH)
             assertEquals(
                 "Specialized STT must stay in transcription mode",
-                src !in setOf(LanguageCode.HINDI, LanguageCode.TAMIL, LanguageCode.TELUGU),
+                src !in setOf(LanguageCode.HINDI, LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.ODIA),
                 recognizer.isTranslateMode
             )
         }

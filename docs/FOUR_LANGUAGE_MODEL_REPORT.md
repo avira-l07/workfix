@@ -2,7 +2,7 @@
 
 This report measures the four languages selected for the current iTantra
 prototype: Hindi, English, Tamil and Telugu. It uses the categories shown by
-an [unofficial SIH26173 problem-statement mirror](https://sih2026.vuce.in/ps/SIH26173):
+the [official SIH26173 problem statement](https://sih.gov.in/sih2026PS):
 accuracy (40%), efficiency (20%) and latency (20%). Those published weights
 sum to 80%; this report does not invent another category or an official pass
 threshold. **The prototype has four selectable voice languages, not validated

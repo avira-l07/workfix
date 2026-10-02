@@ -17,10 +17,12 @@ data class ModelFileSpec(
 
 object ModelFileSpecs {
     // Language codes present in the published Whisper encoder metadata.
-    val supportedSttLanguages: Set<LanguageCode> = LanguageCode.entries.toSet() - LanguageCode.ODIA
+    val supportedWhisperLanguages: Set<LanguageCode> = LanguageCode.entries.toSet() - LanguageCode.ODIA
+    // Odia uses a dedicated CTC model; the shared Whisper export has no Odia token.
+    val supportedSttLanguages: Set<LanguageCode> = LanguageCode.entries.toSet()
 
+    /** Shared Whisper file layout. Prefer AdditionalSttModel for a manually selected CTC language. */
     fun getSttSpec(lang: LanguageCode): ModelFileSpec {
-        // We use a shared multilingual Whisper model for all languages.
         return ModelFileSpec(
             type = ModelFileSpec.EngineType.STT,
             languageCode = lang,

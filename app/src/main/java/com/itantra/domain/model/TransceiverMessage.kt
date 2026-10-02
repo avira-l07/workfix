@@ -96,6 +96,17 @@ data class TransceiverMessage(
             return 100f * (1.0f - (finalFrameBytes.toFloat() / rawPcmEquivalentBytes.toFloat()))
         }
 
+    /** Actual frame bytes for this voice message versus its uncompressed 16 kHz PCM reference.
+     * Null means no frame was measured; it must never be displayed as 0% or 100% savings.
+     * This is not a comparison against a compressed voice codec or a radio-link measurement.
+     */
+    val measuredWireReductionVsPcmPercent: Double?
+        get() {
+            if (!isVoiceGenerated || rawPcmEquivalentBytes <= 0) return null
+            val bytes = finalFrameBytes.takeIf { it > 0 } ?: packetBytes.takeIf { it > 0 } ?: return null
+            return 100.0 * (1.0 - bytes.toDouble() / rawPcmEquivalentBytes)
+        }
+
     val semanticBitrateBps: Float
         get() {
             if (speechDurationMillis == 0L) return 0f

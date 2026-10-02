@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f9fc">
+  <title>iTantra — Your voice, your colors</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='20' fill='%233b5ee7'/%3E%3Cpath d='M20 28v8m8-16v24m8-30v36m8-22v8' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="refinements.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="preview-bar">
+    <span><span class="preview-dot"></span> Design preview <span class="preview-detail">· Sample data & simulated actions</span></span>
+    <label class="preview-state">Preview state <select id="scenario" aria-label="Preview state"><option value="connected">Connected</option><option value="disconnected">Disconnected</option><option value="missing">Models missing</option><option value="download-failed">Download failed</option><option value="empty">Empty history</option></select></label>
+  </div>
+  <aside class="sidebar" aria-label="Main navigation"></aside>
+  <div class="workspace">
+    <header class="topbar"></header>
+    <main id="main" tabindex="-1"></main>
+    <footer class="desktop-footer"><span>Made for conversations that matter.</span><button class="text-btn" data-action="appearance">Choose your colors</button></footer>
+  </div>
+  <nav class="bottom-nav" aria-label="Mobile navigation"></nav>
+  <div id="talk-dock"></div>
+  <dialog id="modal" aria-labelledby="modal-title"></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -26,7 +26,7 @@ data class BenchmarkSession(
     val androidVersion: String = "",
     val abi: String = "",
     val threadCount: Int = 1,
-    val modelVersion: String = "Whisper Tiny Multilingual INT8 ONNX",
+    val modelVersion: String = "Unspecified STT model",
     val noiseCondition: NoiseCondition = NoiseCondition.QUIET,
     val totalUtterances: Int = 0,
     val totalReferenceWords: Int = 0,

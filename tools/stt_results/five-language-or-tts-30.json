@@ -1,0 +1,225 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114046707,
+  "model_sha256": "ab867f39b00f1fcb39dc97f5079150959b50df50d7f10e75232c56b52f19c021",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 1040.4089600003015,
+    "p95_synthesis_ms_nearest_rank": 1449.6290000388399,
+    "rtf": 0.9378140560479402,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 247726080
+  },
+  "rows": [
+    {
+      "phrase": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+      "repetition": 0,
+      "synthesis_ms": 658.5946999839507,
+      "audio_ms": 1074.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ପାଣି ପଠାନ୍ତୁ",
+      "repetition": 0,
+      "synthesis_ms": 535.252500034403,
+      "audio_ms": 730.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ରାସ୍ତା ବନ୍ଦ ଅଛି",
+      "repetition": 0,
+      "synthesis_ms": 1149.7780000208877,
+      "audio_ms": 1309.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+      "repetition": 0,
+      "synthesis_ms": 1398.218900023494,
+      "audio_ms": 1316.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ",
+      "repetition": 0,
+      "synthesis_ms": 1294.4191999849863,
+      "audio_ms": 1180.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+      "repetition": 1,
+      "synthesis_ms": 1092.7825999679044,
+      "audio_ms": 1069.0625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ପାଣି ପଠାନ୍ତୁ",
+      "repetition": 1,
+      "synthesis_ms": 744.3247000337578,
+      "audio_ms": 766.8125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ରାସ୍ତା ବନ୍ଦ ଅଛି",
+      "repetition": 1,
+      "synthesis_ms": 1122.4553000065498,
+      "audio_ms": 1213.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+      "repetition": 1,
+      "synthesis_ms": 1375.4806999932043,
+      "audio_ms": 1213.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ",
+      "repetition": 1,
+      "synthesis_ms": 1207.9743000213057,
+      "audio_ms": 1189.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+      "repetition": 2,
+      "synthesis_ms": 876.464799977839,
+      "audio_ms": 1060.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ପାଣି ପଠାନ୍ତୁ",
+      "repetition": 2,
+      "synthesis_ms": 824.0464999689721,
+      "audio_ms": 756.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ରାସ୍ତା ବନ୍ଦ ଅଛି",
+      "repetition": 2,
+      "synthesis_ms": 980.2677999832667,
+      "audio_ms": 1232.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+      "repetition": 2,
+      "synthesis_ms": 1198.279200005345,
+      "audio_ms": 1222.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ",
+      "repetition": 2,
+      "synthesis_ms": 1227.122199954465,
+      "audio_ms": 1228.8125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+      "repetition": 3,
+      "synthesis_ms": 1058.0512000015005,
+      "audio_ms": 1060.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ପାଣି ପଠାନ୍ତୁ",
+      "repetition": 3,
+      "synthesis_ms": 685.7424000045285,
+      "audio_ms": 751.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ରାସ୍ତା ବନ୍ଦ ଅଛି",
+      "repetition": 3,
+      "synthesis_ms": 1107.7322000055574,
+      "audio_ms": 1168.125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+      "repetition": 3,
+      "synthesis_ms": 1449.6290000388399,
+      "audio_ms": 1404.125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ",
+      "repetition": 3,
+      "synthesis_ms": 1183.4940999979153,
+      "audio_ms": 1162.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+      "repetition": 4,
+      "synthesis_ms": 863.2745000068098,
+      "audio_ms": 1046.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ପାଣି ପଠାନ୍ତୁ",
+      "repetition": 4,
+      "synthesis_ms": 658.7779999827035,
+      "audio_ms": 745.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ରାସ୍ତା ବନ୍ଦ ଅଛି",
+      "repetition": 4,
+      "synthesis_ms": 1001.1118000256829,
+      "audio_ms": 1249.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+      "repetition": 4,
+      "synthesis_ms": 1471.4796000043862,
+      "audio_ms": 1464.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ",
+      "repetition": 4,
+      "synthesis_ms": 1220.266799966339,
+      "audio_ms": 1256.8125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+      "repetition": 5,
+      "synthesis_ms": 811.9365999591537,
+      "audio_ms": 1011.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ପାଣି ପଠାନ୍ତୁ",
+      "repetition": 5,
+      "synthesis_ms": 645.7683999906294,
+      "audio_ms": 731.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ରାସ୍ତା ବନ୍ଦ ଅଛି",
+      "repetition": 5,
+      "synthesis_ms": 1146.6465000412427,
+      "audio_ms": 1190.9375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+      "repetition": 5,
+      "synthesis_ms": 1279.8624000279233,
+      "audio_ms": 1330.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ",
+      "repetition": 5,
+      "synthesis_ms": 943.0338999954984,
+      "audio_ms": 1146.625,
+      "sample_rate_hz": 16000
+    }
+  ]
+}

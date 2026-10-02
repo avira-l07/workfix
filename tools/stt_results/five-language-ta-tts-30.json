@@ -1,0 +1,225 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114032763,
+  "model_sha256": "c44055b2e7c5719ca26708f6eb03680b0f1bbf6fdcb0df6480478f872f1f6e34",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 1316.7144299989257,
+    "p95_synthesis_ms_nearest_rank": 1975.9672000072896,
+    "rtf": 0.8226326758144149,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 272056320
+  },
+  "rows": [
+    {
+      "phrase": "உதவி தேவை",
+      "repetition": 0,
+      "synthesis_ms": 605.2690999931656,
+      "audio_ms": 1050.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "தண்ணீர் அனுப்புங்கள்",
+      "repetition": 0,
+      "synthesis_ms": 934.9427000270225,
+      "audio_ms": 1508.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "சாலை மூடப்பட்டுள்ளது",
+      "repetition": 0,
+      "synthesis_ms": 1400.3286000224762,
+      "audio_ms": 1635.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+      "repetition": 0,
+      "synthesis_ms": 1972.2514000022784,
+      "audio_ms": 2475.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "மருத்துவரை அழைக்கவும்",
+      "repetition": 0,
+      "synthesis_ms": 1172.6628000033088,
+      "audio_ms": 1477.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "உதவி தேவை",
+      "repetition": 1,
+      "synthesis_ms": 866.5550999576226,
+      "audio_ms": 1054.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "தண்ணீர் அனுப்புங்கள்",
+      "repetition": 1,
+      "synthesis_ms": 1231.1189000029117,
+      "audio_ms": 1525.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "சாலை மூடப்பட்டுள்ளது",
+      "repetition": 1,
+      "synthesis_ms": 1376.4102999703027,
+      "audio_ms": 1500.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+      "repetition": 1,
+      "synthesis_ms": 1946.6304000234231,
+      "audio_ms": 2255.125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "மருத்துவரை அழைக்கவும்",
+      "repetition": 1,
+      "synthesis_ms": 1309.7569000092335,
+      "audio_ms": 1680.9375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "உதவி தேவை",
+      "repetition": 2,
+      "synthesis_ms": 854.3787999660708,
+      "audio_ms": 1053.8125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "தண்ணீர் அனுப்புங்கள்",
+      "repetition": 2,
+      "synthesis_ms": 1254.5583000173792,
+      "audio_ms": 1447.625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "சாலை மூடப்பட்டுள்ளது",
+      "repetition": 2,
+      "synthesis_ms": 1296.8723000376485,
+      "audio_ms": 1483.625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+      "repetition": 2,
+      "synthesis_ms": 2094.853599963244,
+      "audio_ms": 2382.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "மருத்துவரை அழைக்கவும்",
+      "repetition": 2,
+      "synthesis_ms": 1236.9489999837242,
+      "audio_ms": 1597.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "உதவி தேவை",
+      "repetition": 3,
+      "synthesis_ms": 958.6602000053972,
+      "audio_ms": 1040.625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "தண்ணீர் அனுப்புங்கள்",
+      "repetition": 3,
+      "synthesis_ms": 1458.3566000219434,
+      "audio_ms": 1552.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "சாலை மூடப்பட்டுள்ளது",
+      "repetition": 3,
+      "synthesis_ms": 1258.3778000553139,
+      "audio_ms": 1489.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+      "repetition": 3,
+      "synthesis_ms": 1790.3866000124253,
+      "audio_ms": 2237.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "மருத்துவரை அழைக்கவும்",
+      "repetition": 3,
+      "synthesis_ms": 1092.5656000035815,
+      "audio_ms": 1478.9375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "உதவி தேவை",
+      "repetition": 4,
+      "synthesis_ms": 853.0993000022136,
+      "audio_ms": 1038.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "தண்ணீர் அனுப்புங்கள்",
+      "repetition": 4,
+      "synthesis_ms": 1365.699699963443,
+      "audio_ms": 1556.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "சாலை மூடப்பட்டுள்ளது",
+      "repetition": 4,
+      "synthesis_ms": 1468.069499998819,
+      "audio_ms": 1539.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+      "repetition": 4,
+      "synthesis_ms": 1975.9672000072896,
+      "audio_ms": 2391.6875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "மருத்துவரை அழைக்கவும்",
+      "repetition": 4,
+      "synthesis_ms": 1133.2753000315279,
+      "audio_ms": 1516.125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "உதவி தேவை",
+      "repetition": 5,
+      "synthesis_ms": 875.8216999704018,
+      "audio_ms": 1038.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "தண்ணீர் அனுப்புங்கள்",
+      "repetition": 5,
+      "synthesis_ms": 1294.7468999773264,
+      "audio_ms": 1459.6875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "சாலை மூடப்பட்டுள்ளது",
+      "repetition": 5,
+      "synthesis_ms": 1297.7628000080585,
+      "audio_ms": 1496.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+      "repetition": 5,
+      "synthesis_ms": 1895.239399978891,
+      "audio_ms": 2463.0625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "மருத்துவரை அழைக்கவும்",
+      "repetition": 5,
+      "synthesis_ms": 1229.8660999513231,
+      "audio_ms": 1591.875,
+      "sample_rate_hz": 16000
+    }
+  ]
+}

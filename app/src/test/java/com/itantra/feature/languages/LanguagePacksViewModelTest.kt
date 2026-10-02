@@ -142,6 +142,17 @@ class LanguagePacksViewModelTest {
     }
 
     @Test
+    fun odiaCandidateCanBeSelectedForMicrophoneAndTts() = runTest(testDispatcher) {
+        val viewModel = LanguagePacksViewModel(MockLanguagePackRepository())
+
+        viewModel.toggleStagedMicLanguage(LanguageCode.ODIA)
+        assertEquals(true, viewModel.stagedMicLanguages.value?.contains(LanguageCode.ODIA))
+
+        viewModel.toggleStagedListenLanguage(LanguageCode.ODIA)
+        assertEquals(true, viewModel.stagedListenLanguages.value?.contains(LanguageCode.ODIA))
+    }
+
+    @Test
     fun ttsInstallForActiveLanguage_viewModelDoesNotDirectlyLoadEngines() = runTest(testDispatcher) {
         val repo = MockLanguagePackRepository()
         var synthCreated = false

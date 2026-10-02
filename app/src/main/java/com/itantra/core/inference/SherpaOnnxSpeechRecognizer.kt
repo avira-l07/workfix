@@ -16,12 +16,12 @@ import java.io.File
 
 /** Only pass language tokens actually supported by this Whisper export. */
 internal fun whisperLanguageCode(code: LanguageCode): String {
-    require(code in ModelFileSpecs.supportedSttLanguages) { "Unsupported Whisper language: $code" }
+    require(code in ModelFileSpecs.supportedWhisperLanguages) { "Unsupported Whisper language: $code" }
     return code.wireCode
 }
 
 internal fun languageCodeFromWhisper(code: String): LanguageCode? =
-    LanguageCode.fromWireCode(code.trim())?.takeIf { it in ModelFileSpecs.supportedSttLanguages }
+    LanguageCode.fromWireCode(code.trim())?.takeIf { it in ModelFileSpecs.supportedWhisperLanguages }
 
 class SherpaOnnxSpeechRecognizer(
     private val context: Context,
