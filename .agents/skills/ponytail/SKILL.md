@@ -89,6 +89,13 @@ Example: "Add a cache for these API responses."
 
 ## When NOT to be lazy
 
+The ponytail skill applies to how much code you write, not to experimental rigor.
+Everything in the Hard Rules and Acceptance sections of my prompt is explicitly
+requested and must not be simplified: the leakage check, speaker-based splits,
+the three held-out sets, seed variance, FP32-vs-INT8 comparison, and honest
+"Not run" / "Not verified" labels. Keep the code small, but do not cut any of
+these.
+
 Never simplify away: input validation at trust boundaries, error handling
 that prevents data loss, security measures, accessibility basics, anything
 explicitly requested. User insists on the full version → build it, no
