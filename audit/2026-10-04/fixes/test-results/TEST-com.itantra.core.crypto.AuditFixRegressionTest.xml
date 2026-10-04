@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.crypto.AuditFixRegressionTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:14.277Z" hostname="AVII" time="0.567">
+  <properties/>
+  <testcase name="malformed profiles cannot create a peer identity" classname="com.itantra.core.crypto.AuditFixRegressionTest" time="0.081"/>
+  <testcase name="UTF8 boundary survives encryption framing and receiver decode" classname="com.itantra.core.crypto.AuditFixRegressionTest" time="0.266"/>
+  <testcase name="eight concurrent decrypts accept each authenticated counter exactly once" classname="com.itantra.core.crypto.AuditFixRegressionTest" time="0.22"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

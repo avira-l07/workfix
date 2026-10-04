@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.feature.benchmark.BenchmarkAccuracyTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:22.533Z" hostname="AVII" time="0.184">
+  <properties/>
+  <testcase name="testEachBenchmarkHasCriticalPhraseCases" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.155"/>
+  <testcase name="testCorpusWerAggregation" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.0"/>
+  <testcase name="testUnicodeScriptsNormalization" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.001"/>
+  <testcase name="testEmptyReferenceSafety" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.001"/>
+  <testcase name="testNoResultMarkedDeviceTestedWithoutDeviceEvidence" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.001"/>
+  <testcase name="testTtsEvaluationSerialization" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.006"/>
+  <testcase name="testAll10BenchmarkAssetFilesParseSuccessfully" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.009"/>
+  <testcase name="testAll10BenchmarkAssetFilesExist" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.001"/>
+  <testcase name="testEachBenchmarkHasAtLeast20Sentences" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.006"/>
+  <testcase name="testWerMath" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.001"/>
+  <testcase name="testEvidenceLevelIntegrity" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.0"/>
+  <testcase name="testBenchmarkSessionSerialization" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.002"/>
+  <testcase name="testEditOperationAccounting" classname="com.itantra.feature.benchmark.BenchmarkAccuracyTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

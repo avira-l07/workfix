@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.itantra.data.settings.AppearancePersistenceTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:13.361Z" hostname="AVII" time="0.635">
+  <properties/>
+  <testcase name="appearance persists and simultaneous edits preserve other preferences" classname="com.example.itantra.data.settings.AppearancePersistenceTest" time="0.635"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

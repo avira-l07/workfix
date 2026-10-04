@@ -1,4 +1,4 @@
-"""Copy five checksum-verified FLEURS recordings into Android self-test assets."""
+"""Copy checksum-verified FLEURS recordings into Android self-test assets."""
 
 import hashlib
 import json
@@ -14,6 +14,10 @@ SOURCES = {
     "ta": ROOT / "tools/stt_models/extra-language-test/manifest-ta-te.json",
     "te": ROOT / "tools/stt_models/extra-language-test/manifest-ta-te.json",
     "or": ROOT / "tools/stt_models/odia-validation/manifest-or-20.json",
+    "bn": ROOT / "tools/stt_models/five-language-validation/manifest-bn-30.json",
+    "gu": ROOT / "tools/stt_models/five-language-validation/manifest-gu-30.json",
+    "mr": ROOT / "tools/stt_models/five-language-validation/manifest-mr-30.json",
+    "ml": ROOT / "tools/stt_models/five-language-validation/manifest-ml-30.json",
 }
 
 
@@ -37,7 +41,7 @@ def main() -> None:
             "asset": f"benchmark/five_self_test/{code}.wav",
             "reference": item["reference"],
             "sha256": actual,
-            "source": item["source"],
+            "source": item.get("source", "https://huggingface.co/datasets/google/fleurs"),
             "license": item.get("license", "CC-BY-4.0"),
         })
     (DEST / "manifest.json").write_text(

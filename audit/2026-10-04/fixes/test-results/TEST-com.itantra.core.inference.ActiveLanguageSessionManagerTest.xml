@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.ActiveLanguageSessionManagerTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:15.257Z" hostname="AVII" time="0.155">
+  <properties/>
+  <testcase name="manager with FULL_AI or STANDARD_AI capability detector allows normal model loading" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.1"/>
+  <testcase name="releaseAll unloads engines and clears active language" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.005"/>
+  <testcase name="STT load failure propagates exception, cleans up and sets ERROR state" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.007"/>
+  <testcase name="switching to a new language loads its engines and sets it active" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.005"/>
+  <testcase name="TTS load failure cleanly unloads loaded STT, leaves no leaked engine, and propagates exception" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.006"/>
+  <testcase name="switching languages unloads the previous language before loading the next" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.003"/>
+  <testcase name="switching to the already-active language is a no-op" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.005"/>
+  <testcase name="manager with CORE_ONLY capability detector refuses heavy model loading and sets ERROR" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.005"/>
+  <testcase name="ensureCapabilities sets ERROR when requested TTS load fails for active language" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.007"/>
+  <testcase name="unloadIfActive unloads active language and resets to IDLE" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.004"/>
+  <testcase name="default NoOp factory throws rather than pretending to load a real engine" classname="com.itantra.core.inference.ActiveLanguageSessionManagerTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

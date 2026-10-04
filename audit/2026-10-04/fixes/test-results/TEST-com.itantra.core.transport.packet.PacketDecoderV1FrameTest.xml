@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.transport.packet.PacketDecoderV1FrameTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:21.312Z" hostname="AVII" time="0.001">
+  <properties/>
+  <testcase name="testV1FrameOneBytePayload_size34_decodes" classname="com.itantra.core.transport.packet.PacketDecoderV1FrameTest" time="0.0"/>
+  <testcase name="testV1FrameTwoBytesPayload_size35_decodes" classname="com.itantra.core.transport.packet.PacketDecoderV1FrameTest" time="0.0"/>
+  <testcase name="testV1FrameZeroPayload_size33_decodes" classname="com.itantra.core.transport.packet.PacketDecoderV1FrameTest" time="0.001"/>
+  <testcase name="testFrameBelow33_throws" classname="com.itantra.core.transport.packet.PacketDecoderV1FrameTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,76 @@
+{
+  "language": "ta",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Manual language: IndicConformer CTC INT8",
+  "stt_load_ms": 956.612000009045,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\ta\\model.int8.onnx",
+      "bytes": 197595513,
+      "sha256": "abb7b59d706b8d27ba3fb5e5e3db7671c9e1a09bf7bc6122de507c60030e65fb"
+    },
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\tokens.txt",
+      "bytes": 67605,
+      "sha256": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
+    }
+  ],
+  "stt": {
+    "reference": "இந்த விதிகள் திருத்தப்படுவதற்கு முன்னர் அனைத்து மாநிலங்களின் ஒருமித்த ஒப்புதலையும் கோரியது மற்றும் பெரும்பாலும் அவர்களின் பிரதிநிதிகள் அங்கு இல்லாததால் மாநில அரசு மத்திய அரசை மிகவும் சாதாரணமாக எடுத்துக் கொண்டது",
+    "output": "இந்த விதிகள் திருத்தப்படுவதற்கு முன்னர் அனைத்து மாநிலங்களின் ஒருமித்த ஒப்புதலை கோரியது மற்றும் பெரும்பாலும் அவர்களின் பிரதிநிதிகள் அங்கு இல்லாததால் மாநில அரசு மத்திய அரசை மிகவும் சாதாரணமாக எடுத்து கொண்டது",
+    "native_script_majority": true,
+    "decode_ms": 705.6891000829637,
+    "audio_seconds": 14.1,
+    "rtf": 0.05004887234630948,
+    "single_recording_wer": 0.08695652173913043,
+    "word_errors": 2,
+    "reference_words": 23
+  },
+  "silence": {
+    "output": "ஆ",
+    "decode_ms": 43.59530005604029
+  },
+  "tts_load_ms": 964.946800027974,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\models\\bundled\\ta\\tts\\model.onnx",
+      "bytes": 114032388,
+      "sha256": "c44055b2e7c5719ca26708f6eb03680b0f1bbf6fdcb0df6480478f872f1f6e34"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\ta\\tts\\tokens.txt",
+      "bytes": 375,
+      "sha256": "0b3f692319bb5fae8658e2f84bf252bca92450d0207bbba7273caa1a182d81b8"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "உதவி தேவை",
+      "synthesis_ms": 578.4953000256792,
+      "sample_rate": 16000,
+      "samples": 16356,
+      "peak_amplitude": 0.5675663948059082,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "தண்ணீர் அனுப்புங்கள்",
+      "synthesis_ms": 885.0382000673562,
+      "sample_rate": 16000,
+      "samples": 27362,
+      "peak_amplitude": 0.6787841320037842,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "மருத்துவரை அழைக்கவும்",
+      "synthesis_ms": 797.5414999527857,
+      "sample_rate": 16000,
+      "samples": 25713,
+      "peak_amplitude": 0.669405460357666,
+      "finite": true,
+      "missing_token_letters": []
+    }
+  ]
+}

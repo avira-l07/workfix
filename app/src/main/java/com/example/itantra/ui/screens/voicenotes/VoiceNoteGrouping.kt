@@ -27,7 +27,8 @@ object VoiceNoteGrouping {
         return when {
             daysAgo == 0L -> VoiceNoteGroupKey(VoiceNoteBucket.TODAY)
             daysAgo == 1L -> VoiceNoteGroupKey(VoiceNoteBucket.YESTERDAY)
-            daysAgo in 2..7 -> VoiceNoteGroupKey(VoiceNoteBucket.THIS_WEEK)
+            // Rolling seven local dates, including today; preview uses the same cutoff.
+            daysAgo in 2..6 -> VoiceNoteGroupKey(VoiceNoteBucket.THIS_WEEK)
             date.year == today.year && date.month == today.month -> VoiceNoteGroupKey(VoiceNoteBucket.THIS_MONTH)
             else -> VoiceNoteGroupKey(VoiceNoteBucket.OLDER, YearMonth.from(date))
         }

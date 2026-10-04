@@ -1,0 +1,15 @@
+{
+  "tests": {
+    "tests": 444,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "lint": {
+    "Warning": 68,
+    "Hint": 1
+  },
+  "report": "D:\\new itantra\\docs\\AUDIT_FIXES_2026-10-04.txt",
+  "debug_apk": "D:\\new itantra\\artifacts\\audit-fixes-2026-10-04\\app-debug.apk",
+  "main_changed_files": 25
+}

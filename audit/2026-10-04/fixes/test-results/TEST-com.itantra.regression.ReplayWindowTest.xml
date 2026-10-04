@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.regression.ReplayWindowTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:35.593Z" hostname="AVII" time="0.001">
+  <properties/>
+  <testcase name="testDuplicateCounterRejected" classname="com.itantra.regression.ReplayWindowTest" time="0.0"/>
+  <testcase name="testWindowAdvancement" classname="com.itantra.regression.ReplayWindowTest" time="0.0"/>
+  <testcase name="testOutOfOrderWithinWindowAccepted" classname="com.itantra.regression.ReplayWindowTest" time="0.0"/>
+  <testcase name="testPreAuthCheckDoesNotMutateState" classname="com.itantra.regression.ReplayWindowTest" time="0.0"/>
+  <testcase name="testResetClearsWindow" classname="com.itantra.regression.ReplayWindowTest" time="0.0"/>
+  <testcase name="testFirstPacketAndMonotonicCountersAccepted" classname="com.itantra.regression.ReplayWindowTest" time="0.001"/>
+  <testcase name="testStaleCounterOutsideWindowRejected" classname="com.itantra.regression.ReplayWindowTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

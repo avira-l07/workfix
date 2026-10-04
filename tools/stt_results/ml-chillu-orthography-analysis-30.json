@@ -1,0 +1,218 @@
+{
+  "scope": "Supplementary legacy chillu orthography analysis, no model or app change",
+  "primary_wer_unchanged": 0.2890625,
+  "folded_wer": 0.2784313725490196,
+  "folded_cer": 0.06846846846846846,
+  "rows": [
+    {
+      "row": 0,
+      "word_errors": 3,
+      "words": 19,
+      "char_errors": 3,
+      "chars": 174
+    },
+    {
+      "row": 1,
+      "word_errors": 2,
+      "words": 15,
+      "char_errors": 4,
+      "chars": 155
+    },
+    {
+      "row": 2,
+      "word_errors": 4,
+      "words": 20,
+      "char_errors": 7,
+      "chars": 207
+    },
+    {
+      "row": 3,
+      "word_errors": 3,
+      "words": 8,
+      "char_errors": 4,
+      "chars": 59
+    },
+    {
+      "row": 4,
+      "word_errors": 8,
+      "words": 18,
+      "char_errors": 8,
+      "chars": 179
+    },
+    {
+      "row": 5,
+      "word_errors": 4,
+      "words": 19,
+      "char_errors": 1,
+      "chars": 178
+    },
+    {
+      "row": 6,
+      "word_errors": 3,
+      "words": 15,
+      "char_errors": 3,
+      "chars": 146
+    },
+    {
+      "row": 7,
+      "word_errors": 1,
+      "words": 14,
+      "char_errors": 1,
+      "chars": 148
+    },
+    {
+      "row": 8,
+      "word_errors": 7,
+      "words": 10,
+      "char_errors": 16,
+      "chars": 123
+    },
+    {
+      "row": 9,
+      "word_errors": 11,
+      "words": 40,
+      "char_errors": 63,
+      "chars": 275
+    },
+    {
+      "row": 10,
+      "word_errors": 7,
+      "words": 13,
+      "char_errors": 3,
+      "chars": 107
+    },
+    {
+      "row": 11,
+      "word_errors": 0,
+      "words": 14,
+      "char_errors": 0,
+      "chars": 104
+    },
+    {
+      "row": 12,
+      "word_errors": 5,
+      "words": 14,
+      "char_errors": 6,
+      "chars": 114
+    },
+    {
+      "row": 13,
+      "word_errors": 16,
+      "words": 40,
+      "char_errors": 72,
+      "chars": 275
+    },
+    {
+      "row": 14,
+      "word_errors": 2,
+      "words": 14,
+      "char_errors": 2,
+      "chars": 151
+    },
+    {
+      "row": 15,
+      "word_errors": 5,
+      "words": 20,
+      "char_errors": 4,
+      "chars": 158
+    },
+    {
+      "row": 16,
+      "word_errors": 3,
+      "words": 25,
+      "char_errors": 3,
+      "chars": 250
+    },
+    {
+      "row": 17,
+      "word_errors": 2,
+      "words": 11,
+      "char_errors": 3,
+      "chars": 105
+    },
+    {
+      "row": 18,
+      "word_errors": 16,
+      "words": 26,
+      "char_errors": 10,
+      "chars": 198
+    },
+    {
+      "row": 19,
+      "word_errors": 5,
+      "words": 19,
+      "char_errors": 7,
+      "chars": 181
+    },
+    {
+      "row": 20,
+      "word_errors": 3,
+      "words": 7,
+      "char_errors": 2,
+      "chars": 54
+    },
+    {
+      "row": 21,
+      "word_errors": 8,
+      "words": 22,
+      "char_errors": 8,
+      "chars": 172
+    },
+    {
+      "row": 22,
+      "word_errors": 0,
+      "words": 5,
+      "char_errors": 0,
+      "chars": 58
+    },
+    {
+      "row": 23,
+      "word_errors": 3,
+      "words": 17,
+      "char_errors": 9,
+      "chars": 160
+    },
+    {
+      "row": 24,
+      "word_errors": 4,
+      "words": 13,
+      "char_errors": 5,
+      "chars": 122
+    },
+    {
+      "row": 25,
+      "word_errors": 4,
+      "words": 19,
+      "char_errors": 4,
+      "chars": 174
+    },
+    {
+      "row": 26,
+      "word_errors": 3,
+      "words": 17,
+      "char_errors": 3,
+      "chars": 143
+    },
+    {
+      "row": 27,
+      "word_errors": 1,
+      "words": 14,
+      "char_errors": 2,
+      "chars": 104
+    },
+    {
+      "row": 28,
+      "word_errors": 7,
+      "words": 14,
+      "char_errors": 49,
+      "chars": 118
+    },
+    {
+      "row": 29,
+      "word_errors": 2,
+      "words": 8,
+      "char_errors": 2,
+      "chars": 48
+    }
+  ]
+}

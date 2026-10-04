@@ -1,0 +1,255 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114052927,
+  "model_sha256": "7f03397b7144325dc3deab36315c59e423319b8b575497caacbb08d28072b26c",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 968.1738300054955,
+    "p95_synthesis_ms_nearest_rank": 1228.956799954176,
+    "rtf": 0.9151882439643118,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 236998656
+  },
+  "rows": [
+    {
+      "phrase": "സഹായം വേണം",
+      "repetition": 0,
+      "synthesis_ms": 512.3809000942856,
+      "audio_ms": 929.5,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "വെള്ളം അയയ്ക്കൂ",
+      "repetition": 0,
+      "synthesis_ms": 459.707000060007,
+      "audio_ms": 864.5,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "റോഡ് അടച്ചിരിക്കുന്നു",
+      "repetition": 0,
+      "synthesis_ms": 856.1742000747472,
+      "audio_ms": 1249.4375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഞങ്ങൾ സുരക്ഷിതരാണ്",
+      "repetition": 0,
+      "synthesis_ms": 1228.956799954176,
+      "audio_ms": 1253.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഡോക്ടറെ വിളിക്കൂ",
+      "repetition": 0,
+      "synthesis_ms": 986.1981000285596,
+      "audio_ms": 882.9375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "സഹായം വേണം",
+      "repetition": 1,
+      "synthesis_ms": 945.2830000082031,
+      "audio_ms": 941.375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "വെള്ളം അയയ്ക്കൂ",
+      "repetition": 1,
+      "synthesis_ms": 700.688200071454,
+      "audio_ms": 674.4375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "റോഡ് അടച്ചിരിക്കുന്നു",
+      "repetition": 1,
+      "synthesis_ms": 1090.8865999663249,
+      "audio_ms": 1204.4375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഞങ്ങൾ സുരക്ഷിതരാണ്",
+      "repetition": 1,
+      "synthesis_ms": 1088.7513000052422,
+      "audio_ms": 1257.625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഡോക്ടറെ വിളിക്കൂ",
+      "repetition": 1,
+      "synthesis_ms": 914.7369000129402,
+      "audio_ms": 918.375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "സഹായം വേണം",
+      "repetition": 2,
+      "synthesis_ms": 957.8228000318632,
+      "audio_ms": 925.875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "വെള്ളം അയയ്ക്കൂ",
+      "repetition": 2,
+      "synthesis_ms": 966.6377999819815,
+      "audio_ms": 857.9375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "റോഡ് അടച്ചിരിക്കുന്നു",
+      "repetition": 2,
+      "synthesis_ms": 1062.4003000557423,
+      "audio_ms": 1301.5625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഞങ്ങൾ സുരക്ഷിതരാണ്",
+      "repetition": 2,
+      "synthesis_ms": 1113.0533000687137,
+      "audio_ms": 1303.1875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഡോക്ടറെ വിളിക്കൂ",
+      "repetition": 2,
+      "synthesis_ms": 1038.5210999520496,
+      "audio_ms": 908.125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "സഹായം വേണം",
+      "repetition": 3,
+      "synthesis_ms": 882.5497999787331,
+      "audio_ms": 901.625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "വെള്ളം അയയ്ക്കൂ",
+      "repetition": 3,
+      "synthesis_ms": 818.1298999115825,
+      "audio_ms": 747.25,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "റോഡ് അടച്ചിരിക്കുന്നു",
+      "repetition": 3,
+      "synthesis_ms": 1127.241100068204,
+      "audio_ms": 1207.25,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഞങ്ങൾ സുരക്ഷിതരാണ്",
+      "repetition": 3,
+      "synthesis_ms": 1052.3030000040308,
+      "audio_ms": 1584.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഡോക്ടറെ വിളിക്കൂ",
+      "repetition": 3,
+      "synthesis_ms": 887.3674999922514,
+      "audio_ms": 878.6875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "സഹായം വേണം",
+      "repetition": 4,
+      "synthesis_ms": 890.9051000373438,
+      "audio_ms": 860.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "വെള്ളം അയയ്ക്കൂ",
+      "repetition": 4,
+      "synthesis_ms": 939.6826999727637,
+      "audio_ms": 784.0625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "റോഡ് അടച്ചിരിക്കുന്നു",
+      "repetition": 4,
+      "synthesis_ms": 1045.3848999459296,
+      "audio_ms": 1277.25,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഞങ്ങൾ സുരക്ഷിതരാണ്",
+      "repetition": 4,
+      "synthesis_ms": 1088.5726999258623,
+      "audio_ms": 1230.125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഡോക്ടറെ വിളിക്കൂ",
+      "repetition": 4,
+      "synthesis_ms": 981.2299000332132,
+      "audio_ms": 960.125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "സഹായം വേണം",
+      "repetition": 5,
+      "synthesis_ms": 1069.2670999560505,
+      "audio_ms": 1041.1875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "വെള്ളം അയയ്ക്കൂ",
+      "repetition": 5,
+      "synthesis_ms": 883.2581000169739,
+      "audio_ms": 1093.5,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "റോഡ് അടച്ചിരിക്കുന്നു",
+      "repetition": 5,
+      "synthesis_ms": 1284.717999980785,
+      "audio_ms": 1340.0625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഞങ്ങൾ സുരക്ഷിതരാണ്",
+      "repetition": 5,
+      "synthesis_ms": 1223.4157999046147,
+      "audio_ms": 1445.125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ഡോക്ടറെ വിളിക്കൂ",
+      "repetition": 5,
+      "synthesis_ms": 948.9910000702366,
+      "audio_ms": 914.3125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    }
+  ]
+}

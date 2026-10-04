@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.itantra.data.settings.AppSettings
 import com.example.itantra.data.settings.SettingsRepository
+import com.example.itantra.data.settings.ThemeMode
+import com.example.itantra.data.settings.ColorPalette
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -25,13 +27,15 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     fun setEmergencyTtsAnnounce(enabled: Boolean) = update { it.copy(emergencyTtsAnnounce = enabled) }
     fun setEmergencyRequireConfirmation(enabled: Boolean) = update { it.copy(emergencyRequireConfirmation = enabled) }
     fun setOperatorName(name: String) = update { it.copy(operatorName = name) }
+    fun setThemeMode(mode: ThemeMode) = update { it.copy(themeMode = mode) }
+    fun setColorPalette(palette: ColorPalette) = update { it.copy(colorPalette = palette) }
 
     fun resetToDefault() {
         viewModelScope.launch { repository.resetToDefault() }
     }
 
     private fun update(transform: (AppSettings) -> AppSettings) {
-        viewModelScope.launch { repository.updateFrom(settings.value, transform) }
+        viewModelScope.launch { repository.update(transform) }
     }
 }
 

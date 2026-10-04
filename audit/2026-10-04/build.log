@@ -1,0 +1,230 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:javaPreCompileDebug
+> Task :app:parseDebugLocalResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:compileDebugNavigationResources
+> Task :app:generateDebugRFile
+> Task :app:checkDebugAarMetadata
+
+> Task :app:kspDebugKotlin
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:mergeDebugAssets
+> Task :app:mergeDebugUnitTestManifest
+> Task :app:processDebugUnitTestManifest
+> Task :app:verifySpeechDataLeakage SKIPPED
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:compressDebugAssets
+> Task :app:generateDebugGlobalSynthetics
+> Task :app:checkDebugDuplicateClasses
+> Task :app:desugarDebugFileDependencies
+> Task :app:processDebugManifestForPackage
+> Task :app:configureCMakeDebug[arm64-v8a]
+> Task :app:mergeLibDexDebug
+> Task :app:mergeExtDexDebug
+
+> Task :app:buildCMakeDebug[arm64-v8a]
+C/C++: ninja: Entering directory `D:\new itantra\app\.cxx\Debug\464j6b1o\arm64-v8a'
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/ops/gemm.cc:40:9: warning: field '_b_is_packed' will be initialized after field '_activation_type' [-Wreorder-ctor]
+C/C++:    35 |       : _alpha(alpha)
+C/C++:       |         ~~~~~~~~~~~~~
+C/C++:       |         _activation_type(activation_type)
+C/C++:    36 |       , _beta(beta)
+C/C++:       |         ~~~~~~~~~~~
+C/C++:       |         _alpha(alpha)
+C/C++:    37 |       , _trans_a(trans_a)
+C/C++:       |         ~~~~~~~~~~~~~~~~~
+C/C++:       |         _beta(beta)
+C/C++:    38 |       , _trans_b(trans_b)
+C/C++:       |         ~~~~~~~~~~~~~~~~~
+C/C++:       |         _trans_a(trans_a)
+C/C++:    39 |       , _a_is_packed(a_is_packed)
+C/C++:       |         ~~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++:       |         _trans_b(trans_b)
+C/C++:    40 |       , _b_is_packed(b_is_packed)
+C/C++:       |         ^~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++:       |         _a_is_packed(a_is_packed)
+C/C++:    41 |       , _activation_type(activation_type)
+C/C++:       |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++:       |         _b_is_packed(b_is_packed)
+C/C++: 1 warning generated.
+
+> Task :app:compileDebugKotlin
+
+> Task :app:buildCMakeDebug[arm64-v8a]
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/ops/transpose.cc:27:29: warning: comparison of integers of different signs: 'size_type' (aka 'unsigned long') and 'dim_t' (aka 'long') [-Wsign-compare]
+C/C++:    27 |         assert(_perm.size() == x.rank());
+C/C++:       |                ~~~~~~~~~~~~ ^  ~~~~~~~~
+C/C++: C:/Users/avira/AppData/Local/Android/Sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/assert.h:55:23: note: expanded from macro 'assert'
+C/C++:    55 | #  define assert(e) ((e) ? __assert_no_op : __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, #e))
+C/C++:       |                       ^
+C/C++: 1 warning generated.
+C/C++: In file included from D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/cpu/kernels.cc:16:
+C/C++: In file included from D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/cpu/vec_neon.h:6:
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/cpu/vec.h:148:65: warning: unused parameter 'count' [-Wunused-parameter]
+C/C++:   148 |       static inline void convert_and_store(float v, U* a, dim_t count) {
+C/C++:       |                                                                 ^
+C/C++: 1 warning generated.
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/cpu/primitives.cc:911:53: warning: unused parameter 'a_shift_compensation' [-Wunused-parameter]
+C/C++:   911 |                                      const int32_t* a_shift_compensation) {
+C/C++:       |                                                     ^
+C/C++: 1 warning generated.
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/layers/attention.cc:372:28: warning: unused parameter 'queries' [-Wunused-parameter]
+C/C++:   372 |         const StorageView& queries,
+C/C++:       |                            ^
+C/C++: 1 warning generated.
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/layers/transformer.cc:858:24: warning: unused variable 'device' [-Wunused-variable]
+C/C++:   858 |             const auto device = outputs->device();
+C/C++:       |                        ^~~~~~
+C/C++: 1 warning generated.
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/thread_pool.cc:79:48: warning: unused parameter 'thread' [-Wunused-parameter]
+C/C++:    79 |   static void set_thread_affinity(std::thread& thread, int index) {
+C/C++:       |                                                ^
+C/C++: 1 warning generated.
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/sentencepiece-src/src/builder.cc:47:15: warning: unused variable 'kMaxUnicode' [-Wunused-const-variable]
+C/C++:    47 | constexpr int kMaxUnicode = 0x10FFFF;
+C/C++:       |               ^~~~~~~~~~~
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/sentencepiece-src/src/builder.cc:49:23: warning: unused variable 'kDefaultNormalizerName' [-Wunused-const-variable]
+C/C++:    49 | static constexpr char kDefaultNormalizerName[] = "nfkc";
+C/C++:       |                       ^~~~~~~~~~~~~~~~~~~~~~
+C/C++: 2 warnings generated.
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/sentencepiece-src/src/sentencepiece_trainer.cc:207:16: warning: 'done' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+C/C++:   207 |   virtual bool done() const { return iter_ == end_; }
+C/C++:       |                ^
+C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/sentencepiece-src/src/sentencepiece_trainer.h:52:16: note: overridden virtual function is here
+C/C++:    52 |   virtual bool done() const = 0;
+C/C++:       |                ^
+C/C++: 1 warning generated.
+
+> Task :app:compileDebugKotlin
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:275:82 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:286:48 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:322:55 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:728:38 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/chat/DedicatedChatScreen.kt:759:28 'val LocalClipboardManager: ProvidableCompositionLocal<ClipboardManager>' is deprecated. Use LocalClipboard instead which supports suspend functions.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:330:67 'val Icons.Filled.Chat: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Chat.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/app/AppGraph.kt:69:52 Unchecked cast of 'Any?' to 'List<LanguagePackSummary>'.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:51:52 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:110:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:161:25 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:162:25 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:183:30 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:198:13 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:237:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:244:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:252:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:264:30 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:279:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:284:31 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:340:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:374:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:381:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:402:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:403:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:419:13 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ModelFileSpec.kt:54:13 'when' is exhaustive so 'else' is redundant here.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:132:41 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:457:28 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:777:51 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:1886:44 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:2376:102 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:2379:43 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:10:8 'class NetworkInfo : Any, Parcelable' is deprecated. Deprecated in Java.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:251:42 'class NetworkInfo : Any, Parcelable' is deprecated. Deprecated in Java.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:252:90 'class NetworkInfo : Any, Parcelable' is deprecated. Deprecated in Java.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:265:56 'val isConnected: Boolean' is deprecated. Deprecated in Java.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:processDebugJavaRes
+> Task :app:mergeDebugJniLibFolders
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeDebugNativeLibs
+> Task :app:mergeDebugJavaResource
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :app:stripDebugDebugSymbols
+
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]
+C/C++: ninja: Entering directory `D:\new itantra\app\.cxx\RelWithDebInfo\93t366i3\arm64-v8a'
+C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/ops/gemm.cc:40:9: warning: field '_b_is_packed' will be initialized after field '_activation_type' [-Wreorder-ctor]
+C/C++:    35 |       : _alpha(alpha)
+C/C++:       |         ~~~~~~~~~~~~~
+C/C++:       |         _activation_type(activation_type)
+C/C++:    36 |       , _beta(beta)
+C/C++:       |         ~~~~~~~~~~~
+C/C++:       |         _alpha(alpha)
+C/C++:    37 |       , _trans_a(trans_a)
+C/C++:       |         ~~~~~~~~~~~~~~~~~
+C/C++:       |         _beta(beta)
+C/C++:    38 |       , _trans_b(trans_b)
+C/C++:       |         ~~~~~~~~~~~~~~~~~
+C/C++:       |         _trans_a(trans_a)
+C/C++:    39 |       , _a_is_packed(a_is_packed)
+C/C++:       |         ~~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++:       |         _trans_b(trans_b)
+C/C++:    40 |       , _b_is_packed(b_is_packed)
+C/C++:       |         ^~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++:       |         _a_is_packed(a_is_packed)
+C/C++:    41 |       , _activation_type(activation_type)
+C/C++:       |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++:       |         _b_is_packed(b_is_packed)
+C/C++: 1 warning generated.
+C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/thread_pool.cc:79:48: warning: unused parameter 'thread' [-Wunused-parameter]
+C/C++:    79 |   static void set_thread_affinity(std::thread& thread, int index) {
+C/C++:       |                                                ^
+C/C++: 1 warning generated.
+C/C++: In file included from D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/cpu/kernels.cc:16:
+C/C++: In file included from D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/cpu/vec_neon.h:6:
+C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/cpu/vec.h:148:65: warning: unused parameter 'count' [-Wunused-parameter]
+C/C++:   148 |       static inline void convert_and_store(float v, U* a, dim_t count) {
+C/C++:       |                                                                 ^
+C/C++: 1 warning generated.
+C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/layers/transformer.cc:858:24: warning: unused variable 'device' [-Wunused-variable]
+C/C++:   858 |             const auto device = outputs->device();
+C/C++:       |                        ^~~~~~
+C/C++: 1 warning generated.
+C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/layers/attention.cc:372:28: warning: unused parameter 'queries' [-Wunused-parameter]
+C/C++:   372 |         const StorageView& queries,
+C/C++:       |                            ^
+C/C++: 1 warning generated.
+C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/cpu/primitives.cc:911:53: warning: unused parameter 'a_shift_compensation' [-Wunused-parameter]
+C/C++:   911 |                                      const int32_t* a_shift_compensation) {
+C/C++:       |                                                     ^
+C/C++: 1 warning generated.
+
+Could not read standard output of command 'C:\Users\avira\AppData\Local\Android\Sdk\cmake\3.22.1\bin\ninja.exe'.
+java.io.IOException: There is not enough space on the disk
+	at java.base/java.io.FileOutputStream.writeBytes(Native Method)
+	at java.base/java.io.FileOutputStream.write(FileOutputStream.java:352)
+	at com.android.build.gradle.internal.cxx.process.MultiplexingOutputStream.write(MultiplexingOutputStream.kt:29)
+	at org.gradle.process.internal.streams.ExecOutputHandleRunner.writeBuffer(ExecOutputHandleRunner.java:97)
+	at org.gradle.process.internal.streams.ExecOutputHandleRunner.lambda$forwardContent$0(ExecOutputHandleRunner.java:81)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:74)
+	at org.gradle.process.internal.streams.ExecOutputHandleRunner.forwardContent(ExecOutputHandleRunner.java:80)
+	at org.gradle.process.internal.streams.ExecOutputHandleRunner.run(ExecOutputHandleRunner.java:64)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)

@@ -108,6 +108,7 @@ fun batteryIconFor(level: Int, isCharging: Boolean): ImageVector {
     }
 }
 
+@Composable
 fun batteryColorFor(level: Int, isCharging: Boolean): Color {
     return if (isCharging) {
         ITantraColors.StatusSuccess

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.itantra.ui.screens.chat.ChatDateSeparatorTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:13.999Z" hostname="AVII" time="0.004">
+  <properties/>
+  <testcase name="testFormatTime12Hour" classname="com.example.itantra.ui.screens.chat.ChatDateSeparatorTest" time="0.002"/>
+  <testcase name="testDateSeparatorYesterday" classname="com.example.itantra.ui.screens.chat.ChatDateSeparatorTest" time="0.0"/>
+  <testcase name="testDayKeyGrouping" classname="com.example.itantra.ui.screens.chat.ChatDateSeparatorTest" time="0.001"/>
+  <testcase name="testDateSeparatorOlderDate" classname="com.example.itantra.ui.screens.chat.ChatDateSeparatorTest" time="0.0"/>
+  <testcase name="testDateSeparatorToday" classname="com.example.itantra.ui.screens.chat.ChatDateSeparatorTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

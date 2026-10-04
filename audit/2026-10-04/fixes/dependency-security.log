@@ -1,0 +1,71 @@
+{
+  "modules": 169,
+  "osv_error": null,
+  "advisory_ids": [],
+  "outdated_checks": [
+    {
+      "group": "androidx.room",
+      "artifact": "room-runtime",
+      "current": "2.6.1",
+      "primary_registry": "https://dl.google.com/dl/android/maven2/androidx/room/room-runtime/maven-metadata.xml",
+      "latest_stable": "2.8.5",
+      "outdated": true
+    },
+    {
+      "group": "androidx.datastore",
+      "artifact": "datastore-preferences",
+      "current": "1.1.1",
+      "primary_registry": "https://dl.google.com/dl/android/maven2/androidx/datastore/datastore-preferences/maven-metadata.xml",
+      "latest_stable": "1.2.1",
+      "outdated": true
+    },
+    {
+      "group": "androidx.lifecycle",
+      "artifact": "lifecycle-viewmodel-compose",
+      "current": "2.11.0",
+      "primary_registry": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-viewmodel-compose/maven-metadata.xml",
+      "latest_stable": "2.11.0",
+      "outdated": false
+    },
+    {
+      "group": "com.google.mlkit",
+      "artifact": "translate",
+      "current": "17.0.3",
+      "primary_registry": "https://dl.google.com/dl/android/maven2/com/google/mlkit/translate/maven-metadata.xml",
+      "latest_stable": "17.0.3",
+      "outdated": false
+    },
+    {
+      "group": "com.google.android.gms",
+      "artifact": "play-services-nearby",
+      "current": "Not resolved",
+      "primary_registry": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-nearby/maven-metadata.xml",
+      "latest_stable": "19.5.1",
+      "outdated": true
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "artifact": "kotlinx-coroutines-android",
+      "current": "1.9.0",
+      "primary_registry": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/maven-metadata.xml",
+      "latest_stable": "1.11.0",
+      "outdated": true
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "artifact": "kotlinx-serialization-json",
+      "current": "1.7.3",
+      "primary_registry": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-json/maven-metadata.xml",
+      "latest_stable": "1.11.0",
+      "outdated": true
+    },
+    {
+      "group": "net.zetetic",
+      "artifact": "sqlcipher-android",
+      "current": "4.19.0",
+      "primary_registry": "https://repo.maven.apache.org/maven2/net/zetetic/sqlcipher-android/maven-metadata.xml",
+      "latest_stable": "4.19.1",
+      "outdated": true
+    }
+  ]
+}

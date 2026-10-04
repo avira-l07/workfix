@@ -1,0 +1,354 @@
+{
+  "scope": "Windows desktop, same 30 FLEURS clips as current CTC models",
+  "repository": "csukuangfj/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12",
+  "revision": "6abf1ece20cd2308bdb7d13cd78ec1c44fa4c094",
+  "model_bytes": 365438543,
+  "model_sha256": "e7c4e54ee4c4c47829cc6667d5d00ed8ea7bef1dcfeef0fce766f77752a2726c",
+  "tokens_sha256": "a7a044c52cb29cbe8b0dc1953e92cefd4ca16b0ed968177b6beab21f9a7d0b31",
+  "peak_desktop_working_set_bytes": 895737856,
+  "languages": {
+    "gu": {
+      "summary": {
+        "count": 30,
+        "wer": 0.32062391681109187,
+        "cer": 0.08545830461750517,
+        "native_script_count": 30,
+        "decode_ms_mean": 1032.5141833396628,
+        "decode_ms_p95_nearest_rank": 1573.8577999873087,
+        "rtf": 0.1048237749583414
+      },
+      "rows": [
+        {
+          "row": 0,
+          "output": "તિબેટનો બૌધવાદ બૌધના ઉપદેશો પર આધારિત છે પરંતુ તેનો પ્રેમના મહાયાન પંથ દ્વારા અને ભારતીય યોગની ઘણી બધી પ્રયુક્તિઓ દ્વારા વિસ્તાર કરવામાં આવ્યો છે",
+          "decode_ms": 1211.4702999824658,
+          "audio_seconds": 11.88,
+          "word_errors": 4,
+          "words": 24,
+          "char_errors": 8,
+          "chars": 128,
+          "native_script": true
+        },
+        {
+          "row": 1,
+          "output": "તમે પ્રવાહમાંથી બહાર આવો પછી પાછા તરવું એ સામારી રીતે હોય તેના કરતાં વધારે મુશ્કેલ નથી",
+          "decode_ms": 620.2933000167832,
+          "audio_seconds": 6.3,
+          "word_errors": 1,
+          "words": 16,
+          "char_errors": 3,
+          "chars": 72,
+          "native_script": true
+        },
+        {
+          "row": 2,
+          "output": "પુરુષોના સિટિંગ સુપર જીમાં મેક્સિકોના આલી વેલા સ્ક્યુઝએ ંદરમાં ક્રમે પૂર્ણ કર્યું હતું પુરુષોના સ્ટેન્ડિંગ સુપર જીમાં ન્યૂઝિલેન્ડના આદમ હોલે નવમાં ક્રમે પૂર્ણ કર્યું હતું",
+          "decode_ms": 1442.7683999529108,
+          "audio_seconds": 13.86,
+          "word_errors": 8,
+          "words": 24,
+          "char_errors": 10,
+          "chars": 148,
+          "native_script": true
+        },
+        {
+          "row": 3,
+          "output": "આઉદ્યાન કિલોમીટરનું વર્ગ અંતર્કાપે છે અને તેનું વિભાજન જઉદ અલગ અલગ એકોઝોનમાં કરવામાં આવ્યું છે જે દરેક વન્યજીવઓને ટેકો આપે છે",
+          "decode_ms": 1162.770799943246,
+          "audio_seconds": 11.52,
+          "word_errors": 11,
+          "words": 25,
+          "char_errors": 17,
+          "chars": 108,
+          "native_script": true
+        },
+        {
+          "row": 4,
+          "output": "કૃપા કરીને સાટ સાથે તેની યોગ્યતા મુજબ સંપૂર્ણ ગૌરવ વિચારપૂર્વકતા અને માનથી વર્તન કરો કથલે આમ અથવા નાઝીઓ વિષય રમુજ ન કરો",
+          "decode_ms": 1022.5893000606447,
+          "audio_seconds": 10.2,
+          "word_errors": 5,
+          "words": 21,
+          "char_errors": 6,
+          "chars": 100,
+          "native_script": true
+        },
+        {
+          "row": 5,
+          "output": "ટિપ્પણી કરવા કહેવામાં આવ્યું ત્યારે મિલરે કહ્યું માઇકને સંભાળવામાં બહુવાર લાગે છે હું તૈયાર થઈ રહ્યો હતો તેથી તે શું કહી રહ્યો હતો તે હું નવતો સાંભળી રહ્યો",
+          "decode_ms": 1268.7874999828637,
+          "audio_seconds": 12.06,
+          "word_errors": 8,
+          "words": 30,
+          "char_errors": 6,
+          "chars": 127,
+          "native_script": true
+        },
+        {
+          "row": 6,
+          "output": "તેની સાપેક્ષ સુલભતા સાથે ટિમ્બકટુન ઉપયોગ વિદેશી દૂરની જમીનો માટે રૂપક તરીકે થયો છે",
+          "decode_ms": 878.94960003905,
+          "audio_seconds": 8.7,
+          "word_errors": 2,
+          "words": 15,
+          "char_errors": 3,
+          "chars": 69,
+          "native_script": true
+        },
+        {
+          "row": 7,
+          "output": "ફિલિ્પાઇન્સ જેતવામાં યુએસ સામરાજ્યવાદના ખર્ચા ફિલિપનો લોકોએ પોતે આપ્યો હતો",
+          "decode_ms": 713.5054999962449,
+          "audio_seconds": 6.96,
+          "word_errors": 8,
+          "words": 11,
+          "char_errors": 6,
+          "chars": 66,
+          "native_script": true
+        },
+        {
+          "row": 8,
+          "output": "તે ચેત્રણી આપે છે કે કોઈ બાહિન દરી આપી ન શકે કે અત્યારના સમયે ઇરાકમાં કોઈપણ ગતિવિધી સાંપ્રદાયિક યુદ્ધવક્તિ હિંસા અથવા સંપૂર્ણ અંધાધંધી તરફનું જોગ અટકાવશે",
+          "decode_ms": 1247.6199000375345,
+          "audio_seconds": 10.14,
+          "word_errors": 11,
+          "words": 27,
+          "char_errors": 15,
+          "chars": 126,
+          "native_script": true
+        },
+        {
+          "row": 9,
+          "output": "નવા રાજ્યના પ્રાચેન એજિપ્શિયનો તેમના પૂર્વજોનો જેસ મારકોથી અભિભુત હતા તે એ સમયે ક વર્ષ કરતા જૂના હતા",
+          "decode_ms": 1181.2668000347912,
+          "audio_seconds": 10.86,
+          "word_errors": 12,
+          "words": 19,
+          "char_errors": 15,
+          "chars": 93,
+          "native_script": true
+        },
+        {
+          "row": 10,
+          "output": "ઘણા કિસ્સાઓમાં વિદેશોમાં ગેપિયર કોર્શમાં પ્રવેશ કરવાથી તમારા દેશમાં ઉચ્ચ શિક્ષણમાં પાછા ફરવાની શક્યતા વધી શકે છે",
+          "decode_ms": 1202.6799999875948,
+          "audio_seconds": 11.16,
+          "word_errors": 3,
+          "words": 18,
+          "char_errors": 2,
+          "chars": 95,
+          "native_script": true
+        },
+        {
+          "row": 11,
+          "output": "આ સિદ્ધાંતો સૂચવે છે કે લોકોને પુખ્ત વયે પહોંચે ત્યાં સુધી આંતરિક રીતે દબાવવામાં આવે આવેલી કેટલીક જરૂરિયાતો અને અથવા ઇચ્છાઓ હોય છે",
+          "decode_ms": 1183.5808000760153,
+          "audio_seconds": 11.16,
+          "word_errors": 1,
+          "words": 22,
+          "char_errors": 3,
+          "chars": 105,
+          "native_script": true
+        },
+        {
+          "row": 12,
+          "output": "કેટલાક તેવરોમાં નાના બાળકો ધરાવતા પરિયારોમાટે ખાસ કેમ્પી ગેરિયા હોય",
+          "decode_ms": 483.6823999648914,
+          "audio_seconds": 4.92,
+          "word_errors": 5,
+          "words": 11,
+          "char_errors": 6,
+          "chars": 61,
+          "native_script": true
+        },
+        {
+          "row": 13,
+          "output": "તેની સાપેક સુલભતા સાથે ટિમબકટોનો ઉપયોગ વિદેશી દૂરની જમીનો માટે રૂપક તરીકે થયો છે",
+          "decode_ms": 769.3115000147372,
+          "audio_seconds": 7.68,
+          "word_errors": 3,
+          "words": 15,
+          "char_errors": 4,
+          "chars": 69,
+          "native_script": true
+        },
+        {
+          "row": 14,
+          "output": "છપ્પન ભોગની પ્લેટો હિંદુવાદમાં છપ્પન જુદી જુદી ખાદ્ય વસ્તુઓ જેવી કે મીઠાઈઓ ફડો મેવાઓ વાનગીઓ વગેરે કે જે દેયગ સમક્ષપપ્રસ્તુત કરવામાં આવે છે બાબા શામને પીરસવામાં આવી હતી",
+          "decode_ms": 1618.9489000244066,
+          "audio_seconds": 14.52,
+          "word_errors": 8,
+          "words": 30,
+          "char_errors": 16,
+          "chars": 141,
+          "native_script": true
+        },
+        {
+          "row": 15,
+          "output": "સમયજતા નવી વસ્તી તેમના નવા વાતવરને અનુકૂળ થવા લાગે તેઓ અન્ય વસ્તીની જેમ ઓછા અને ઓછા દેખાશે",
+          "decode_ms": 823.1311999261379,
+          "audio_seconds": 8.1,
+          "word_errors": 3,
+          "words": 18,
+          "char_errors": 3,
+          "chars": 77,
+          "native_script": true
+        },
+        {
+          "row": 16,
+          "output": "એfic વેસ્ટ સ્ટોરની પહેલે પર સ્ટેનલીમાં આવેલા ટાપોઓની એક માત્ર બિંકમાં નાણાનો વિનેમય કરી શકાય છે",
+          "decode_ms": 924.643800011836,
+          "audio_seconds": 9.0,
+          "word_errors": 10,
+          "words": 15,
+          "char_errors": 12,
+          "chars": 84,
+          "native_script": true
+        },
+        {
+          "row": 17,
+          "output": "સ્પેન વાસીઓએ વસાહતી કરણના સમયગાળાની શરૂઆત કરી જે ત્રણ સદીઓ સુધી ચાલીો",
+          "decode_ms": 720.199599978514,
+          "audio_seconds": 7.14,
+          "word_errors": 5,
+          "words": 10,
+          "char_errors": 4,
+          "chars": 60,
+          "native_script": true
+        },
+        {
+          "row": 18,
+          "output": "રજૂ કરવામાં આવેલા અભિપ્રાયો અન્ય જગ્યાએ ઉપલબ્ધ વધુ વિગતવાર માહિતીની સરખામણીમાં ઘણીવાર સામાન્ય રીતે અને વધુ સરળ હોય છે",
+          "decode_ms": 1041.0134000703692,
+          "audio_seconds": 9.78,
+          "word_errors": 3,
+          "words": 19,
+          "char_errors": 4,
+          "chars": 95,
+          "native_script": true
+        },
+        {
+          "row": 19,
+          "output": "તેમને  મીટર ટિકિટ હતી મહાન કાર્ો દ્વારા સ્વીડિશ રાજાએ ડેવિડ કૉલકર એહેરેન્ટ સ્ટ્રોમેમાં લખ્યું હતું કે ગિનિઝ બુક ઓફ વર્લ્ડ રેકોર્ડ્સમાં સૂચિ બદ્ધ હતું",
+          "decode_ms": 1543.8355000223964,
+          "audio_seconds": 14.52,
+          "word_errors": 13,
+          "words": 24,
+          "char_errors": 21,
+          "chars": 130,
+          "native_script": true
+        },
+        {
+          "row": 20,
+          "output": "ઓલિમ્પિક સુવર્ણ ચંદ્રક મેળવનાર ોમીટર અને મીટર ફ્રીશ ટાઇલમાં અને કોમનવેલ્થ ગેમ્સમાં  રિલેમાં ભાગ લેવાયનો છે પરંતુ તેની ફર્યાદોને કારણે તેની ફિટનેસ માટે સંકા છે",
+          "decode_ms": 1534.0979000320658,
+          "audio_seconds": 14.1,
+          "word_errors": 11,
+          "words": 27,
+          "char_errors": 15,
+          "chars": 142,
+          "native_script": true
+        },
+        {
+          "row": 21,
+          "output": "તેઓ હજુ સુધી એ નક્કી કરી રહ્યા છે કે ક્રેશ કેટલો મોટો હતો અને પૃથ્વીને કંઈ રીતે અસર થશે",
+          "decode_ms": 833.3967999788001,
+          "audio_seconds": 8.1,
+          "word_errors": 4,
+          "words": 19,
+          "char_errors": 4,
+          "chars": 69,
+          "native_script": true
+        },
+        {
+          "row": 22,
+          "output": "પોલીસે કહ્યું કે શરીર લગભગ એક દિવસ્થિતિયા પડી રહ્યું હોવાનું દેખાય છે",
+          "decode_ms": 619.9267000192776,
+          "audio_seconds": 6.3,
+          "word_errors": 2,
+          "words": 13,
+          "char_errors": 4,
+          "chars": 58,
+          "native_script": true
+        },
+        {
+          "row": 23,
+          "output": "હસ્તકલાના ઉત્પાદનોને પ્રાચીનમાની શકાય છે જોકે તે વિપુલમાત્રામાં ઉત્પાદિત આવા સામાન કરતા પ્રારંભિક અવસ્થાના છે",
+          "decode_ms": 986.6712000221014,
+          "audio_seconds": 9.6,
+          "word_errors": 6,
+          "words": 17,
+          "char_errors": 2,
+          "chars": 97,
+          "native_script": true
+        },
+        {
+          "row": 24,
+          "output": "માં ફ્રેડરલ ચૂંટણીના પહેલા થયેલીમદદારોની મત ગણત્રીમાં ઓસ્ટ્રેલિયામાં પ્રજાસતતા લાવવાનો વિરોધ કરવા વાળાઓની સાંખ્યાપછી  ટ્કાવધી હતી",
+          "decode_ms": 1573.8577999873087,
+          "audio_seconds": 14.34,
+          "word_errors": 18,
+          "words": 23,
+          "char_errors": 25,
+          "chars": 118,
+          "native_script": true
+        },
+        {
+          "row": 25,
+          "output": "સફારી અને આફ્રિકામાં પ્રવાસનું કદાચ સૌથી મોટું આકર્ષણ અને ઘણા મુલાકાતીઓ માટે મુખ્ય મુસાફરી છે",
+          "decode_ms": 749.5439000194892,
+          "audio_seconds": 7.68,
+          "word_errors": 2,
+          "words": 15,
+          "char_errors": 4,
+          "chars": 78,
+          "native_script": true
+        },
+        {
+          "row": 26,
+          "output": "અમેરિકાના રાષ્ટ્રપતિ જ્યોર્જw બુશે આ જાહેરાતને અવકારી હતી",
+          "decode_ms": 640.6711000017822,
+          "audio_seconds": 6.42,
+          "word_errors": 3,
+          "words": 9,
+          "char_errors": 7,
+          "chars": 55,
+          "native_script": true
+        },
+        {
+          "row": 27,
+          "output": "કુરિયર કંપનીઓને વસ્તુઓ જડપથી પહોંચાડવા માટે સારી રકમ ચૂકાવામાં આવે છે વારંવાર તાત્કાલિક સમાર્કામ માટે વ્યવવાસાયક દસ્તાવેજો માલકે વધારાના પાર્ટ્સ માટે સમય ખૂબ જ મહત્વપરન હોય છે",
+          "decode_ms": 1501.6680000117049,
+          "audio_seconds": 14.04,
+          "word_errors": 7,
+          "words": 28,
+          "char_errors": 9,
+          "chars": 150,
+          "native_script": true
+        },
+        {
+          "row": 28,
+          "output": "જ્યારે તમે તમારાથી માઇલ દૂર રહેતી વ્યક્તિને કૉલ કરો ત્યારે તમે સેટેલાઇટનો ઉપયોગ કરો છો",
+          "decode_ms": 631.9858999922872,
+          "audio_seconds": 6.24,
+          "word_errors": 2,
+          "words": 16,
+          "char_errors": 6,
+          "chars": 77,
+          "native_script": true
+        },
+        {
+          "row": 29,
+          "output": "પૂર્વ ફિલિપનો પોલિસમેન ફિલિપાઇનસની રાજધારી મનિલામાં હંકુંગના પ્રવાસીઓની બસ હાઇજેક કરીને તેમને બંદી બનાવી રાખ્યા છે",
+          "decode_ms": 842.5577000016347,
+          "audio_seconds": 8.22,
+          "word_errors": 6,
+          "words": 16,
+          "char_errors": 8,
+          "chars": 104,
+          "native_script": true
+        }
+      ]
+    }
+  }
+}

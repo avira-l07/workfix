@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.domain.model.MeasurementTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:22.527Z" hostname="AVII" time="0.001">
+  <properties/>
+  <testcase name="Measured displays value with unit suffix" classname="com.itantra.domain.model.MeasurementTest" time="0.0"/>
+  <testcase name="of() maps null to NotMeasured and non-null to Measured" classname="com.itantra.domain.model.MeasurementTest" time="0.0"/>
+  <testcase name="NotMeasured always displays N slash A regardless of unit" classname="com.itantra.domain.model.MeasurementTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

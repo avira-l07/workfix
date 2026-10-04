@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.metrics.SpeechDeduplicatorTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:18.156Z" hostname="AVII" time="0.008">
+  <properties/>
+  <testcase name="testSpokenNumbersAreNeverCollapsed" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.001"/>
+  <testcase name="testNormalSentenceNotAltered" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.0"/>
+  <testcase name="testInstructionAfterShortWordIsKept" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.002"/>
+  <testcase name="testLongSingleWordLoopIsCollapsed" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.0"/>
+  <testcase name="testBlankInputReturnsEmpty" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.0"/>
+  <testcase name="testLoopFollowedByRealContentKeepsTheContent" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.001"/>
+  <testcase name="testDeliberateTripleCallIsKept" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.0"/>
+  <testcase name="testDifferentMultiSentenceNotAltered" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.0"/>
+  <testcase name="testHindiLoop" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.0"/>
+  <testcase name="testShortPhraseLoop021" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.0"/>
+  <testcase name="testShortPhraseLoop024" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.0"/>
+  <testcase name="testTwoRepeatsFollowedByNewContentAreKept" classname="com.itantra.core.metrics.SpeechDeduplicatorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

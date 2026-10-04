@@ -1,0 +1,354 @@
+{
+  "scope": "Windows desktop, same 30 FLEURS clips as current CTC models",
+  "repository": "csukuangfj/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12",
+  "revision": "6abf1ece20cd2308bdb7d13cd78ec1c44fa4c094",
+  "model_bytes": 365438543,
+  "model_sha256": "e7c4e54ee4c4c47829cc6667d5d00ed8ea7bef1dcfeef0fce766f77752a2726c",
+  "tokens_sha256": "a7a044c52cb29cbe8b0dc1953e92cefd4ca16b0ed968177b6beab21f9a7d0b31",
+  "peak_desktop_working_set_bytes": 1115537408,
+  "languages": {
+    "bn": {
+      "summary": {
+        "count": 30,
+        "wer": 0.35818181818181816,
+        "cer": 0.08369601606963509,
+        "native_script_count": 30,
+        "decode_ms_mean": 1462.947856662019,
+        "decode_ms_p95_nearest_rank": 2992.3770999303088,
+        "rtf": 0.11501162395141656
+      },
+      "rows": [
+        {
+          "row": 0,
+          "output": "বাদের উপর শখুব চওড়া একটি জায়গা থেকে জলছিটকে বেলোচ্ছে",
+          "decode_ms": 744.7416000068188,
+          "audio_seconds": 6.6,
+          "word_errors": 6,
+          "words": 11,
+          "char_errors": 8,
+          "chars": 49,
+          "native_script": true
+        },
+        {
+          "row": 1,
+          "output": "যদিও অধিকাংশ চিনহ শুনুমাত্র কাতালানএ নির্দেশ করে কারণ এটি আইনের মাধ্যমে প্রথম দাপ্তরিক ভাষা হিসেবে প্রতিষ্ঠিত হয়",
+          "decode_ms": 1475.6022999063134,
+          "audio_seconds": 13.08,
+          "word_errors": 6,
+          "words": 18,
+          "char_errors": 7,
+          "chars": 98,
+          "native_script": true
+        },
+        {
+          "row": 2,
+          "output": "স্থানীয় কার্যক্রমের উদাহরণগুলোর মধ্য শ্ীকার করা মাল ধারা ফটোগ্রাফী করা পাখি দেখা এবং পাকগুলোতে ঘোডা ও বাস্ততন্ত্র সম্পর্কিত তথ্য নিয়ে পরাশনা করা অন্দর্ভুক্ত রয়েছে",
+          "decode_ms": 2290.5004000058398,
+          "audio_seconds": 18.96,
+          "word_errors": 10,
+          "words": 24,
+          "char_errors": 14,
+          "chars": 146,
+          "native_script": true
+        },
+        {
+          "row": 3,
+          "output": "নতুন প্রজন্ম প্রাচিম মিশরিয়দের শ্রীতি স্থহম্বগুলো দেখে অভাগ হয়েছিলেন যা হ বছরের ও বেশি পুরানো ছিল",
+          "decode_ms": 1276.541900006123,
+          "audio_seconds": 12.12,
+          "word_errors": 8,
+          "words": 15,
+          "char_errors": 18,
+          "chars": 90,
+          "native_script": true
+        },
+        {
+          "row": 4,
+          "output": "আপনি প্ররথমবার বিদেশে গেলে সেখানকার মানুষকে সম্ভবত ধৈর্যশীল ও সহনভূতিশীল মনে হবে কারণ তারা জানে যে নতুন দেশে ভরমণকারীদের মানিয়ে নেওয়ার দরকার হয়",
+          "decode_ms": 2103.935599909164,
+          "audio_seconds": 17.52,
+          "word_errors": 4,
+          "words": 24,
+          "char_errors": 4,
+          "chars": 126,
+          "native_script": true
+        },
+        {
+          "row": 5,
+          "output": "গবেষকদের মতামাত অনুজায়ী এটি একটি অল্পবয়সী ডাইনোসারের লেজ হলেও নমুনায় ছোট পাখি নয় বরং প্রাপ্তব়স্কতের পালকি দেখা গিয়েছে",
+          "decode_ms": 1368.9073999412358,
+          "audio_seconds": 11.64,
+          "word_errors": 7,
+          "words": 19,
+          "char_errors": 9,
+          "chars": 106,
+          "native_script": true
+        },
+        {
+          "row": 6,
+          "output": "আপনি বুঝিসেন কি না জানিনা তবে মধ্য আমেরিকা থেকে এই দেশে বেশিরবাগ পন্ণ শূল্কমুক্তভাবে এসেছে",
+          "decode_ms": 1143.0407000007108,
+          "audio_seconds": 9.48,
+          "word_errors": 8,
+          "words": 16,
+          "char_errors": 6,
+          "chars": 76,
+          "native_script": true
+        },
+        {
+          "row": 7,
+          "output": "বিজ্ঞানীরা মনে করেন যে ওসেলোটগুলি অনুসরণ কর এবং গন্ধদ্বারা খাওয়াশিকার এবং যেখানে তার মাটিতে চলার সময় ঘ্রাহন নিয়ে প্রানিদের খুঁজে",
+          "decode_ms": 1613.8412000145763,
+          "audio_seconds": 13.8,
+          "word_errors": 8,
+          "words": 22,
+          "char_errors": 8,
+          "chars": 112,
+          "native_script": true
+        },
+        {
+          "row": 8,
+          "output": "জাতিসঙগ বৈশিক অষ্ণতাদ্বারা আক্রান্ত দেশগুলোকে এর প্রভাব মোকাবেলা করতে সাহায্য করার জন্য তহবিল চূড়ান্ত করার ব্যাপারে ও আশা করে",
+          "decode_ms": 1540.1361000258476,
+          "audio_seconds": 13.62,
+          "word_errors": 6,
+          "words": 19,
+          "char_errors": 5,
+          "chars": 110,
+          "native_script": true
+        },
+        {
+          "row": 9,
+          "output": "বিজ্ঞানীরা জানাচ্ছেন সাংহরাস্ষের ফলে শৃষ্ট বিষ্ফরণ ছিল বিপল",
+          "decode_ms": 866.2022999487817,
+          "audio_seconds": 8.04,
+          "word_errors": 4,
+          "words": 8,
+          "char_errors": 8,
+          "chars": 51,
+          "native_script": true
+        },
+        {
+          "row": 10,
+          "output": "ফিলিপিনসের বিজয় হিসাবে মার্কিন সামরাজ্যবাদের যুদ্ধব্যয় ফিলিপিনও জনগা নিজেরা় দিয়েছিল",
+          "decode_ms": 1112.5553000019863,
+          "audio_seconds": 9.66,
+          "word_errors": 7,
+          "words": 11,
+          "char_errors": 5,
+          "chars": 80,
+          "native_script": true
+        },
+        {
+          "row": 11,
+          "output": "পুলিশ জানায় ফটোগ্রাফারকে আঘাত করা গাড়ির চালকের বিরুদ্ধে অপরাদমূলক অভিযোগ আনার সম্ভাবনা নেই",
+          "decode_ms": 1054.7969999024644,
+          "audio_seconds": 8.88,
+          "word_errors": 1,
+          "words": 13,
+          "char_errors": 1,
+          "chars": 80,
+          "native_script": true
+        },
+        {
+          "row": 12,
+          "output": "আসল জনসংখ্যার পরিবর্তন একেবারে হয়নি এখনও তাদের আগের মতো একই অভিযোজনের প্রয়োজন হয়",
+          "decode_ms": 1056.4787000184879,
+          "audio_seconds": 9.24,
+          "word_errors": 1,
+          "words": 13,
+          "char_errors": 1,
+          "chars": 72,
+          "native_script": true
+        },
+        {
+          "row": 13,
+          "output": "বিজ্ঞানীরা বলেছেন এই প্রাণিটির পালকের উপরের অংশ ছিল বাদামির বর্ণের এবং ভিতরের রং ফ্াকাসে বা ক্যারোটিনের মতো",
+          "decode_ms": 1270.1279000611976,
+          "audio_seconds": 11.94,
+          "word_errors": 4,
+          "words": 17,
+          "char_errors": 6,
+          "chars": 91,
+          "native_script": true
+        },
+        {
+          "row": 14,
+          "output": "বাবাস্যামকে ভোগেররকমের প্লেট হিন্দুধর্মে মিষটি হল বাদাম থালাবাসণ ইত্যাদির মতো দেবতাকে অর্পণ করা হয় এমন ছাটি খাওয়ানোর জিনিস পরিবেশনা করা হয়েছিল",
+          "decode_ms": 2460.8014000114053,
+          "audio_seconds": 20.34,
+          "word_errors": 16,
+          "words": 28,
+          "char_errors": 19,
+          "chars": 133,
+          "native_script": true
+        },
+        {
+          "row": 15,
+          "output": "যদিও মধ্য আমেরিকা দেশগুলির শুলকের মাধ্যমে আমাদের আশিশতাংশপন্যের কর আদায় করা হয়েছিল আমরা আপনার সাথে আছে",
+          "decode_ms": 1444.5275000762194,
+          "audio_seconds": 12.54,
+          "word_errors": 6,
+          "words": 18,
+          "char_errors": 4,
+          "chars": 91,
+          "native_script": true
+        },
+        {
+          "row": 16,
+          "output": "ফোলাইন্ডে পুরুষদের দৃষ্টি প্রতিবন্ধী বিভাগের স্কিচালক ম্যাকিয়েচ ক্রেজে এবং গাইট আন্নাওগারজিনসকা সুপারজিতে পারতমস্থানে রয়েছে দক্ষিণ করিয়ার জং শোরক পার্ক পুরুষদের সিটি সুপারজিতে চিশতম় স্থান অর্জন করেছেন",
+          "decode_ms": 3240.388600039296,
+          "audio_seconds": 25.74,
+          "word_errors": 19,
+          "words": 32,
+          "char_errors": 20,
+          "chars": 189,
+          "native_script": true
+        },
+        {
+          "row": 17,
+          "output": "শহরের চৌরা রাস্তাগুলি কাছের আচ্ছাদনযুক্ত ভবন এবং আধুনিক শপিং কেন্দ্রগুলি ঐতিহ্যবা়ী লালটালি সাত আচ্ছাদিত থাকত তাবদীর বাজার এবং পুরাতন নৈচিত এবং গির্জাগুলি যদিও এই সরের আভা তুরস্কের ঐতিজ্যে তুলনায় ূমধ্য সাগরিয় ইউরোপের সাথে সদৃশ্য",
+          "decode_ms": 2992.3770999303088,
+          "audio_seconds": 24.36,
+          "word_errors": 17,
+          "words": 35,
+          "char_errors": 33,
+          "chars": 210,
+          "native_script": true
+        },
+        {
+          "row": 18,
+          "output": "কালের প্রবাহে নতুন জনগুষ্টি তাদের নতুন পরিবেশের সাথে মানিয়ে নেওয়া শুরু করার সাথে সাথে তাদের অন্য জনগুষ্টির সাথে মিল কোমটে শুরু করে",
+          "decode_ms": 1732.9342999728397,
+          "audio_seconds": 14.04,
+          "word_errors": 3,
+          "words": 22,
+          "char_errors": 8,
+          "chars": 110,
+          "native_script": true
+        },
+        {
+          "row": 19,
+          "output": "আর্জেন্টি না বিশ্বের অন্যতম সেরা একটি পলদল এবং খেলোয়ার ঠাকার জন্য শুরপরিচিত",
+          "decode_ms": 941.1932999501005,
+          "audio_seconds": 7.68,
+          "word_errors": 7,
+          "words": 12,
+          "char_errors": 7,
+          "chars": 67,
+          "native_script": true
+        },
+        {
+          "row": 20,
+          "output": "শুরুর দিকে পোশাট খুব বেশি প্রাচচের বাইজেনটাইনের সংস্কৃতির দ্বাড়া প্রভাবিত ছিল",
+          "decode_ms": 1207.501900033094,
+          "audio_seconds": 11.28,
+          "word_errors": 5,
+          "words": 11,
+          "char_errors": 10,
+          "chars": 70,
+          "native_script": true
+        },
+        {
+          "row": 21,
+          "output": "মহাকাশে উপগ্রহটি করটি পেয়েছে তারপর তখনই তা প্রতিফলিত হয়েছে",
+          "decode_ms": 795.160400099121,
+          "audio_seconds": 7.68,
+          "word_errors": 2,
+          "words": 9,
+          "char_errors": 4,
+          "chars": 51,
+          "native_script": true
+        },
+        {
+          "row": 22,
+          "output": "আপনি বুঝেছেন কিনা জানিনা তবে মধ্য আমেরিকা থেকে এই দেশে বেশিরবাগ পন্য শূল্কমূত্বভাবে এসেছে",
+          "decode_ms": 1309.5517000183463,
+          "audio_seconds": 12.36,
+          "word_errors": 6,
+          "words": 16,
+          "char_errors": 6,
+          "chars": 76,
+          "native_script": true
+        },
+        {
+          "row": 23,
+          "output": "অবশেষে কাঠের চাকার বদলে লোহার চাকা লাগানো শুরু হল  সালে প্রথমবার পুরপুরি লোহার রেল চাল হয়",
+          "decode_ms": 1113.1211000028998,
+          "audio_seconds": 10.5,
+          "word_errors": 4,
+          "words": 17,
+          "char_errors": 8,
+          "chars": 79,
+          "native_script": true
+        },
+        {
+          "row": 24,
+          "output": "তীব্বতের বুদ্ধধর্ম বুদ্ধের শিক্ষার ওপর ভিত্তি করে তৈরি হয়েছে কিন্তু তা সম্প্রসারিত হয়েছে ভালোবাসার মহাজান পথ ও ভারতীয় যোগের নানা কৌশল দ্বারা",
+          "decode_ms": 1457.4421000434086,
+          "audio_seconds": 13.68,
+          "word_errors": 9,
+          "words": 20,
+          "char_errors": 5,
+          "chars": 121,
+          "native_script": true
+        },
+        {
+          "row": 25,
+          "output": "বিজ্ঞানের মূল লক্ষ বৈজ্ঞানিক পদ্ধতিতে বিশ্ব যেভাবে কাজ করে তা নির্ধারণ করা এই ই বৈজ্ঞানিক গবেষনার দিশা নির্দেশ করে",
+          "decode_ms": 1185.7811999507248,
+          "audio_seconds": 10.86,
+          "word_errors": 4,
+          "words": 20,
+          "char_errors": 3,
+          "chars": 98,
+          "native_script": true
+        },
+        {
+          "row": 26,
+          "output": "দুঘণ্টার মধ্যে সরকারী ভবনের কাছে আরও তিনটি বোমা বিশ্ফরিত হয়েছিল",
+          "decode_ms": 616.6768999537453,
+          "audio_seconds": 6.18,
+          "word_errors": 3,
+          "words": 11,
+          "char_errors": 3,
+          "chars": 56,
+          "native_script": true
+        },
+        {
+          "row": 27,
+          "output": "পোকামাকর হল প্রথম জীব যারা বাতাসে উড়ে বেড়িয়েছিল তাদের ওড়ার ক্ষমতা তাদের সত্রুদের আরও সহজ এড়াতে এবং আরও দক্ষতার সাথে খাবার এবং সাথীদের খুজে পেতে সহয়তা করে",
+          "decode_ms": 1558.9273000368848,
+          "audio_seconds": 14.04,
+          "word_errors": 6,
+          "words": 27,
+          "char_errors": 8,
+          "chars": 136,
+          "native_script": true
+        },
+        {
+          "row": 28,
+          "output": "এটি সতর্ক করে যে এই মুহুর্তে ইরাকে নেওয়া কোনও পদক্ষেপ যে সাম্প্রদায়িক দাঙ্গা করমবর্ধমান হেঙস্রতা বা বৃশ্িংখলার দিকে অগ্রসার হওয়াকে আটকাবে তার গ্ারান্টি কেউ দিতে পারে না",
+          "decode_ms": 1946.7522000195459,
+          "audio_seconds": 16.92,
+          "word_errors": 6,
+          "words": 27,
+          "char_errors": 10,
+          "chars": 146,
+          "native_script": true
+        },
+        {
+          "row": 29,
+          "output": "এটিকে মুঙ্গলবার কেটেফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাচানো হয়",
+          "decode_ms": 967.8902999730781,
+          "audio_seconds": 8.82,
+          "word_errors": 4,
+          "words": 15,
+          "char_errors": 2,
+          "chars": 67,
+          "native_script": true
+        }
+      ]
+    }
+  }
+}

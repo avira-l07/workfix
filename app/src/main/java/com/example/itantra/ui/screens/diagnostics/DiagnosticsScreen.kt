@@ -99,22 +99,38 @@ fun DiagnosticsScreen(
             item { QuickStatSummary(state) }
             item { AiBenchmarkSection(state) }
             item {
-                DiagnosticsSection(title = "Five-language desktop reference · 30 clips each") {
-                    Text("Clean FLEURS speech on Windows, 2 Oct 2026. Phone and two-device results: Not verified.",
+                DiagnosticsSection(title = "Ten-language desktop reference · 30 clips each") {
+                    Text("Clean FLEURS speech on Windows, 2–4 Oct 2026. Phone and two-device results: Not verified.",
                         style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
                     MetricRow("Hindi STT WER / CER", "9.1% / 3.9%")
                     MetricRow("English STT WER / CER", "6.9% / 3.8%")
                     MetricRow("Tamil STT WER / CER", "21.8% / 8.7%")
                     MetricRow("Telugu STT WER / CER", "22.7% / 7.1%")
                     MetricRow("Odia STT WER / CER", "19.3% / 5.1%")
-                    Text("Tamil, Telugu and Odia remain above the 15% WER target.",
+                    MetricRow("Bengali STT WER / CER", "14.4% / 3.6%")
+                    MetricRow("Gujarati STT WER / CER", "18.5% / 5.8%")
+                    MetricRow("Marathi STT WER / CER", "15.7% / 4.6%")
+                    MetricRow("Marathi STT / TTS mean", "757 / 549 ms · desktop")
+                    MetricRow("Kannada STT WER / CER", "17.2% / 6.3% · 30 clips")
+                    MetricRow("Kannada STT mean / p95", "440 / 1,123 ms · desktop")
+                    Text("Kannada: select Kannada mic and download the dedicated CTC pack. Native script 30/30 on desktop; phone and listener validation: Not verified. Auto-detect still uses Tiny and is unreliable for Kannada.",
+                        style = MaterialTheme.typography.bodySmall, color = ITantraColors.StatusWarning)
+                    MetricRow("Malayalam STT WER / CER", "28.9% / 7.1% · 30 clips")
+                    MetricRow("Malayalam independent test WER / CER", "22.9% / 5.3% · 100 clips")
+                    MetricRow("Malayalam STT / TTS mean", "664 / 968 ms · desktop")
+                    Text("Malayalam is experimental: download the new STT pack and select Malayalam mic. Desktop peak STT memory was 722–946 MB; phone memory and voice quality are Not verified. General Malayalam translation is unavailable.",
+                        style = MaterialTheme.typography.bodySmall, color = ITantraColors.StatusWarning)
+                    Text("Marathi: select Marathi mic and download the new STT pack. This voice lacks U+0949 (ॉ); unsupported text is preserved and speech shows an error. A replacement voice and pronunciation are Not verified.",
+                        style = MaterialTheme.typography.bodySmall, color = ITantraColors.StatusWarning)
+                    MetricRow("Fine-tuned ta / te / bn / gu", "Not run; current packs active")
+                    Text("Tamil, Telugu, Odia, Marathi, Kannada and Malayalam remain above the 15% WER target.",
                         style = MaterialTheme.typography.bodySmall, color = ITantraColors.StatusWarning)
                 }
             }
             item {
-                DiagnosticsSection(title = "Five-language phone self-test") {
+                DiagnosticsSection(title = "Ten-language phone self-test") {
                     Text(
-                        "Runs one bundled recording and speaks one phrase in each language. Listen to the five voices. This is not a two-phone validation or a 30-utterance WER test.",
+                        "Runs one bundled recording and speaks one phrase in each language. Listen to all ten voices. This is not a two-phone validation or a 30-utterance WER test.",
                         style = MaterialTheme.typography.bodySmall,
                         color = ITantraColors.TextMuted,
                     )
@@ -127,7 +143,7 @@ fun DiagnosticsScreen(
                     ) {
                         Text(if (fiveLanguageSelfTestRunning) "RUNNING SELF-TEST…"
                             else if (!fiveLanguageSelfTestEnabled) "DISCONNECT AND STOP LISTENING FIRST"
-                            else "RUN FIVE-LANGUAGE SELF-TEST")
+                            else "RUN TEN-LANGUAGE SELF-TEST")
                     }
                     fiveLanguageSelfTestError?.let {
                         Text("Self-test stopped: $it", style = MaterialTheme.typography.bodySmall,
@@ -205,7 +221,7 @@ private fun QuickStatSummary(s: DiagnosticsUiState) = DiagnosticsSection(title =
     QuickStatRow(
         "Offline Indic STT & TTS Pipeline", 25,
         "${s.installedSpeechPairCount}/${s.catalogLanguageCount} speech pairs installed · STT ${s.installedSttCount} · TTS ${s.installedTtsCount}",
-        "Desktop STT evidence: 4 selected + Odia candidate. Installed files are not proof of phone accuracy or translation.",
+        "10 selected speech models benchmarked on desktop. Installed files are not proof of phone accuracy or translation.",
     )
     QuickStatRow(
         "P2P Transport & Turnaround Latency", 20,

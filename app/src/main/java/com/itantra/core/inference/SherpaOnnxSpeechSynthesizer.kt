@@ -22,6 +22,19 @@ import java.io.File
 class TtsLoadException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 class TtsSynthesisException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
+internal fun ttsSmokeText(languageCode: LanguageCode): String = when (languageCode) {
+    LanguageCode.HINDI -> "\u0928\u092E\u0938\u094D\u0924\u0947" // "नमस्ते"
+    LanguageCode.TAMIL -> "வணக்கம்"
+    LanguageCode.TELUGU -> "నమస్కారం"
+    LanguageCode.ODIA -> "ସାହାଯ୍ୟ ଆବଶ୍ୟକ"
+    LanguageCode.BENGALI -> "সাহায্য দরকার"
+    LanguageCode.GUJARATI -> "મદદ જોઈએ છે"
+    LanguageCode.KANNADA -> "ಸಹಾಯ ಬೇಕು"
+    LanguageCode.MALAYALAM -> "സഹായം വേണം"
+    LanguageCode.MARATHI -> "मदत हवी आहे"
+    else -> "Hello"
+}
+
 class SherpaOnnxSpeechSynthesizer(
     private val context: Context,
     override val languageCode: LanguageCode,
@@ -31,6 +44,7 @@ class SherpaOnnxSpeechSynthesizer(
 
     private var tts: OfflineTts? = null
     private val synthMutex = Mutex()
+    private var vocabulary: Set<String> = emptySet()
 
     override var isLoaded: Boolean = false
         private set
@@ -78,6 +92,7 @@ class SherpaOnnxSpeechSynthesizer(
         if (!hasValidTokens) {
             throw TtsLoadException("TTS_TOKENS_INVALID: ${spec.tokensFile} contains no valid token entries for ${languageCode.wireCode}")
         }
+        vocabulary = tokensFile.readLines().map { it.substringBeforeLast(' ') }.toSet()
 
         // 3. RAM Guard: verify sufficient runtime memory before loading native weights
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
@@ -132,14 +147,9 @@ class SherpaOnnxSpeechSynthesizer(
 
         // Phase 14: Smoke synthesis verification — model is only READY if it can actually
         // produce nonempty PCM for a simple test phrase.
-        val smokeText = when (languageCode) {
-            LanguageCode.HINDI -> "\u0928\u092E\u0938\u094D\u0924\u0947" // "नमस्ते"
-            LanguageCode.TAMIL -> "வணக்கம்"
-            LanguageCode.TELUGU -> "నమస్కారం"
-            LanguageCode.ODIA -> "ସାହାଯ୍ୟ ଆବଶ୍ୟକ"
-            else -> "Hello"
-        }
+        val smokeText = ttsSmokeText(languageCode)
         try {
+            requireTtsTextCoverage(languageCode, smokeText, vocabulary)
             val smokeResult = tts?.generate(smokeText)
             if (smokeResult == null || smokeResult.samples.isEmpty() || smokeResult.sampleRate <= 0) {
                 try { tts?.release() } catch (_: Throwable) {}
@@ -170,6 +180,7 @@ class SherpaOnnxSpeechSynthesizer(
         }
 
         synthMutex.withLock {
+            requireTtsTextCoverage(languageCode, request.text, vocabulary)
             val t0 = SystemClock.elapsedRealtimeNanos()
             Log.i("SherpaOnnxTTS", "TTS synth start lang=${languageCode.wireCode} chars=${request.text.length} correlationId=${request.correlationId}")
 
@@ -217,6 +228,7 @@ class SherpaOnnxSpeechSynthesizer(
                     Log.w("SherpaOnnxTTS", "Error during tts.release(): ${t.message}")
                 } finally {
                     tts = null
+                    vocabulary = emptySet()
                     isLoaded = false
                 }
             }

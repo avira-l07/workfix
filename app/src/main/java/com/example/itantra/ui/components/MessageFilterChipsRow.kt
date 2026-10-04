@@ -32,7 +32,7 @@ fun MessageFilterChipsRow(
                 label = { Text(if (count != null) "${filter.label} ($count)" else filter.label) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = ITantraColors.Primary,
-                    selectedLabelColor = ITantraColors.SurfaceWhite,
+                    selectedLabelColor = ITantraColors.OnPrimary,
                 ),
             )
         }

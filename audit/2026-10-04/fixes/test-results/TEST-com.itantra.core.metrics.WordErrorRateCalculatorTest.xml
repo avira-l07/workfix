@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.metrics.WordErrorRateCalculatorTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:18.167Z" hostname="AVII" time="0.007">
+  <properties/>
+  <testcase name="test normalization punctuation removal" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.002"/>
+  <testcase name="test completely wrong" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.001"/>
+  <testcase name="test character error rate hindi substitution" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.001"/>
+  <testcase name="test character error rate known pair single word" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.001"/>
+  <testcase name="test code switch lowercase" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.0"/>
+  <testcase name="test character error rate multi word deletions" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.001"/>
+  <testcase name="test perfect match" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.0"/>
+  <testcase name="test one insertion" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.0"/>
+  <testcase name="test one substitution" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.0"/>
+  <testcase name="test one deletion" classname="com.itantra.core.metrics.WordErrorRateCalculatorTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

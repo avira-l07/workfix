@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.transceiver.MultiLanguageRoutingTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:18.491Z" hostname="AVII" time="0.03">
+  <properties/>
+  <testcase name="test same-language routing directs to matching TTS engine and bypasses TranslationRouter" classname="com.itantra.core.transceiver.MultiLanguageRoutingTest" time="0.008"/>
+  <testcase name="test UTF-8 byte serialization and LoopbackTransport roundtrip across all 10 languages" classname="com.itantra.core.transceiver.MultiLanguageRoutingTest" time="0.014"/>
+  <testcase name="test 10 canonical languages catalog and manifest completeness" classname="com.itantra.core.transceiver.MultiLanguageRoutingTest" time="0.006"/>
+  <testcase name="test cross-language packet defers translation and does not invoke incorrect TTS engine" classname="com.itantra.core.transceiver.MultiLanguageRoutingTest" time="0.002"/>
+  <system-out><![CDATA[=== STARTING SAME-LANGUAGE ROUTING & TTS RESOLUTION VERIFICATION ===
+Verified same-language route for [hi]: Dispatched to HINDI TTS, TranslationRouter calls=0
+Verified same-language route for [en]: Dispatched to ENGLISH TTS, TranslationRouter calls=0
+Verified same-language route for [bn]: Dispatched to BENGALI TTS, TranslationRouter calls=0
+Verified same-language route for [gu]: Dispatched to GUJARATI TTS, TranslationRouter calls=0
+Verified same-language route for [mr]: Dispatched to MARATHI TTS, TranslationRouter calls=0
+Verified same-language route for [kn]: Dispatched to KANNADA TTS, TranslationRouter calls=0
+Verified same-language route for [ml]: Dispatched to MALAYALAM TTS, TranslationRouter calls=0
+Verified same-language route for [ta]: Dispatched to TAMIL TTS, TranslationRouter calls=0
+Verified same-language route for [te]: Dispatched to TELUGU TTS, TranslationRouter calls=0
+Verified same-language route for [or]: Dispatched to ODIA TTS, TranslationRouter calls=0
+=== SAME-LANGUAGE ROUTING VERIFIED: 10/10 MATCHED TTS TARGETS, 0 TRANSLATIONS ===
+=== STARTING UTF-8 & LOOPBACK TRANSPORT VERIFICATION (10 LANGUAGES) ===
+Language [HI]: UTF-8 len=138 bytes (52 chars), Roundtrip VERIFIED: टैक्टिकल टीम अल्फा चेकपॉइंट ब्रावो की ओर बढ़ रही है।
+Language [EN]: UTF-8 len=47 bytes (47 chars), Roundtrip VERIFIED: Tactical team Alpha moving to checkpoint Bravo.
+Language [BN]: UTF-8 len=145 bytes (53 chars), Roundtrip VERIFIED: কৌশলগত দল আলফা চেকপয়েন্ট ব্রাভোর দিকে এগিয়ে যাচ্ছে।
+Language [GU]: UTF-8 len=145 bytes (55 chars), Roundtrip VERIFIED: ટેક્ટિકલ ટીમ આલ્ફા ચેકપોઇન્ટ બ્રાવો તરફ આગળ વધી રહી છે.
+Language [MR]: UTF-8 len=165 bytes (61 chars), Roundtrip VERIFIED: टॅक्टिकल टीम अल्फा चेकपॉईंट ब्राव्होच्या दिशेने पुढे जात आहे.
+Language [KN]: UTF-8 len=163 bytes (59 chars), Roundtrip VERIFIED: ಕಾರ್ಯಾಚರಣೆ ತಂಡ ಆಲ್ಫಾ ಚೆಕ್‌ಪಾಯಿಂಟ್ ಬ್ರಾವೋ ಕಡೆಗೆ ಚಲಿಸುತ್ತಿದೆ.
+Language [ML]: UTF-8 len=168 bytes (60 chars), Roundtrip VERIFIED: ടാക്ടിക്കൽ ടീം ആൽഫ ചെക്ക്പോയിന്റ് ബ്രാവോയിലേക്ക് നീങ്ങുന്നു.
+Language [TA]: UTF-8 len=163 bytes (59 chars), Roundtrip VERIFIED: தந்திரோபாய குழு ஆல்பா சோதனைச் சாவடி பிராவோவுக்கு நகர்கிறது.
+Language [TE]: UTF-8 len=154 bytes (56 chars), Roundtrip VERIFIED: టాక్టికల్ బృందం ఆల్ఫా చెక్పాయింట్ బ్రావో వైపు వెళుతోంది.
+Language [OR]: UTF-8 len=154 bytes (56 chars), Roundtrip VERIFIED: ଟ୍ୟାକଟିକାଲ ଟିମ୍ ଆଲଫା ଚେକପଏଣ୍ଟ ବ୍ରାଭୋ ଆଡ଼କୁ ଅଗ୍ରସର ହେଉଛି।
+=== ALL 10 LANGUAGES UTF-8 PRESERVED & LOOPBACK VERIFIED ===
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

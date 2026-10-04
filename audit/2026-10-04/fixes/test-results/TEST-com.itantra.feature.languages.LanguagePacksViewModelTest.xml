@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.feature.languages.LanguagePacksViewModelTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:22.739Z" hostname="AVII" time="0.065">
+  <properties/>
+  <testcase name="activateLanguage_setsRepositoryActiveLanguage" classname="com.itantra.feature.languages.LanguagePacksViewModelTest" time="0.024"/>
+  <testcase name="odiaCandidateCanBeSelectedForMicrophoneAndTts" classname="com.itantra.feature.languages.LanguagePacksViewModelTest" time="0.005"/>
+  <testcase name="downloadPack_invokesRepositoryStartDownloadExactlyOnceWithoutChangingActiveLanguage" classname="com.itantra.feature.languages.LanguagePacksViewModelTest" time="0.007"/>
+  <testcase name="activateLanguage_doesNotDirectlyManageEngineLifecycle" classname="com.itantra.feature.languages.LanguagePacksViewModelTest" time="0.011"/>
+  <testcase name="activatingAlreadySelectedHindiDisablesAutoDetectionAndPreservesTarget" classname="com.itantra.feature.languages.LanguagePacksViewModelTest" time="0.005"/>
+  <testcase name="cancelDownload_invokesRepositoryCancelDownload" classname="com.itantra.feature.languages.LanguagePacksViewModelTest" time="0.006"/>
+  <testcase name="ttsInstallForActiveLanguage_viewModelDoesNotDirectlyLoadEngines" classname="com.itantra.feature.languages.LanguagePacksViewModelTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

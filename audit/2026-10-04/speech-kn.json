@@ -1,0 +1,81 @@
+{
+  "language": "kn",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Active fallback: Whisper Tiny INT8",
+  "stt_load_ms": 786.8600999936461,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\shared\\stt\\tiny-encoder.int8.onnx",
+      "bytes": 12937772,
+      "sha256": "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\shared\\stt\\tiny-decoder.int8.onnx",
+      "bytes": 89855401,
+      "sha256": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\shared\\stt\\tiny-tokens.txt",
+      "bytes": 816730,
+      "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+    }
+  ],
+  "stt": {
+    "reference": "ಸರಳ ಸುವಾಸನೆ ಭಕ್ಷ್ಯಗಳನ್ನು ಒದಗಿಸುವ ಜಾವಾನೀಸ್ ಪಾಕಪದ್ಧತಿಯನ್ನು ಈಗ ದ್ವೀಪಸಮೂಹದಾದ್ಯಂತ ವ್ಯಾಪಕವಾಗಿ ಬಳಸಲಾಗುತ್ತದೆ. ಜಾವಾನೀಸ್‌ನ ನೆಚ್ಚಿನ ಮಸಾಲೆಗಳು ಕಡಲೆಕಾಯಿ ಮೆಣಸಿನಕಾಯಿ ಸಕ್ಕರೆ ಅದರಲ್ಲೂ ವಿಶೇಷವಾಗಿ ಜಾವಾ ತೆಂಗಿನಕಾಯಿ ಸಕ್ಕರೆ ಮತ್ತು ವಿವಿಧ ಸುಗಂಧಿತ ಮಸಾಲೆಗಳಿಂದ ಕೂಡಿರುತ್ತದೆ",
+    "output": "ndo sari laswara ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo",
+    "native_script_majority": false,
+    "decode_ms": 2911.5538999903947,
+    "audio_seconds": 26.16,
+    "rtf": 0.11129793195681936,
+    "single_recording_wer": 2.2962962962962963,
+    "word_errors": 62,
+    "reference_words": 27
+  },
+  "silence": {
+    "output": "[XBOX]",
+    "decode_ms": 97.5414999993518
+  },
+  "tts_load_ms": 778.4235998988152,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\models\\bundled\\kn\\tts\\model.onnx",
+      "bytes": 114045444,
+      "sha256": "9644cfa46c5802c4c2c8196f91eedc0cd54d46527bbc32589ebaf967ed07591f"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\kn\\tts\\tokens.txt",
+      "bytes": 487,
+      "sha256": "a4a44037f7492c9e5b69a4483250e54af9a2d528bd4e19de95a21ff0c5e82a8a"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "ಸಹಾಯ ಬೇಕು",
+      "synthesis_ms": 675.8007999742404,
+      "sample_rate": 16000,
+      "samples": 18670,
+      "peak_amplitude": 0.7343650460243225,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "ನೀರು ಕಳುಹಿಸಿ",
+      "synthesis_ms": 842.913500033319,
+      "sample_rate": 16000,
+      "samples": 22151,
+      "peak_amplitude": 0.8448709845542908,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+      "synthesis_ms": 884.5666999695823,
+      "sample_rate": 16000,
+      "samples": 22848,
+      "peak_amplitude": 0.881530225276947,
+      "finite": true,
+      "missing_token_letters": []
+    }
+  ]
+}

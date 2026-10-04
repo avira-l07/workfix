@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.translation.MTDirectionalReadinessTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:19.732Z" hostname="AVII" time="0.024">
+  <properties/>
+  <testcase name="test_sameLanguageBypassDoesNotRequireEngine" classname="com.itantra.core.translation.MTDirectionalReadinessTest" time="0.018"/>
+  <testcase name="test_bothMTModelsReadiness" classname="com.itantra.core.translation.MTDirectionalReadinessTest" time="0.0"/>
+  <testcase name="test_indicEnOnlyReadiness" classname="com.itantra.core.translation.MTDirectionalReadinessTest" time="0.002"/>
+  <testcase name="test_enIndicOnlyReadiness" classname="com.itantra.core.translation.MTDirectionalReadinessTest" time="0.001"/>
+  <testcase name="test_indicToIndicRequiresBothDirections" classname="com.itantra.core.translation.MTDirectionalReadinessTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

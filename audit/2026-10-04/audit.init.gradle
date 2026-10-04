@@ -1,0 +1,31 @@
+import groovy.json.JsonOutput
+
+allprojects { project ->
+    def auditOutputRoot = System.getenv('ITANTRA_AUDIT_OUTPUT')
+    layout.buildDirectory.set(auditOutputRoot
+        ? new File(auditOutputRoot, project.name)
+        : new File(rootProject.projectDir, "audit/2026-10-04/build/${project.name}"))
+    afterEvaluate {
+        if (project.name == 'app') {
+            android.sourceSets.test.java.setSrcDirs([new File(rootProject.projectDir, 'audit/2026-10-04/tests')])
+            tasks.matching { it.name == 'compileDebugUnitTestKotlin' }.configureEach { task ->
+                task.setSource(project.fileTree(new File(rootProject.projectDir, 'audit/2026-10-04/tests')))
+                task.doFirst { println 'Fresh audit Kotlin compile override active' }
+            }
+            tasks.withType(Test).configureEach {
+                filter { includeTestsMatching('audit.*') }
+                systemProperty 'itantra.audit.root', rootProject.projectDir.absolutePath
+            }
+            tasks.register('auditRuntimeInventory') {
+                doLast {
+                    def modules = configurations.debugRuntimeClasspath.incoming.resolutionResult.allComponents
+                        .collect { it.id }.findAll { it instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier }
+                        .collect { [group: it.group, artifact: it.module, version: it.version] }
+                        .sort { a, b -> "${a.group}:${a.artifact}" <=> "${b.group}:${b.artifact}" }
+                    new File(rootProject.projectDir, 'audit/2026-10-04/dependencies.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(modules))
+                    println "Fresh runtime inventory: ${modules.size()} resolved Maven modules; local AAR inventoried separately"
+                }
+            }
+        }
+    }
+}

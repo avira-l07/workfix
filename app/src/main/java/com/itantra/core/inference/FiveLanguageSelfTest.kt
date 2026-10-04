@@ -13,7 +13,9 @@ import kotlin.math.abs
 object FiveLanguageSelfTest {
     val languages = listOf(
         LanguageCode.HINDI, LanguageCode.ENGLISH, LanguageCode.TAMIL,
-        LanguageCode.TELUGU, LanguageCode.ODIA,
+        LanguageCode.TELUGU, LanguageCode.ODIA, LanguageCode.BENGALI,
+        LanguageCode.GUJARATI, LanguageCode.MARATHI, LanguageCode.MALAYALAM,
+        LanguageCode.KANNADA,
     )
 
     private val phrases = mapOf(
@@ -22,6 +24,11 @@ object FiveLanguageSelfTest {
         LanguageCode.TAMIL to "உதவி தேவை",
         LanguageCode.TELUGU to "సహాయం కావాలి",
         LanguageCode.ODIA to "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+        LanguageCode.BENGALI to "সাহায্য দরকার",
+        LanguageCode.GUJARATI to "મદદ જોઈએ છે",
+        LanguageCode.MARATHI to "मदत हवी आहे",
+        LanguageCode.MALAYALAM to "സഹായം വേണം",
+        LanguageCode.KANNADA to "ಸಹಾಯ ಬೇಕು",
     )
 
     data class Result(
@@ -42,10 +49,14 @@ object FiveLanguageSelfTest {
 
     fun scriptStatus(language: LanguageCode, text: String): String {
         val range = when (language) {
-            LanguageCode.HINDI -> 0x0900..0x097F
+            LanguageCode.HINDI, LanguageCode.MARATHI -> 0x0900..0x097F
             LanguageCode.TAMIL -> 0x0B80..0x0BFF
             LanguageCode.TELUGU -> 0x0C00..0x0C7F
             LanguageCode.ODIA -> 0x0B00..0x0B7F
+            LanguageCode.BENGALI -> 0x0980..0x09FF
+            LanguageCode.GUJARATI -> 0x0A80..0x0AFF
+            LanguageCode.MALAYALAM -> 0x0D00..0x0D7F
+            LanguageCode.KANNADA -> 0x0C80..0x0CFF
             LanguageCode.ENGLISH -> 0x0041..0x007A
             else -> return "Not verified"
         }

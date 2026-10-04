@@ -38,5 +38,43 @@
     "sha256": "b810480697b74eaea66c46ac9af98c82a0b88b3e7588d52c3869541615784419",
     "source": "https://huggingface.co/datasets/google/fleurs",
     "license": "CC-BY-4.0"
+  },
+  {
+    "language": "bn",
+    "asset": "benchmark/five_self_test/bn.wav",
+    "reference": "বাঁধের উপর 100 ফুট চওড়া একটি জায়গা থেকে জল ছিটকে বেরোচ্ছে",
+    "sha256": "feb470a22858f5b3d35963280f1aa19fefc6dab378da519a957f223c5bcd4d3c",
+    "source": "https://huggingface.co/datasets/google/fleurs",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "language": "gu",
+    "asset": "benchmark/five_self_test/gu.wav",
+    "reference": "તીબેટનો બૌદ્ધવાદ બુદ્ધનાં ઉપદેશો ઉપર આધારિત છે પરંતુ તેનો પ્રેમના મહાયાન પંથ દ્વારા અને ભારતીય યોગની ઘણી બધી પ્રયુક્તિઓ દ્વારા વિસ્તાર કરવામાં આવ્યો છે",
+    "sha256": "db94ff01add81c3b8f24e6b791cac0991876dc69eb7359ef4001337264603073",
+    "source": "https://huggingface.co/datasets/google/fleurs",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "language": "mr",
+    "asset": "benchmark/five_self_test/mr.wav",
+    "reference": "एखादी संस्था नाविन्यपूर्ण होण्यापूर्वी त्यातील प्रमुखांनी नाविन्यतेची एक संस्कृती निर्माण केली पाहिजे तसेच ज्ञानाची देवाण-घेवाण आणि संस्थात्मक अध्ययन केले पाहिजे",
+    "sha256": "2460d07facafc94fc51685d5c31e64e6f221416246c9ec822139713a9b7c920b",
+    "source": "https://huggingface.co/datasets/google/fleurs",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "language": "ml",
+    "asset": "benchmark/five_self_test/ml.wav",
+    "reference": "പോയിൻ്റ് മരിയനും ഫെയർമോണ്ടും തമ്മിലുള്ള ദൂരം ഒറ്റപ്പെട്ട ബാക്ക്‌വുഡ് ഭൂപ്രദേശങ്ങളിലൂടെ കടന്നുപോകുന്ന ബഫല്ലോ-പിറ്റ്സ്ബർഗ് ഹൈവേയിലെ ഏറ്റവും വെല്ലുവിളി നിറഞ്ഞ ഡ്രൈവിംഗ് സാഹചര്യങ്ങൾ സൃഷ്ടിക്കുന്നു",
+    "sha256": "753a291d4eff703be48176ecb4b988075e62df570d8167b7727075da1633d681",
+    "source": "https://huggingface.co/datasets/google/fleurs",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "language": "kn",
+    "asset": "benchmark/five_self_test/kn.wav",
+    "reference": "ಸರಳ ಸುವಾಸನೆ ಭಕ್ಷ್ಯಗಳನ್ನು ಒದಗಿಸುವ ಜಾವಾನೀಸ್ ಪಾಕಪದ್ಧತಿಯನ್ನು ಈಗ ದ್ವೀಪಸಮೂಹದಾದ್ಯಂತ ವ್ಯಾಪಕವಾಗಿ ಬಳಸಲಾಗುತ್ತದೆ. ಜಾವಾನೀಸ್‌ನ ನೆಚ್ಚಿನ ಮಸಾಲೆಗಳು ಕಡಲೆಕಾಯಿ ಮೆಣಸಿನಕಾಯಿ ಸಕ್ಕರೆ ಅದರಲ್ಲೂ ವಿಶೇಷವಾಗಿ ಜಾವಾ ತೆಂಗಿನಕಾಯಿ ಸಕ್ಕರೆ ಮತ್ತು ವಿವಿಧ ಸುಗಂಧಿತ ಮಸಾಲೆಗಳಿಂದ ಕೂಡಿರುತ್ತದೆ",
+    "sha256": "1b75c19f60300ffc9117fb4530fb75112d4be9f5456efa7b98e460b24f7c46c7"
   }
 ]

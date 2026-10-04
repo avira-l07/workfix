@@ -1,0 +1,76 @@
+{
+  "language": "en",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Manual language: IndicConformer CTC INT8",
+  "stt_load_ms": 1904.4341000262648,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\en\\model.int8.onnx",
+      "bytes": 174610057,
+      "sha256": "28b9261a53028a7c99ff0799f44fb53f19c78b68cc4cf40637ac9c16cb1fbc6f"
+    },
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\en\\tokens.txt",
+      "bytes": 11433,
+      "sha256": "89c165b98df7af718ec0e872177279bfad4ade51331f1be92753c9583a1ef30d"
+    }
+  ],
+  "stt": {
+    "reference": "when you call someone who is thousands of miles away you are using a satellite",
+    "output": "When you call someone who is thousands of miles away, you' are using a satellite.",
+    "native_script_majority": true,
+    "decode_ms": 204.294600058347,
+    "audio_seconds": 6.54,
+    "rtf": 0.031237706430939906,
+    "single_recording_wer": 0.0,
+    "word_errors": 0,
+    "reference_words": 15
+  },
+  "silence": {
+    "output": "",
+    "decode_ms": 33.39669993147254
+  },
+  "tts_load_ms": 1965.9854000201449,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\en\\tts\\model.onnx",
+      "bytes": 114017028,
+      "sha256": "409bafdb550948dc5c0b216e21b341732ef3cefead8008b512b034f1bdb27132"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\en\\tts\\tokens.txt",
+      "bytes": 303,
+      "sha256": "dff08580748be688d9112d62d6352422c56d372dfe34b24ea3f66fa1b75cfaa9"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "We need help",
+      "synthesis_ms": 1091.6105000069365,
+      "sample_rate": 16000,
+      "samples": 15600,
+      "peak_amplitude": 0.8732255101203918,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "Send clean water",
+      "synthesis_ms": 1194.708399940282,
+      "sample_rate": 16000,
+      "samples": 20005,
+      "peak_amplitude": 0.7518695592880249,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "Call a doctor",
+      "synthesis_ms": 875.9036000119522,
+      "sample_rate": 16000,
+      "samples": 16801,
+      "peak_amplitude": 0.7121008038520813,
+      "finite": true,
+      "missing_token_letters": []
+    }
+  ]
+}

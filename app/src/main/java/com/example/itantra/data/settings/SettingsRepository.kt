@@ -9,7 +9,6 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "itantra_settings")
@@ -17,8 +16,10 @@ val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(na
 /**
  * Real persistence for Settings.
  */
-class SettingsRepository(private val dataStore: DataStore<Preferences>) {
-    private val privateContent = com.itantra.core.storage.PrivateContent()
+class SettingsRepository(
+    private val dataStore: DataStore<Preferences>,
+    private val privateContent: com.itantra.core.storage.PrivateContent = com.itantra.core.storage.PrivateContent(),
+) {
 
     private object Keys {
         val VAD_SENSITIVITY = intPreferencesKey("vad_sensitivity")
@@ -28,10 +29,11 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val EMERGENCY_TTS_ANNOUNCE = booleanPreferencesKey("emergency_tts_announce")
         val EMERGENCY_REQUIRE_CONFIRMATION = booleanPreferencesKey("emergency_require_confirmation")
         val OPERATOR_NAME = stringPreferencesKey("operator_name")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
+        val COLOR_PALETTE = stringPreferencesKey("color_palette")
     }
 
-    val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
-        AppSettings(
+    private fun readSettings(prefs: Preferences) = AppSettings(
             vadSensitivity = prefs[Keys.VAD_SENSITIVITY] ?: 2,
             noiseSuppressionDb = prefs[Keys.NOISE_SUPPRESSION_DB] ?: 18,
             emergencyOverrideSilent = prefs[Keys.EMERGENCY_OVERRIDE_SILENT] ?: true,
@@ -39,15 +41,15 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
             emergencyTtsAnnounce = prefs[Keys.EMERGENCY_TTS_ANNOUNCE] ?: true,
             emergencyRequireConfirmation = prefs[Keys.EMERGENCY_REQUIRE_CONFIRMATION] ?: true,
             operatorName = prefs[Keys.OPERATOR_NAME]?.let(privateContent::decode) ?: "",
+            themeMode = ThemeMode.entries.firstOrNull { it.name == prefs[Keys.THEME_MODE] } ?: ThemeMode.SYSTEM,
+            colorPalette = ColorPalette.entries.firstOrNull { it.name == prefs[Keys.COLOR_PALETTE] } ?: ColorPalette.OCEAN,
         )
-    }
 
-    suspend fun update(transform: (AppSettings) -> AppSettings) =
-        updateFrom(settings.first(), transform)
+    val settings: Flow<AppSettings> = dataStore.data.map(::readSettings)
 
-    suspend fun updateFrom(current: AppSettings, transform: (AppSettings) -> AppSettings) {
-        val next = transform(current)
+    suspend fun update(transform: (AppSettings) -> AppSettings) {
         dataStore.edit { prefs ->
+            val next = transform(readSettings(prefs))
             prefs[Keys.VAD_SENSITIVITY] = next.vadSensitivity
             prefs[Keys.NOISE_SUPPRESSION_DB] = next.noiseSuppressionDb
             prefs[Keys.EMERGENCY_OVERRIDE_SILENT] = next.emergencyOverrideSilent
@@ -55,6 +57,8 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
             prefs[Keys.EMERGENCY_TTS_ANNOUNCE] = next.emergencyTtsAnnounce
             prefs[Keys.EMERGENCY_REQUIRE_CONFIRMATION] = next.emergencyRequireConfirmation
             prefs[Keys.OPERATOR_NAME] = privateContent.encode(next.operatorName)
+            prefs[Keys.THEME_MODE] = next.themeMode.name
+            prefs[Keys.COLOR_PALETTE] = next.colorPalette.name
         }
     }
 

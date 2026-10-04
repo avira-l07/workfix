@@ -1,0 +1,225 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114045156,
+  "model_sha256": "c67081369061e87ba302bfbc0445543c4c23c04133514b7d6c7be2710363bc42",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 1046.45185333405,
+    "p95_synthesis_ms_nearest_rank": 1639.4552999990992,
+    "rtf": 0.9219095550292267,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 243507200
+  },
+  "rows": [
+    {
+      "phrase": "সাহায্য দরকার",
+      "repetition": 0,
+      "synthesis_ms": 1396.0618000128306,
+      "audio_ms": 1375.625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "পানি পাঠান",
+      "repetition": 0,
+      "synthesis_ms": 1166.4553000009619,
+      "audio_ms": 898.8125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "রাস্তা বন্ধ",
+      "repetition": 0,
+      "synthesis_ms": 981.6213000449352,
+      "audio_ms": 991.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "আমরা নিরাপদে আছি",
+      "repetition": 0,
+      "synthesis_ms": 1253.123999980744,
+      "audio_ms": 1273.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ডাক্তার ডাকুন",
+      "repetition": 0,
+      "synthesis_ms": 937.0651000062935,
+      "audio_ms": 1156.875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "সাহায্য দরকার",
+      "repetition": 1,
+      "synthesis_ms": 1538.6341999983415,
+      "audio_ms": 1325.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "পানি পাঠান",
+      "repetition": 1,
+      "synthesis_ms": 968.4773999615572,
+      "audio_ms": 867.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "রাস্তা বন্ধ",
+      "repetition": 1,
+      "synthesis_ms": 1193.9043000456877,
+      "audio_ms": 1030.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "আমরা নিরাপদে আছি",
+      "repetition": 1,
+      "synthesis_ms": 1639.4552999990992,
+      "audio_ms": 1363.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ডাক্তার ডাকুন",
+      "repetition": 1,
+      "synthesis_ms": 923.7772999913432,
+      "audio_ms": 985.3125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "সাহায্য দরকার",
+      "repetition": 2,
+      "synthesis_ms": 1789.1728999675252,
+      "audio_ms": 1443.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "পানি পাঠান",
+      "repetition": 2,
+      "synthesis_ms": 971.6920999926515,
+      "audio_ms": 882.25,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "রাস্তা বন্ধ",
+      "repetition": 2,
+      "synthesis_ms": 1084.0464999782853,
+      "audio_ms": 1050.625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "আমরা নিরাপদে আছি",
+      "repetition": 2,
+      "synthesis_ms": 1325.6079000420868,
+      "audio_ms": 1374.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ডাক্তার ডাকুন",
+      "repetition": 2,
+      "synthesis_ms": 826.3719000387937,
+      "audio_ms": 988.1875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "সাহায্য দরকার",
+      "repetition": 3,
+      "synthesis_ms": 1426.2462999904528,
+      "audio_ms": 1418.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "পানি পাঠান",
+      "repetition": 3,
+      "synthesis_ms": 991.0317999892868,
+      "audio_ms": 908.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "রাস্তা বন্ধ",
+      "repetition": 3,
+      "synthesis_ms": 1023.6237000208348,
+      "audio_ms": 1049.8125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "আমরা নিরাপদে আছি",
+      "repetition": 3,
+      "synthesis_ms": 965.0227999663912,
+      "audio_ms": 1355.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ডাক্তার ডাকুন",
+      "repetition": 3,
+      "synthesis_ms": 847.3994999658316,
+      "audio_ms": 1096.8125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "সাহায্য দরকার",
+      "repetition": 4,
+      "synthesis_ms": 1172.9000000050291,
+      "audio_ms": 1452.5625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "পানি পাঠান",
+      "repetition": 4,
+      "synthesis_ms": 724.9541000346653,
+      "audio_ms": 852.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "রাস্তা বন্ধ",
+      "repetition": 4,
+      "synthesis_ms": 664.8323999834247,
+      "audio_ms": 982.5,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "আমরা নিরাপদে আছি",
+      "repetition": 4,
+      "synthesis_ms": 985.6065000058152,
+      "audio_ms": 1371.125,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ডাক্তার ডাকুন",
+      "repetition": 4,
+      "synthesis_ms": 632.9932000371628,
+      "audio_ms": 1012.6875,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "সাহায্য দরকার",
+      "repetition": 5,
+      "synthesis_ms": 1069.670099997893,
+      "audio_ms": 1389.625,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "পানি পাঠান",
+      "repetition": 5,
+      "synthesis_ms": 729.962199984584,
+      "audio_ms": 861.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "রাস্তা বন্ধ",
+      "repetition": 5,
+      "synthesis_ms": 593.4349999879487,
+      "audio_ms": 932.75,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "আমরা নিরাপদে আছি",
+      "repetition": 5,
+      "synthesis_ms": 950.6505000172183,
+      "audio_ms": 1363.375,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ডাক্তার ডাকুন",
+      "repetition": 5,
+      "synthesis_ms": 619.7601999738254,
+      "audio_ms": 1000.0,
+      "sample_rate_hz": 16000
+    }
+  ]
+}

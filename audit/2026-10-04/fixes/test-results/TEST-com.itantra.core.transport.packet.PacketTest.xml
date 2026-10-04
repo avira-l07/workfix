@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.transport.packet.PacketTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:21.315Z" hostname="AVII" time="0.001">
+  <properties/>
+  <testcase name="testEmptyPayload" classname="com.itantra.core.transport.packet.PacketTest" time="0.001"/>
+  <testcase name="testCorruptCrc" classname="com.itantra.core.transport.packet.PacketTest" time="0.0"/>
+  <testcase name="testEncodeDecodeRoundTrip" classname="com.itantra.core.transport.packet.PacketTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

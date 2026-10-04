@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.regression.EmergencySemanticsAndPersistenceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:22.857Z" hostname="AVII" time="0.048">
+  <properties/>
+  <testcase name="testMultipleRecordsSelectsLatestRemoteUnresolved" classname="com.itantra.regression.EmergencySemanticsAndPersistenceTest" time="0.009"/>
+  <testcase name="testHumanAckResolvesRecord" classname="com.itantra.regression.EmergencySemanticsAndPersistenceTest" time="0.027"/>
+  <testcase name="testLocalVsRemoteUnresolvedDistinctionOnRestart" classname="com.itantra.regression.EmergencySemanticsAndPersistenceTest" time="0.008"/>
+  <testcase name="testResolvedRecordsDoNotTriggerAlarmOnRestart" classname="com.itantra.regression.EmergencySemanticsAndPersistenceTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

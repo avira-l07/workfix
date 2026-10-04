@@ -5,6 +5,11 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// The active translation engine is ML Kit. Keep the separate desktop/experimental
+// CTranslate2 bridge opt-in so normal APKs do not fetch, build or ship it.
+val experimentalTranslation = providers.gradleProperty("itantraExperimentalTranslation")
+    .map(String::toBoolean).orElse(false)
+
 android {
     namespace = "com.example.itantra"
     // NOTE: verify API 37 is actually installed / released in whatever environment builds
@@ -67,9 +72,11 @@ android {
             pickFirsts.add("**/libc++_shared.so")
         }
     }
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
+    if (experimentalTranslation.get()) {
+        externalNativeBuild {
+            cmake {
+                path = file("src/main/cpp/CMakeLists.txt")
+            }
         }
     }
     sourceSets {
@@ -100,9 +107,6 @@ dependencies {
     // Jetpack DataStore (Settings Persistence)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
-    // Nearby Connections (P2P Transport)
-    implementation("com.google.android.gms:play-services-nearby:19.3.0")
-
     // Room persistence & SQLite (Message queue, retry state)
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
@@ -114,6 +118,11 @@ dependencies {
 
     // Google ML Kit on-device translation (Phase 5: Hindi↔English offline MT)
     implementation("com.google.mlkit:translate:17.0.3")
+    constraints {
+        implementation("com.squareup.okhttp3:okhttp:4.12.0") {
+            because("ML Kit's transitive OkHttp 3.0.0 has certificate-validation advisories")
+        }
+    }
     // Kotlin coroutines integration for Google Play Services Tasks
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
 
@@ -149,17 +158,29 @@ kotlin {
     }
 }
 
-// Day 2: Exclude on-demand TTS models from release build to keep production APK lean (<1GB)
-tasks.matching { it.name == "mergeReleaseAssets" }.configureEach {
+// Model weights are always installed on demand. Keep local benchmark/model files
+// available to developers without accidentally embedding them in either APK.
+tasks.matching { it.name == "mergeDebugAssets" || it.name == "mergeReleaseAssets" }.configureEach {
     doLast {
         val mergeTask = this as? com.android.build.gradle.tasks.MergeSourceSetFolders ?: return@doLast
         val outDir = mergeTask.outputDir.orNull?.asFile ?: return@doLast
-        val onDemandLanguages = listOf("bn", "gu", "kn", "ml", "mr", "or", "ta", "te")
-        onDemandLanguages.forEach { lang ->
-            val langDir = File(outDir, "language_packs/$lang")
-            if (langDir.exists()) {
-                langDir.deleteRecursively()
+        val packsDir = File(outDir, "language_packs")
+        if (packsDir.isDirectory) {
+            check(packsDir.canonicalFile.toPath().startsWith(outDir.canonicalFile.toPath()))
+            packsDir.walkTopDown().filter { it.isFile && it.extension == "onnx" }.forEach { model ->
+                check(model.delete()) { "Could not exclude on-demand model from APK: $model" }
             }
         }
     }
+}
+
+// A local fine-tuning manifest is never allowed into a build without checking
+// it against the complete FLEURS validation/test protection index.
+val verifySpeechDataLeakage by tasks.registering(Exec::class) {
+    onlyIf { rootProject.file("tools/stt_training/manifests").isDirectory }
+    workingDir = rootProject.projectDir
+    commandLine("python", "tools/check_speech_leakage.py", "workspace-check")
+}
+tasks.matching { it.name == "testDebugUnitTest" || it.name == "check" }.configureEach {
+    dependsOn(verifySpeechDataLeakage)
 }

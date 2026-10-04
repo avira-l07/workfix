@@ -1,0 +1,39 @@
+Traceback (most recent call last):
+  File "D:\new itantra\audit\2026-10-04\speech_probe.py", line 114, in <module>
+    if args.language: probe(args.language)
+                      ~~~~~^^^^^^^^^^^^^^^
+  File "D:\new itantra\audit\2026-10-04\speech_probe.py", line 89, in probe
+    assert sha(model)==expected['model.onnx'] and sha(tokens)==expected['tokens.txt'], 'TTS checksum mismatch'
+           ~~~^^^^^^^
+  File "D:\new itantra\audit\2026-10-04\speech_probe.py", line 25, in sha
+    with p.open('rb') as f: return hashlib.file_digest(f, 'sha256').hexdigest()
+         ~~~~~~^^^^^^
+  File "C:\Python314\Lib\pathlib\__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\new itantra\\models\\bundled\\hi\\tts\\model.onnx'
+hi: FAILED process exit 1
+Traceback (most recent call last):
+  File "D:\new itantra\audit\2026-10-04\speech_probe.py", line 114, in <module>
+    if args.language: probe(args.language)
+                      ~~~~~^^^^^^^^^^^^^^^
+  File "D:\new itantra\audit\2026-10-04\speech_probe.py", line 89, in probe
+    assert sha(model)==expected['model.onnx'] and sha(tokens)==expected['tokens.txt'], 'TTS checksum mismatch'
+           ~~~^^^^^^^
+  File "D:\new itantra\audit\2026-10-04\speech_probe.py", line 25, in sha
+    with p.open('rb') as f: return hashlib.file_digest(f, 'sha256').hexdigest()
+         ~~~~~~^^^^^^
+  File "C:\Python314\Lib\pathlib\__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\new itantra\\models\\bundled\\en\\tts\\model.onnx'
+en: FAILED process exit 1
+ta: STT 706ms native=True; TTS 754ms; phone Not verified
+te: STT 402ms native=True; TTS 732ms; phone Not verified
+or: STT 358ms native=True; TTS 574ms; phone Not verified
+bn: STT 240ms native=True; TTS 742ms; phone Not verified
+gu: STT 591ms native=True; TTS 671ms; phone Not verified
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0949.
+mr: STT 1047ms native=True; TTS 951ms; phone Not verified
+ml: STT 1653ms native=True; TTS 1006ms; phone Not verified
+kn: STT 6075ms native=False; TTS 1348ms; phone Not verified

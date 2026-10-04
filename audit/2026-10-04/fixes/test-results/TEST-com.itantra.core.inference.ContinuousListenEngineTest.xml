@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.ContinuousListenEngineTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:15.775Z" hostname="AVII" time="0.022">
+  <properties/>
+  <testcase name="test SentenceBoundaryConfig defaults and update" classname="com.itantra.core.inference.ContinuousListenEngineTest" time="0.007"/>
+  <testcase name="test sentence boundary endpointing distinguishes short pause from sentence finalization" classname="com.itantra.core.inference.ContinuousListenEngineTest" time="0.012"/>
+  <testcase name="test pauseListening and resumeListening state transitions" classname="com.itantra.core.inference.ContinuousListenEngineTest" time="0.001"/>
+  <testcase name="test resumeListening safely restarts from OFF state without getting stuck" classname="com.itantra.core.inference.ContinuousListenEngineTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

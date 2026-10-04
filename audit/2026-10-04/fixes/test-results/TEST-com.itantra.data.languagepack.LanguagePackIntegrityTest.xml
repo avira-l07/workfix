@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.data.languagepack.LanguagePackIntegrityTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:21.761Z" hostname="AVII" time="0.307">
+  <properties/>
+  <testcase name="test_zeroByteFileNotReady" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.016"/>
+  <testcase name="test_manifestRuntimeFilenameAgreement" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.006"/>
+  <testcase name="test_sharedSttNotDuplicated" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.002"/>
+  <testcase name="test_importLanguageTts_checksumMismatchRollsBackAndFails" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.044"/>
+  <testcase name="test_all10ModelFileSpecs" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.002"/>
+  <testcase name="test_partialInstallNotReady" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.017"/>
+  <testcase name="test_deletePackDoesNotDeleteSharedStt" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.053"/>
+  <testcase name="test_perLanguageTtsPath" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.005"/>
+  <testcase name="test_sharedSttPath" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.001"/>
+  <testcase name="test_missingRequiredFileNotReady" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.016"/>
+  <testcase name="test_importSharedStt_checksumMismatchRollsBackAndFails" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.052"/>
+  <testcase name="test_atomicInstallBehavior" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.016"/>
+  <testcase name="test_checksumMismatchFails" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.027"/>
+  <testcase name="test_all10LanguageIds" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.002"/>
+  <testcase name="test_importTranslationModels_rejectsDirectoryWithoutValidManifest" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.027"/>
+  <testcase name="test_packReadinessWhenAllFilesPresent" classname="com.itantra.data.languagepack.LanguagePackIntegrityTest" time="0.02"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

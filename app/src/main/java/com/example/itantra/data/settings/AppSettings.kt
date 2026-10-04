@@ -1,5 +1,8 @@
 package com.example.itantra.data.settings
 
+enum class ThemeMode { SYSTEM, LIGHT, DARK }
+enum class ColorPalette { OCEAN, FOREST, IRIS, EMBER }
+
 /**
  * Persisted app configuration. Field ranges match the sliders already designed in
  * 01_settings/code.html — keep this in sync if the UI's slider ranges ever change.
@@ -12,4 +15,6 @@ data class AppSettings(
     val emergencyTtsAnnounce: Boolean = true,
     val emergencyRequireConfirmation: Boolean = true,
     val operatorName: String = "",
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val colorPalette: ColorPalette = ColorPalette.OCEAN,
 )

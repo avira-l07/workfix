@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.TtsTextCoverageTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:16.797Z" hostname="AVII" time="0.011">
+  <properties/>
+  <testcase name="Marathi foreign alphabet does not silently disappear" classname="com.itantra.core.inference.TtsTextCoverageTest" time="0.006"/>
+  <testcase name="Marathi native startup phrase is fully supported" classname="com.itantra.core.inference.TtsTextCoverageTest" time="0.003"/>
+  <testcase name="Marathi doctor vowel is rejected before native character skipping" classname="com.itantra.core.inference.TtsTextCoverageTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

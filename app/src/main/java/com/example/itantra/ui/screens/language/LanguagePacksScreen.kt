@@ -155,6 +155,7 @@ fun LanguagePacksScreen(
                 LanguageCode.TAMIL -> "Tamil IndicConformer CTC v2"
                 LanguageCode.TELUGU -> "Telugu IndicConformer CTC v2"
                 LanguageCode.ODIA -> "Odia IndicConformer CTC candidate"
+                LanguageCode.MALAYALAM -> "Malayalam IndicConformer CTC · experimental"
                 else -> "v1.0.0"
             },
             sizeMb = sttMb + ttsMb,
@@ -280,8 +281,8 @@ fun LanguagePacksScreen(
             item {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = Color(0xFFFFF8E1),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD54F)),
+                    color = ITantraColors.WarningContainer,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.StatusWarning),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -291,7 +292,7 @@ fun LanguagePacksScreen(
                         Icon(
                             Icons.Filled.Info,
                             contentDescription = null,
-                            tint = Color(0xFFE65100),
+                            tint = ITantraColors.OnWarningContainer,
                             modifier = Modifier.size(20.dp).padding(top = 1.dp)
                         )
                         Spacer(Modifier.width(10.dp))
@@ -300,14 +301,14 @@ fun LanguagePacksScreen(
                                 "MALAYALAM & ODIA NOTICE",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFE65100),
+                                color = ITantraColors.OnWarningContainer,
                             )
                             Spacer(Modifier.height(2.dp))
                             Text(
                                 "Malayalam: transcription only. Odia: desktop-tested STT candidate; Android performance unverified.",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFFE65100),
+                                color = ITantraColors.OnWarningContainer,
                             )
                             Spacer(Modifier.height(2.dp))
                             Text(
@@ -329,6 +330,10 @@ fun LanguagePacksScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
+                        if (micAutoDetect) Text(
+                            "Auto-detect uses Whisper Tiny. For Kannada and other Indic speech, select a microphone language and its dedicated pack.",
+                            style = MaterialTheme.typography.bodySmall, color = ITantraColors.OnWarningContainer,
+                        )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -404,15 +409,15 @@ fun LanguagePacksScreen(
                             effectiveListenLangs.forEach { code ->
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
-                                    color = Color(0xFFE8F5E9),
-                                    border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFF81C784))
+                                    color = ITantraColors.SuccessContainer,
+                                    border = androidx.compose.foundation.BorderStroke(0.5.dp, ITantraColors.StatusSuccess)
                                 ) {
                                     Text(
                                         LanguageCatalog.byCode(code).displayName,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontSize = 11.sp,
-                                        color = Color(0xFF2E7D32),
+                                        color = ITantraColors.OnSuccessContainer,
                                         fontWeight = FontWeight.Medium
                                     )
                                 }
@@ -445,7 +450,7 @@ fun LanguagePacksScreen(
                             label = { Text(filter) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = ITantraColors.Primary,
-                                selectedLabelColor = ITantraColors.SurfaceWhite,
+                                selectedLabelColor = ITantraColors.OnPrimary,
                             ),
                         )
                     }
@@ -557,7 +562,7 @@ private fun StorageOverviewCard(packs: List<LanguagePackItem>) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
-                .background(Color(0xFFE2E8F0), RoundedCornerShape(4.dp))
+                .background(ITantraColors.BorderSubtle, RoundedCornerShape(4.dp))
         ) {
             Row(modifier = Modifier.fillMaxSize()) {
                 if (activeFraction > 0f) {
@@ -654,8 +659,8 @@ private fun LanguagePackCard(
                 Spacer(Modifier.height(6.dp))
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFFFFF8E1),
-                    border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFFFD54F)),
+                    color = ITantraColors.WarningContainer,
+                    border = androidx.compose.foundation.BorderStroke(0.5.dp, ITantraColors.StatusWarning),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -665,17 +670,17 @@ private fun LanguagePackCard(
                         Icon(
                             Icons.Filled.Warning,
                             contentDescription = null,
-                            tint = Color(0xFFE65100),
+                            tint = ITantraColors.OnWarningContainer,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
                             if (pack.languageCode == LanguageCode.ODIA)
                                 "Odia STT is a desktop-tested candidate; device performance unverified. Translation unavailable."
-                            else "Voice transcript only — translation not available for this language",
+                            else "Experimental Malayalam STT: accuracy and phone RAM need testing. Select Malayalam mic. Translation unavailable.",
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 10.sp,
-                            color = Color(0xFFE65100),
+                            color = ITantraColors.OnWarningContainer,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -699,7 +704,7 @@ private fun LanguagePackCard(
                             Icons.Filled.Mic,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = if (pack.isSpeakSelected) ITantraColors.SurfaceWhite else ITantraColors.TextHeadline
+                            tint = if (pack.isSpeakSelected) ITantraColors.OnPrimary else ITantraColors.TextHeadline
                         )
                     },
                     label = {
@@ -711,7 +716,7 @@ private fun LanguagePackCard(
                     },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = ITantraColors.Primary,
-                        selectedLabelColor = ITantraColors.SurfaceWhite,
+                        selectedLabelColor = ITantraColors.OnPrimary,
                     )
                 )
 
@@ -724,7 +729,7 @@ private fun LanguagePackCard(
                             Icons.Filled.GraphicEq,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = if (pack.isListenSelected) ITantraColors.SurfaceWhite else ITantraColors.TextHeadline
+                            tint = if (pack.isListenSelected) ITantraColors.OnSuccess else ITantraColors.TextHeadline
                         )
                     },
                     label = {
@@ -735,8 +740,8 @@ private fun LanguagePackCard(
                         )
                     },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFF2E7D32),
-                        selectedLabelColor = ITantraColors.SurfaceWhite,
+                        selectedContainerColor = ITantraColors.StatusSuccess,
+                        selectedLabelColor = ITantraColors.OnSuccess,
                     )
                 )
             }
@@ -891,27 +896,27 @@ private fun DiagnosticsBadge(status: ReadinessBadgeState, progress: Float) {
     val (label, bgColor, textColor, borderColor) = when (status) {
         ReadinessBadgeState.READY_OFFLINE -> Quad(
             "SPEECH READY",
-            Color(0xFFE8F5E9),
-            Color(0xFF2E7D32),
-            Color(0xFF81C784)
+            ITantraColors.SuccessContainer,
+            ITantraColors.OnSuccessContainer,
+            ITantraColors.StatusSuccess
         )
         ReadinessBadgeState.NOT_PROVISIONED -> Quad(
             "NOT PROVISIONED",
-            Color(0xFFF5F5F5),
-            Color(0xFF757575),
-            Color(0xFFE0E0E0)
+            ITantraColors.SurfaceVariant,
+            ITantraColors.TextMuted,
+            ITantraColors.BorderSubtle
         )
         ReadinessBadgeState.DOWNLOADING -> Quad(
             if (progress > 0f) "DOWNLOADING ${(progress * 100).toInt()}%" else "DOWNLOADING...",
-            Color(0xFFE3F2FD),
-            Color(0xFF1565C0),
-            Color(0xFF90CAF9)
+            ITantraColors.AccentSubtle,
+            ITantraColors.Primary,
+            ITantraColors.BorderStrong
         )
         ReadinessBadgeState.FAILED -> Quad(
             "FAILED (RETRY)",
-            Color(0xFFFFEBEE),
-            Color(0xFFC62828),
-            Color(0xFFEF9A9A)
+            ITantraColors.ErrorContainer,
+            ITantraColors.OnErrorContainer,
+            ITantraColors.StatusDanger
         )
     }
 
@@ -934,9 +939,9 @@ private fun DiagnosticsBadge(status: ReadinessBadgeState, progress: Float) {
 @Composable
 private fun ComponentPill(label: String, isReady: Boolean, isMuted: Boolean = false) {
     val (bgColor, borderColor, textColor) = when {
-        isMuted -> Triple(Color(0xFFFFF8E1), Color(0xFFFFD54F), Color(0xFFE65100))
-        isReady -> Triple(Color(0xFFE8F5E9), Color(0xFF81C784), Color(0xFF2E7D32))
-        else -> Triple(Color(0xFFF5F5F5), Color(0xFFE0E0E0), ITantraColors.TextMuted)
+        isMuted -> Triple(ITantraColors.WarningContainer, ITantraColors.StatusWarning, ITantraColors.OnWarningContainer)
+        isReady -> Triple(ITantraColors.SuccessContainer, ITantraColors.StatusSuccess, ITantraColors.OnSuccessContainer)
+        else -> Triple(ITantraColors.SurfaceVariant, ITantraColors.BorderSubtle, ITantraColors.TextMuted)
     }
     Surface(
         shape = RoundedCornerShape(4.dp),

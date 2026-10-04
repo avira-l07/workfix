@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.transceiver.TwentyMessageLoopbackTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:19.690Z" hostname="AVII" time="0.039">
+  <properties/>
+  <testcase name="test duplicate packet arrival handles cleanly without crash" classname="com.itantra.core.transceiver.TwentyMessageLoopbackTest" time="0.013"/>
+  <testcase name="test packet checksum CRC32 integrity validation rejects corrupted frames" classname="com.itantra.core.transceiver.TwentyMessageLoopbackTest" time="0.002"/>
+  <testcase name="test 20 sequential transmissions through loopback achieve 100 percent delivery" classname="com.itantra.core.transceiver.TwentyMessageLoopbackTest" time="0.024"/>
+  <system-out><![CDATA[=== STARTING 20-MESSAGE SEQUENTIAL LOOPBACK VERIFICATION ===
+Message 1 of 20: msgId=100001 delivered successfully, RTT=0ms
+Message 2 of 20: msgId=100002 delivered successfully, RTT=0ms
+Message 3 of 20: msgId=100003 delivered successfully, RTT=0ms
+Message 4 of 20: msgId=100004 delivered successfully, RTT=0ms
+Message 5 of 20: msgId=100005 delivered successfully, RTT=0ms
+Message 6 of 20: msgId=100006 delivered successfully, RTT=0ms
+Message 7 of 20: msgId=100007 delivered successfully, RTT=0ms
+Message 8 of 20: msgId=100008 delivered successfully, RTT=0ms
+Message 9 of 20: msgId=100009 delivered successfully, RTT=0ms
+Message 10 of 20: msgId=100010 delivered successfully, RTT=0ms
+Message 11 of 20: msgId=100011 delivered successfully, RTT=0ms
+Message 12 of 20: msgId=100012 delivered successfully, RTT=0ms
+Message 13 of 20: msgId=100013 delivered successfully, RTT=0ms
+Message 14 of 20: msgId=100014 delivered successfully, RTT=0ms
+Message 15 of 20: msgId=100015 delivered successfully, RTT=0ms
+Message 16 of 20: msgId=100016 delivered successfully, RTT=0ms
+Message 17 of 20: msgId=100017 delivered successfully, RTT=0ms
+Message 18 of 20: msgId=100018 delivered successfully, RTT=0ms
+Message 19 of 20: msgId=100019 delivered successfully, RTT=0ms
+Message 20 of 20: msgId=100020 delivered successfully, RTT=0ms
+=== LOCAL LOOPBACK VERIFIED: 20/20 DELIVERED, 0 DROPS, 0 CRASHES ===
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

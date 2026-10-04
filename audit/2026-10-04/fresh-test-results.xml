@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="audit.FreshAuditTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-03T23:16:40.392Z" hostname="AVII" time="0.684">
+  <properties/>
+  <testcase name="concurrentTransmitCountersAreUnique" classname="audit.FreshAuditTest" time="0.296"/>
+  <testcase name="pinnedModelRejectsCorruptStaging" classname="audit.FreshAuditTest" time="0.026"/>
+  <testcase name="unauthenticatedSessionCannotEncrypt" classname="audit.FreshAuditTest" time="0.013"/>
+  <testcase name="packetRoundTripAndCrcFuzz" classname="audit.FreshAuditTest" time="0.012"/>
+  <testcase name="concurrentReplayProbe" classname="audit.FreshAuditTest" time="0.08"/>
+  <testcase name="localDateBoundaryProbe" classname="audit.FreshAuditTest" time="0.021"/>
+  <testcase name="encryptedPayloadBoundaryProbe" classname="audit.FreshAuditTest" time="0.014"/>
+  <testcase name="sasTamperReplayAndReset" classname="audit.FreshAuditTest" time="0.011"/>
+  <testcase name="migrationSqlAndIndependentDelete" classname="audit.FreshAuditTest" time="0.188"/>
+  <testcase name="storedCipherAuthenticationAndLostKey" classname="audit.FreshAuditTest" time="0.005"/>
+  <testcase name="invalidLocationAndProfileProbe" classname="audit.FreshAuditTest" time="0.006"/>
+  <system-out><![CDATA[PASS 200 concurrent encryption counters unique
+PASS corrupt staged model fails readiness without promotion
+PASS application traffic blocked before mutual SAS, fabricated verify rejected
+PASS packet UTF-8/emoji ten-language round-trip and 98 malformed/corrupted frames
+OBSERVED concurrent replay extra acceptances=231; direct API probe, production receive dispatch separately reviewed
+OBSERVED seven-days-old note bucket=THIS_WEEK; requested rolling seven days normally covers offsets 0..6
+PASS today/yesterday/6 days/10 days/older local-device-date boundaries
+OBSERVED plaintext=16384 bytes -> encrypted=16400 rejected; 16368-byte plaintext passes; outgoing encoder has no size guard
+PASS SAS agreement, AAD tampering, replay rejection, session reset
+PASS actual migration SQL 2->5 executed on fresh SQLite; voice-note delete preserves peer row; v1 fixture missing; Room/SQLCipher Android integration NOT tested
+PASS at-rest JCA round-trip, distinct nonce, tamper and lost-key rejection; Android keystore NOT tested
+OBSERVED location NaN/out-of-range longitude/negative accuracy/time/trailing byte accepted; blank profile ID and v999 accepted
+]]></system-out>
+  <system-err><![CDATA[SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+]]></system-err>
+</testsuite>

@@ -9,6 +9,8 @@ This small read-speech sample does not certify conversational or Android perform
 import argparse
 import hashlib
 import json
+import math
+import statistics
 import time
 import unicodedata
 from pathlib import Path
@@ -91,7 +93,10 @@ def distance(a, b):
 def peak_memory_bytes():
     import os
     if os.name != 'nt':
-        return None
+        import resource
+        import sys
+        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return int(peak if sys.platform == 'darwin' else peak * 1024)
     import ctypes
     from ctypes import wintypes
     class Counters(ctypes.Structure):
@@ -113,6 +118,7 @@ def benchmark(model, label=None, manifest_path=None, model_dir=None, prefix=None
     import numpy as np
     import soundfile as sf
     import sherpa_onnx
+    from benchmark_five_language_stt import script_ok
     manifest = json.loads((manifest_path or CACHE / 'fleurs-manifest.json').read_text(encoding='utf-8'))
     directory = model_dir or ROOT / ('app/src/main/assets/language_packs/shared/stt' if model == 'tiny' else 'app/build/whisper-small')
     prefix = (model + '-') if prefix is None else prefix
@@ -137,13 +143,18 @@ def benchmark(model, label=None, manifest_path=None, model_dir=None, prefix=None
             ref, hyp = normalize(record['reference']), normalize(output)
             row = {**record, 'output': output, 'seconds': elapsed, 'audio_seconds': len(audio)/rate,
                    'word_errors': distance(ref.split(), hyp.split()), 'words': len(ref.split()),
-                   'char_errors': distance(ref.replace(' ', ''), hyp.replace(' ', '')), 'chars': len(ref.replace(' ', ''))}
+                   'char_errors': distance(ref.replace(' ', ''), hyp.replace(' ', '')), 'chars': len(ref.replace(' ', '')),
+                   'native_script': script_ok(lang, output)}
             rows.append(row)
             print(json.dumps({'model': model, 'lang': lang, 'row': record['row'], 'output': output}), flush=True)
+        timings = sorted(r['seconds'] * 1000 for r in rows)
         summaries[lang] = {'count': len(rows), 'wer': sum(r['word_errors'] for r in rows)/sum(r['words'] for r in rows),
                            'cer': sum(r['char_errors'] for r in rows)/sum(r['chars'] for r in rows),
                            'rtf': sum(r['seconds'] for r in rows)/sum(r['audio_seconds'] for r in rows),
-                           'load_seconds': load_seconds}
+                           'load_seconds': load_seconds,
+                           'decode_ms_mean': statistics.mean(timings),
+                           'decode_ms_p95_nearest_rank': timings[math.ceil(.95 * len(timings)) - 1],
+                           'native_script_count': sum(r['native_script'] for r in rows)}
         results.extend(rows)
         del recognizer
     REPORT.mkdir(parents=True, exist_ok=True)

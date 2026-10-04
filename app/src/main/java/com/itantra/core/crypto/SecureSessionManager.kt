@@ -325,6 +325,7 @@ class SecureSessionManager {
      * Atomic critical section: counter check/increment -> nonce construction -> AES-GCM encryption.
      */
     suspend fun encrypt(packet: ItantraPacket): ItantraPacket = encryptMutex.withLock {
+        PacketEncoder.requireEncryptablePayload(packet.payload)
         if (_state.value != SecureSessionState.SECURE_VERIFIED) {
             throw IllegalStateException("Cannot encrypt: session is not secure (State: ${_state.value})")
         }
@@ -383,7 +384,10 @@ class SecureSessionManager {
         decryptDurationUs = (System.nanoTime() - t0) / 1000
 
         // Step 2: Commit counter ONLY AFTER successful AEAD authentication
-        replayWindow.commit(packet.counter)
+        if (!replayWindow.accept(packet.counter)) {
+            replayRejections++
+            throw SecurityException("Replay/stale packet rejected after authentication")
+        }
 
         return packet.copy(securityVersion = 0, payload = plaintext)
     }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.SpeechOutputValidationTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:16.315Z" hostname="AVII" time="0.004">
+  <properties/>
+  <testcase name="auto detected Hindi with English text is rejected" classname="com.itantra.core.inference.SpeechOutputValidationTest" time="0.002"/>
+  <testcase name="English translation is not rejected for Hindi source script" classname="com.itantra.core.inference.SpeechOutputValidationTest" time="0.0"/>
+  <testcase name="native Hindi and detected English pass" classname="com.itantra.core.inference.SpeechOutputValidationTest" time="0.0"/>
+  <testcase name="startup defaults to manual but preserves explicitly saved auto" classname="com.itantra.core.inference.SpeechOutputValidationTest" time="0.0"/>
+  <testcase name="unsupported auto language cannot fall back to Hindi" classname="com.itantra.core.inference.SpeechOutputValidationTest" time="0.0"/>
+  <testcase name="manual Hindi cannot relabel English or romanized output as valid Hindi" classname="com.itantra.core.inference.SpeechOutputValidationTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

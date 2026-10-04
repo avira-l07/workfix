@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -75,6 +76,7 @@ class TransceiverCoordinator(
         private val FIVE_VOICE_LANGUAGES = setOf(
             LanguageCode.HINDI, LanguageCode.ENGLISH, LanguageCode.TAMIL,
             LanguageCode.TELUGU, LanguageCode.ODIA,
+            LanguageCode.MARATHI, LanguageCode.KANNADA,
         )
     }
 
@@ -146,7 +148,7 @@ class TransceiverCoordinator(
         try {
             val securePacket = secureSessionManager.encrypt(packet)
             transportEngine.send(securePacket)
-            android.util.Log.i("TransceiverCoordinator", "Sent PROFILE_HANDSHAKE: id=$devId, name=$name")
+            android.util.Log.i("TransceiverCoordinator", "Sent verified peer profile")
         } catch (e: Exception) {
             android.util.Log.e("TransceiverCoordinator", "Error sending PROFILE_HANDSHAKE", e)
         }
@@ -239,6 +241,18 @@ class TransceiverCoordinator(
 
     val continuousListenEngine = ContinuousListenEngine(context)
     private var continuousModeJob: Job? = null
+    val continuousModeError = com.itantra.core.service.OperationalForegroundService.lastStartupError
+    init {
+        scope.launch {
+            continuousModeError.collect { error ->
+                if (error != null) {
+                    continuousModeJob?.cancel()
+                    continuousModeJob = null
+                    continuousListenEngine.stop()
+                }
+            }
+        }
+    }
     private var isTtsPlaying = false
 
     val emergencyStore = com.itantra.core.emergency.EmergencyPersistenceStore(context.filesDir)
@@ -681,7 +695,7 @@ class TransceiverCoordinator(
             PacketType.PROFILE_HANDSHAKE -> {
                 val payload = com.itantra.core.transport.packet.ProfilePayload.fromBytes(decryptedPacket.payload)
                 if (payload != null) {
-                    android.util.Log.i("TransceiverCoordinator", "Received PROFILE_HANDSHAKE: id=${payload.deviceId}, name=${payload.displayName}, v=${payload.protocolVersion}")
+                    android.util.Log.i("TransceiverCoordinator", "Received validated peer profile")
                     val currentPeer = _activePeerProfile.value
                     val updated = (currentPeer ?: com.itantra.domain.model.PeerProfile(bluetoothAddress = "", displayName = payload.displayName))
                         .copy(
@@ -1289,9 +1303,20 @@ class TransceiverCoordinator(
     fun setContinuousMode(enabled: Boolean) {
         if (enabled) {
             if (continuousModeJob != null) return
-            com.itantra.core.service.OperationalForegroundService.startContinuous(context)
-            continuousListenEngine.start()
+            if (!com.itantra.core.service.OperationalForegroundService.startContinuous(context)) return
             continuousModeJob = scope.launch {
+                // Audio capture starts only after Android has accepted the foreground service.
+                val ready = kotlinx.coroutines.withTimeoutOrNull(10_000) {
+                    com.itantra.core.service.OperationalForegroundService.continuousReady.first { it }
+                } == true
+                if (!ready || continuousModeError.value != null) {
+                    if (continuousModeError.value == null) com.itantra.core.service.OperationalForegroundService
+                        .reportContinuousFailure("Continuous listening could not start: microphone service did not become ready. Check permissions and retry.")
+                    com.itantra.core.service.OperationalForegroundService.stopContinuous(context)
+                    continuousModeJob = null
+                    return@launch
+                }
+                continuousListenEngine.start()
                 launch {
                     try {
                         audioSource.stream.collect { samples ->
@@ -1493,7 +1518,7 @@ class TransceiverCoordinator(
                     sendVoiceMessage(msgId, com.itantra.domain.model.MessagePriority.NORMAL)
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "Error: ${e.message}") }
+                    updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = e.message ?: "Speech processing failed") }
                 } finally {
                     if (!isTtsPlaying && continuousModeJob?.isActive == true) {
                         continuousListenEngine.resumeListening()
@@ -1869,7 +1894,7 @@ class TransceiverCoordinator(
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "Error: ${e.message}") }
+                    updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = e.message ?: "Speech processing failed") }
                 } finally {
                     if (continuousModeJob?.isActive == true && !isTtsPlaying) {
                         continuousListenEngine.resetAndResume()
@@ -2017,7 +2042,7 @@ class TransceiverCoordinator(
                 }
             } catch (e: Exception) {
                 android.util.Log.e("TransceiverCoordinator", "Error sending text message", e)
-                updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "$text (Failed to send)") }
+                updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = e.message ?: "Failed to send") }
             }
         }
     }
@@ -2236,8 +2261,12 @@ class TransceiverCoordinator(
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    if (e is com.itantra.core.transport.packet.PayloadTooLargeException) {
+                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = e.message) }
+                        return@launch
+                    }
                     if (attempt == maxAttempts) {
-                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "${msg.text} (Encryption failed)") }
+                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = e.message ?: "Encryption failed") }
                     } else {
                         delay(1000)
                     }

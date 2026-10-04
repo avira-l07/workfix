@@ -1,0 +1,76 @@
+{
+  "language": "or",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Manual language: IndicConformer CTC INT8",
+  "stt_load_ms": 683.8247000705451,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\or\\model.int8.onnx",
+      "bytes": 197584928,
+      "sha256": "31730e06bd186bca5c3214003c2a0b5eeb3234d079b5b81aa72547adbe1c9be7"
+    },
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\tokens.txt",
+      "bytes": 67605,
+      "sha256": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
+    }
+  ],
+  "stt": {
+    "reference": "ହାତୀ ଓ ଜିରାଫ୍ ଭଳି ପଶୁମାନଙ୍କର କାର୍ ଏବଂ ଭଲ ଦେଖାଯାଉଥିବା ମାନକ ସରଞ୍ଜାମକୁ ନିକଟରୁ ଦେଖିବା ପାଇଁ ପାଖକୁ ଆସିବାର ପ୍ରବୃତ୍ତି ଥାଏ",
+    "output": "ହାତୀ ଓ ଜିରାଫ ଭଳି ପଶୁମାନଙ୍କର କାର୍ ଏବଂ ଭଲ ଦେଖାଯାଉଥିବା ମାନକ ସରଞ୍ଜାମରୁ ନିକଟରୁ ଦେଖିବା ପାଇଁ ପାଖକୁ ଆସିବାର ପ୍ରବୃତି ଥାଏ",
+    "native_script_majority": true,
+    "decode_ms": 358.14180003944784,
+    "audio_seconds": 10.08,
+    "rtf": 0.03552994048010395,
+    "single_recording_wer": 0.16666666666666666,
+    "word_errors": 3,
+    "reference_words": 18
+  },
+  "silence": {
+    "output": "ହ",
+    "decode_ms": 37.263200036250055
+  },
+  "tts_load_ms": 791.0265000537038,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\models\\bundled\\or\\tts\\model.onnx",
+      "bytes": 114046212,
+      "sha256": "ab867f39b00f1fcb39dc97f5079150959b50df50d7f10e75232c56b52f19c021"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\or\\tts\\tokens.txt",
+      "bytes": 495,
+      "sha256": "bc90e5423446ca730aef6b56a4656cb07421c7538429a50b9c396fe0758fd587"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+      "synthesis_ms": 629.9007999477908,
+      "sample_rate": 16000,
+      "samples": 16811,
+      "peak_amplitude": 0.6404114961624146,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "ପାଣି ପଠାନ୍ତୁ",
+      "synthesis_ms": 340.86070000194013,
+      "sample_rate": 16000,
+      "samples": 10660,
+      "peak_amplitude": 0.5561850666999817,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ",
+      "synthesis_ms": 750.2890999894589,
+      "sample_rate": 16000,
+      "samples": 19494,
+      "peak_amplitude": 0.6683998107910156,
+      "finite": true,
+      "missing_token_letters": []
+    }
+  ]
+}

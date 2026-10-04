@@ -53,7 +53,7 @@ def fetch():
         print(f"Downloaded and verified {name}: {path.stat().st_size} bytes", flush=True)
 
 
-def benchmark():
+def benchmark(languages=("ta", "te", "or")):
     import numpy as np
     import sherpa_onnx
     import soundfile as sf
@@ -64,7 +64,7 @@ def benchmark():
         model=str(MODEL), tokens=str(TOKENS), num_threads=4,
         decoding_method="greedy_search")
     results = {}
-    for lang in ("ta", "te", "or"):
+    for lang in languages:
         rows = json.loads((DATA / f"manifest-{lang}-30.json").read_text(encoding="utf-8"))
         if len(rows) != 30:
             raise RuntimeError(f"Expected 30 ground-truth samples for {lang}")
@@ -106,7 +106,8 @@ def benchmark():
               "model_sha256": MODEL_SHA256, "tokens_sha256": digest(TOKENS),
               "peak_desktop_working_set_bytes": validate_stt.peak_memory_bytes(),
               "languages": results}
-    destination = ROOT / "tools/stt_results/omnilingual-300m-int8-30.json"
+    suffix = "" if tuple(languages) == ("ta", "te", "or") else "-" + "-".join(languages)
+    destination = ROOT / f"tools/stt_results/omnilingual-300m-int8{suffix}-30.json"
     destination.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Saved {destination}", flush=True)
 
@@ -114,4 +115,10 @@ def benchmark():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("fetch", "benchmark"))
-    {"fetch": fetch, "benchmark": benchmark}[parser.parse_args().action]()
+    parser.add_argument("--languages", nargs="+", choices=("ta", "te", "or", "bn", "gu", "ml"),
+                        default=("ta", "te", "or"))
+    args = parser.parse_args()
+    if args.action == "fetch":
+        fetch()
+    else:
+        benchmark(args.languages)

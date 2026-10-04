@@ -1,0 +1,1665 @@
+iTANTRA - FRESH APPLICATION AUDIT
+PRE-FIX SNAPSHOT: This report records findings before the owner's fix approval.
+Current fixes, verification, APKs and remaining gaps are recorded separately in
+D:\new itantra\docs\AUDIT_FIXES_2026-10-04.txt. The evidence below is preserved.
+Date: 4 October 2026 (Asia/Kolkata)
+Repository: D:\new itantra
+Audit evidence: D:\new itantra\audit\2026-10-04
+
+EXECUTIVE SUMMARY
+=================
+Provisional engineering health assessment: 5.5 / 10.
+This is a reviewer judgment about the evidence available here. It is NOT a
+measured SIH score, an accuracy percentage, a security certification, or a
+claim that every feature works on phones.
+
+13 tracked findings: Critical 0; High 2; Medium 7; Low 4.
+Seven findings have fresh dependency/core-function/desktop execution evidence.
+Six are source-level findings or risks whose actual screen/device behavior
+has not been reproduced. Each entry states its evidence boundary.
+These counts are separate from Android lint's warnings and hint.
+
+Main concerns:
+- ML Kit pulls in OkHttp 3.0.0, matching two published certificate-validation
+  advisories. Presence is confirmed; exploitation in this app is unverified.
+- The active Kannada Whisper Tiny fallback failed native-script recognition
+  on the fresh recording and returned text for a direct silence probe.
+- Long outgoing messages can exceed the receiver's encrypted frame limit.
+- Marathi TTS skips U+0949 in the tested word for doctor.
+- The attractive HTML preview is a simulation; its appearance system has
+  not been merged into the native application.
+- Native device identity labels, operational channel labels, and dark-mode
+  colors need attention; Android 10 foreground-service behavior needs testing.
+
+Positive fresh evidence:
+- Final isolated run: 11 new audit probes, 0 failures, 0 errors, 0 skipped.
+  Passing observational probes intentionally demonstrate several defects;
+  their green result does not imply those defects are fixed.
+- Debug and unsigned release APK packaging completed.
+- Android debug lint completed: 0 errors, 73 warnings, 1 hint.
+- No ONNX language-model weights are bundled in either fresh APK.
+- Public model availability: 29 configured artifact HEAD requests returned 200.
+- All ten desktop TTS probes generated finite, nonempty, non-silent PCM.
+- Nine of ten tested desktop STT outputs used the expected script.
+- Mutual SAS agreement, pre-verification traffic blocking, authenticated-header
+  tamper rejection, sequential replay rejection, unique concurrent transmit
+  counters, and local stored-data authentication were exercised freshly.
+
+WHAT WAS FIXED / WHAT CHANGED
+============================
+Production app fixes in this audit: NONE.
+Your attachment explicitly says: "Do NOT fix anything yet. Produce the full
+report first, then wait for my approval." That instruction governs this pass.
+No application Kotlin, Compose UI, model manifest, dependency declaration,
+translation pipeline, transport implementation, or existing test was edited
+by this audit. Earlier uncommitted work was preserved. No commit or push ran.
+Earlier claimed fixes were not counted as evidence for this audit.
+
+New material consists of this report and fresh audit harnesses/evidence under
+D:\new itantra\audit\2026-10-04. The harnesses test existing application code;
+they do not change application behavior.
+
+Audit setup corrections, not product fixes:
+1. Drive D: ran out of space during the initial combined build. Only this
+   audit's build folder was moved to C: temporary storage, and a junction at
+   D:\new itantra\audit\2026-10-04\build preserves the Android build path.
+   Target: C:\Users\avira\AppData\Local\Temp\itantra-fresh-audit-20261004.
+   Existing models, prior APKs, app data, and unrelated work were not deleted.
+2. Android's built-in Kotlin source configuration initially still included
+   legacy tests. The final test execution filter runs only audit.* classes.
+   No legacy test results are used as proof in this report. Some legacy files
+   still compiled and produced compiler warnings; this is not test evidence.
+3. The migration fixture initially assumed a version 1 schema file existed.
+   It does not. The corrected probe uses the actual version 2 schema and runs
+   migrations 2->3->4->5. Historical version 1 migration remains unverified.
+4. Hindi/English desktop voice paths were corrected to their actual source
+   assets. Kannada was rerun with the exact token file used by the app.
+   Initial harness failures are retained in the logs for transparency.
+
+APPLICATION CONTEXT
+===================
+Purpose: offline speech-to-text, optional local translation, small encrypted
+peer packets, receiving-side speech synthesis, chat history, voice transcripts,
+location sharing, and emergency messages.
+Production frontend: native Kotlin / Jetpack Compose Android application.
+Storage: Room version 5 with SQLCipher; separate protected preferences/files.
+Speech: sherpa-onnx native STT and offline VITS/MMS-style voices.
+Translation: active application engine is ML Kit offline translation, plus
+deterministic emergency phrase handling. General Malayalam/Odia translation
+is unsupported. Speech support does not imply translation support.
+Transports: Bluetooth Classic RFCOMM and Wi-Fi Direct TCP, one active transport.
+Backend: no hosted application backend, REST API, WebSocket service, cloud
+account, payment flow, admin panel, or server-side user roles found.
+Roles: local operator and a peer in a mutually SAS-verified session; Android
+platform permissions independently gate microphone, radios, and location.
+Model provisioning accesses public Hugging Face artifacts and Google-managed
+translation-model installation. Installed speech inference is local.
+
+Three different UI/source categories must be distinguished:
+- D:\new itantra\app\src\main\java: production native application.
+- D:\new itantra\itantra_light_ui: standalone HTML/CSS/JavaScript design preview.
+- D:\new itantra\old ui and stitch_ui_curated_v8: reference/export material;
+  not the active Android application source set.
+The HTML preview is not a WebView wrapper around the native backend.
+
+METHOD AND EVIDENCE BOUNDARIES
+==============================
+Old reports, past pass counts, cached benchmark result JSON files, and prior
+"it works" claims were not accepted as verification. Ground-truth audio,
+schema definitions, current source code, and installed model files were used
+as inputs to freshly written probes, not as evidence of prior success.
+
+Native Kotlin/Java sources were compiled into a new audit output location.
+Existing Gradle dependency caches and native CMake dependency checkouts were
+reused; this is not a brand-new SDK/dependency installation from scratch.
+The first combined build was interrupted by disk exhaustion. Later packaging
+tasks completed; a combined command still reported failure because the audit
+fixture was wrong. The final corrected fresh test command succeeded separately.
+Those harness/build-environment failures are not application regressions.
+
+No phone was installed, launched, paired, or tested in this audit. Your plan
+to perform the physical-device tests yourself was preserved.
+No app user data was wiped or modified.
+The browser tool rejected opening this local file:// preview by URL policy.
+That policy was not bypassed with another browser or localhost hosting.
+Therefore rendered, responsive, interactive, screen-reader, and keyboard UI
+tests are UNVERIFIED. JavaScript syntax, static assets, and the pure date
+function were checked independently without a browser or DOM.
+
+Speech probes used desktop sherpa-onnx 1.13.8, Windows, one clean recording per
+language, one one-second silence input, and three short TTS phrases per language.
+Timings were captured while audit/build processes were also active. They are
+observed desktop smoke timings, NOT isolated phone benchmarks or performance
+acceptance results. Non-silent PCM does not prove intelligibility.
+
+FULL FINDINGS TABLE
+===================
+ID  | Severity | Area                 | Summary                          | Fix order
+F01 | High     | Dependency security  | Vulnerable OkHttp 3.0.0 resolved  | P1
+F02 | High     | Kannada STT          | Wrong script; silence text       | P1
+F03 | Medium   | Packet/input bounds  | Encryptable oversized frame      | P1
+F04 | Medium   | Marathi TTS          | Doctor word loses U+0949          | P1
+F05 | Medium   | Operational UI truth | Static radio/channel labels      | P2
+F06 | Medium   | Theme integration    | Native dark theme incomplete     | P2
+F07 | Medium   | Profile validation   | Blank ID/unsupported v accepted  | P2
+F08 | Low      | Privacy/logging      | Peer IDs/names logged in release | P2
+F09 | Low      | Crypto concurrency   | Concurrent replay API race       | P2
+F10 | Low      | Notes/UI consistency | Seven-day cutoff differs         | P2
+F11 | Low      | APK/dead integration | Unused integrations shipped      | P3
+F12 | Medium   | Device identity UI   | Settings ID differs from peer ID | P2
+F13 | Medium   | Android service      | API 29 microphone type hazard    | P2
+
+F01 - HIGH - Vulnerable runtime dependency
+Location: D:\new itantra\app\build.gradle.kts:116.
+Dependency: com.google.mlkit:translate:17.0.3 -> com.squareup.okhttp3:okhttp:3.0.0.
+Repro: run the auditRuntimeInventory task, then dependency_probe.py; run
+  :app:dependencyInsight --dependency okhttp --configuration debugRuntimeClasspath.
+Expected: the resolved network stack should not match known certificate
+validation vulnerabilities.
+Actual: OSV returns GHSA-3cqm-mf7h-prrj / CVE-2021-0341 and
+GHSA-4hc2-jh7r-wrc3 / CVE-2016-2402 for OkHttp 3.0.0.
+Evidence: dependency-security.json and final-checks.log show both the exact
+resolved version and its parent dependency. Primary publisher advisories are
+listed at the end of this report.
+Boundary: confirmed dependency exposure; no MITM attack was executed. No claim
+that every ML Kit request uses the vulnerable behavior. The app's own speech
+file downloader uses HttpURLConnection, so it is a separate implementation.
+Suggested fix: constrain/exclude the vulnerable transitive version in favor
+of a supported compatible patched release, then test ML Kit model download
+and offline translation. Do not blindly upgrade every dependency together.
+
+F02 - HIGH - Kannada's active fallback fails the recognition probe
+Location: D:\new itantra\app\src\main\assets\language_packs\kn_dev_manifest.json:10;
+  D:\new itantra\app\src\main\java\com\itantra\core\inference\ModelFileSpec.kt:27;
+  D:\new itantra\app\src\main\java\com\itantra\core\inference\SherpaOnnxSpeechRecognizer.kt:101.
+Repro: python audit/2026-10-04/speech_probe.py --language kn.
+Expected: Kannada recording produces meaningful Kannada-script text; direct
+silence input produces no transcript.
+Actual: Whisper Tiny with language=kn and task=transcribe produces repeated
+Latin text beginning "ndo sari laswara". Direct silence returns "[XBOX]".
+Evidence: speech-kn.json, speech-kn-app-token.log; app-model weights and the
+exact app token file are hashed in the JSON. This recording has 62 word edits
+against 27 reference words. WER can exceed 100% because of insertions; this is
+one recording, not the language's population WER.
+Boundary: reproduced on desktop with the active model configuration. Phone
+output and the production VAD gate are unverified; the silence probe bypasses
+VAD and does not prove a silent phone recording will be sent.
+Suggested fix: benchmark and provision a better Kannada recognizer with the
+same selective-download design. Require held-out accuracy and phone memory/
+latency tests before calling the replacement production-ready. Mark the
+current fallback experimental in the meantime.
+
+F03 - MEDIUM - Outgoing message size is incompatible with receiver bounds
+Location: D:\new itantra\app\src\main\java\com\itantra\core\transport\packet\PacketEncoder.kt:59;
+  D:\new itantra\app\src\main\java\com\itantra\core\transport\packet\PacketDecoder.kt:18;
+  D:\new itantra\app\src\main\java\com\itantra\core\transceiver\TransceiverCoordinator.kt:1985;
+  D:\new itantra\app\src\main\java\com\example\itantra\ui\screens\chat\DedicatedChatScreen.kt:313.
+Repro: run encryptedPayloadBoundaryProbe in the fresh audit suite; encrypt
+16,384 plaintext bytes, encode them, then decode the resulting body.
+Expected: reject over-limit input locally with a clear message or fragment it
+according to an explicit protocol before sending.
+Actual: the encoder accepts it; AES-GCM adds 16 bytes; the 16,400-byte payload
+is rejected by the receiver. 16,368 plaintext bytes fit the current cipher limit.
+The chat input and sendTextMessage path have no corresponding UTF-8 byte cap.
+Evidence: fresh-test-results.xml. Both radio receive loops also reject frames
+above MAX_FRAME_BODY_SIZE. Actual phone disconnect behavior was not exercised.
+Suggested fix: define a shared encrypted wire limit, validate final translated
+UTF-8 payload bytes including AEAD overhead, guard the encoder, and explain
+oversized input in the UI. Keep the original transcript intact on failure.
+
+F04 - MEDIUM - Marathi voice silently loses an important character
+Location: D:\new itantra\app\src\main\assets\language_packs\mr\tts\tokens.txt:1
+  (the entire vocabulary file lacks U+0949);
+  D:\new itantra\app\src\main\java\com\itantra\core\inference\SherpaOnnxSpeechSynthesizer.kt:183.
+Repro: synthesize the fresh Marathi phrase "डॉक्टरांना बोलवा".
+Expected: preserve the supported pronunciation of the word for doctor or
+clearly indicate that the voice cannot represent its characters.
+Actual: native sherpa logs "Skip unknown character. Unicode codepoint: U+0949".
+The voice still generates nonempty PCM and the application treats generation
+as success; it checks output presence/rate, not text coverage.
+Evidence: speech.log and speech-mr.json, including missing_token_letters.
+Boundary: character loss is reproduced; the resulting intelligibility and
+pronunciation have not been rated by a Marathi listener.
+Suggested fix: choose a voice/tokenizer with correct coverage, or implement
+linguistically reviewed model-specific normalization and test it with native
+listeners. Do not replace arbitrary characters just to hide the warning.
+
+F05 - MEDIUM - Hardcoded operational channel looks like real configuration
+Location: D:\new itantra\app\src\main\java\com\example\itantra\ui\screens\hub\TransceiverHubScreen.kt:733,754;
+  D:\new itantra\app\src\main\java\com\example\itantra\MainActivity.kt:986.
+Repro: inspect these assignments; change the active peer/transport and follow
+the same Hub/Connect composition. Device rendering was not available here.
+Expected: show actual peer/transport configuration, or label a demo name.
+Actual source: "CHANNEL: TAC-RELIEF-04" and "DISASTER RELIEF COMMAND COHORTS"
+are literals; the Connect channel name is also a literal. They do not come
+from a radio gateway, channel selection, or group state.
+Evidence: source-integration-log-index.txt plus exact source locations above.
+Boundary: source-confirmed misleading labeling; no screenshot reproduction.
+Suggested fix: replace these with the real selected peer/transport or an
+explicit example label. Avoid suggesting a configured radio/satellite channel
+or command cohort that the app does not implement.
+
+F06 - MEDIUM - Preview theme system is not integrated into native screens
+Location: D:\new itantra\app\src\main\java\com\example\itantra\ui\theme\Color.kt:10,11;
+  D:\new itantra\app\src\main\java\com\example\itantra\ui\theme\Theme.kt:15,62;
+  D:\new itantra\app\src\main\java\com\example\itantra\ui\screens\settings\SettingsScreen.kt:249,372;
+  D:\new itantra\itantra_light_ui\theme.js:6,7.
+Repro pending: open Settings/Notes on a phone using system dark mode; compare
+top-bar text, cards, labels, and buttons; compare preview appearance choices.
+Expected: readable native dark mode and the promised selectable palettes.
+Actual source: native MaterialTheme has a dark scheme, but many screen
+containers/cards/top bars directly use fixed white/light ITantraColors.
+Native Settings has no equivalent saved light/dark/system + four palettes.
+The HTML preview does have that separate browser-local appearance system.
+Evidence: static-inventory.json and source references. Contrast calculations
+are token-level math, not rendered accessibility verification. A white-on-white
+combination would be 1:1; actual inherited colors need device confirmation.
+Boundary: source-level integration gap and suspected contrast risk; no claimed
+visual reproduction or WCAG conformance/nonconformance certification.
+Suggested fix: implement native persisted appearance choices and use semantic
+theme surfaces/content colors; verify each screen at both brightness extremes.
+
+F07 - MEDIUM - Malformed authenticated profile can replace active identity
+Location: D:\new itantra\app\src\main\java\com\itantra\core\transport\packet\ProfilePayload.kt:33;
+  D:\new itantra\app\src\main\java\com\itantra\core\transceiver\TransceiverCoordinator.kt:682,688;
+  D:\new itantra\app\src\main\java\com\itantra\data\db\PeerDao.kt:29.
+Repro: call ProfilePayload.fromBytes with {} and with v=999 in a fresh probe.
+Expected: reject a blank device identity and unsupported protocol version.
+Actual: both are accepted. The coordinator copies the blank ID/name into
+activePeerProfile without validation. PeerDao separately rejects blank IDs,
+so a blank peer row is NOT persisted; the active state and saved list can diverge.
+Evidence: invalidLocationAndProfileProbe in fresh-test-results.xml and the
+coordinator/DAO source paths.
+Boundary: parser acceptance is reproduced. A peer must already be in a verified
+encrypted session; no unauthenticated profile-injection claim is made.
+Suggested fix: validate ID format/length, supported version, bounded display
+name and language list before updating any active state. Preserve the previous
+peer identity and show/log a non-sensitive protocol error on rejection.
+
+F08 - LOW - Release source logs peer identity metadata
+Location: D:\new itantra\app\src\main\java\com\itantra\core\transceiver\TransceiverCoordinator.kt:149,684.
+Repro pending: inspect release logcat after verified profile exchange.
+Expected: routine production logs should omit unnecessary peer identifiers
+and names or use redacted correlation identifiers.
+Actual source: unconditional Log.i includes sent/received device IDs and names.
+These calls are not gated by BuildConfig.DEBUG; release shrinking is disabled.
+Evidence: exact source lines and source-integration-log-index.txt.
+Boundary: release source exposure is confirmed; actual phone logcat access,
+third-party log collection, or exfiltration was not tested. This is not a
+claim that ordinary other Android apps can read all logs.
+Suggested fix: redact identity metadata or gate detailed logs to debug builds.
+Do not log spoken message contents or security session secrets.
+
+F09 - LOW - Replay check/commit has a concurrency gap at the crypto API
+Location: D:\new itantra\app\src\main\java\com\itantra\core\crypto\SecureSessionManager.kt:366,386;
+  D:\new itantra\app\src\main\java\com\itantra\core\crypto\ReplayWindow.kt:39,55;
+  D:\new itantra\app\src\main\java\com\itantra\core\transceiver\TransceiverCoordinator.kt:471.
+Repro: concurrently call decrypt on the same authenticated packet from eight
+threads; repeat 50 times in concurrentReplayProbe.
+Expected API behavior: each counter can succeed only once.
+Actual final probe: 231 extra successful decryptions across those 50 rounds.
+Pre-check and post-auth commit are individually synchronized, not atomic together.
+Evidence: fresh-test-results.xml. Sequential duplicate rejection also passed.
+Boundary: the current normal incoming collector calls handleIncomingPacket
+serially. Concurrent exploitation through the actual phone receive path was
+not reproduced; severity is deliberately Low API hardening, not High remote
+replay compromise.
+Suggested fix: after successful authentication, atomically re-check-and-accept
+the counter, or serialize decrypt. Never let unauthenticated packets advance
+the replay window.
+
+F10 - LOW - Native and preview notes disagree at the seven-day boundary
+Location: D:\new itantra\app\src\main\java\com\example\itantra\ui\screens\voicenotes\VoiceNoteGrouping.kt:30;
+  D:\new itantra\itantra_light_ui\app.js:104.
+Repro: fix local date to 15 October 2026; group a note dated 8 October 2026.
+Expected: one explicitly defined policy shared across the two UIs.
+Actual: native daysAgo in 2..7 -> THIS_WEEK; preview 2..6 -> This week, so day 7
+is This month in the preview. Both use calendar-day comparisons, not elapsed
+hours. The label "This week" also needs an explicit rolling/calendar definition.
+Evidence: fresh-test-results.xml and preview-pure-results.json.
+Suggested fix: agree on the bucket specification and align both functions;
+cover midnight, DST, older months/years, and the exact cutoff in fresh tests.
+
+F11 - LOW - Dormant integrations add packaging and maintenance work
+Location: D:\new itantra\app\build.gradle.kts:104;
+  D:\new itantra\app\src\main\cpp\CMakeLists.txt:31,47,60;
+  D:\new itantra\app\src\main\java\com\itantra\app\AppGraph.kt:251;
+  D:\new itantra\app\src\main\java\com\itantra\core\translation\ProductionTranslationEngine.kt:34.
+Repro: trace the active AppGraph translation engine, search production usages
+of Nearby/ProductionTranslationEngine, then run package_probe.py.
+Expected: ship integrations needed by the active workflow, or clearly isolate
+optional experimental components.
+Actual: active translation uses ML Kit; Nearby has no active application call
+site found, and the alternative CTranslate2 stack is not the active engine.
+libitantra_mt_jni.so remains in both APKs (exact sizes in package evidence).
+Evidence: packages.json, source searches, and active AppGraph binding.
+Boundary: these are removal candidates, not proof they can be deleted without
+checking experimental/benchmark dependencies. No dependency was removed.
+Suggested fix: first remove the unused Nearby dependency if confirmed; make
+the alternate translation JNI stack an explicit optional build component.
+Rebuild and compare measured APK size before claiming savings.
+
+F12 - MEDIUM - Settings displays a different identity from the peer protocol
+Location: D:\new itantra\app\src\main\java\com\example\itantra\ui\screens\settings\SettingsScreen.kt:277,284,303;
+  D:\new itantra\app\src\main\java\com\itantra\core\profile\DeviceProfileManager.kt:36,51;
+  D:\new itantra\app\src\main\java\com\itantra\core\transceiver\TransceiverCoordinator.kt:130.
+Repro pending: compare the Settings DEVICE ID with the local ID in a verified
+peer profile or the connect identity panel.
+Expected: the same stable iTantra identity is used when recognizing a device.
+Actual source: Settings hashes ANDROID_ID and appends a model fragment into
+0x....-MODEL; the protocol sends the separate generated IT-XXXX-XXXX identity.
+On a Settings read exception, a fake "0xNODE-DEV" is still displayed with READY.
+Evidence: fresh source trace; Android lint independently flags HardwareIds
+at SettingsScreen.kt:277. No actual phone identifier was collected in this audit.
+Boundary: source-confirmed mismatch; visual/device reproduction unverified.
+Suggested fix: display DeviceProfileManager's real iTantra ID, indicate missing
+identity honestly, and avoid deriving an operational ID from ANDROID_ID.
+
+F13 - MEDIUM - Android 10 foreground-service failure handling needs correction
+Location: D:\new itantra\app\src\main\java\com\itantra\core\service\OperationalForegroundService.kt:145,152,157,203.
+Repro pending: start continuous listening on API 29 and exercise microphone
+permission revocation / foreground-service-start rejection.
+Expected: valid API-specific foreground startup; failure visibly stops the
+operation and releases resources.
+Actual source/lint: the SDK >= Q (29) branch passes FOREGROUND_SERVICE_TYPE_MICROPHONE,
+an API 30 constant. The catch only prints the exception after recording flags
+and acquiring a wake lock. acquire() has no timeout (separate lint warning).
+Evidence: lint-results.xml IDs InlinedApi and WakelockTimeout; service source.
+Boundary: this is a source/lint risk, not a reproduced API 29 crash or measured
+battery drain. Whether the platform accepts the inlined value needs a device/
+emulator test; the failure-cleanup gap exists independently of that outcome.
+Suggested fix: use an API-appropriate foreground-service call/type, report
+startup failure, reset session flags, release the wake lock on failure, and
+consider a bounded/renewable wake lock tied to the active operation.
+
+PHASE COVERAGE AND RESULTS
+==========================
+1. PROJECT HEALTH
+Fresh source compilation and both packaging tasks: completed after recovering
+audit storage. Clean dependency/SDK installation and actual launch: UNVERIFIED.
+Dependency resolution: 170 debug-runtime Maven modules; no duplicate class
+error in the packaging tasks. Actual selected coroutine runtime is 1.9.0,
+although the direct declaration asks for 1.8.0; normal Gradle conflict resolution
+selected the higher transitive version. This is not by itself a defect.
+Eight direct dependency families were checked against primary registries;
+the exact current/latest table is appended below. "Outdated" alone does not
+mean unsafe; compatibility must be checked before upgrades.
+Local sherpa AAR and native CTranslate2/SentencePiece dependencies are outside
+the Maven OSV query. They are inventoried, not declared vulnerability-free.
+Pattern scan found zero HF/GitHub/AWS/private-key literal candidates in the
+selected app/tool/config/preview sources. This is not a complete secret audit
+of Git history, binary artifacts, every file, or the user's machine.
+SDK location is machine-local configuration. No private token value was printed.
+Compiler/native warnings and all lint locations are preserved in evidence.
+
+2. CONNECTIONS AND INTEGRATIONS
+The app does not expose server REST endpoints or WebSockets. HTTP wrong-method,
+account-token expiration, server roles, and payment API tests are not applicable.
+Packet parsing was exercised with ten language codes, UTF-8, emoji, truncation,
+and byte corruption: 98 malformed/corrupted frame cases rejected.
+Mutual SAS session agreement, forged verification rejection, AAD tampering,
+sequential replay, and post-reset traffic blocking passed the fresh probes.
+29 public model weight endpoints answered HEAD 200. This does not verify a
+complete phone download, checksum, cancellation, resume, or low-storage handling.
+Fresh corrupt staged CTC install was rejected without readiness/promotion.
+Actual migration SQL 2->5 ran on in-memory desktop SQLite. Note deletion left
+the separate peer row intact. Room/SQLCipher connection, v1 backup migration,
+keystore loss recovery, interrupted encryption migration, and physical socket
+connect/reconnect/drop/timeout/duplicate-session behavior are UNVERIFIED.
+Location parser acceptance alone is not a production bug: the coordinator
+checks exact payload length, finite/ranged latitude/longitude and accuracy;
+suspect timestamps are marked Time unverified rather than silently trusted.
+Translation inference/download separation was traced in source. Google-managed
+offline translation and failure degradation were not executed on Android.
+
+3. LIVE DATA AND FAKE DATA DETECTION
+Full inventory below separates current runtime sources from historical and
+simulated values. No claim that a source trace proves live screen updates.
+Metrics use Measured/NotMeasured types and missing UI values are generally
+shown as Not measured / --. Raw API/DB-to-rendered-value comparison remains
+UNVERIFIED without the device UI. F05/F12 are confirmed source exceptions.
+Local timestamps derive from stored epoch values/device timezone. Fresh native
+and JS date probes exposed F10; live midnight refresh was not tested.
+
+4. FUNCTIONAL BUGS
+Fresh tests cover core packet/crypto/storage/date/install and SQLite migration
+operations; fresh desktop probes call real native speech models.
+Source callbacks connect Hub, Connect, Messages, selected Chat, Voice Notes,
+Language Packs, Settings and Diagnostics to the application graph.
+Native chat send/retry/PTT, playback, translation, peer-list navigation, pack
+selection/download/delete, SOS broadcast/ACK, location actions, settings reset,
+and wipe UI are not claimed end-to-end passed. Device interaction is UNVERIFIED.
+Signup/login/logout/payment/upload-to-server do not exist in this application.
+Oversized text is a reproduced core defect; physical duplicate taps, back/
+refresh, rotation, state restoration and permission revocation are UNVERIFIED.
+No dead native button was demonstrated by clicking. Callback presence is
+recorded only as source wiring. The preview's buttons are simulated by design.
+
+5. UI/UX, OLD AND NEW
+Seven preview routes and five referenced local asset files were found; no
+missing referenced local asset was found. Both JavaScript files passed node
+syntax checking; 51 action case labels were inventoried, not clicked.
+Pure date grouping was tested outside the browser. HTML reference exports
+were not treated as runtime screenshots.
+320, 375, 768, 1024, 1440, 1920 px; portrait and landscape; light/dark; RTL;
+Indic font shaping; loading/empty/error/success screens; keyboard focus;
+TalkBack/screen reader; touch targets; overlap/scroll/flicker; outdoor contrast:
+ALL UNVERIFIED as rendered UI in this session.
+Token-level contrast math and source accessibility labels were inspected;
+this does not establish WCAG AAA or complete accessibility compliance.
+
+6. SECURITY / PERMISSIONS / PRIVACY
+This app uses peer-session verification, not JWT/login/admin roles. Standard
+web XSS/CSRF/CORS/IDOR/server password-reset claims do not map to this architecture.
+No production WebView backend bridge was found. The preview escapes text
+through its esc helper; actual browser injection testing is UNVERIFIED.
+Fresh AEAD/session tests and stored-data tamper/lost-key probes passed; Android
+Keystore/SQLCipher durability were not exercised. OSV findings are F01.
+Debug TEST_PTT registration is guarded by BuildConfig.DEBUG and uses
+RECEIVER_NOT_EXPORTED; it was not misreported as a release injection endpoint.
+Manifest disables backups; wipe/service components are not exported. These
+are source/packaging observations, not platform penetration tests.
+Microphone, Bluetooth/Nearby, Wi-Fi Direct, location and notification permissions
+are declared. Grant/deny/revoke behavior and OS background restrictions are
+UNVERIFIED. F13 describes a concrete API/lifecycle risk found by fresh lint.
+Protected local storage is used in source; no real user database was opened,
+no wipe was run, and no personal conversation was sent to an external service.
+The vulnerability query uploads only dependency coordinates/versions, not code.
+
+7. PERFORMANCE AND STABILITY
+Fresh APK bytes/hashes and native ELF segment alignment were measured below.
+All inspected packaged ELF PT_LOAD alignments are at least 16 KiB. This is
+not a 16-KiB-page Android installation/runtime test or Play certification.
+200 concurrent encryption calls produced unique counters. An eight-thread
+replay stress probe exposed the separate decrypt race (F09).
+Speech timing smoke measurements and generated PCM are appended below. Full
+language accuracy, controlled p95/mean/peak RAM, large-history UI performance,
+many-radio-peer load, thermal throttling, battery impact, hours-long operation,
+restart/crash recovery, and interrupted installs remain UNVERIFIED.
+Release is unsigned and shrinking remains disabled. Do not distribute it as
+a production release without signing and installation checks.
+
+8. CROSS-ENVIRONMENT
+Available executed environments: Windows desktop JVM/SQLite/sherpa, Android
+debug/release compilation/packaging, Node syntax/pure-function tests.
+Android application ABI is arm64-v8a only; declared min SDK 26, target/compile 37.
+32-bit and x86/x86_64 installation is outside current support. This is an
+explicit build constraint, not a tested compatibility result.
+No phone OS version, physical hardware, emulator, or browser runtime was tested.
+Dev/prod source difference: debug-only test receiver; release unsigned; differing
+native stripped sizes. Actual lifecycle/network/logcat differences UNVERIFIED.
+
+FAKE / MOCK / HISTORICAL DATA INVENTORY
+======================================
+A. Native operational placeholders needing correction
+- Hub/Connect channel: TAC-RELIEF-04; Hub command-cohort label: fixed literals
+  at the F05 locations. They are not live radio/group state.
+- Settings device ID: hash-derived alternative label, with 0xNODE-DEV fallback
+  and unconditional READY at F12 locations; differs from protocol identity.
+
+B. Native historical statistics, correctly labeled but not fresh live values
+- DiagnosticsScreen.kt:103-122 embeds WER/CER and timing strings, including
+  Hindi 9.1%, English 6.9%, Tamil 21.8%, Telugu 22.7%, Odia 19.3%, Bengali 14.4%,
+  Gujarati 18.5%, Marathi 15.7%, and Malayalam 28.9% / 22.9%.
+- These strings explicitly say Windows desktop / phone Not verified. They
+  are not claimed fabricated, and they were NOT reused as current audit results.
+- They will not automatically update when a new benchmark/model is selected.
+  Prefer imported versioned benchmark artifacts with date, dataset, model hash
+  and device provenance if this becomes a maintained production feature.
+- The five category weights 25/25/20/15/15 are configured priorities; the UI
+  explicitly says they are not an achieved score.
+
+C. Truthful unavailable/default values, not fake telemetry
+- Hub "RSSI: -- dBm": explicitly unknown, although not wired to available
+  discovery RSSI on this screen. Connect RSSI comes from Android discovery
+  EXTRA_RSSI at MainActivity.kt:858-873; it is not continuous link RSSI.
+- Peer batteryPercent=null renders Not measured; no invented peer battery.
+- Local battery uses ACTION_BATTERY_CHANGED and BatteryManager extras in
+  BatteryIndicator.kt:55-92; unknown values are not replaced with a fixed percent.
+- Bluetooth hardware status is read from BluetoothManager/permission checks
+  and state broadcasts in RadioHardwareStatus.kt:23-65.
+- Diagnostics real latency/model/memory counters use current StateFlows and
+  Measurement values; stale/empty/error live behavior still needs a phone.
+- Real device ID generation uses SecureRandom. Randomness used for identities,
+  cryptographic nonces and temporary names is not fake telemetry.
+- Normal input placeholders/default operator labels are not fabricated results.
+
+D. HTML design preview - intentionally simulated
+Files: D:\new itantra\itantra_light_ui\index.html:20;
+       D:\new itantra\itantra_light_ui\app.js:1,35-67,153,159,204,218-234.
+The visible banner says Design preview / Sample data & simulated actions.
+Non-real data/action families:
+- Aarav/Mira/Field unit peers, masked addresses, roles and initials;
+- fixed discovery RSSI (-63/-71/-78), fixed six-digit security codes;
+- initial Hindi/English conversations, fixed displayed message times/statuses;
+- sample voice transcripts, translated sample strings, three-state message
+  delivery/retry transitions, voice-note and playback actions;
+- seeded transcript history dates/texts and delete/undo/confirm interactions;
+- installed pack selection, simulated progress and failures, model ready states;
+- fixed coordinates 28.6139,77.2090 and IT-DEMO-01 device ID;
+- simulated emergency delivery and human ACK, export/diagnostic status;
+- preview scenario switch (connected/disconnected/missing/failed/empty).
+These are not connected to Android Bluetooth sockets, Room, sherpa, ML Kit,
+GPS, or actual security sessions. They are intentionally labeled preview data.
+Generated Date.now sample times do not turn them into real measurements.
+
+OLD VS NEW UI / FEATURE INCONSISTENCIES
+======================================
+1. Preview uses browser routing/DOM/modals; native uses AppDestination Compose
+   screens in MainActivity.kt:765 onward. No automatic backend merge exists.
+2. Preview has saved light/dark/system + Ocean/Forest/Iris/Ember choices.
+   Native lacks the equivalent palette preference UI and semantic color coverage.
+3. Preview offers swap between speaking/target languages; no equivalent native
+   hub swap callback was found in the current language-selector code.
+4. Preview has adaptive side/bottom navigation; native navigation is through
+   existing hub/menu/back/selected-conversation callbacks. Rendering parity
+   and user reachability still need interaction tests.
+5. Preview conversation/device history is seeded; native Messages uses Room
+   peers/messages and opens DedicatedChatScreen for the selected peer.
+6. Preview pack ready/install states are simulations; native uses file manifests,
+   installed checks, checksums, translation readiness and engine loading.
+7. Preview RSSI/security/ACK are examples; native uses discovery/session packet
+   state. Do not use preview numbers as demo transport evidence.
+8. Notes grouping diverges at exactly seven days (F10). Deletion is simulated
+   in preview; native confirmation calls the local voice-note DAO delete.
+9. Native includes nine-language self-test and historical diagnostics; preview
+   Diagnostics does not run those native tests.
+10. General Odia/Malayalam translation remains unavailable even where STT/TTS
+    exists. The preview must preserve this limitation if later ported.
+11. Old reference directories are not active Android destinations. No production
+    route to those reference HTML/Kotlin copies was found. This is a source
+    observation; actual route traversal is still unverified.
+
+UNVERIFIED - DO NOT PRESENT AS PASSED
+====================================
+U01 Physical APK install, startup, voice playback and two-device exchanges:
+    no phone testing performed; user will test independently.
+U02 Native live speech accuracy, noisy speech, accents, field vocabulary,
+    long utterances and native listener intelligibility: desktop smoke only.
+U03 Full per-language >=30-utterance fresh WER/CER and controlled p95/RAM:
+    one fresh recording per language is insufficient.
+U04 Live ML Kit translation and 100% offline packet-to-audio operation:
+    Android runtime not available; source separation alone is not proof.
+U05 Bluetooth/Wi-Fi discovery, pairing, reconnect, drop, heartbeat, SAS UI,
+    concurrent connection attempts and permission revocation: hardware needed.
+U06 UI responsive widths/orientation, fonts, dark/light/RTL, accessibility,
+    click-through/keyboard/browser errors: file:// browser opening was blocked.
+U07 Clean SDK/dependency install, first-run provisioning and first-boot launch:
+    existing SDK/Gradle/CMake caches reused; no installation on Android.
+U08 Room + SQLCipher + Keystore behavior, v1 legacy database migration, locked/
+    corrupt database handling and interrupted migration: only desktop SQLite
+    2->5 SQL plus in-memory-key JCA probes executed.
+U09 Actual destructive wipe, emergency-record deletion isolation and platform
+    backups: not run against user data; source checks only.
+U10 Complete downloads, throttled network, expiry/429 failures, low disk during
+    installation, cancellation/resume races: public HEAD and corrupt staging
+    probe only. Audit disk exhaustion is not a phone installer test.
+U11 Phone launch time, peak RAM/CPU, battery, thermal behavior, long-duration
+    leaks and large-data scrolling: no phone profiler or endurance run.
+U12 Release signing, update-install compatibility and 16-KiB runtime behavior:
+    unsigned release packaged; ELF alignment inspected only.
+U13 Vulnerability exploitation / ML Kit network reachability of affected OkHttp
+    code: dependency advisory matches, no MITM test.
+U14 Native sherpa AAR / ONNX runtime and CMake dependency vulnerability coverage:
+    not covered by the 170-module Maven OSV query; exact AAR provenance/SBOM
+    needed before a complete supply-chain security claim.
+U15 All files/Git history secret scan and model license/legal review:
+    bounded source-pattern scan only; distribution rights not re-audited here.
+U16 Source findings F06/F08/F12/F13 on actual devices: pending rendered/logcat/
+    API 29 confirmation. Current receive-path replay exploit also unverified.
+U17 Every settings update race, rotation/restart restoration, continuous VAD,
+    permission-denied UX, SOS priority preemption and human acknowledgment:
+    no full end-to-end state-machine test performed.
+U18 Satellite/radio gateway, NavIC-specific hardware, mesh relay, Bhuvan/MOSDAC
+    ingestion: not demonstrated by this app audit. No installed-model claim
+    should imply those hardware/platform integrations are complete.
+
+PRIORITIZED FIX PLAN - NOT EXECUTED
+=================================
+P1 Before a serious demonstration/distribution:
+1. Address F01 with a compatible patched OkHttp resolution; verify actual
+   ML Kit downloads and offline translation afterward.
+2. Add F03 final UTF-8/cipher-size validation and explicit input feedback.
+3. Replace/clearly downgrade the Kannada fallback status (F02) based on a
+   controlled held-out comparison and phone memory/latency evidence.
+4. Resolve Marathi U+0949 coverage (F04) with a linguistically valid voice path
+   and Marathi listener checks. Never relabel non-silent audio as intelligible.
+
+P2 Trust, readability and operating-state consistency:
+5. Fix F07 profile validation before active-state changes.
+6. Unify real local identity display (F12), remove demo operational labels (F05).
+7. Port the chosen native appearance system (F06) and verify every screen.
+8. Correct/test API-specific foreground startup and failure cleanup (F13).
+9. Redact release identity logs (F08), close the crypto API replay race (F09),
+   and align transcript date buckets (F10).
+
+P3 Packaging and maintenance:
+10. Confirm/remove unused Nearby and isolate optional CTranslate2 JNI (F11).
+11. Review the remaining lint warnings in the attached full warning evidence;
+    upgrade dependencies in small compatible groups rather than wholesale.
+12. Store benchmark provenance as data; distinguish installed, desktop-tested,
+    phone self-tested and two-device validated states in the native UI.
+
+For each approved fix: add a fresh targeted regression, rerun the new probes,
+package both variants, and then apply the user's phone checklist. Do not claim
+accuracy <10%, successful live links, audible intelligibility, or battery
+resilience without the corresponding measured evidence.
+
+MEASURED APPENDICES
+==================
+The following sections are generated from this audit's fresh evidence files.
+
+APPENDIX A - FRESH DESKTOP SPEECH SMOKE RESULTS
+===============================================
+Each row: ONE clean reference recording; THREE short warmed TTS phrases.
+These are smoke tests. Sample WER is NOT overall language accuracy.
+No phone validation, listener rating, p95, peak RAM or battery measurement.
+Times include contention from concurrent audit/build work on this PC.
+STT: four threads, 16-kHz mono, 100-ms trailing pad, greedy decoding.
+TTS: one thread, one warm-up, local VITS/MMS model; all outputs 16 kHz.
+WER: NFC/lowercase normalization, punctuation -> spaces, token edit distance.
+This normalization is not interchangeable with other benchmark protocols.
+
+Language  | Sample WER | STT ms | RTF   | TTS mean/max ms | Expected script
+----------|------------|--------|-------|-----------------|----------------
+Hindi     |      4.17% |    538 | 0.059 |     687/ 843    | Observed
+English   |      0.00% |    204 | 0.031 |    1054/1195    | Observed
+Tamil     |      8.70% |    706 | 0.050 |     754/ 885    | Observed
+Telugu    |      5.26% |    402 | 0.037 |     732/ 983    | Observed
+Odia      |     16.67% |    358 | 0.036 |     574/ 750    | Observed
+Bengali   |     18.18% |    240 | 0.036 |     742/1022    | Observed
+Gujarati  |     16.67% |    591 | 0.050 |     671/ 785    | Observed
+Marathi   |     23.81% |   1047 | 0.068 |     951/1103    | Observed
+Malayalam |     15.79% |   1653 | 0.080 |    1006/1094    | Observed
+Kannada   |    229.63% |   2912 | 0.111 |     801/ 885    | FAILED
+
+Phone status for EVERY row: Not verified.
+Non-silent PCM for EVERY TTS row: observed; intelligibility: Not verified.
+Nine CTC models were selected in manual language mode. Kannada used
+the active Whisper Tiny fallback with kn / transcribe and app tokens.
+English is NeMo FastConformer INT8, not IndicConformer: its original
+probe JSON contains a generic CTC label. Model filename/hash and the
+current AdditionalSttModel declaration establish the correct identity.
+
+Direct model silence outputs (one second of zeros + 100-ms pad):
+  Hindi: "स"
+  English: ""
+  Tamil: "ஆ"
+  Telugu: ""
+  Odia: "ହ"
+  Bengali: "এ ব"
+  Gujarati: "બ"
+  Marathi: ""
+  Malayalam: "അ"
+  Kannada: "[XBOX]"
+Seven model probes returned characters on pure silence. Three returned empty.
+These probes bypass the production VAD/utterance gate. This is model-level
+behavior; no silent phone transmission is asserted. Verify noise rejection
+on phones before broadening accuracy claims.
+
+Local STT/TTS file bytes, load time and hashes:
+These are on-disk source/provisioning weights, not APK contents or peak RAM.
+
+Hindi (hi) - Manual language: IndicConformer CTC INT8
+  STT load: 1076 ms; TTS load: 1019 ms.
+  STT total: 197,663,198 bytes.
+  TTS total: 114,043,612 bytes.
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\hi\model.int8.onnx
+    197,595,593 bytes; SHA-256 915c71e04dd7e5378a4057fdebb252b3a587188e4e99db6d7ce0909ad5ad05fa
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\tokens.txt
+    67,605 bytes; SHA-256 ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2
+  TTS: D:\new itantra\app\src\main\assets\language_packs\hi\tts\model.onnx
+    114,043,140 bytes; SHA-256 c44b4179e7ff0da4d76eac3929fc1dbd67c51f02da8fca083c445e17450c3f75
+  TTS: D:\new itantra\app\src\main\assets\language_packs\hi\tts\tokens.txt
+    472 bytes; SHA-256 aa9abf8320da4ca80b153c51e2d3b6b52cb41e930ccc16dec570e70726ab3dd6
+  TTS[0] "मदद चाहिए": 531 ms, 11962 samples, peak 0.6521, finite=True, missing-token characters=[]
+  TTS[1] "पानी भेजिए": 689 ms, 13650 samples, peak 0.7788, finite=True, missing-token characters=[]
+  TTS[2] "डॉक्टर को बुलाइए": 843 ms, 15889 samples, peak 0.8490, finite=True, missing-token characters=[]
+  Actual STT output: कुछ अणुओं में अस्थिर केंद्रक होता है जिसका मतलब यह कि उनमें थोड़े या बिना किसी झटके से टूटने की प्रवृत्ति होती है
+  Word edits/reference words: 1/24.
+
+English (en) - NeMo FastConformer CTC INT8
+  STT load: 1904 ms; TTS load: 1966 ms.
+  STT total: 174,621,490 bytes.
+  TTS total: 114,017,331 bytes.
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\en\model.int8.onnx
+    174,610,057 bytes; SHA-256 28b9261a53028a7c99ff0799f44fb53f19c78b68cc4cf40637ac9c16cb1fbc6f
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\en\tokens.txt
+    11,433 bytes; SHA-256 89c165b98df7af718ec0e872177279bfad4ade51331f1be92753c9583a1ef30d
+  TTS: D:\new itantra\app\src\main\assets\language_packs\en\tts\model.onnx
+    114,017,028 bytes; SHA-256 409bafdb550948dc5c0b216e21b341732ef3cefead8008b512b034f1bdb27132
+  TTS: D:\new itantra\app\src\main\assets\language_packs\en\tts\tokens.txt
+    303 bytes; SHA-256 dff08580748be688d9112d62d6352422c56d372dfe34b24ea3f66fa1b75cfaa9
+  TTS[0] "We need help": 1092 ms, 15600 samples, peak 0.8732, finite=True, missing-token characters=[]
+  TTS[1] "Send clean water": 1195 ms, 20005 samples, peak 0.7519, finite=True, missing-token characters=[]
+  TTS[2] "Call a doctor": 876 ms, 16801 samples, peak 0.7121, finite=True, missing-token characters=[]
+  Actual STT output: When you call someone who is thousands of miles away, you' are using a satellite.
+  Word edits/reference words: 0/15.
+
+Tamil (ta) - Manual language: IndicConformer CTC INT8
+  STT load: 957 ms; TTS load: 965 ms.
+  STT total: 197,663,118 bytes.
+  TTS total: 114,032,763 bytes.
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\ta\model.int8.onnx
+    197,595,513 bytes; SHA-256 abb7b59d706b8d27ba3fb5e5e3db7671c9e1a09bf7bc6122de507c60030e65fb
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\tokens.txt
+    67,605 bytes; SHA-256 ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2
+  TTS: D:\new itantra\models\bundled\ta\tts\model.onnx
+    114,032,388 bytes; SHA-256 c44055b2e7c5719ca26708f6eb03680b0f1bbf6fdcb0df6480478f872f1f6e34
+  TTS: D:\new itantra\app\src\main\assets\language_packs\ta\tts\tokens.txt
+    375 bytes; SHA-256 0b3f692319bb5fae8658e2f84bf252bca92450d0207bbba7273caa1a182d81b8
+  TTS[0] "உதவி தேவை": 578 ms, 16356 samples, peak 0.5676, finite=True, missing-token characters=[]
+  TTS[1] "தண்ணீர் அனுப்புங்கள்": 885 ms, 27362 samples, peak 0.6788, finite=True, missing-token characters=[]
+  TTS[2] "மருத்துவரை அழைக்கவும்": 798 ms, 25713 samples, peak 0.6694, finite=True, missing-token characters=[]
+  Actual STT output: இந்த விதிகள் திருத்தப்படுவதற்கு முன்னர் அனைத்து மாநிலங்களின் ஒருமித்த ஒப்புதலை கோரியது மற்றும் பெரும்பாலும் அவர்களின் பிரதிநிதிகள் அங்கு இல்லாததால் மாநில அரசு மத்திய அரசை மிகவும் சாதாரணமாக எடுத்து கொண்டது
+  Word edits/reference words: 2/23.
+
+Telugu (te) - Manual language: IndicConformer CTC INT8
+  STT load: 786 ms; TTS load: 754 ms.
+  STT total: 197,663,298 bytes.
+  TTS total: 114,038,199 bytes.
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\te\model.int8.onnx
+    197,595,693 bytes; SHA-256 710f176e33080f1be84b4f38bb5f33be3f522dcf4f191bf4d5cc89f7a85924f3
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\tokens.txt
+    67,605 bytes; SHA-256 ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2
+  TTS: D:\new itantra\models\bundled\te\tts\model.onnx
+    114,037,764 bytes; SHA-256 a8ec6093c0ec3c6dcb7edc0c4cd6c08e312cd3299b00d0aa4988d2a7fea2baa5
+  TTS: D:\new itantra\app\src\main\assets\language_packs\te\tts\tokens.txt
+    435 bytes; SHA-256 528152cb4121272e6e71f7a1d91c8d4922b92fae414ae599db608cb92a738bb7
+  TTS[0] "సహాయం కావాలి": 983 ms, 21913 samples, peak 0.8836, finite=True, missing-token characters=[]
+  TTS[1] "నీరు పంపండి": 590 ms, 16429 samples, peak 0.8702, finite=True, missing-token characters=[]
+  TTS[2] "వైద్యుడిని పిలవండి": 623 ms, 19612 samples, peak 0.7546, finite=True, missing-token characters=[]
+  Actual STT output: చాలా సందర్భాల్లో విదేశాల్లో ఒక గ్యాప్ ఇయర్ కోర్సులో చేరడం వల్ల మీ స్వంత దేశంలో తిరిగి ఉన్నత విద్యకు వెళ్లేే మీ అవకాశాలను మెరుగుపరుచుకోవచ్చు
+  Word edits/reference words: 1/19.
+
+Odia (or) - Manual language: IndicConformer CTC INT8
+  STT load: 684 ms; TTS load: 791 ms.
+  STT total: 197,652,533 bytes.
+  TTS total: 114,046,707 bytes.
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\or\model.int8.onnx
+    197,584,928 bytes; SHA-256 31730e06bd186bca5c3214003c2a0b5eeb3234d079b5b81aa72547adbe1c9be7
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\tokens.txt
+    67,605 bytes; SHA-256 ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2
+  TTS: D:\new itantra\models\bundled\or\tts\model.onnx
+    114,046,212 bytes; SHA-256 ab867f39b00f1fcb39dc97f5079150959b50df50d7f10e75232c56b52f19c021
+  TTS: D:\new itantra\app\src\main\assets\language_packs\or\tts\tokens.txt
+    495 bytes; SHA-256 bc90e5423446ca730aef6b56a4656cb07421c7538429a50b9c396fe0758fd587
+  TTS[0] "ସାହାଯ୍ୟ ଆବଶ୍ୟକ": 630 ms, 16811 samples, peak 0.6404, finite=True, missing-token characters=[]
+  TTS[1] "ପାଣି ପଠାନ୍ତୁ": 341 ms, 10660 samples, peak 0.5562, finite=True, missing-token characters=[]
+  TTS[2] "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ": 750 ms, 19494 samples, peak 0.6684, finite=True, missing-token characters=[]
+  Actual STT output: ହାତୀ ଓ ଜିରାଫ ଭଳି ପଶୁମାନଙ୍କର କାର୍ ଏବଂ ଭଲ ଦେଖାଯାଉଥିବା ମାନକ ସରଞ୍ଜାମରୁ ନିକଟରୁ ଦେଖିବା ପାଇଁ ପାଖକୁ ଆସିବାର ପ୍ରବୃତି ଥାଏ
+  Word edits/reference words: 3/18.
+
+Bengali (bn) - Manual language: IndicConformer CTC INT8
+  STT load: 662 ms; TTS load: 849 ms.
+  STT total: 197,663,183 bytes.
+  TTS total: 114,045,156 bytes.
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\bn\model.int8.onnx
+    197,595,578 bytes; SHA-256 e9120a534f69df065314be468bf15579f1b92a4cd8c07ad119b80b69244718a8
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\tokens.txt
+    67,605 bytes; SHA-256 ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2
+  TTS: D:\new itantra\models\bundled\bn\tts\model.onnx
+    114,044,676 bytes; SHA-256 c67081369061e87ba302bfbc0445543c4c23c04133514b7d6c7be2710363bc42
+  TTS: D:\new itantra\app\src\main\assets\language_packs\bn\tts\tokens.txt
+    480 bytes; SHA-256 a74190ec42b8f0afb349276430c716f1b585090d8fe6d3c1d6d5fe510798a387
+  TTS[0] "সাহায্য দরকার": 1022 ms, 22772 samples, peak 0.8222, finite=True, missing-token characters=[]
+  TTS[1] "পানি পাঠান": 622 ms, 13778 samples, peak 0.9318, finite=True, missing-token characters=[]
+  TTS[2] "ডাক্তার ডাকুন": 582 ms, 16148 samples, peak 0.9170, finite=True, missing-token characters=[]
+  Actual STT output: বাঁধ উপর একশো ফুট চওড়া একটি জায়গা থেকে জল ছিটকে বেরোচ্ছে
+  Word edits/reference words: 2/11.
+
+Gujarati (gu) - Manual language: IndicConformer CTC INT8
+  STT load: 770 ms; TTS load: 2263 ms.
+  STT total: 197,663,066 bytes.
+  TTS total: 114,034,326 bytes.
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\gu\model.int8.onnx
+    197,595,461 bytes; SHA-256 822ed7f0b809bbd479275bf91c913d05564b88c0d082bbcba2f37999b88cb598
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\tokens.txt
+    67,605 bytes; SHA-256 ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2
+  TTS: D:\new itantra\models\bundled\gu\tts\model.onnx
+    114,033,924 bytes; SHA-256 6d9b4f268765e19b6620983bd698c5e4fa943309560b6c7b199b50a4aae30d47
+  TTS: D:\new itantra\app\src\main\assets\language_packs\gu\tts\tokens.txt
+    402 bytes; SHA-256 2d855f2affb7586cc6be095a4382eb0bee2a22242deda32c86aab6b1a810d8c4
+  TTS[0] "મદદ જોઈએ છે": 649 ms, 15616 samples, peak 0.2052, finite=True, missing-token characters=[]
+  TTS[1] "પાણી મોકલો": 578 ms, 13568 samples, peak 0.2279, finite=True, missing-token characters=[]
+  TTS[2] "ડોક્ટરને બોલાવો": 785 ms, 18176 samples, peak 0.2196, finite=True, missing-token characters=[]
+  Actual STT output: તિબેટનો બૌદ્ધવાદ બૌદ્ધના ઉપદેશો પર આધારિત છે પરંતુ તેનો પ્રેમના મહયાન પંથ દ્વારા અને ભારતીય યોગની ઘણી બધી પ્રયુક્તિઓ દ્વારા વિસ્તાર કરવામાં આવ્યો છે
+  Word edits/reference words: 4/24.
+
+Marathi (mr) - Manual language: IndicConformer CTC INT8
+  STT load: 1528 ms; TTS load: 1899 ms.
+  STT total: 197,663,198 bytes.
+  TTS total: 114,044,398 bytes.
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\mr\model.int8.onnx
+    197,595,593 bytes; SHA-256 1ea81e55c4b9b12624c9d02a5b9c1b6f7c871c78a55ff52d333f81cb5136eaf2
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\tokens.txt
+    67,605 bytes; SHA-256 ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2
+  TTS: D:\new itantra\models\bundled\mr\tts\model.onnx
+    114,043,908 bytes; SHA-256 046cecf7cca77680c9ca319953e777c8d0233ce78e9b55a47aa909edf87d99e8
+  TTS: D:\new itantra\app\src\main\assets\language_packs\mr\tts\tokens.txt
+    490 bytes; SHA-256 4d968029d0754b41633cb0871cce6796a5ab3d3bc2b9b91c5721cfdf85156083
+  TTS[0] "मदत हवी आहे": 821 ms, 17160 samples, peak 0.7357, finite=True, missing-token characters=[]
+  TTS[1] "पाणी पाठवा": 929 ms, 18490 samples, peak 0.8884, finite=True, missing-token characters=[]
+  TTS[2] "डॉक्टरांना बोलवा": 1103 ms, 18136 samples, peak 0.8410, finite=True, missing-token characters=['U+0949']
+  Actual STT output: एखादी संस्था नावीन्यपूर्ण होण्यापूर्वी त्यातील प्रामुख्याने नावीन्यतेची एक संस्कृती निर्माण केली पाहिजे तसेच ज्ञानाची देवाणघेवाण आणि संस्थात्मक अध्ययन केले पाहिजे
+  Word edits/reference words: 5/21.
+
+Malayalam (ml) - Manual language: IndicConformer CTC INT8
+  STT load: 1515 ms; TTS load: 2116 ms.
+  STT total: 197,663,160 bytes.
+  TTS total: 114,052,927 bytes.
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\ml\model.int8.onnx
+    197,595,555 bytes; SHA-256 dcbdfa9f773db910508b40b703cb76c5974e8d4c6f123ea81265b40853c3f0c2
+  STT: D:\new itantra\tools\stt_models\indicconformer-candidates\tokens.txt
+    67,605 bytes; SHA-256 ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2
+  TTS: D:\new itantra\models\bundled\ml\tts\model.onnx
+    114,052,356 bytes; SHA-256 7f03397b7144325dc3deab36315c59e423319b8b575497caacbb08d28072b26c
+  TTS: D:\new itantra\app\src\main\assets\language_packs\ml\tts\tokens.txt
+    571 bytes; SHA-256 3a752c36593cc519193c8caa6c00371369b423366fa6ead8d91945a28b2c46a3
+  TTS[0] "സഹായം വേണം": 942 ms, 15329 samples, peak 0.7386, finite=True, missing-token characters=[]
+  TTS[1] "വെള്ളം അയയ്ക്കൂ": 1094 ms, 14466 samples, peak 0.6875, finite=True, missing-token characters=[]
+  TTS[2] "ഡോക്ടറെ വിളിക്കൂ": 982 ms, 14241 samples, peak 0.6709, finite=True, missing-token characters=[]
+  Actual STT output: പോയിൻ്റ് മരിയനും പേർമോണ്ടും തമ്മിലുള്ള ദൂരം ഒറ്റപ്പെട്ട ബാക്ക്വുഡ് ഭൂപ്രദേശങ്ങളിലൂടെ കടന്നുപോകുന്ന ബഫല്ലോ പിറ്റ്സ്ബർഗ് ഹൈവേയിലെ ഏറ്റവും വെല്ലുവിളി നിറഞ്ഞ ഡ്രൈവിംഗ് സാഹചര്യങ്ങൾ സൃഷ്ടിക്കുന്നു
+  Word edits/reference words: 3/19.
+
+Kannada (kn) - Active fallback: Whisper Tiny INT8
+  STT load: 787 ms; TTS load: 778 ms.
+  STT total: 103,609,903 bytes.
+  TTS total: 114,045,931 bytes.
+  STT: D:\new itantra\app\src\main\assets\language_packs\shared\stt\tiny-encoder.int8.onnx
+    12,937,772 bytes; SHA-256 d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434
+  STT: D:\new itantra\app\src\main\assets\language_packs\shared\stt\tiny-decoder.int8.onnx
+    89,855,401 bytes; SHA-256 d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925
+  STT: D:\new itantra\app\src\main\assets\language_packs\shared\stt\tiny-tokens.txt
+    816,730 bytes; SHA-256 b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126
+  TTS: D:\new itantra\models\bundled\kn\tts\model.onnx
+    114,045,444 bytes; SHA-256 9644cfa46c5802c4c2c8196f91eedc0cd54d46527bbc32589ebaf967ed07591f
+  TTS: D:\new itantra\app\src\main\assets\language_packs\kn\tts\tokens.txt
+    487 bytes; SHA-256 a4a44037f7492c9e5b69a4483250e54af9a2d528bd4e19de95a21ff0c5e82a8a
+  TTS[0] "ಸಹಾಯ ಬೇಕು": 676 ms, 18670 samples, peak 0.7344, finite=True, missing-token characters=[]
+  TTS[1] "ನೀರು ಕಳುಹಿಸಿ": 843 ms, 22151 samples, peak 0.8449, finite=True, missing-token characters=[]
+  TTS[2] "ವೈದ್ಯರನ್ನು ಕರೆಸಿ": 885 ms, 22848 samples, peak 0.8815, finite=True, missing-token characters=[]
+  Actual STT output: ndo sari laswara ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo sari ndo
+  Word edits/reference words: 62/27.
+
+APPENDIX B - FRESH PACKAGES
+===========================
+
+D:\new itantra\audit\2026-10-04\build\app\outputs\apk\debug\app-debug.apk
+  Bytes: 94,600,062; MiB: 90.22.
+  SHA-256: 46a4104e98a197286733ec3214903f163902626e7dadb6ad72a432a07d3fedb4
+  ONNX weight assets found: 0.
+  Benchmark WAVs bundled: 33.
+  Native libraries: 9.
+    lib/arm64-v8a/libandroidx.graphics.path.so: 10,096 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libdatastore_shared_counter.so: 7,112 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libitantra_mt_jni.so: 10,749,384 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libonnxruntime.so: 22,249,552 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384, 16384]
+    lib/arm64-v8a/libsherpa-onnx-c-api.so: 4,465,168 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libsherpa-onnx-cxx-api.so: 440,688 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libsherpa-onnx-jni.so: 5,036,448 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libsqlcipher.so: 2,100,672 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libtranslate_jni.so: 16,361,032 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+
+D:\new itantra\audit\2026-10-04\build\app\outputs\apk\release\app-release-unsigned.apk
+  Bytes: 81,349,450; MiB: 77.58.
+  SHA-256: 219968215ed18a6edfddfb22a3db6319aac85f191be2ef2126bd84f9131c51f6
+  ONNX weight assets found: 0.
+  Benchmark WAVs bundled: 33.
+  Native libraries: 9.
+    lib/arm64-v8a/libandroidx.graphics.path.so: 10,096 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libdatastore_shared_counter.so: 7,112 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libitantra_mt_jni.so: 4,690,248 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libonnxruntime.so: 22,249,552 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384, 16384]
+    lib/arm64-v8a/libsherpa-onnx-c-api.so: 4,465,168 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libsherpa-onnx-cxx-api.so: 440,688 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libsherpa-onnx-jni.so: 5,036,448 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libsqlcipher.so: 2,100,672 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    lib/arm64-v8a/libtranslate_jni.so: 16,361,032 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+
+D:\new itantra\app\libs\sherpa-onnx.aar
+  Bytes: 78,836,277; MiB: 75.18.
+  SHA-256: 43625a96e4824a2ca3d456483d08b0358c4328d0665a7d4ed7cf88c44926b396
+  ONNX weight assets found: 0.
+  Benchmark WAVs bundled: 0.
+  Native libraries: 16.
+    jni/arm64-v8a/libonnxruntime.so: 22,249,560 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384, 16384]
+    jni/arm64-v8a/libsherpa-onnx-c-api.so: 4,465,168 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    jni/arm64-v8a/libsherpa-onnx-cxx-api.so: 440,688 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    jni/arm64-v8a/libsherpa-onnx-jni.so: 119,076,960 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    jni/armeabi-v7a/libonnxruntime.so: 15,359,592 bytes; PT_LOAD alignment bytes=not parsed (32-bit ELF)
+    jni/armeabi-v7a/libsherpa-onnx-c-api.so: 3,202,700 bytes; PT_LOAD alignment bytes=not parsed (32-bit ELF)
+    jni/armeabi-v7a/libsherpa-onnx-cxx-api.so: 282,008 bytes; PT_LOAD alignment bytes=not parsed (32-bit ELF)
+    jni/armeabi-v7a/libsherpa-onnx-jni.so: 3,428,780 bytes; PT_LOAD alignment bytes=not parsed (32-bit ELF)
+    jni/x86/libonnxruntime.so: 26,491,148 bytes; PT_LOAD alignment bytes=not parsed (32-bit ELF)
+    jni/x86/libsherpa-onnx-c-api.so: 5,051,192 bytes; PT_LOAD alignment bytes=not parsed (32-bit ELF)
+    jni/x86/libsherpa-onnx-cxx-api.so: 392,768 bytes; PT_LOAD alignment bytes=not parsed (32-bit ELF)
+    jni/x86/libsherpa-onnx-jni.so: 5,358,928 bytes; PT_LOAD alignment bytes=not parsed (32-bit ELF)
+    jni/x86_64/libonnxruntime.so: 25,581,120 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384, 16384]
+    jni/x86_64/libsherpa-onnx-c-api.so: 4,927,096 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    jni/x86_64/libsherpa-onnx-cxx-api.so: 436,952 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+    jni/x86_64/libsherpa-onnx-jni.so: 5,201,192 bytes; PT_LOAD alignment bytes=[16384, 16384, 16384]
+
+The two APKs contain only arm64-v8a native code. The local AAR also
+contains other ABIs; its 32-bit ELF segment alignment was not parsed.
+Packaged arm64 PT_LOAD alignment: >=16,384 bytes for every inspected segment.
+ZIP page alignment, install/run on a 16-KiB device, and signature verification
+were not tested. Release APK is UNSIGNED, and is not a distribution release.
+Model downloads remain necessary. APK size is not total installed-model size.
+Debug/release packaging tasks completed in verification.log. That combined
+command failed at the then-incorrect audit fixture; the corrected fresh test
+run subsequently succeeded. No false overall build-success claim is made.
+
+APPENDIX C - DEPENDENCIES AND PUBLIC MODEL ENDPOINTS
+====================================================
+170 resolved debug-runtime Maven coordinates queried live against OSV.
+One coordinate matched two advisory records: com.squareup.okhttp3:okhttp:3.0.0.
+No additional matches were returned for the queried coordinates.
+This excludes native source/local AAR internals, build tools, test-only
+dependencies and unknown vulnerabilities. Absence of a match is not a guarantee.
+
+Resolved current / registry latest stable (queried this audit):
+  androidx.room:room-runtime: 2.6.1 / 2.8.5 (outdated).
+    Source: https://dl.google.com/dl/android/maven2/androidx/room/room-runtime/maven-metadata.xml
+  androidx.datastore:datastore-preferences: 1.1.1 / 1.2.1 (outdated).
+    Source: https://dl.google.com/dl/android/maven2/androidx/datastore/datastore-preferences/maven-metadata.xml
+  androidx.lifecycle:lifecycle-viewmodel-compose: 2.11.0 / 2.11.0 (current in queried registry).
+    Source: https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-viewmodel-compose/maven-metadata.xml
+  com.google.mlkit:translate: 17.0.3 / 17.0.3 (current in queried registry).
+    Source: https://dl.google.com/dl/android/maven2/com/google/mlkit/translate/maven-metadata.xml
+  com.google.android.gms:play-services-nearby: 19.3.0 / 19.5.1 (outdated).
+    Source: https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-nearby/maven-metadata.xml
+  org.jetbrains.kotlinx:kotlinx-coroutines-android: 1.9.0 / 1.11.0 (outdated).
+    Source: https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/maven-metadata.xml
+  org.jetbrains.kotlinx:kotlinx-serialization-json: 1.7.3 / 1.11.0 (outdated).
+    Source: https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-json/maven-metadata.xml
+  net.zetetic:sqlcipher-android: 4.19.0 / 4.19.1 (outdated).
+    Source: https://repo.maven.apache.org/maven2/net/zetetic/sqlcipher-android/maven-metadata.xml
+
+  GHSA-3cqm-mf7h-prrj: Square OkHttp can accept the wrong certificate
+    Aliases: A-171980069, ASB-A-171980069, CVE-2021-0341
+    Queried record: https://api.osv.dev/v1/vulns/GHSA-3cqm-mf7h-prrj
+
+  GHSA-4hc2-jh7r-wrc3: Improper Certificate Validation in OkHttp
+    Aliases: CVE-2016-2402
+    Queried record: https://api.osv.dev/v1/vulns/GHSA-4hc2-jh7r-wrc3
+
+Configured root weight endpoint HEAD checks: 29; statuses {'200': 29}.
+Includes ten manifest STT weights, ten TTS weights and nine manual CTC weights.
+All requested public weight endpoints answered 200. No authentication
+secret was sent. No complete model download was performed by this probe.
+Token/lexicon endpoints, all mirror/resume behaviors and Android download
+installation are not proven by successful root-weight HEAD checks.
+  bn / sttModel: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/bn/model.int8.onnx
+  bn / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/ben/model.onnx
+  en / sttModel: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/en/model.int8.onnx
+  en / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/eng/model.onnx
+  gu / sttModel: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/gu/model.int8.onnx
+  gu / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/guj/model.onnx
+  hi / sttModel: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/hi/model.int8.onnx
+  hi / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/hin/model.onnx
+  kn / sttModel: HTTP 200; https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-encoder.int8.onnx
+  kn / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/kan/model.onnx
+  ml / sttModel: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/ml/model.int8.onnx
+  ml / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/mal/model.onnx
+  mr / sttModel: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/mr/model.int8.onnx
+  mr / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/mar/model.onnx
+  or / sttModel: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/or/model.int8.onnx
+  or / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/ory/model.onnx
+  ta / sttModel: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/ta/model.int8.onnx
+  ta / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/tam/model.onnx
+  te / sttModel: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/te/model.int8.onnx
+  te / ttsModel: HTTP 200; https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/tel/model.onnx
+  hi / Manual CTC: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/hi/model.int8.onnx
+  en / Manual CTC: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/en/model.int8.onnx
+  ta / Manual CTC: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/ta/model.int8.onnx
+  te / Manual CTC: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/te/model.int8.onnx
+  or / Manual CTC: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/or/model.int8.onnx
+  bn / Manual CTC: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/bn/model.int8.onnx
+  gu / Manual CTC: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/gu/model.int8.onnx
+  mr / Manual CTC: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/mr/model.int8.onnx
+  ml / Manual CTC: HTTP 200; https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/ml/model.int8.onnx
+
+APPENDIX D - NEW AUDIT TESTS AND RAW OBSERVATIONS
+=================================================
+Suite audit.FreshAuditTest; timestamp UTC 2026-10-03T23:16:40.392Z.
+Tests=11, failures=0, errors=0, skipped=0.
+Only the fresh audit.* suite execution counts as evidence.
+Some probes assert/document existing defective behavior; a green probe
+means successful observation, not correction of the observed defect.
+  PASS concurrentTransmitCountersAreUnique (0.296 s)
+  PASS pinnedModelRejectsCorruptStaging (0.026 s)
+  PASS unauthenticatedSessionCannotEncrypt (0.013 s)
+  PASS packetRoundTripAndCrcFuzz (0.012 s)
+  PASS concurrentReplayProbe (0.08 s)
+  PASS localDateBoundaryProbe (0.021 s)
+  PASS encryptedPayloadBoundaryProbe (0.014 s)
+  PASS sasTamperReplayAndReset (0.011 s)
+  PASS migrationSqlAndIndependentDelete (0.188 s)
+  PASS storedCipherAuthenticationAndLostKey (0.005 s)
+  PASS invalidLocationAndProfileProbe (0.006 s)
+
+Raw output:
+PASS 200 concurrent encryption counters unique
+PASS corrupt staged model fails readiness without promotion
+PASS application traffic blocked before mutual SAS, fabricated verify rejected
+PASS packet UTF-8/emoji ten-language round-trip and 98 malformed/corrupted frames
+OBSERVED concurrent replay extra acceptances=231; direct API probe, production receive dispatch separately reviewed
+OBSERVED seven-days-old note bucket=THIS_WEEK; requested rolling seven days normally covers offsets 0..6
+PASS today/yesterday/6 days/10 days/older local-device-date boundaries
+OBSERVED plaintext=16384 bytes -> encrypted=16400 rejected; 16368-byte plaintext passes; outgoing encoder has no size guard
+PASS SAS agreement, AAD tampering, replay rejection, session reset
+PASS actual migration SQL 2->5 executed on fresh SQLite; voice-note delete preserves peer row; v1 fixture missing; Room/SQLCipher Android integration NOT tested
+PASS at-rest JCA round-trip, distinct nonce, tamper and lost-key rejection; Android keystore NOT tested
+OBSERVED location NaN/out-of-range longitude/negative accuracy/time/trailing byte accepted; blank profile ID and v999 accepted
+
+Harness stderr:
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+
+Important boundaries:
+- SQLite migration SQL 2->5 ran on desktop SQLite with a test adapter.
+  This is not Android Room/SQLCipher/Keystore integration validation.
+- Note deletion preserved one separate peer row. Chat/emergency row
+  preservation was source-traced, not exercised by this deletion test.
+- Storage tests used an in-memory key provider, not Android Keystore.
+- Invalid location parser values were accepted directly, but the real
+  coordinator validates length, coordinates and accuracy downstream.
+  Do not treat that parser observation as an end-to-end security bug.
+- Decrypt concurrency stress bypassed the serialized receive collector.
+  Its race is an API hardening finding, not a proven remote exploit.
+- No prior 420/other historical suite pass count is re-certified here.
+- The original migration-v1 fixture error was repaired only in this
+  audit harness; the product migration-v1 path remains unverified.
+
+APPENDIX E - COMPLETE FRESH ANDROID LINT LOCATION INVENTORY
+===========================================================
+Issues by severity: {'Warning': 73, 'Hint': 1}.
+Issue counts by ID: {'EmptySuperCall': 1, 'InlinedApi': 1, 'RedundantLabel': 1, 'AndroidGradlePluginVersion': 1, 'GradleDependency': 10, 'NewerVersionAvailable': 10, 'ModifierParameter': 2, 'ChromeOsAbiSupport': 1, 'HardwareIds': 2, 'WakelockTimeout': 1, 'ObsoleteSdkInt': 6, 'UnnecessaryArrayInit': 1, 'UnusedResources': 7, 'IconLocation': 2, 'UseKtx': 12, 'UseTomlInstead': 16}.
+These lint warnings are not counted as 74 additional confirmed defects.
+They include dependency/catalog recommendations and maintenance warnings.
+Source/lint concerns require device confirmation as stated in findings.
+01. [Warning] EmptySuperCall: No need to call `super.onCleared`; the super method is defined to be empty
+    D:\new itantra\app\src\main\java\com\itantra\feature\benchmark\TtsEvaluationViewModel.kt:316
+02. [Warning] InlinedApi: Field requires API level 30 (current min is 29): `android.content.pm.ServiceInfo#FOREGROUND_SERVICE_TYPE_MICROPHONE`
+    D:\new itantra\app\src\main\java\com\itantra\core\service\OperationalForegroundService.kt:152
+03. [Warning] RedundantLabel: Redundant label can be removed
+    D:\new itantra\app\src\main\AndroidManifest.xml:60
+04. [Warning] AndroidGradlePluginVersion: A newer version of com.android.application than 9.3.3 is available: 9.4.1
+    D:\new itantra\gradle\libs.versions.toml:2
+05. [Warning] GradleDependency: A newer version of androidx.datastore:datastore-preferences than 1.1.1 is available: 1.2.1
+    D:\new itantra\app\build.gradle.kts:101
+06. [Warning] GradleDependency: A newer version of com.google.android.gms:play-services-nearby than 19.3.0 is available: 19.5.1
+    D:\new itantra\app\build.gradle.kts:104
+07. [Warning] GradleDependency: A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.5
+    D:\new itantra\app\build.gradle.kts:107
+08. [Warning] GradleDependency: A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.5
+    D:\new itantra\app\build.gradle.kts:108
+09. [Warning] GradleDependency: A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.5
+    D:\new itantra\app\build.gradle.kts:110
+10. [Warning] GradleDependency: A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.8.4 is available: 2.11.0
+    D:\new itantra\app\build.gradle.kts:127
+11. [Warning] GradleDependency: A newer version of androidx.room:room-testing than 2.6.1 is available: 2.8.5
+    D:\new itantra\app\build.gradle.kts:133
+12. [Warning] GradleDependency: A newer version of androidx.room:room-testing than 2.6.1 is available: 2.8.5
+    D:\new itantra\app\build.gradle.kts:138
+13. [Warning] GradleDependency: A newer version of androidx.core:core-ktx than 1.19.0 is available: 1.19.1
+    D:\new itantra\gradle\libs.versions.toml:3
+14. [Warning] GradleDependency: A newer version of androidx.compose:compose-bom than 2026.02.01 is available: 2026.09.00
+    D:\new itantra\gradle\libs.versions.toml:11
+15. [Warning] NewerVersionAvailable: A newer version of net.zetetic:sqlcipher-android than 4.19.0 is available: 4.19.1
+    D:\new itantra\app\build.gradle.kts:109
+16. [Warning] NewerVersionAvailable: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-android than 1.8.0 is available: 1.11.0
+    D:\new itantra\app\build.gradle.kts:113
+17. [Warning] NewerVersionAvailable: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-play-services than 1.8.0 is available: 1.11.0
+    D:\new itantra\app\build.gradle.kts:118
+18. [Warning] NewerVersionAvailable: A newer version of org.xerial:sqlite-jdbc than 3.45.1.0 is available: 3.53.4.0
+    D:\new itantra\app\build.gradle.kts:130
+19. [Warning] NewerVersionAvailable: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-test than 1.8.0 is available: 1.11.0
+    D:\new itantra\app\build.gradle.kts:131
+20. [Warning] NewerVersionAvailable: A newer version of org.json:json than 20231013 is available: 20260814
+    D:\new itantra\app\build.gradle.kts:132
+21. [Warning] NewerVersionAvailable: A newer version of org.jetbrains.kotlin.android than 2.1.10 is available: 2.4.20
+    D:\new itantra\gradle\libs.versions.toml:9
+22. [Warning] NewerVersionAvailable: A newer version of org.jetbrains.kotlin.plugin.compose than 2.1.10 is available: 2.4.20
+    D:\new itantra\gradle\libs.versions.toml:9
+23. [Warning] NewerVersionAvailable: A newer version of org.jetbrains.kotlin.plugin.serialization than 2.1.10 is available: 2.4.20
+    D:\new itantra\gradle\libs.versions.toml:9
+24. [Warning] NewerVersionAvailable: A newer version of org.jetbrains.kotlinx:kotlinx-serialization-json than 1.7.3 is available: 1.11.0
+    D:\new itantra\gradle\libs.versions.toml:28
+25. [Warning] ModifierParameter: Modifier parameter should be the first optional parameter
+    D:\new itantra\app\src\main\java\com\example\itantra\ui\components\BatteryIndicator.kt:125
+26. [Warning] ModifierParameter: Modifier parameter should be the first optional parameter
+    D:\new itantra\app\src\main\java\com\example\itantra\ui\components\MessageFilterChipsRow.kt:24
+27. [Warning] ChromeOsAbiSupport: Missing x86_64 ABI support for ChromeOS
+    D:\new itantra\app\build.gradle.kts:30
+28. [Warning] HardwareIds: Using `getString` to get device identifiers is not recommended
+    D:\new itantra\app\src\main\java\com\example\itantra\ui\screens\settings\SettingsScreen.kt:277
+29. [Warning] HardwareIds: Using `getString` to get device identifiers is not recommended
+    D:\new itantra\app\src\main\java\com\itantra\core\transceiver\TransceiverCoordinator.kt:84
+30. [Warning] WakelockTimeout: Provide a timeout when requesting a wakelock with `PowerManager.Wakelock.acquire(long timeout)`. This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user's battery.
+    D:\new itantra\app\src\main\java\com\itantra\core\service\OperationalForegroundService.kt:203
+31. [Warning] ObsoleteSdkInt: Unnecessary; `SDK_INT` is always >= 26
+    D:\new itantra\app\src\main\java\com\itantra\core\service\OperationalForegroundService.kt:44
+32. [Warning] ObsoleteSdkInt: Unnecessary; `SDK_INT` is always >= 26
+    D:\new itantra\app\src\main\java\com\itantra\core\service\OperationalForegroundService.kt:59
+33. [Warning] ObsoleteSdkInt: Unnecessary; `SDK_INT` is always >= 26
+    D:\new itantra\app\src\main\java\com\itantra\core\service\OperationalForegroundService.kt:77
+34. [Warning] ObsoleteSdkInt: Unnecessary; `SDK_INT` is always >= 26
+    D:\new itantra\app\src\main\java\com\itantra\core\audio\SpeakerAudioSink.kt:141
+35. [Warning] ObsoleteSdkInt: Unnecessary; `SDK_INT` is always >= 26
+    D:\new itantra\app\src\main\java\com\itantra\core\audio\SpeakerAudioSink.kt:279
+36. [Warning] ObsoleteSdkInt: This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 26. Merge all the resources in this folder into `mipmap-anydpi`.
+    D:\new itantra\app\src\main\res\mipmap-anydpi-v26:?
+37. [Hint] UnnecessaryArrayInit: This initialization lambda (`{ 0 }`) is unnecessary and is less efficient
+    D:\new itantra\app\src\main\java\com\itantra\core\crypto\CryptoPrimitives.kt:61
+38. [Warning] UnusedResources: The resource `R.color.purple_200` appears to be unused
+    D:\new itantra\app\src\main\res\values\colors.xml:3
+39. [Warning] UnusedResources: The resource `R.color.purple_500` appears to be unused
+    D:\new itantra\app\src\main\res\values\colors.xml:4
+40. [Warning] UnusedResources: The resource `R.color.purple_700` appears to be unused
+    D:\new itantra\app\src\main\res\values\colors.xml:5
+41. [Warning] UnusedResources: The resource `R.color.teal_200` appears to be unused
+    D:\new itantra\app\src\main\res\values\colors.xml:6
+42. [Warning] UnusedResources: The resource `R.color.teal_700` appears to be unused
+    D:\new itantra\app\src\main\res\values\colors.xml:7
+43. [Warning] UnusedResources: The resource `R.color.black` appears to be unused
+    D:\new itantra\app\src\main\res\values\colors.xml:8
+44. [Warning] UnusedResources: The resource `R.color.white` appears to be unused
+    D:\new itantra\app\src\main\res\values\colors.xml:9
+45. [Warning] IconLocation: Found bitmap drawable `res/drawable/app_logo.png` in densityless folder
+    D:\new itantra\app\src\main\res\drawable\app_logo.png:?
+46. [Warning] IconLocation: Found bitmap drawable `res/drawable/ic_launcher_foreground.png` in densityless folder
+    D:\new itantra\app\src\main\res\drawable\ic_launcher_foreground.png:?
+47. [Warning] UseKtx: Use the KTX extension function `String.toUri` instead?
+    D:\new itantra\app\src\main\java\com\example\itantra\ui\screens\chat\DedicatedChatScreen.kt:846
+48. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\core\profile\DeviceProfileManager.kt:50
+49. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\core\profile\DeviceProfileManager.kt:78
+50. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\core\profile\DeviceProfileManager.kt:84
+51. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\data\languagepack\RealLanguagePackRepository.kt:235
+52. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\data\languagepack\RealLanguagePackRepository.kt:241
+53. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\data\languagepack\RealLanguagePackRepository.kt:253
+54. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\data\languagepack\RealLanguagePackRepository.kt:265
+55. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\data\languagepack\RealLanguagePackRepository.kt:274
+56. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\data\languagepack\RealLanguagePackRepository.kt:291
+57. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\data\languagepack\RealLanguagePackRepository.kt:302
+58. [Warning] UseKtx: Use the KTX extension function `SharedPreferences.edit` instead?
+    D:\new itantra\app\src\main\java\com\itantra\data\languagepack\RealLanguagePackRepository.kt:643
+59. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:98
+60. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:101
+61. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:104
+62. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:107
+63. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:108
+64. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:109
+65. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:110
+66. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:113
+67. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:116
+68. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:118
+69. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:127
+70. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:130
+71. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:131
+72. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:132
+73. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:133
+74. [Warning] UseTomlInstead: Use version catalog instead
+    D:\new itantra\app\build.gradle.kts:138
+
+APPENDIX F - BUILD/HARNESS WARNING AND ERROR RECORD
+===================================================
+All original logs, including failed setup attempts, are retained in the audit folder.
+Initial failures: D: storage exhaustion; retry output-path cross-drive mismatch;
+Gradle Kotlin source override API mismatch; incorrect schema-v1 audit fixture.
+A report source-line display initially hit Windows cp1252 UnicodeEncodeError;
+rerunning the display with UTF-8 output succeeded. App behavior was unaffected.
+None is silently presented as a passing application run.
+Current source compiled and packaged after setup recovery. Warnings remain.
+The following is a deduplicated warning-line inventory, not only a count.
+Full surrounding compiler and task output is available in the original logs.
+  build.log:3
+    Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+  build.log:47
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/ops/gemm.cc:40:9: warning: field '_b_is_packed' will be initialized after field '_activation_type' [-Wreorder-ctor]
+  build.log:74
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/ops/transpose.cc:27:29: warning: comparison of integers of different signs: 'size_type' (aka 'unsigned long') and 'dim_t' (aka 'long') [-Wsign-compare]
+  build.log:83
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/cpu/vec.h:148:65: warning: unused parameter 'count' [-Wunused-parameter]
+  build.log:87
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/cpu/primitives.cc:911:53: warning: unused parameter 'a_shift_compensation' [-Wunused-parameter]
+  build.log:91
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/layers/attention.cc:372:28: warning: unused parameter 'queries' [-Wunused-parameter]
+  build.log:95
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/layers/transformer.cc:858:24: warning: unused variable 'device' [-Wunused-variable]
+  build.log:99
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/ctranslate2-src/src/thread_pool.cc:79:48: warning: unused parameter 'thread' [-Wunused-parameter]
+  build.log:103
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/sentencepiece-src/src/builder.cc:47:15: warning: unused variable 'kMaxUnicode' [-Wunused-const-variable]
+  build.log:106
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/sentencepiece-src/src/builder.cc:49:23: warning: unused variable 'kDefaultNormalizerName' [-Wunused-const-variable]
+  build.log:110
+    C/C++: D:/new itantra/app/.cxx/Debug/464j6b1o/arm64-v8a/_deps/sentencepiece-src/src/sentencepiece_trainer.cc:207:16: warning: 'done' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+  build.log:119
+    w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:275:82 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:120
+    w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:286:48 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:121
+    w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:322:55 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:122
+    w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:728:38 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:123
+    w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/chat/DedicatedChatScreen.kt:759:28 'val LocalClipboardManager: ProvidableCompositionLocal<ClipboardManager>' is deprecated. Use LocalClipboard instead which supports suspend functions.
+  build.log:124
+    w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:330:67 'val Icons.Filled.Chat: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Chat.
+  build.log:125
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/app/AppGraph.kt:69:52 Unchecked cast of 'Any?' to 'List<LanguagePackSummary>'.
+  build.log:126
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:51:52 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:127
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:110:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:128
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:161:25 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:129
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:162:25 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:130
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:183:30 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:131
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:198:13 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:132
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:237:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:133
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:244:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:134
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:252:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:135
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:264:30 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:136
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:279:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:137
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:284:31 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:138
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:340:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:139
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:374:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:140
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:381:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:141
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:402:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:142
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:403:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:143
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:419:13 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:144
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ModelFileSpec.kt:54:13 'when' is exhaustive so 'else' is redundant here.
+  build.log:145
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:132:41 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:146
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:457:28 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:147
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:777:51 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:148
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:1886:44 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:149
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:2376:102 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:150
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:2379:43 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  build.log:151
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:10:8 'class NetworkInfo : Any, Parcelable' is deprecated. Deprecated in Java.
+  build.log:152
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:251:42 'class NetworkInfo : Any, Parcelable' is deprecated. Deprecated in Java.
+  build.log:153
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:252:90 'class NetworkInfo : Any, Parcelable' is deprecated. Deprecated in Java.
+  build.log:154
+    w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:265:56 'val isConnected: Boolean' is deprecated. Deprecated in Java.
+  build.log:170
+    C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/ops/gemm.cc:40:9: warning: field '_b_is_packed' will be initialized after field '_activation_type' [-Wreorder-ctor]
+  build.log:193
+    C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/thread_pool.cc:79:48: warning: unused parameter 'thread' [-Wunused-parameter]
+  build.log:199
+    C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/cpu/vec.h:148:65: warning: unused parameter 'count' [-Wunused-parameter]
+  build.log:203
+    C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/layers/transformer.cc:858:24: warning: unused variable 'device' [-Wunused-variable]
+  build.log:207
+    C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/layers/attention.cc:372:28: warning: unused parameter 'queries' [-Wunused-parameter]
+  build.log:211
+    C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/ctranslate2-src/src/cpu/primitives.cc:911:53: warning: unused parameter 'a_shift_compensation' [-Wunused-parameter]
+  verification.log:75
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:77:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:76
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:91:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:77
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:122:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:78
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:137:29 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:79
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:166:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:80
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:193:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:81
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:209:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:82
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:224:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:83
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:259:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:84
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:262:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:85
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/HindiSttModelTest.kt:40:9 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'File?'.
+  verification.log:86
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/LifecycleOverlapTest.kt:72:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:87
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/LifecycleOverlapTest.kt:120:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:88
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/TtsLifecycleAndStorageTest.kt:214:54 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:89
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/TtsLifecycleAndStorageTest.kt:220:52 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:90
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/TtsLifecycleAndStorageTest.kt:250:54 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:91
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/TtsLifecycleAndStorageTest.kt:269:52 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:92
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/transceiver/ReceiverTtsTest.kt:110:48 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:93
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/transceiver/ReceiverTtsTest.kt:248:57 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:94
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/transceiver/ReceiverTtsTest.kt:341:57 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:95
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/transceiver/ReceiverTtsTest.kt:360:94 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:96
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:153:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:97
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:159:52 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:98
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:164:28 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:99
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:190:28 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:100
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:211:28 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:101
+    w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/languages/LanguagePacksViewModelTest.kt:113:35 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+  verification.log:105
+    C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/sentencepiece-src/src/builder.cc:47:15: warning: unused variable 'kMaxUnicode' [-Wunused-const-variable]
+  verification.log:108
+    C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/sentencepiece-src/src/builder.cc:49:23: warning: unused variable 'kDefaultNormalizerName' [-Wunused-const-variable]
+  verification.log:112
+    C/C++: D:/new itantra/app/.cxx/RelWithDebInfo/93t366i3/arm64-v8a/_deps/sentencepiece-src/src/sentencepiece_trainer.cc:207:16: warning: 'done' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+  verification.log:123
+    WARNING: A restricted method in java.lang.System has been called
+  verification.log:124
+    WARNING: java.lang.System::load has been called by org.sqlite.SQLiteJDBCLoader in an unnamed module (file:/C:/Users/avira/.gradle/caches/modules-2/files-2.1/org.xerial/sqlite-jdbc/3.45.1.0/7cd66c2793e4d9511f6da8fc6c621575171c2da1/sqlite-jdbc-3.45.1.0.jar)
+  verification.log:125
+    WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+  verification.log:126
+    WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+  verification.log:233
+    w: Detected multiple Kotlin daemon sessions at 
+
+SQLCipher native security/source audit and local-AAR SBOM generation were
+not performed. Maven advisory coverage must not imply native coverage.
+The SLF4J no-binding message belongs to the desktop SQLite test harness.
+It does not prove a missing Android runtime logger.
+JDK 25/Kotlin fallback and native-access warnings are recorded above.
+Old test files were compiled in some attempts; their deprecation warnings
+are listed, but their old test outcomes are excluded from verification.
+
+APPENDIX G - STATIC ROUTES, ACTIONS, PLACEHOLDERS AND CONTRAST
+==============================================================
+Declared preview routes: hub, connect, chat, notes, packs, settings, diagnostics
+Declared preview action cases (NOT clicked):
+  active-mic
+  allow-permission
+  appearance
+  back-chat-list
+  cancel-download
+  cancel-record
+  chat-record
+  choose-language
+  close-modal
+  confirm-delete
+  confirm-reset
+  confirm-switch
+  copy-demo-id
+  copy-location
+  critical
+  delete-note
+  deny-permission
+  diagnose
+  disconnect
+  discover
+  download
+  edit-name
+  filter
+  finish-record
+  go
+  human-ack
+  language
+  link-details
+  location
+  maps-preview
+  mode
+  open-chat
+  pack-filter
+  pair
+  permission-help
+  reject-pair
+  reset-settings
+  retry
+  select-receive
+  select-speak
+  send-location
+  send-sos
+  sos-preset
+  swap-languages
+  switch-peer
+  target
+  theme-mode
+  theme-palette
+  transport
+  trust-pair
+  wipe
+Referenced preview assets:
+  theme.js: exists=True
+  themes.css: exists=True
+  styles.css: exists=True
+  refinements.css: exists=True
+  app.js: exists=True
+Token-only contrast examples (not rendered-widget measurements):
+  #64748B on #FFFFFF: 4.76:1
+  #334155 on #1E293B: 1.41:1
+  #0F172A on #1E293B: 1.22:1
+  #059669 on #FFFFFF: 3.77:1
+  #D97706 on #FFFFFF: 3.19:1
+No screen WCAG claim follows from these examples. Browser rendering is unverified.
+Pure preview bucket observations:
+{
+  "scope": "Pure date function only; browser/UI unverified",
+  "result": [
+    {
+      "daysAgo": 0,
+      "bucket": "Today"
+    },
+    {
+      "daysAgo": 1,
+      "bucket": "Yesterday"
+    },
+    {
+      "daysAgo": 6,
+      "bucket": "This week"
+    },
+    {
+      "daysAgo": 7,
+      "bucket": "This month"
+    },
+    {
+      "daysAgo": 10,
+      "bucket": "This month"
+    },
+    {
+      "daysAgo": 40,
+      "bucket": "Older · September 2026"
+    },
+    {
+      "daysAgo": 400,
+      "bucket": "Older · September 2025"
+    }
+  ]
+}
+
+Fresh TODO/stub search in production app + preview:
+- data_extraction_rules.xml:13 retains template backup TODO; manifest disables
+  backups, so this is a template/config cleanup item rather than a demonstrated leak.
+- LanguagePackRepository.kt:60 retains a historical NotImplementedError comment.
+- ActiveLanguageSessionManager.kt:441-447 has an explicit NoOpEngineFactory
+  whose methods throw NotImplementedError. AppGraph.kt:180-203 instead supplies
+  an EngineFactory implementation that constructs the real Sherpa engines.
+  No production mic no-op claim follows from the presence of this test/default stub.
+- No production/preview console.log or Math.random occurrence was returned by
+  the scoped search. Random crypto/device IDs are legitimate source data.
+Dormant Nearby/CTranslate2 integrations are tracked separately in F11.
+
+APPENDIX H - REPRODUCTION, FILE CHANGES AND NEXT APPROVAL
+=========================================================
+Run from D:\new itantra in PowerShell with the existing Android SDK/JDK configured.
+The successful audit logs resolved dependencies from C:\Users\avira\.gradle.
+Reuse that configured cache; do not require a fresh download just to reproduce.
+Fresh test command (init script isolates audit execution/output):
+  .\gradlew.bat -I audit/2026-10-04/audit.init.gradle :app:testDebugUnitTest --no-daemon
+Build tasks and resolved inventory:
+  .\gradlew.bat -I audit/2026-10-04/audit.init.gradle :app:assembleDebug :app:assembleRelease :app:lintDebug :app:auditRuntimeInventory --no-daemon
+Dependency chain:
+  .\gradlew.bat -I audit/2026-10-04/audit.init.gradle :app:dependencyInsight --dependency okhttp --configuration debugRuntimeClasspath --no-daemon
+Additional probes:
+  python audit/2026-10-04/speech_probe.py
+  python audit/2026-10-04/dependency_probe.py
+  python audit/2026-10-04/download_endpoint_probe.py
+  python audit/2026-10-04/package_probe.py
+  python audit/2026-10-04/static_probe.py
+  node --check itantra_light_ui/app.js
+  node --check itantra_light_ui/theme.js
+  node audit/2026-10-04/preview_pure_probes.cjs
+Speech requires the local models/audio inputs and desktop sherpa-onnx 1.13.8,
+numpy and soundfile. Public advisory/metadata/endpoint probes need internet.
+Core JVM tests use current source/classes; the final filtered command log is
+fresh-tests-final.log. Do not run clean against unrelated prior outputs.
+
+Files added/created by the audit:
+D:\new itantra\docs\FRESH_AUDIT_2026-10-04.txt
+  D:\new itantra\audit\2026-10-04\audit.init.gradle
+  D:\new itantra\audit\2026-10-04\build.log
+  D:\new itantra\audit\2026-10-04\checks-retry.log
+  D:\new itantra\audit\2026-10-04\checks.log
+  D:\new itantra\audit\2026-10-04\dependencies.json
+  D:\new itantra\audit\2026-10-04\dependency-security.json
+  D:\new itantra\audit\2026-10-04\dependency-security.log
+  D:\new itantra\audit\2026-10-04\dependency_probe.py
+  D:\new itantra\audit\2026-10-04\download-endpoints.json
+  D:\new itantra\audit\2026-10-04\download-endpoints.log
+  D:\new itantra\audit\2026-10-04\download_endpoint_probe.py
+  D:\new itantra\audit\2026-10-04\final-checks.log
+  D:\new itantra\audit\2026-10-04\finish_report.py
+  D:\new itantra\audit\2026-10-04\fresh-test-results.xml
+  D:\new itantra\audit\2026-10-04\fresh-tests-final.log
+  D:\new itantra\audit\2026-10-04\fresh-tests.log
+  D:\new itantra\audit\2026-10-04\inventory.log
+  D:\new itantra\audit\2026-10-04\lint-results.txt
+  D:\new itantra\audit\2026-10-04\lint-results.xml
+  D:\new itantra\audit\2026-10-04\okhttp-dependency-path.log
+  D:\new itantra\audit\2026-10-04\package_probe.py
+  D:\new itantra\audit\2026-10-04\packages.json
+  D:\new itantra\audit\2026-10-04\packages.log
+  D:\new itantra\audit\2026-10-04\preview-pure-results.json
+  D:\new itantra\audit\2026-10-04\preview-pure.log
+  D:\new itantra\audit\2026-10-04\preview_pure_probes.cjs
+  D:\new itantra\audit\2026-10-04\source-integration-log-index.txt
+  D:\new itantra\audit\2026-10-04\speech-bn.json
+  D:\new itantra\audit\2026-10-04\speech-en-retry.log
+  D:\new itantra\audit\2026-10-04\speech-en.json
+  D:\new itantra\audit\2026-10-04\speech-gu.json
+  D:\new itantra\audit\2026-10-04\speech-hi-retry.log
+  D:\new itantra\audit\2026-10-04\speech-hi.json
+  D:\new itantra\audit\2026-10-04\speech-kn-app-token.log
+  D:\new itantra\audit\2026-10-04\speech-kn.json
+  D:\new itantra\audit\2026-10-04\speech-ml.json
+  D:\new itantra\audit\2026-10-04\speech-mr.json
+  D:\new itantra\audit\2026-10-04\speech-or.json
+  D:\new itantra\audit\2026-10-04\speech-ta.json
+  D:\new itantra\audit\2026-10-04\speech-te.json
+  D:\new itantra\audit\2026-10-04\speech.log
+  D:\new itantra\audit\2026-10-04\speech_probe.py
+  D:\new itantra\audit\2026-10-04\static-inventory.json
+  D:\new itantra\audit\2026-10-04\static.log
+  D:\new itantra\audit\2026-10-04\static_probe.py
+  D:\new itantra\audit\2026-10-04\tests\FreshAuditTest.kt
+  D:\new itantra\audit\2026-10-04\tts-bn-0.wav
+  D:\new itantra\audit\2026-10-04\tts-bn-1.wav
+  D:\new itantra\audit\2026-10-04\tts-bn-2.wav
+  D:\new itantra\audit\2026-10-04\tts-en-0.wav
+  D:\new itantra\audit\2026-10-04\tts-en-1.wav
+  D:\new itantra\audit\2026-10-04\tts-en-2.wav
+  D:\new itantra\audit\2026-10-04\tts-gu-0.wav
+  D:\new itantra\audit\2026-10-04\tts-gu-1.wav
+  D:\new itantra\audit\2026-10-04\tts-gu-2.wav
+  D:\new itantra\audit\2026-10-04\tts-hi-0.wav
+  D:\new itantra\audit\2026-10-04\tts-hi-1.wav
+  D:\new itantra\audit\2026-10-04\tts-hi-2.wav
+  D:\new itantra\audit\2026-10-04\tts-kn-0.wav
+  D:\new itantra\audit\2026-10-04\tts-kn-1.wav
+  D:\new itantra\audit\2026-10-04\tts-kn-2.wav
+  D:\new itantra\audit\2026-10-04\tts-ml-0.wav
+  D:\new itantra\audit\2026-10-04\tts-ml-1.wav
+  D:\new itantra\audit\2026-10-04\tts-ml-2.wav
+  D:\new itantra\audit\2026-10-04\tts-mr-0.wav
+  D:\new itantra\audit\2026-10-04\tts-mr-1.wav
+  D:\new itantra\audit\2026-10-04\tts-mr-2.wav
+  D:\new itantra\audit\2026-10-04\tts-or-0.wav
+  D:\new itantra\audit\2026-10-04\tts-or-1.wav
+  D:\new itantra\audit\2026-10-04\tts-or-2.wav
+  D:\new itantra\audit\2026-10-04\tts-ta-0.wav
+  D:\new itantra\audit\2026-10-04\tts-ta-1.wav
+  D:\new itantra\audit\2026-10-04\tts-ta-2.wav
+  D:\new itantra\audit\2026-10-04\tts-te-0.wav
+  D:\new itantra\audit\2026-10-04\tts-te-1.wav
+  D:\new itantra\audit\2026-10-04\tts-te-2.wav
+  D:\new itantra\audit\2026-10-04\verification.log
+Generated build products remain under audit/2026-10-04/build (junction to C: temp).
+Gradle/native tools also generated their normal cache/.cxx metadata.
+No production source/dependency/model-manifest fixes were made.
+No existing tests, app DB, chats, emergency records or settings were edited.
+No phone access, model substitution, deletion of installed packs, commit or push.
+
+Primary references used for the current advisory/version checks:
+https://google.github.io/osv.dev/post-v1-querybatch/
+https://api.osv.dev/v1/vulns/GHSA-3cqm-mf7h-prrj
+https://api.osv.dev/v1/vulns/GHSA-4hc2-jh7r-wrc3
+https://github.com/square/okhttp/pull/6741
+https://publicobject.com/2016/02/11/okhttp-certificate-pinning-vulnerability/
+Exact primary Maven/Google registry URLs are in Appendix C.
+
+Next decision: which findings should be fixed?
+Suggested first batch: F01, F03, F02 and F04. See the prioritized plan above.
+These are proposed fixes; no fix is approved merely because it appears here.
+The attachment explicitly requires approval after this report. Product
+implementation therefore stops here pending the user's choice.

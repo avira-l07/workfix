@@ -1,0 +1,26 @@
+[
+  {
+    "path": "D:\\new itantra\\audit\\2026-10-04\\build\\app\\outputs\\apk\\debug\\app-debug.apk",
+    "bytes": 94600164,
+    "sha256": "cff0548d54ccec998dca570e636c88bd8cfe656324efc1065cd92179dac76359",
+    "onnx_weights": 0,
+    "native_libraries": 8,
+    "alignment_below_16k": []
+  },
+  {
+    "path": "D:\\new itantra\\audit\\2026-10-04\\build\\app\\outputs\\apk\\release\\app-release-unsigned.apk",
+    "bytes": 78360680,
+    "sha256": "416b05b5f8c82c6034f1d65e3817ce8a5b8f1a965839fa5ee103a88d6013e5d2",
+    "onnx_weights": 0,
+    "native_libraries": 8,
+    "alignment_below_16k": []
+  },
+  {
+    "path": "D:\\new itantra\\app\\libs\\sherpa-onnx.aar",
+    "bytes": 78836277,
+    "sha256": "43625a96e4824a2ca3d456483d08b0358c4328d0665a7d4ed7cf88c44926b396",
+    "onnx_weights": 0,
+    "native_libraries": 16,
+    "alignment_below_16k": []
+  }
+]

@@ -3,6 +3,11 @@ package com.itantra.core.transport.packet
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.zip.CRC32
+import com.itantra.core.crypto.CryptoPrimitives
+
+class PayloadTooLargeException : IllegalArgumentException(
+    "Message is too long for this link. Shorten it and retry (maximum ${PacketEncoder.MAX_PLAINTEXT_BYTES} UTF-8 bytes, including translation)."
+)
 
 /**
  * Encodes an [ItantraPacket] into a framed ByteArray ready for a stream.
@@ -31,6 +36,11 @@ import java.util.zip.CRC32
 object PacketEncoder {
     const val MAGIC = 0x49545031
     const val VERSION: Byte = 2
+    const val MAX_PLAINTEXT_BYTES = PacketDecoder.MAX_PAYLOAD_SIZE - CryptoPrimitives.AES_GCM_TAG_LEN
+
+    fun requireEncryptablePayload(payload: ByteArray) {
+        if (payload.size > MAX_PLAINTEXT_BYTES) throw PayloadTooLargeException()
+    }
 
     /**
      * Extracts exactly the header bytes from the packet (the bytes that form the Additional Authenticated Data).
@@ -58,6 +68,7 @@ object PacketEncoder {
 
     fun encode(packet: ItantraPacket): ByteArray {
         val payloadLen = packet.payload.size
+        if (payloadLen > PacketDecoder.MAX_PAYLOAD_SIZE) throw PayloadTooLargeException()
         // 32 bytes header + N payload + 4 CRC
         val frameContentLength = 32 + payloadLen + 4
         val totalFrameLength = 4 + frameContentLength // including the 4 byte frame size prefix

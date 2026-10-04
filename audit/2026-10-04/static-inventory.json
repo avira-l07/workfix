@@ -1,0 +1,156 @@
+{
+  "scope": "Static inspection only; browser file policy blocked visual and interactive tests",
+  "preview_asset_links": [
+    {
+      "path": "theme.js",
+      "exists": true
+    },
+    {
+      "path": "themes.css",
+      "exists": true
+    },
+    {
+      "path": "styles.css",
+      "exists": true
+    },
+    {
+      "path": "refinements.css",
+      "exists": true
+    },
+    {
+      "path": "app.js",
+      "exists": true
+    }
+  ],
+  "preview_routes": [
+    "hub",
+    "connect",
+    "chat",
+    "notes",
+    "packs",
+    "settings",
+    "diagnostics",
+    "hub",
+    "connect",
+    "chat",
+    "notes",
+    "settings",
+    "packs"
+  ],
+  "preview_declared_action_cases": [
+    "active-mic",
+    "allow-permission",
+    "appearance",
+    "back-chat-list",
+    "cancel-download",
+    "cancel-record",
+    "chat-record",
+    "choose-language",
+    "close-modal",
+    "confirm-delete",
+    "confirm-reset",
+    "confirm-switch",
+    "copy-demo-id",
+    "copy-location",
+    "critical",
+    "delete-note",
+    "deny-permission",
+    "diagnose",
+    "disconnect",
+    "discover",
+    "download",
+    "edit-name",
+    "filter",
+    "finish-record",
+    "go",
+    "human-ack",
+    "language",
+    "link-details",
+    "location",
+    "maps-preview",
+    "mode",
+    "open-chat",
+    "pack-filter",
+    "pair",
+    "permission-help",
+    "reject-pair",
+    "reset-settings",
+    "retry",
+    "select-receive",
+    "select-speak",
+    "send-location",
+    "send-sos",
+    "sos-preset",
+    "swap-languages",
+    "switch-peer",
+    "target",
+    "theme-mode",
+    "theme-palette",
+    "transport",
+    "trust-pair",
+    "wipe"
+  ],
+  "preview_literal_data_actions": [
+    "active-mic",
+    "appearance",
+    "back-chat-list",
+    "chat-record",
+    "choose-language",
+    "close-modal",
+    "copy-demo-id",
+    "copy-location",
+    "critical",
+    "delete-note",
+    "diagnose",
+    "filter",
+    "go",
+    "language",
+    "link-details",
+    "location",
+    "maps-preview",
+    "mode",
+    "open-chat",
+    "pack-filter",
+    "permission-help",
+    "reset-settings",
+    "retry",
+    "select-receive",
+    "select-speak",
+    "sos-preset",
+    "swap-languages",
+    "target",
+    "theme-mode",
+    "theme-palette",
+    "transport",
+    "wipe"
+  ],
+  "production_sources": 130,
+  "secret_literal_candidates": [],
+  "native_static_color_contrast": [
+    {
+      "foreground": "#64748B",
+      "background": "#FFFFFF",
+      "ratio": 4.76
+    },
+    {
+      "foreground": "#334155",
+      "background": "#1E293B",
+      "ratio": 1.41
+    },
+    {
+      "foreground": "#0F172A",
+      "background": "#1E293B",
+      "ratio": 1.22
+    },
+    {
+      "foreground": "#059669",
+      "background": "#FFFFFF",
+      "ratio": 3.77
+    },
+    {
+      "foreground": "#D97706",
+      "background": "#FFFFFF",
+      "ratio": 3.19
+    }
+  ]
+}

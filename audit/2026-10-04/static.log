@@ -1,0 +1,48 @@
+{
+  "assets": 5,
+  "missing_assets": [],
+  "routes": [
+    "hub",
+    "connect",
+    "chat",
+    "notes",
+    "packs",
+    "settings",
+    "diagnostics",
+    "hub",
+    "connect",
+    "chat",
+    "notes",
+    "settings",
+    "packs"
+  ],
+  "declared_action_cases": 51,
+  "secret_candidate_count": 0,
+  "native_contrast": [
+    {
+      "foreground": "#64748B",
+      "background": "#FFFFFF",
+      "ratio": 4.76
+    },
+    {
+      "foreground": "#334155",
+      "background": "#1E293B",
+      "ratio": 1.41
+    },
+    {
+      "foreground": "#0F172A",
+      "background": "#1E293B",
+      "ratio": 1.22
+    },
+    {
+      "foreground": "#059669",
+      "background": "#FFFFFF",
+      "ratio": 3.77
+    },
+    {
+      "foreground": "#D97706",
+      "background": "#FFFFFF",
+      "ratio": 3.19
+    }
+  ]
+}

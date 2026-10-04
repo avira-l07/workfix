@@ -1,0 +1,45 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:fixRuntimeInventory
+
+> Task :app:kspDebugKotlin
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+
+> Task :app:compileDebugKotlin
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/components/BatteryIndicator.kt:111:5 Functions which invoke @Composable functions must be marked with the @Composable annotation
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/components/BatteryIndicator.kt:113:23 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/components/BatteryIndicator.kt:115:36 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/components/BatteryIndicator.kt:116:38 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/components/BatteryIndicator.kt:117:38 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/components/BatteryIndicator.kt:118:31 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:1308:48 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:1309:91 Unresolved reference 'first'.
+e: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:1309:99 Unresolved reference 'it'.
+
+> Task :app:compileDebugKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin' (registered by plugin 'com.android.internal.application').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 34s
+9 actionable tasks: 3 executed, 6 up-to-date

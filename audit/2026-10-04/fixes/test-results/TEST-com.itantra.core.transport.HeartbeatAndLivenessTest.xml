@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.transport.HeartbeatAndLivenessTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:19.905Z" hostname="AVII" time="0.683">
+  <properties/>
+  <testcase name="testHB11_verifyRetryUsesSamePacket" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.005"/>
+  <testcase name="testHB6_silenceTimeoutDisconnectsTransport" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.054"/>
+  <testcase name="testHB9_disconnectDisablesAuthenticatedLiveness" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.002"/>
+  <testcase name="testHB4_secureVerifiedEnablesLivenessAndResetsLastRx" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.001"/>
+  <testcase name="testHB10_helloRetryUsesSameHandshake" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.002"/>
+  <testcase name="testHB2_encryptedHeartbeatEmittedUpward" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.206"/>
+  <testcase name="testHB1_plaintextHeartbeatDropped" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.205"/>
+  <testcase name="testHB8_heartbeatSendDoesNotWaitAck" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.002"/>
+  <testcase name="testHB5_authenticatedPacketsKeepConnectionAlive" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.002"/>
+  <testcase name="testHB3_waitingUserVerificationDoesNotDisconnect" classname="com.itantra.core.transport.HeartbeatAndLivenessTest" time="0.203"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

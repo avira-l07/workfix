@@ -1,0 +1,267 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114044398,
+  "model_sha256": "046cecf7cca77680c9ca319953e777c8d0233ce78e9b55a47aa909edf87d99e8",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 548.7396000069566,
+    "p95_synthesis_ms_nearest_rank": 701.4155000215396,
+    "rtf": 0.4995022102601655,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 240410624
+  },
+  "rows": [
+    {
+      "phrase": "मदत हवी आहे",
+      "repetition": 0,
+      "synthesis_ms": 476.4214000897482,
+      "audio_ms": 972.6875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "पाणी पाठवा",
+      "repetition": 0,
+      "synthesis_ms": 499.4204000104219,
+      "audio_ms": 993.25,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "रस्ता बंद आहे",
+      "repetition": 0,
+      "synthesis_ms": 504.6828000340611,
+      "audio_ms": 1280.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "आम्ही सुरक्षित आहोत",
+      "repetition": 0,
+      "synthesis_ms": 516.8394000502303,
+      "audio_ms": 1312.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "डॉक्टरांना बोलवा",
+      "repetition": 0,
+      "synthesis_ms": 585.7140000443906,
+      "audio_ms": 1026.3125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": [
+        "U+0949"
+      ]
+    },
+    {
+      "phrase": "मदत हवी आहे",
+      "repetition": 1,
+      "synthesis_ms": 418.39480004273355,
+      "audio_ms": 1056.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "पाणी पाठवा",
+      "repetition": 1,
+      "synthesis_ms": 492.84379999153316,
+      "audio_ms": 973.75,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "रस्ता बंद आहे",
+      "repetition": 1,
+      "synthesis_ms": 492.02639993745834,
+      "audio_ms": 1027.8125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "आम्ही सुरक्षित आहोत",
+      "repetition": 1,
+      "synthesis_ms": 701.4155000215396,
+      "audio_ms": 1213.6875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "डॉक्टरांना बोलवा",
+      "repetition": 1,
+      "synthesis_ms": 599.6520000044256,
+      "audio_ms": 1059.3125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": [
+        "U+0949"
+      ]
+    },
+    {
+      "phrase": "मदत हवी आहे",
+      "repetition": 2,
+      "synthesis_ms": 507.6537999557331,
+      "audio_ms": 932.3125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "पाणी पाठवा",
+      "repetition": 2,
+      "synthesis_ms": 591.3476999849081,
+      "audio_ms": 1209.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "रस्ता बंद आहे",
+      "repetition": 2,
+      "synthesis_ms": 549.0017998963594,
+      "audio_ms": 1016.8125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "आम्ही सुरक्षित आहोत",
+      "repetition": 2,
+      "synthesis_ms": 589.3412000732496,
+      "audio_ms": 1275.4375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "डॉक्टरांना बोलवा",
+      "repetition": 2,
+      "synthesis_ms": 616.2742000306025,
+      "audio_ms": 1116.6875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": [
+        "U+0949"
+      ]
+    },
+    {
+      "phrase": "मदत हवी आहे",
+      "repetition": 3,
+      "synthesis_ms": 474.1941000102088,
+      "audio_ms": 998.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "पाणी पाठवा",
+      "repetition": 3,
+      "synthesis_ms": 524.8130999971181,
+      "audio_ms": 1022.5625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "रस्ता बंद आहे",
+      "repetition": 3,
+      "synthesis_ms": 552.7731000911444,
+      "audio_ms": 1163.25,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "आम्ही सुरक्षित आहोत",
+      "repetition": 3,
+      "synthesis_ms": 746.5739999897778,
+      "audio_ms": 1296.1875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "डॉक्टरांना बोलवा",
+      "repetition": 3,
+      "synthesis_ms": 594.2795000737533,
+      "audio_ms": 1028.8125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": [
+        "U+0949"
+      ]
+    },
+    {
+      "phrase": "मदत हवी आहे",
+      "repetition": 4,
+      "synthesis_ms": 484.39600004348904,
+      "audio_ms": 1030.5,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "पाणी पाठवा",
+      "repetition": 4,
+      "synthesis_ms": 542.8421999095008,
+      "audio_ms": 1106.9375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "रस्ता बंद आहे",
+      "repetition": 4,
+      "synthesis_ms": 453.9896999485791,
+      "audio_ms": 1152.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "आम्ही सुरक्षित आहोत",
+      "repetition": 4,
+      "synthesis_ms": 616.324899950996,
+      "audio_ms": 1313.0625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "डॉक्टरांना बोलवा",
+      "repetition": 4,
+      "synthesis_ms": 575.3158000297844,
+      "audio_ms": 1017.9375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": [
+        "U+0949"
+      ]
+    },
+    {
+      "phrase": "मदत हवी आहे",
+      "repetition": 5,
+      "synthesis_ms": 441.66560005396605,
+      "audio_ms": 951.8125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "पाणी पाठवा",
+      "repetition": 5,
+      "synthesis_ms": 567.5595999928191,
+      "audio_ms": 1141.25,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "रस्ता बंद आहे",
+      "repetition": 5,
+      "synthesis_ms": 548.8602999830619,
+      "audio_ms": 974.6875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "आम्ही सुरक्षित आहोत",
+      "repetition": 5,
+      "synthesis_ms": 611.7073999485001,
+      "audio_ms": 1294.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "डॉक्टरांना बोलवा",
+      "repetition": 5,
+      "synthesis_ms": 585.8635000186041,
+      "audio_ms": 1001.125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": [
+        "U+0949"
+      ]
+    }
+  ]
+}

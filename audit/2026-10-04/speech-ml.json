@@ -1,0 +1,76 @@
+{
+  "language": "ml",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Manual language: IndicConformer CTC INT8",
+  "stt_load_ms": 1515.3986000223085,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\ml\\model.int8.onnx",
+      "bytes": 197595555,
+      "sha256": "dcbdfa9f773db910508b40b703cb76c5974e8d4c6f123ea81265b40853c3f0c2"
+    },
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\tokens.txt",
+      "bytes": 67605,
+      "sha256": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
+    }
+  ],
+  "stt": {
+    "reference": "പോയിൻ്റ് മരിയനും ഫെയർമോണ്ടും തമ്മിലുള്ള ദൂരം ഒറ്റപ്പെട്ട ബാക്ക്‌വുഡ് ഭൂപ്രദേശങ്ങളിലൂടെ കടന്നുപോകുന്ന ബഫല്ലോ-പിറ്റ്സ്ബർഗ് ഹൈവേയിലെ ഏറ്റവും വെല്ലുവിളി നിറഞ്ഞ ഡ്രൈവിംഗ് സാഹചര്യങ്ങൾ സൃഷ്ടിക്കുന്നു",
+    "output": "പോയിൻ്റ് മരിയനും പേർമോണ്ടും തമ്മിലുള്ള ദൂരം ഒറ്റപ്പെട്ട ബാക്ക്വുഡ് ഭൂപ്രദേശങ്ങളിലൂടെ കടന്നുപോകുന്ന ബഫല്ലോ പിറ്റ്സ്ബർഗ് ഹൈവേയിലെ ഏറ്റവും വെല്ലുവിളി നിറഞ്ഞ ഡ്രൈവിംഗ് സാഹചര്യങ്ങൾ സൃഷ്ടിക്കുന്നു",
+    "native_script_majority": true,
+    "decode_ms": 1653.0117999063805,
+    "audio_seconds": 20.76,
+    "rtf": 0.0796248458529085,
+    "single_recording_wer": 0.15789473684210525,
+    "word_errors": 3,
+    "reference_words": 19
+  },
+  "silence": {
+    "output": "അ",
+    "decode_ms": 140.46430005691946
+  },
+  "tts_load_ms": 2116.0693999845535,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\models\\bundled\\ml\\tts\\model.onnx",
+      "bytes": 114052356,
+      "sha256": "7f03397b7144325dc3deab36315c59e423319b8b575497caacbb08d28072b26c"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\ml\\tts\\tokens.txt",
+      "bytes": 571,
+      "sha256": "3a752c36593cc519193c8caa6c00371369b423366fa6ead8d91945a28b2c46a3"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "സഹായം വേണം",
+      "synthesis_ms": 941.995200002566,
+      "sample_rate": 16000,
+      "samples": 15329,
+      "peak_amplitude": 0.7386137247085571,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "വെള്ളം അയയ്ക്കൂ",
+      "synthesis_ms": 1094.4540000054985,
+      "sample_rate": 16000,
+      "samples": 14466,
+      "peak_amplitude": 0.687516987323761,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "ഡോക്ടറെ വിളിക്കൂ",
+      "synthesis_ms": 982.0695000234991,
+      "sample_rate": 16000,
+      "samples": 14241,
+      "peak_amplitude": 0.6708642244338989,
+      "finite": true,
+      "missing_token_letters": []
+    }
+  ]
+}

@@ -72,6 +72,41 @@ object AdditionalSttModel {
                 "tokens.txt" to indicTokens,
             ),
         ),
+        LanguageCode.BENGALI to Model(
+            LanguageCode.BENGALI, "shared/stt-bn-ctc-v2", "IndicConformer Bengali INT8 · device unverified", "bn",
+            linkedMapOf(
+                "model.int8.onnx" to FileCheck(197595578, "e9120a534f69df065314be468bf15579f1b92a4cd8c07ad119b80b69244718a8"),
+                "tokens.txt" to indicTokens,
+            ),
+        ),
+        LanguageCode.GUJARATI to Model(
+            LanguageCode.GUJARATI, "shared/stt-gu-ctc-v2", "IndicConformer Gujarati INT8 · device unverified", "gu",
+            linkedMapOf(
+                "model.int8.onnx" to FileCheck(197595461, "822ed7f0b809bbd479275bf91c913d05564b88c0d082bbcba2f37999b88cb598"),
+                "tokens.txt" to indicTokens,
+            ),
+        ),
+        LanguageCode.MARATHI to Model(
+            LanguageCode.MARATHI, "shared/stt-mr-ctc-v2", "IndicConformer Marathi INT8 · device unverified", "mr",
+            linkedMapOf(
+                "model.int8.onnx" to FileCheck(197595593, "1ea81e55c4b9b12624c9d02a5b9c1b6f7c871c78a55ff52d333f81cb5136eaf2"),
+                "tokens.txt" to indicTokens,
+            ),
+        ),
+        LanguageCode.MALAYALAM to Model(
+            LanguageCode.MALAYALAM, "shared/stt-ml-ctc-v2", "IndicConformer Malayalam INT8 · experimental · device unverified", "ml",
+            linkedMapOf(
+                "model.int8.onnx" to FileCheck(197595555, "dcbdfa9f773db910508b40b703cb76c5974e8d4c6f123ea81265b40853c3f0c2"),
+                "tokens.txt" to indicTokens,
+            ),
+        ),
+        LanguageCode.KANNADA to Model(
+            LanguageCode.KANNADA, "shared/stt-kn-ctc-v2", "IndicConformer Kannada INT8 · device unverified", "kn",
+            linkedMapOf(
+                "model.int8.onnx" to FileCheck(197595728, "b226ce7e4ea35b0dd66991964bd00e011b6b14b0fcdf4f7d1cccd777781c94dc"),
+                "tokens.txt" to indicTokens,
+            ),
+        ),
     )
 
     fun forLanguage(language: LanguageCode, autoDetect: Boolean = false): Model? =

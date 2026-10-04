@@ -84,34 +84,54 @@ object WavWriter {
         }
     }
 
-    /**
-     * Read 16-bit mono 16kHz PCM audio samples from an InputStream into FloatArray in [-1.0f, 1.0f].
-     */
+    /** Read mono 16 kHz PCM16 or IEEE-float32 WAV; reject unsupported audio explicitly. */
     fun readWav(inputStream: java.io.InputStream): FloatArray {
         val bytes = inputStream.readBytes()
-        if (bytes.size < 44) return FloatArray(0)
-
-        // Find "data" chunk
-        var dataOffset = 12
-        while (dataOffset < bytes.size - 8) {
-            if (bytes[dataOffset] == 'd'.code.toByte() &&
-                bytes[dataOffset + 1] == 'a'.code.toByte() &&
-                bytes[dataOffset + 2] == 't'.code.toByte() &&
-                bytes[dataOffset + 3] == 'a'.code.toByte()
-            ) {
-                break
+        require(bytes.size >= 12 && String(bytes, 0, 4, Charsets.US_ASCII) == "RIFF" &&
+            String(bytes, 8, 4, Charsets.US_ASCII) == "WAVE") { "Invalid WAV header" }
+        val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
+        val riffEnd = 8L + (buffer.getInt(4).toLong() and 0xffffffffL)
+        require(riffEnd in 12L..bytes.size.toLong()) { "Truncated WAV file" }
+        var offset = 12
+        var format = 0
+        var bits = 0
+        var dataOffset = -1
+        var dataSize = 0
+        while (offset.toLong() + 8 <= riffEnd) {
+            val id = String(bytes, offset, 4, Charsets.US_ASCII)
+            val size = buffer.getInt(offset + 4).toLong() and 0xffffffffL
+            val start = offset + 8
+            val end = start.toLong() + size
+            require(end <= riffEnd) { "Truncated WAV chunk: $id" }
+            when (id) {
+                "fmt " -> {
+                    require(size >= 16) { "Invalid WAV format chunk" }
+                    format = buffer.getShort(start).toInt() and 0xffff
+                    bits = buffer.getShort(start + 14).toInt() and 0xffff
+                    require(buffer.getShort(start + 2).toInt() == 1 && buffer.getInt(start + 4) == 16000) {
+                        "STT sample must be mono 16 kHz"
+                    }
+                    require((format == 1 && bits == 16) || (format == 3 && bits == 32)) {
+                        "Unsupported WAV encoding: format=$format, bits=$bits"
+                    }
+                    require(buffer.getShort(start + 12).toInt() == bits / 8) { "Invalid WAV block alignment" }
+                }
+                "data" -> {
+                    require(dataOffset == -1) { "Multiple WAV data chunks are unsupported" }
+                    dataOffset = start
+                    dataSize = size.toInt()
+                }
             }
-            dataOffset++
+            offset = (end + (size and 1L)).toInt()
         }
-        val pcmOffset = if (dataOffset < bytes.size - 8) dataOffset + 8 else 44
-        val pcmByteCount = bytes.size - pcmOffset
-        val sampleCount = pcmByteCount / 2
-
-        val buffer = ByteBuffer.wrap(bytes, pcmOffset, sampleCount * 2).order(ByteOrder.LITTLE_ENDIAN)
-        val floats = FloatArray(sampleCount)
-        for (i in 0 until sampleCount) {
-            floats[i] = buffer.short / 32768.0f
+        require(bits > 0 && dataOffset >= 0 && dataSize > 0 && dataSize % (bits / 8) == 0) {
+            "Missing or invalid WAV audio data"
         }
-        return floats
+        buffer.position(dataOffset)
+        return FloatArray(dataSize / (bits / 8)) {
+            val sample = if (format == 3) buffer.float else buffer.short / 32768.0f
+            require(sample.isFinite()) { "Non-finite WAV sample" }
+            sample
+        }
     }
 }

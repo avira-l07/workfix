@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.transceiver.PipelineGeneralizationTest" tests="17" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:18.555Z" hostname="AVII" time="1.103">
+  <properties/>
+  <testcase name="test English target uses text translation for specialized Indic speech models" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.004"/>
+  <testcase name="test Malayalam and Odia emergency phrases resolve correctly without neural MT" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.009"/>
+  <testcase name="test English to Odia cross-language UNSUPPORTED_ROUTE transmits original with BYPASSED status" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.215"/>
+  <testcase name="missing Marathi pack reports download required instead of falling back to Tiny" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.006"/>
+  <testcase name="test null target language falls back to transcribe" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.002"/>
+  <testcase name="test Hindi to Malayalam cross-language UNSUPPORTED_ROUTE transmits original with BYPASSED status" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.214"/>
+  <testcase name="test non-Malayalam non-Odia unsupported route still errors and drops message" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.212"/>
+  <testcase name="test Malayalam cross-language UNSUPPORTED_ROUTE transmits original with BYPASSED status" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.211"/>
+  <testcase name="test Hindi specialized transcription retains Hindi to English MT routing" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.004"/>
+  <testcase name="test Odia cross-language UNSUPPORTED_ROUTE transmits original with BYPASSED status" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.21"/>
+  <testcase name="test cross-language between two non-English languages sets task transcribe" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.002"/>
+  <testcase name="test Whisper native translate bypass applies only to shared multilingual speech models" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.002"/>
+  <testcase name="test cross-language between two non-English languages routes through MT engine" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.002"/>
+  <testcase name="missing Malayalam model surfaces error without Tiny or English translation fallback" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.005"/>
+  <testcase name="test English to Hindi baseline routes through MT engine without translate mode" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.002"/>
+  <testcase name="test same-language selection sets task transcribe across non-Hindi languages" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.002"/>
+  <testcase name="test Whisper native translate bypass does not apply when target is not English" classname="com.itantra.core.transceiver.PipelineGeneralizationTest" time="0.001"/>
+  <system-out><![CDATA[DEBUG Malayalam msg: state=DELIVERED, lang=MALAYALAM, targetLang=HINDI, transStatus=BYPASSED, detail=Original sent — no translation available for Malayalam, text=ഇത് ഒരു സാധാരണ സന്ദേശമാണ്
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

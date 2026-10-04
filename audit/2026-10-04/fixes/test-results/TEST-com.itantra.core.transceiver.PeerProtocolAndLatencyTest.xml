@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.transceiver.PeerProtocolAndLatencyTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:18.523Z" hostname="AVII" time="0.029">
+  <properties/>
+  <testcase name="testContinuousModeStateTransitions" classname="com.itantra.core.transceiver.PeerProtocolAndLatencyTest" time="0.002"/>
+  <testcase name="testEstimatedE2eLatencyComposition" classname="com.itantra.core.transceiver.PeerProtocolAndLatencyTest" time="0.002"/>
+  <testcase name="testAuthoritativeByteAccounting" classname="com.itantra.core.transceiver.PeerProtocolAndLatencyTest" time="0.007"/>
+  <testcase name="testCryptoTimingRecorderIntegration" classname="com.itantra.core.transceiver.PeerProtocolAndLatencyTest" time="0.008"/>
+  <testcase name="testTwoPeerHandshakeSasAndEncryptedCapabilities" classname="com.itantra.core.transceiver.PeerProtocolAndLatencyTest" time="0.007"/>
+  <testcase name="testEmergencyCodeReceiverLanguageResolution" classname="com.itantra.core.transceiver.PeerProtocolAndLatencyTest" time="0.001"/>
+  <testcase name="testAckVsHumanAckDistinction" classname="com.itantra.core.transceiver.PeerProtocolAndLatencyTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

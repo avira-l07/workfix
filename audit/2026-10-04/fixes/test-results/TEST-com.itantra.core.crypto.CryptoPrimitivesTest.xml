@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.crypto.CryptoPrimitivesTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:14.849Z" hostname="AVII" time="0.016">
+  <properties/>
+  <testcase name="testEcdhKeyExchange" classname="com.itantra.core.crypto.CryptoPrimitivesTest" time="0.008"/>
+  <testcase name="testAesGcmEncryption" classname="com.itantra.core.crypto.CryptoPrimitivesTest" time="0.002"/>
+  <testcase name="testSasGeneration" classname="com.itantra.core.crypto.CryptoPrimitivesTest" time="0.002"/>
+  <testcase name="testHkdfSha256" classname="com.itantra.core.crypto.CryptoPrimitivesTest" time="0.001"/>
+  <testcase name="testAesGcmTampering" classname="com.itantra.core.crypto.CryptoPrimitivesTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

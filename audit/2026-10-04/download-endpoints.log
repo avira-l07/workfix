@@ -1,0 +1,176 @@
+[
+  {
+    "language": "bn",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "bn",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "en",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "en",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "gu",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "gu",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "hi",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "hi",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "kn",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "kn",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "ml",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "ml",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "mr",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "mr",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "or",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "or",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "ta",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "ta",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "te",
+    "component": "sttModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "te",
+    "component": "ttsModel",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "hi",
+    "component": "Manual CTC",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "en",
+    "component": "Manual CTC",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "ta",
+    "component": "Manual CTC",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "te",
+    "component": "Manual CTC",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "or",
+    "component": "Manual CTC",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "bn",
+    "component": "Manual CTC",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "gu",
+    "component": "Manual CTC",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "mr",
+    "component": "Manual CTC",
+    "status": 200,
+    "error": null
+  },
+  {
+    "language": "ml",
+    "component": "Manual CTC",
+    "status": 200,
+    "error": null
+  }
+]

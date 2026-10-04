@@ -1,0 +1,12 @@
+{
+  "vocab.json": {
+    "url": "https://huggingface.co/facebook/mms-tts-mar/resolve/main/vocab.json",
+    "resolved_url": "https://huggingface.co/api/resolve-cache/models/facebook/mms-tts-mar/7af4a6db1df2eb20042d24cc7c180a492df1cc13/vocab.json?%2Ffacebook%2Fmms-tts-mar%2Fresolve%2Fmain%2Fvocab.json=&etag=%22a3a4b30a5910e9931cab47e277c048966aa9a72a%22",
+    "loanword_vowel_present": false
+  },
+  "tokenizer_config.json": {
+    "url": "https://huggingface.co/facebook/mms-tts-mar/resolve/main/tokenizer_config.json",
+    "resolved_url": "https://huggingface.co/api/resolve-cache/models/facebook/mms-tts-mar/7af4a6db1df2eb20042d24cc7c180a492df1cc13/tokenizer_config.json?%2Ffacebook%2Fmms-tts-mar%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22d3901371ddabf7acb33f7cf9f09db3b3723a5ff3%22",
+    "loanword_vowel_present": null
+  }
+}

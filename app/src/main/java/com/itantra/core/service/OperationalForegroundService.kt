@@ -11,8 +11,15 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.os.Handler
+import android.os.Looper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import androidx.core.app.NotificationCompat
 import com.example.itantra.MainActivity
+
+internal fun microphoneForegroundServiceType(sdk: Int): Int =
+    if (sdk >= 30) ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else 0
 
 /**
  * Operational Foreground Service for:
@@ -36,15 +43,29 @@ class OperationalForegroundService : Service() {
         const val ACTION_RESOLVE_EMERGENCY = "com.itantra.action.RESOLVE_EMERGENCY"
 
         const val EXTRA_EMERGENCY_TEXT = "extra_emergency_text"
+        private const val WAKE_LOCK_TIMEOUT_MS = 30 * 60_000L
+        private val _lastStartupError = MutableStateFlow<String?>(null)
+        val lastStartupError = _lastStartupError.asStateFlow()
+        private val _continuousReady = MutableStateFlow(false)
+        val continuousReady = _continuousReady.asStateFlow()
 
-        fun startContinuous(context: Context) {
+        internal fun reportContinuousFailure(message: String) {
+            _continuousReady.value = false
+            _lastStartupError.value = message
+        }
+
+        fun startContinuous(context: Context): Boolean {
+            _lastStartupError.value = null
+            _continuousReady.value = false
             val intent = Intent(context, OperationalForegroundService::class.java).apply {
                 action = ACTION_START_CONTINUOUS
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return try {
                 context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+                true
+            } catch (e: RuntimeException) {
+                _lastStartupError.value = "Continuous listening could not start. Keep iTantra open and check microphone and notification permissions."
+                false
             }
         }
 
@@ -52,7 +73,7 @@ class OperationalForegroundService : Service() {
             val intent = Intent(context, OperationalForegroundService::class.java).apply {
                 action = ACTION_STOP_CONTINUOUS
             }
-            context.startService(intent)
+            try { context.startService(intent) } catch (_: RuntimeException) {}
         }
 
         fun ensureNotificationChannels(context: Context) {
@@ -132,6 +153,15 @@ class OperationalForegroundService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var isContinuousRunning = false
     private var hasActiveEmergency = false
+    private val wakeLockHandler = Handler(Looper.getMainLooper())
+    private val renewWakeLock = object : Runnable {
+        override fun run() {
+            if (isContinuousRunning || hasActiveEmergency) {
+                wakeLock?.acquire(WAKE_LOCK_TIMEOUT_MS)
+                wakeLockHandler.postDelayed(this, WAKE_LOCK_TIMEOUT_MS / 2)
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -142,24 +172,32 @@ class OperationalForegroundService : Service() {
         when (intent?.action) {
             ACTION_START_CONTINUOUS -> {
                 isContinuousRunning = true
-                acquireWakeLock()
-                val notification = buildContinuousNotification()
                 try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val notification = buildContinuousNotification()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         startForeground(
                             NOTIFICATION_ID,
                             notification,
-                            ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                            microphoneForegroundServiceType(Build.VERSION.SDK_INT)
                         )
                     } else {
                         startForeground(NOTIFICATION_ID, notification)
                     }
+                    acquireWakeLock()
+                    _continuousReady.value = true
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    isContinuousRunning = false
+                    _continuousReady.value = false
+                    _lastStartupError.value = "Continuous listening stopped: microphone service is unavailable. Check permissions and retry while iTantra is open."
+                    if (!hasActiveEmergency) {
+                        releaseWakeLock()
+                        stopSelf(startId)
+                    }
                 }
             }
             ACTION_STOP_CONTINUOUS -> {
                 isContinuousRunning = false
+                _continuousReady.value = false
                 if (!hasActiveEmergency) {
                     releaseWakeLock()
                     try {
@@ -195,17 +233,18 @@ class OperationalForegroundService : Service() {
     private fun acquireWakeLock() {
         if (wakeLock == null) {
             val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
-            // No fixed timeout: wakelock is tied to continuous mode lifetime.
-            // releaseWakeLock() is always called on ACTION_STOP_CONTINUOUS,
-            // ACTION_RESOLVE_EMERGENCY, and onDestroy() to prevent leaks.
+            // Bounded acquisition renewed only while an operation is active.
             wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "iTantra:OperationalWakeLock")?.apply {
                 setReferenceCounted(false)
-                acquire()
+                acquire(WAKE_LOCK_TIMEOUT_MS)
             }
         }
+        wakeLockHandler.removeCallbacks(renewWakeLock)
+        wakeLockHandler.postDelayed(renewWakeLock, WAKE_LOCK_TIMEOUT_MS / 2)
     }
 
     private fun releaseWakeLock() {
+        wakeLockHandler.removeCallbacks(renewWakeLock)
         try {
             if (wakeLock?.isHeld == true) {
                 wakeLock?.release()
@@ -266,6 +305,8 @@ class OperationalForegroundService : Service() {
     }
 
     override fun onDestroy() {
+        if (isContinuousRunning) reportContinuousFailure("Continuous listening stopped because the microphone service ended. Open iTantra and retry.")
+        _continuousReady.value = false
         releaseWakeLock()
         super.onDestroy()
     }

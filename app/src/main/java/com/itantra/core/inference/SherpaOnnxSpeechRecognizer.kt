@@ -23,6 +23,9 @@ internal fun whisperLanguageCode(code: LanguageCode): String {
 internal fun languageCodeFromWhisper(code: String): LanguageCode? =
     LanguageCode.fromWireCode(code.trim())?.takeIf { it in ModelFileSpecs.supportedWhisperLanguages }
 
+/** Exact digital silence only: do not impose a threshold on quiet speech. */
+internal fun isDigitalSilence(samples: FloatArray): Boolean = samples.all { it == 0f }
+
 class SherpaOnnxSpeechRecognizer(
     private val context: Context,
     override val languageCode: LanguageCode,
@@ -147,7 +150,7 @@ class SherpaOnnxSpeechRecognizer(
                 copy
             }
 
-            if (chunks.isEmpty()) {
+            if (chunks.isEmpty() || chunks.all(::isDigitalSilence)) {
                 return@withContext SpeechRecognitionResult(
                     text = "",
                     isFinal = true,
@@ -187,6 +190,9 @@ class SherpaOnnxSpeechRecognizer(
     suspend fun decodeDirect(samples: FloatArray, silencePadding: Int = 0): SpeechRecognitionResult = withContext(Dispatchers.Default) {
         recognizerMutex.withLock {
             val rec = recognizer ?: throw IllegalStateException("Recognizer not loaded")
+            if (isDigitalSilence(samples)) return@withContext SpeechRecognitionResult(
+                text = "", isFinal = true, languageCode = languageCode, confidence = null, timestampMillis = 0L,
+            )
             val fullWaveform = if (silencePadding > 0) {
                 val arr = FloatArray(samples.size + silencePadding)
                 System.arraycopy(samples, 0, arr, 0, samples.size)

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.SttLanguageResolutionTest" tests="19" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:16.613Z" hostname="AVII" time="0.004">
+  <properties/>
+  <testcase name="manual English forces ENGLISH metadata regardless of Whisper detection" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="confidence must be null not 1_0" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="containsDevanagari detects Hindi text" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="manual Hindi stays HINDI even with Latin text" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.001"/>
+  <testcase name="detectScriptMismatch flags Latin text for Hindi" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="auto mode uses Whisper detected Hindi" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="manual Hindi forces HINDI metadata regardless of Whisper detection" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="manual English stays ENGLISH when Whisper returns unknown code" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="detectScriptMismatch returns null for English" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="detectScriptMismatch passes Devanagari text for Hindi" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="all Indic languages reject Latin hallucinations" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.001"/>
+  <testcase name="auto mode falls back to script detector when Whisper returns empty" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="unsupported Odia never reaches the native decoder as an invalid token" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.001"/>
+  <testcase name="auto mode uses Whisper detected language when available" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="auto mode falls back to configured language when no detection available" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="confidence must not be 1_0" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="unrelated script is rejected but mixed native text is retained" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="containsDevanagari rejects pure Latin text" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <testcase name="manual Hindi stays HINDI when Whisper returns empty detection" classname="com.itantra.core.inference.SttLanguageResolutionTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

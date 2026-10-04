@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.regression.Phase5TranslationNegotiationRegressionTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:35.580Z" hostname="AVII" time="0.011">
+  <properties/>
+  <testcase name="testTargetLanguageRepository_FIX_030" classname="com.itantra.regression.Phase5TranslationNegotiationRegressionTest" time="0.001"/>
+  <testcase name="testCapabilitiesBitmask_OnlyLoadedEnginesAdvertised_FIX_028_029" classname="com.itantra.regression.Phase5TranslationNegotiationRegressionTest" time="0.0"/>
+  <testcase name="testTypedChat_SameLanguageBypass_FIX_009" classname="com.itantra.regression.Phase5TranslationNegotiationRegressionTest" time="0.002"/>
+  <testcase name="testTypedChat_CrossLanguageSuccess_FIX_009" classname="com.itantra.regression.Phase5TranslationNegotiationRegressionTest" time="0.003"/>
+  <testcase name="testTargetLanguageResolutionPolicy_FIX_030" classname="com.itantra.regression.Phase5TranslationNegotiationRegressionTest" time="0.0"/>
+  <testcase name="testDirectionalReadiness_FIX_070" classname="com.itantra.regression.Phase5TranslationNegotiationRegressionTest" time="0.001"/>
+  <testcase name="testTypedChat_CrossLanguageFailure_BlocksTransmission_FIX_009_FIX_008" classname="com.itantra.regression.Phase5TranslationNegotiationRegressionTest" time="0.002"/>
+  <testcase name="testReceiver_AlreadyTranslatedPacket_ConsumesDirectly_FIX_027" classname="com.itantra.regression.Phase5TranslationNegotiationRegressionTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -3,12 +3,14 @@ package com.itantra.data.languagepack
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
+import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.net.InetSocketAddress
 import java.security.MessageDigest
 
 class RedirectDownloadTest {
@@ -58,6 +60,19 @@ class RedirectDownloadTest {
 
     @Test
     fun testDownloadFileFollowsHuggingFaceRedirectAndVerifiesChecksum() = runBlocking {
+        val payload = "offline model fixture\n".toByteArray()
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        server.createContext("/resolve/main/tokens.txt") { exchange ->
+            exchange.responseHeaders.add("Location", "/cdn/tokens.txt")
+            exchange.sendResponseHeaders(302, -1)
+            exchange.close()
+        }
+        server.createContext("/cdn/tokens.txt") { exchange ->
+            exchange.sendResponseHeaders(200, payload.size.toLong())
+            exchange.responseBody.use { it.write(payload) }
+        }
+        server.start()
+        try {
         val repo = RealLanguagePackRepository(
             context = FakeContext(tempFolder.root),
             storage = FileLanguagePackStorage(tempFolder.root),
@@ -65,9 +80,9 @@ class RedirectDownloadTest {
         )
 
         val targetFile = File(tempFolder.root, "marathi_tokens.txt")
-        // HuggingFace /resolve/main/ URL produces a 302 redirect to cdn-lfs host
-        val redirectUrl = "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/mar/tokens.txt"
-        val expectedSha256 = "4d968029d0754b41633cb0871cce6796a5ab3d3bc2b9b91c5721cfdf85156083"
+        // Same redirect shape as a model host, served locally so the test is offline.
+        val redirectUrl = "http://127.0.0.1:${server.address.port}/resolve/main/tokens.txt"
+        val expectedSha256 = "4930d360b4fe17ce00a0dc0db22594918ea0d21fe57242bfe828c1c53d4709fb"
 
         var totalBytesRead = 0
         repo.downloadFile(redirectUrl, targetFile) { bytesRead ->
@@ -82,5 +97,8 @@ class RedirectDownloadTest {
         val digest = MessageDigest.getInstance("SHA-256")
         val actualSha256 = digest.digest(targetFile.readBytes()).joinToString("") { "%02x".format(it) }
         assertEquals("SHA-256 must match the expected manifest checksum after redirect", expectedSha256, actualSha256)
+        } finally {
+            server.stop(0)
+        }
     }
 }

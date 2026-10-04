@@ -1,0 +1,76 @@
+{
+  "language": "hi",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Manual language: IndicConformer CTC INT8",
+  "stt_load_ms": 1076.2419999809936,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\hi\\model.int8.onnx",
+      "bytes": 197595593,
+      "sha256": "915c71e04dd7e5378a4057fdebb252b3a587188e4e99db6d7ce0909ad5ad05fa"
+    },
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\tokens.txt",
+      "bytes": 67605,
+      "sha256": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
+    }
+  ],
+  "stt": {
+    "reference": "कुछ अणुओं में अस्थिर केंद्रक होता है जिसका मतलब यह है कि उनमें थोड़े या बिना किसी झटके से टूटने की प्रवृत्ति होती है",
+    "output": "कुछ अणुओं में अस्थिर केंद्रक होता है जिसका मतलब यह कि उनमें थोड़े या बिना किसी झटके से टूटने की प्रवृत्ति होती है",
+    "native_script_majority": true,
+    "decode_ms": 537.6190999522805,
+    "audio_seconds": 9.12,
+    "rtf": 0.05894946271406585,
+    "single_recording_wer": 0.041666666666666664,
+    "word_errors": 1,
+    "reference_words": 24
+  },
+  "silence": {
+    "output": "स",
+    "decode_ms": 58.586200000718236
+  },
+  "tts_load_ms": 1018.8075999030843,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\hi\\tts\\model.onnx",
+      "bytes": 114043140,
+      "sha256": "c44b4179e7ff0da4d76eac3929fc1dbd67c51f02da8fca083c445e17450c3f75"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\hi\\tts\\tokens.txt",
+      "bytes": 472,
+      "sha256": "aa9abf8320da4ca80b153c51e2d3b6b52cb41e930ccc16dec570e70726ab3dd6"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "मदद चाहिए",
+      "synthesis_ms": 530.6326999561861,
+      "sample_rate": 16000,
+      "samples": 11962,
+      "peak_amplitude": 0.6520572304725647,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "पानी भेजिए",
+      "synthesis_ms": 688.8236000668257,
+      "sample_rate": 16000,
+      "samples": 13650,
+      "peak_amplitude": 0.7787742614746094,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "डॉक्टर को बुलाइए",
+      "synthesis_ms": 842.5611999118701,
+      "sample_rate": 16000,
+      "samples": 15889,
+      "peak_amplitude": 0.8490105867385864,
+      "finite": true,
+      "missing_token_letters": []
+    }
+  ]
+}

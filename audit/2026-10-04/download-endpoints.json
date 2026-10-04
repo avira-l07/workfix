@@ -1,0 +1,234 @@
+[
+  {
+    "language": "bn",
+    "component": "sttModel",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/bn/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595578",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "bn",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/ben/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114044676",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "en",
+    "component": "sttModel",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/en/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "174610057",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "en",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/eng/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114017028",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "gu",
+    "component": "sttModel",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/gu/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595461",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "gu",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/guj/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114033924",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "hi",
+    "component": "sttModel",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/hi/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595593",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "hi",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/hin/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114043140",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "kn",
+    "component": "sttModel",
+    "url": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main/tiny-encoder.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "12937772",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "kn",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/kan/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114045444",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "ml",
+    "component": "sttModel",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/ml/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595555",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "ml",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/mal/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114052356",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "mr",
+    "component": "sttModel",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/mr/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595593",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "mr",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/mar/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114043908",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "or",
+    "component": "sttModel",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/or/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197584928",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "or",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/ory/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114046212",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "ta",
+    "component": "sttModel",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/ta/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595513",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "ta",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/tam/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114032388",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "te",
+    "component": "sttModel",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/te/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595693",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "te",
+    "component": "ttsModel",
+    "url": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/tel/model.onnx",
+    "status": 200,
+    "advertised_bytes": "114037764",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "hi",
+    "component": "Manual CTC",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/hi/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595593",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "en",
+    "component": "Manual CTC",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/en/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "174610057",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "ta",
+    "component": "Manual CTC",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/ta/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595513",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "te",
+    "component": "Manual CTC",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/te/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595693",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "or",
+    "component": "Manual CTC",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/or/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197584928",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "bn",
+    "component": "Manual CTC",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/bn/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595578",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "gu",
+    "component": "Manual CTC",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/gu/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595461",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "mr",
+    "component": "Manual CTC",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/mr/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595593",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  },
+  {
+    "language": "ml",
+    "component": "Manual CTC",
+    "url": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a/ml/model.int8.onnx",
+    "status": 200,
+    "advertised_bytes": "197595555",
+    "note": "HEAD only; a successful complete download/checksum/resume/cancellation is not proven"
+  }
+]

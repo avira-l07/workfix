@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.domain.model.LanguageCatalogTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:22.523Z" hostname="AVII" time="0.002">
+  <properties/>
+  <testcase name="catalog contains exactly the 10 required languages" classname="com.itantra.domain.model.LanguageCatalogTest" time="0.0"/>
+  <testcase name="byCode returns the matching language" classname="com.itantra.domain.model.LanguageCatalogTest" time="0.0"/>
+  <testcase name="every language has a non-blank display name and native name" classname="com.itantra.domain.model.LanguageCatalogTest" time="0.0"/>
+  <testcase name="wire codes match expected ISO-639-1-style values" classname="com.itantra.domain.model.LanguageCatalogTest" time="0.001"/>
+  <testcase name="fromWireCode resolves known codes and returns null for unknown" classname="com.itantra.domain.model.LanguageCatalogTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

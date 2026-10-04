@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.data.benchmark.FieldEvidenceExportTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:21.467Z" hostname="AVII" time="0.019">
+  <properties/>
+  <testcase name="exportContainsMeasuredSummariesButNoConversationOrReferenceText" classname="com.itantra.data.benchmark.FieldEvidenceExportTest" time="0.018"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

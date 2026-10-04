@@ -12,6 +12,7 @@ import json
 import math
 import statistics
 import time
+import unicodedata
 from pathlib import Path
 
 import sherpa_onnx
@@ -19,11 +20,16 @@ import validate_stt
 
 ROOT = Path(__file__).resolve().parents[1]
 PHRASES = {
+    "kn": ["ಸಹಾಯ ಬೇಕು", "ನೀರು ಕಳುಹಿಸಿ", "ರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ", "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ", "ವೈದ್ಯರನ್ನು ಕರೆಸಿ"],
+    "ml": ["സഹായം വേണം", "വെള്ളം അയയ്ക്കൂ", "റോഡ് അടച്ചിരിക്കുന്നു", "ഞങ്ങൾ സുരക്ഷിതരാണ്", "ഡോക്ടറെ വിളിക്കൂ"],
+    "mr": ["मदत हवी आहे", "पाणी पाठवा", "रस्ता बंद आहे", "आम्ही सुरक्षित आहोत", "डॉक्टरांना बोलवा"],
     "hi": ["मदद चाहिए", "पानी भेजिए", "रास्ता बंद है", "हम सुरक्षित हैं", "डॉक्टर को बुलाइए"],
     "en": ["We need help", "Send clean water", "The road is blocked", "We are safe", "Call a doctor"],
     "ta": ["உதவி தேவை", "தண்ணீர் அனுப்புங்கள்", "சாலை மூடப்பட்டுள்ளது", "நாங்கள் பாதுகாப்பாக இருக்கிறோம்", "மருத்துவரை அழைக்கவும்"],
     "te": ["సహాయం కావాలి", "నీరు పంపండి", "రహదారి మూసివేశారు", "మేము సురక్షితంగా ఉన్నాము", "వైద్యుడిని పిలవండి"],
     "or": ["ସାହାଯ୍ୟ ଆବଶ୍ୟକ", "ପାଣି ପଠାନ୍ତୁ", "ରାସ୍ତା ବନ୍ଦ ଅଛି", "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ", "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ"],
+    "bn": ["সাহায্য দরকার", "পানি পাঠান", "রাস্তা বন্ধ", "আমরা নিরাপদে আছি", "ডাক্তার ডাকুন"],
+    "gu": ["મદદ જોઈએ છે", "પાણી મોકલો", "રસ્તો બંધ છે", "અમે સુરક્ષિત છીએ", "ડોક્ટરને બોલાવો"],
 }
 
 
@@ -44,6 +50,7 @@ def main():
     checksums = manifest["ttsModel"]["checksumsSha256"]
     if digest(model) != checksums["model.onnx"] or digest(tokens) != checksums["tokens.txt"]:
         raise RuntimeError(f"Pinned TTS file checksum mismatch: {lang}")
+    vocabulary = {line.rsplit(" ", 1)[0] for line in tokens.read_text(encoding="utf-8").splitlines()}
     tts = sherpa_onnx.OfflineTts(sherpa_onnx.OfflineTtsConfig(
         model=sherpa_onnx.OfflineTtsModelConfig(
             vits=sherpa_onnx.OfflineTtsVitsModelConfig(model=str(model), tokens=str(tokens)),
@@ -59,7 +66,9 @@ def main():
                 raise RuntimeError(f"Silent or invalid PCM: {lang} {phrase}")
             rows.append({"phrase": phrase, "repetition": repetition, "synthesis_ms": elapsed_ms,
                          "audio_ms": len(audio.samples) * 1000 / audio.sample_rate,
-                         "sample_rate_hz": audio.sample_rate})
+                         "sample_rate_hz": audio.sample_rate,
+                         "letters_or_marks_absent_from_token_file": [f"U+{ord(c):04X}" for c in
+                             sorted(set(phrase)) if unicodedata.category(c)[0] in "LM" and c not in vocabulary]})
     sorted_ms = sorted(row["synthesis_ms"] for row in rows)
     summary = {"count": 30, "mean_synthesis_ms": statistics.mean(sorted_ms),
                "p95_synthesis_ms_nearest_rank": sorted_ms[math.ceil(.95 * len(sorted_ms)) - 1],

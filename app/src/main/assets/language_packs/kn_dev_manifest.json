@@ -2,26 +2,24 @@
   "schemaVersion": 1,
   "languageCode": "kn",
   "displayName": "Kannada",
-  "packVersion": "1.0.0",
-  "downloadSizeBytes": 217655834,
-  "installedSizeBytes": 217655834,
+  "packVersion": "2.0.0",
+  "downloadSizeBytes": 311709264,
+  "installedSizeBytes": 311709264,
   "minimumAppVersion": 1,
   "sttModel": {
-    "modelId": "whisper-tiny-multilingual",
+    "modelId": "indicconformer-ctc-kn-int8",
     "format": "onnx",
     "quantization": "int8",
     "checksumsSha256": {
-      "tiny-encoder.int8.onnx": "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434",
-      "tiny-decoder.int8.onnx": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925",
-      "tiny-tokens.txt": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+      "kn/model.int8.onnx": "b226ce7e4ea35b0dd66991964bd00e011b6b14b0fcdf4f7d1cccd777781c94dc",
+      "tokens.txt": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
     },
-    "downloadUrl": "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main",
+    "downloadUrl": "https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx/resolve/9721eb71eea141fae0982cfcdb9dd2e3d4953c4a",
     "files": [
-      "tiny-encoder.int8.onnx",
-      "tiny-decoder.int8.onnx",
-      "tiny-tokens.txt"
+      "kn/model.int8.onnx",
+      "tokens.txt"
     ],
-    "sizeBytes": 103609903
+    "sizeBytes": 197663333
   },
   "ttsModel": {
     "modelId": "mms-tts-kn",

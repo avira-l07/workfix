@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.MultilingualTtsIntegrationTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:16.150Z" hostname="AVII" time="0.163">
+  <properties/>
+  <testcase name="ensureTts is a no-op when requested language is already loaded" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.007"/>
+  <testcase name="native synthesis failure throws TtsSynthesisException without returning fake empty PCM" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.005"/>
+  <testcase name="unload cleans up engine state safely" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.004"/>
+  <testcase name="load throws TtsLoadException when model file is zero-byte" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.029"/>
+  <testcase name="load throws TtsLoadException when tts directory or model file is missing" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.007"/>
+  <testcase name="ensureTts does not disturb existing STT engine" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.005"/>
+  <testcase name="Kannada Malayalam and Marathi startup phrases use characters supported by the real voice tokens" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.051"/>
+  <testcase name="ModelFileSpecs getTtsSpec returns null gracefully for unsupported language" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.003"/>
+  <testcase name="empty generated PCM is rejected with TtsSynthesisException" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.004"/>
+  <testcase name="load throws TtsLoadException when tokens file is missing" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.012"/>
+  <testcase name="blank text is rejected before native inference" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.005"/>
+  <testcase name="load throws TtsLoadException when tokens file is empty or contains only whitespace" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.022"/>
+  <testcase name="ensureTts unloads previous TTS before loading new TTS language" classname="com.itantra.core.inference.MultilingualTtsIntegrationTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

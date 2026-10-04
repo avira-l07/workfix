@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.AdditionalSttModelTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:15.417Z" hostname="AVII" time="0.353">
+  <properties/>
+  <testcase name="legacy Malayalam Tiny files do not satisfy dedicated pack readiness" classname="com.itantra.core.inference.AdditionalSttModelTest" time="0.059"/>
+  <testcase name="ten download manifests match the pinned runtime model files" classname="com.itantra.core.inference.AdditionalSttModelTest" time="0.083"/>
+  <testcase name="corrupt downloaded pack does not replace a valid speech model" classname="com.itantra.core.inference.AdditionalSttModelTest" time="0.034"/>
+  <testcase name="ten manual languages use distinct pinned CTC packs" classname="com.itantra.core.inference.AdditionalSttModelTest" time="0.003"/>
+  <testcase name="candidate update keeps the installed pack for all four training languages" classname="com.itantra.core.inference.AdditionalSttModelTest" time="0.123"/>
+  <testcase name="old shared Tiny install cannot mark dedicated Marathi ready" classname="com.itantra.core.inference.AdditionalSttModelTest" time="0.051"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,255 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114045931,
+  "model_sha256": "9644cfa46c5802c4c2c8196f91eedc0cd54d46527bbc32589ebaf967ed07591f",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 1360.2540333444874,
+    "p95_synthesis_ms_nearest_rank": 1872.482700040564,
+    "rtf": 0.8633975330131732,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 281145344
+  },
+  "rows": [
+    {
+      "phrase": "ಸಹಾಯ ಬೇಕು",
+      "repetition": 0,
+      "synthesis_ms": 619.3214999511838,
+      "audio_ms": 1270.625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನೀರು ಕಳುಹಿಸಿ",
+      "repetition": 0,
+      "synthesis_ms": 865.1505000889301,
+      "audio_ms": 1381.375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+      "repetition": 0,
+      "synthesis_ms": 1345.3606000402942,
+      "audio_ms": 1597.75,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+      "repetition": 0,
+      "synthesis_ms": 1810.5611000210047,
+      "audio_ms": 2187.375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+      "repetition": 0,
+      "synthesis_ms": 1375.511800055392,
+      "audio_ms": 1494.625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ಸಹಾಯ ಬೇಕು",
+      "repetition": 1,
+      "synthesis_ms": 1044.9722999474034,
+      "audio_ms": 1143.3125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನೀರು ಕಳುಹಿಸಿ",
+      "repetition": 1,
+      "synthesis_ms": 1291.3068999769166,
+      "audio_ms": 1321.125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+      "repetition": 1,
+      "synthesis_ms": 1518.0270000128075,
+      "audio_ms": 1609.875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+      "repetition": 1,
+      "synthesis_ms": 1810.6278999475762,
+      "audio_ms": 2221.4375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+      "repetition": 1,
+      "synthesis_ms": 1309.3816000036895,
+      "audio_ms": 1438.9375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ಸಹಾಯ ಬೇಕು",
+      "repetition": 2,
+      "synthesis_ms": 996.0460000438616,
+      "audio_ms": 1270.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನೀರು ಕಳುಹಿಸಿ",
+      "repetition": 2,
+      "synthesis_ms": 1248.2052999548614,
+      "audio_ms": 1347.5625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+      "repetition": 2,
+      "synthesis_ms": 1426.93430010695,
+      "audio_ms": 1646.125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+      "repetition": 2,
+      "synthesis_ms": 1860.1273000240326,
+      "audio_ms": 2250.5,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+      "repetition": 2,
+      "synthesis_ms": 1292.8487999597564,
+      "audio_ms": 1419.125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ಸಹಾಯ ಬೇಕು",
+      "repetition": 3,
+      "synthesis_ms": 1015.0123001076281,
+      "audio_ms": 1318.125,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನೀರು ಕಳುಹಿಸಿ",
+      "repetition": 3,
+      "synthesis_ms": 1216.9894000981003,
+      "audio_ms": 1285.25,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+      "repetition": 3,
+      "synthesis_ms": 1404.0134000824764,
+      "audio_ms": 1580.5,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+      "repetition": 3,
+      "synthesis_ms": 1893.00609997008,
+      "audio_ms": 2302.0625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+      "repetition": 3,
+      "synthesis_ms": 1360.441799974069,
+      "audio_ms": 1462.0625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ಸಹಾಯ ಬೇಕು",
+      "repetition": 4,
+      "synthesis_ms": 1115.3429000405595,
+      "audio_ms": 1218.5625,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನೀರು ಕಳುಹಿಸಿ",
+      "repetition": 4,
+      "synthesis_ms": 1269.3771999329329,
+      "audio_ms": 1317.75,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+      "repetition": 4,
+      "synthesis_ms": 1364.9764000438154,
+      "audio_ms": 1556.5,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+      "repetition": 4,
+      "synthesis_ms": 1823.8096999702975,
+      "audio_ms": 2224.25,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+      "repetition": 4,
+      "synthesis_ms": 1371.9582998892292,
+      "audio_ms": 1520.0,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ಸಹಾಯ ಬೇಕು",
+      "repetition": 5,
+      "synthesis_ms": 1118.5870000626892,
+      "audio_ms": 1246.875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನೀರು ಕಳುಹಿಸಿ",
+      "repetition": 5,
+      "synthesis_ms": 1332.3461000109091,
+      "audio_ms": 1292.75,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+      "repetition": 5,
+      "synthesis_ms": 1513.9730999944732,
+      "audio_ms": 1641.1875,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+      "repetition": 5,
+      "synthesis_ms": 1872.482700040564,
+      "audio_ms": 2253.9375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    },
+    {
+      "phrase": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+      "repetition": 5,
+      "synthesis_ms": 1320.9216999821365,
+      "audio_ms": 1444.4375,
+      "sample_rate_hz": 16000,
+      "letters_or_marks_absent_from_token_file": []
+    }
+  ]
+}

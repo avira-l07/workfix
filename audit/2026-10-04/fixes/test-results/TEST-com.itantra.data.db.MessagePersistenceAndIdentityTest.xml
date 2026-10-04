@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.data.db.MessagePersistenceAndIdentityTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:21.739Z" hostname="AVII" time="0.003">
+  <properties/>
+  <testcase name="testMessageEntityLosslessMapping" classname="com.itantra.data.db.MessagePersistenceAndIdentityTest" time="0.0"/>
+  <testcase name="testWordErrorRateCalculatorAccuracy" classname="com.itantra.data.db.MessagePersistenceAndIdentityTest" time="0.002"/>
+  <testcase name="testTimestampFormattingIsSingleLine" classname="com.itantra.data.db.MessagePersistenceAndIdentityTest" time="0.0"/>
+  <testcase name="testOperatorNameResolutionForMessageCard" classname="com.itantra.data.db.MessagePersistenceAndIdentityTest" time="0.001"/>
+  <testcase name="testAppSettingsOperatorNameDefaultAndCopy" classname="com.itantra.data.db.MessagePersistenceAndIdentityTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

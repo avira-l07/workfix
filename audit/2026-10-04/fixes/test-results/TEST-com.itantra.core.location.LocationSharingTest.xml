@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.location.LocationSharingTest" tests="22" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:16.816Z" hostname="AVII" time="1.258">
+  <properties/>
+  <testcase name="testDefaultGpsLocationProviderPermissionDeniedFailsEarlyWithoutRegistering" classname="com.itantra.core.location.LocationSharingTest" time="0.008"/>
+  <testcase name="testStaleOrFutureLocationTimestampsAreStoredWithTimeUnverifiedFlag" classname="com.itantra.core.location.LocationSharingTest" time="0.104"/>
+  <testcase name="testSendLocationMessagePermissionDenied" classname="com.itantra.core.location.LocationSharingTest" time="0.213"/>
+  <testcase name="testLocationPayloadRoundTripNegativeAndBounds" classname="com.itantra.core.location.LocationSharingTest" time="0.001"/>
+  <testcase name="testDefaultGpsLocationProviderSuccessRemovesUpdates" classname="com.itantra.core.location.LocationSharingTest" time="0.043"/>
+  <testcase name="testDefaultGpsLocationProviderTimeoutRemovesUpdates" classname="com.itantra.core.location.LocationSharingTest" time="0.056"/>
+  <testcase name="testSendLocationMessageSuccess" classname="com.itantra.core.location.LocationSharingTest" time="0.209"/>
+  <testcase name="testSendLocationMessageGpsDisabled" classname="com.itantra.core.location.LocationSharingTest" time="0.211"/>
+  <testcase name="testTimeUnverifiedFlagRenderingOnBubble" classname="com.itantra.core.location.LocationSharingTest" time="0.002"/>
+  <testcase name="testPacketEncoderExtractAadByte5IsLocationId" classname="com.itantra.core.location.LocationSharingTest" time="0.002"/>
+  <testcase name="testEndToEndLoopbackLocationMessageAliceToBob" classname="com.itantra.core.location.LocationSharingTest" time="0.027"/>
+  <testcase name="testMalformedLocationPayloadsAreDroppedWithoutCrashing" classname="com.itantra.core.location.LocationSharingTest" time="0.072"/>
+  <testcase name="testDefaultGpsLocationProviderPermissionRevocationDuringCleanupDoesNotCrash" classname="com.itantra.core.location.LocationSharingTest" time="0.056"/>
+  <testcase name="testSendLocationMessageNoFixAvailable" classname="com.itantra.core.location.LocationSharingTest" time="0.209"/>
+  <testcase name="testLocationPayloadTooShortThrows" classname="com.itantra.core.location.LocationSharingTest" time="0.002"/>
+  <testcase name="testReceiverDecodesValidLocationPacketAndStoresIt" classname="com.itantra.core.location.LocationSharingTest" time="0.01"/>
+  <testcase name="testLocationPayloadRoundTripPositive" classname="com.itantra.core.location.LocationSharingTest" time="0.001"/>
+  <testcase name="testLocationPacketAesGcmEncryptionDecryptionRoundTrip" classname="com.itantra.core.location.LocationSharingTest" time="0.008"/>
+  <testcase name="testMessageEntityLosslessMappingForLocation" classname="com.itantra.core.location.LocationSharingTest" time="0.003"/>
+  <testcase name="testLocationPacketFramingRoundTrip" classname="com.itantra.core.location.LocationSharingTest" time="0.002"/>
+  <testcase name="testDefaultGpsLocationProviderExternalCancellationRemovesUpdates" classname="com.itantra.core.location.LocationSharingTest" time="0.015"/>
+  <testcase name="testDateUtilsRelativeAgeFormatting" classname="com.itantra.core.location.LocationSharingTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

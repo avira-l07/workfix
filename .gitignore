@@ -3,7 +3,8 @@
 /local.properties
 /.idea
 .DS_Store
-/build
+build/
+**/build/
 /captures
 .externalNativeBuild
 .cxx
@@ -22,6 +23,7 @@ app/src/main/assets/language_packs/**/*.onnx
 
 # Reproducible desktop STT evaluation downloads and transient logs
 /tools/stt_models/
+/tools/stt_training/
 /tools/*.onnx
 /tools/stt-*-run.log
 /tools/__pycache__/

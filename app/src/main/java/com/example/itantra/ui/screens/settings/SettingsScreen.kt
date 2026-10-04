@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,6 +19,8 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.itantra.data.settings.AppSettings
+import com.example.itantra.data.settings.ThemeMode
+import com.example.itantra.data.settings.ColorPalette
 import com.example.itantra.ui.components.rememberBatteryState
 import com.example.itantra.ui.theme.ITantraColors
 
@@ -52,6 +56,26 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item { DeviceIdentityBanner() }
+            item {
+                SettingsSection(icon = "🎨", title = "Appearance", tag = "DISPLAY") {
+                    Text("Theme", style = MaterialTheme.typography.labelLarge)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(ThemeMode.entries) { mode ->
+                            FilterChip(selected = settings.themeMode == mode,
+                                onClick = { viewModel.setThemeMode(mode) },
+                                label = { Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }) })
+                        }
+                    }
+                    Text("Color palette", style = MaterialTheme.typography.labelLarge)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(ColorPalette.entries) { palette ->
+                            FilterChip(selected = settings.colorPalette == palette,
+                                onClick = { viewModel.setColorPalette(palette) },
+                                label = { Text(palette.name.lowercase().replaceFirstChar { it.uppercase() }) })
+                        }
+                    }
+                }
+            }
             item { WipeDataAction(onWipe) }
             item {
                 OperatorIdentitySection(
@@ -271,19 +295,8 @@ private fun NotYetAvailableGate(modifier: Modifier = Modifier) {
 
 @Composable
 private fun DeviceIdentityBanner() {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val deviceId = remember(context) {
-        try {
-            val androidId = android.provider.Settings.Secure.getString(
-                context.contentResolver,
-                android.provider.Settings.Secure.ANDROID_ID
-            ) ?: android.os.Build.MODEL
-            val hex = Integer.toHexString(androidId.hashCode()).take(4).uppercase()
-            "0x$hex-${android.os.Build.MODEL.take(5).uppercase()}"
-        } catch (e: Exception) {
-            "0xNODE-DEV"
-        }
-    }
+    val profile by com.itantra.app.AppGraph.deviceProfileManager.profile.collectAsState()
+    val deviceId = profile.deviceId.takeIf { it.isNotBlank() }
 
     Row(
         modifier = Modifier
@@ -296,11 +309,11 @@ private fun DeviceIdentityBanner() {
         Box(
             Modifier
                 .size(8.dp)
-                .background(ITantraColors.StatusSuccess, RoundedCornerShape(50)),
+                .background(if (deviceId != null) ITantraColors.StatusSuccess else ITantraColors.StatusWarning, RoundedCornerShape(50)),
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            "DEVICE ID: $deviceId · READY",
+            if (deviceId != null) "DEVICE ID: $deviceId" else "Device identity unavailable",
             style = MaterialTheme.typography.labelSmall,
             color = ITantraColors.TextHeadline,
         )

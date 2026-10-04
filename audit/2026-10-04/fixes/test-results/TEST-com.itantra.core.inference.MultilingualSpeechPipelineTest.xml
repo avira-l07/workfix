@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.MultilingualSpeechPipelineTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:16.112Z" hostname="AVII" time="0.035">
+  <properties/>
+  <testcase name="ensureTts does not unload active STT engine and ensureStt does not unload active TTS" classname="com.itantra.core.inference.MultilingualSpeechPipelineTest" time="0.01"/>
+  <testcase name="script detector does NOT invent distinction between Hindi and Marathi without context" classname="com.itantra.core.inference.MultilingualSpeechPipelineTest" time="0.002"/>
+  <testcase name="post processor strips special tokens and surrounding brackets" classname="com.itantra.core.inference.MultilingualSpeechPipelineTest" time="0.013"/>
+  <testcase name="script detector accurately detects unambiguous Indic scripts" classname="com.itantra.core.inference.MultilingualSpeechPipelineTest" time="0.0"/>
+  <testcase name="script detector does NOT automatically classify Latin text as English" classname="com.itantra.core.inference.MultilingualSpeechPipelineTest" time="0.0"/>
+  <testcase name="post processor normalizes NFC and preserves technical English terms" classname="com.itantra.core.inference.MultilingualSpeechPipelineTest" time="0.001"/>
+  <testcase name="ensureStt in AUTO mode reuses loaded recognizer without reloading" classname="com.itantra.core.inference.MultilingualSpeechPipelineTest" time="0.003"/>
+  <testcase name="speech input mode enum has AUTO and MANUAL" classname="com.itantra.core.inference.MultilingualSpeechPipelineTest" time="0.001"/>
+  <testcase name="post processor deduplicates repeating Whisper loops" classname="com.itantra.core.inference.MultilingualSpeechPipelineTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

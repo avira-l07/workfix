@@ -1,0 +1,225 @@
+{
+  "scope": "Windows desktop, fixed short field phrases",
+  "model_bytes": 114034326,
+  "model_sha256": "6d9b4f268765e19b6620983bd698c5e4fa943309560b6c7b199b50a4aae30d47",
+  "summary": {
+    "count": 30,
+    "mean_synthesis_ms": 528.6644666669114,
+    "p95_synthesis_ms_nearest_rank": 668.4320999775082,
+    "rtf": 0.5141316779048023,
+    "sample_rate_hz": 16000,
+    "peak_desktop_working_set_bytes": 224362496
+  },
+  "rows": [
+    {
+      "phrase": "મદદ જોઈએ છે",
+      "repetition": 0,
+      "synthesis_ms": 586.6846000426449,
+      "audio_ms": 976.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "પાણી મોકલો",
+      "repetition": 0,
+      "synthesis_ms": 431.1526999808848,
+      "audio_ms": 800.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "રસ્તો બંધ છે",
+      "repetition": 0,
+      "synthesis_ms": 487.58750001434237,
+      "audio_ms": 880.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "અમે સુરક્ષિત છીએ",
+      "repetition": 0,
+      "synthesis_ms": 577.0669000339694,
+      "audio_ms": 1168.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ડોક્ટરને બોલાવો",
+      "repetition": 0,
+      "synthesis_ms": 668.4320999775082,
+      "audio_ms": 1168.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "મદદ જોઈએ છે",
+      "repetition": 1,
+      "synthesis_ms": 528.8027999922633,
+      "audio_ms": 960.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "પાણી મોકલો",
+      "repetition": 1,
+      "synthesis_ms": 421.34030000306666,
+      "audio_ms": 832.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "રસ્તો બંધ છે",
+      "repetition": 1,
+      "synthesis_ms": 498.25009994674474,
+      "audio_ms": 1008.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "અમે સુરક્ષિત છીએ",
+      "repetition": 1,
+      "synthesis_ms": 591.797899978701,
+      "audio_ms": 1152.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ડોક્ટરને બોલાવો",
+      "repetition": 1,
+      "synthesis_ms": 599.6444000047632,
+      "audio_ms": 1200.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "મદદ જોઈએ છે",
+      "repetition": 2,
+      "synthesis_ms": 469.16549996240065,
+      "audio_ms": 976.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "પાણી મોકલો",
+      "repetition": 2,
+      "synthesis_ms": 396.33979997597635,
+      "audio_ms": 800.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "રસ્તો બંધ છે",
+      "repetition": 2,
+      "synthesis_ms": 538.5347999981605,
+      "audio_ms": 1072.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "અમે સુરક્ષિત છીએ",
+      "repetition": 2,
+      "synthesis_ms": 552.0305999671109,
+      "audio_ms": 1120.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ડોક્ટરને બોલાવો",
+      "repetition": 2,
+      "synthesis_ms": 597.7679000352509,
+      "audio_ms": 1232.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "મદદ જોઈએ છે",
+      "repetition": 3,
+      "synthesis_ms": 673.8715000101365,
+      "audio_ms": 992.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "પાણી મોકલો",
+      "repetition": 3,
+      "synthesis_ms": 464.9541999679059,
+      "audio_ms": 864.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "રસ્તો બંધ છે",
+      "repetition": 3,
+      "synthesis_ms": 452.2399000125006,
+      "audio_ms": 928.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "અમે સુરક્ષિત છીએ",
+      "repetition": 3,
+      "synthesis_ms": 527.8150000376627,
+      "audio_ms": 1072.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ડોક્ટરને બોલાવો",
+      "repetition": 3,
+      "synthesis_ms": 611.0948999994434,
+      "audio_ms": 1152.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "મદદ જોઈએ છે",
+      "repetition": 4,
+      "synthesis_ms": 497.34979995992035,
+      "audio_ms": 992.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "પાણી મોકલો",
+      "repetition": 4,
+      "synthesis_ms": 421.03100003441796,
+      "audio_ms": 848.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "રસ્તો બંધ છે",
+      "repetition": 4,
+      "synthesis_ms": 528.4678000025451,
+      "audio_ms": 1088.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "અમે સુરક્ષિત છીએ",
+      "repetition": 4,
+      "synthesis_ms": 558.6430999683216,
+      "audio_ms": 1152.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ડોક્ટરને બોલાવો",
+      "repetition": 4,
+      "synthesis_ms": 584.4975999789312,
+      "audio_ms": 1200.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "મદદ જોઈએ છે",
+      "repetition": 5,
+      "synthesis_ms": 511.9626999949105,
+      "audio_ms": 992.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "પાણી મોકલો",
+      "repetition": 5,
+      "synthesis_ms": 436.01300002774224,
+      "audio_ms": 896.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "રસ્તો બંધ છે",
+      "repetition": 5,
+      "synthesis_ms": 485.18080002395436,
+      "audio_ms": 976.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "અમે સુરક્ષિત છીએ",
+      "repetition": 5,
+      "synthesis_ms": 572.205800039228,
+      "audio_ms": 1168.0,
+      "sample_rate_hz": 16000
+    },
+    {
+      "phrase": "ડોક્ટરને બોલાવો",
+      "repetition": 5,
+      "synthesis_ms": 590.0090000359342,
+      "audio_ms": 1184.0,
+      "sample_rate_hz": 16000
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+iTANTRA - AUTHORIZED AUDIT FIXES AND VERIFICATION
+Date: 4 October 2026 (Asia/Kolkata)
+Repository: D:\new itantra
+Original pre-fix audit: D:\new itantra\docs\FRESH_AUDIT_2026-10-04.txt
+
+RESULT
+======
+The audited code defects have fixes or explicit safeguards. This is not a claim that all product quality requirements are met.
+Marathi pronunciation remains incomplete. Kannada manual recognition improved but still misses the accuracy target; auto-detect remains unreliable.
+Phone execution, field noise and live two-phone validation remain Not verified. No new trained model was fabricated or claimed.
+Final full regression: 444 tests; 0 failures; 0 errors; 0 skipped.
+Final production lint issue counts: {'Warning': 68, 'Hint': 1}. Warnings/hints remain. Unit/Android-test source static lint was excluded after repeated stalls; full unit execution was not filtered.
+Final build command: gradlew.bat -I audit/2026-10-04/fixes/verify.init.gradle :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:lintDebug :app:fixRuntimeInventory -x :app:lintAnalyzeDebugUnitTest -x :app:lintAnalyzeDebugAndroidTest -Pkotlin.incremental=false --no-daemon --offline
+The full unit suite was executed successfully on both the last JDK25 run and the temporary JDK21 run. The final build uses the original repository daemon pin and existing Gradle cache. Unit sources were not replaced or filtered.
+
+FINDING-BY-FINDING RECORD
+========================
+F01 - FIXED IN DEPENDENCY GRAPH
+Problem: ML Kit resolved vulnerable OkHttp 3.0.0.
+Change: Constrained the transitive runtime to OkHttp 4.12.0. ML Kit remains the translation engine.
+Verification / boundary: 169 resolved runtime Maven modules checked with OSV: no advisories returned. Native/AAR/tool/test libraries are outside this scan; this is not a security certification.
+
+F02 - MANUAL KANNADA PATH FIXED; QUALITY LIMITS REMAIN
+Problem: Tiny produced Latin/wrong-language text and hallucinated on a direct digital-silence probe.
+Change: Manual Kannada now downloads and uses the pinned dedicated CTC model. Added exact all-zero/empty waveform guards in both normal finalization and direct decode. No quiet-speech threshold was introduced. Kannada added to the in-app self-test.
+Verification / boundary: Same 30 clean desktop WAVs: WER 169.80% -> 17.23%, native script 0/30 -> 30/30. Raw CTC still emits a character on 1/2-second zeros; the new app guard prevents native decoding for digital silence, verified by unit checks. Real background noise, Android audio capture and all two-phone outcomes: Not verified. Auto-detect still uses Tiny and is explicitly labelled unreliable for Kannada; select manual Kannada.
+
+F03 - FIXED IN SHARED SENDER
+Problem: 16,384 plaintext bytes became 16,400 encrypted bytes and exceeded the receiver limit.
+Change: A shared guard reserves the 16-byte GCM tag: plaintext maximum 16,368 UTF-8 bytes, ciphertext maximum 16,384. Encoder bounds checked too. Rejected sends retain the message with a readable error; oversize retries stop. The chat input disables oversize sends.
+Verification / boundary: Regression covers the exact Hindi UTF-8 boundary through encrypt/frame/decode/decrypt, the first oversize byte, unchanged next counter, and emoji round-trip. Final translated payloads are guarded too.
+
+F04 - MITIGATED; REPLACEMENT MARATHI VOICE STILL NEEDED
+Problem: The MMS Marathi voice silently skipped U+0949 (ॉ) in the doctor phrase.
+Change: Load uses a native Marathi startup phrase. Synthesis checks actual voice vocabulary before native generation. Unsupported Marathi letters/marks produce an explicit voice error; original text is preserved. Unannounced Android TTS fallback is blocked for Marathi and Kannada as well as the original strict languages.
+Verification / boundary: Unit checks cover the native startup phrase, डॉक्टरांना बोलवा, and foreign letters. Published facebook/mms-tts-mar vocabulary was fetched and also lacks this vowel. Reinstalling that voice cannot repair it. This fixes silent loss, not pronunciation. A broader Sherpa-compatible voice or retraining, plus listener assessment, remains required.
+
+F05 - FIXED IN SOURCE; DEVICE UI NOT VERIFIED
+Problem: Static TAC-RELIEF-04 and cohort/channel labels looked like live operational data.
+Change: Hub and Connect use verified peer identity and actual direct connection state; absent identity is labelled unavailable/pending. Removed the invented channel/cohort labels.
+Verification / boundary: Source checks confirm those strings are removed. Real radio/satellite/multi-hop integration is not created or claimed.
+
+F06 - NATIVE APPEARANCE IMPLEMENTED; VISUAL DEVICE CHECK PENDING
+Problem: Preview appearance options were absent in native UI and fixed light colors broke dark mode.
+Change: Native Compose theme supports System/Light/Dark and Ocean/Forest/Iris/Ember. Settings persist atomically in DataStore. MainActivity applies the saved theme. Existing screens use semantic surface/text/status colors; drawing colors are captured in composable scope. Color changes animate over 180 ms.
+Verification / boundary: All eight scheme combinations pass tested 4.5:1 text contrast pairs. Persistence/concurrent preference updates pass. These numeric token checks do not certify every rendered screen, transition, font size, TalkBack order or sunlight readability. Full HTML-preview workflow parity is not claimed.
+
+F07 - FIXED AT PROFILE PARSER
+Problem: Empty IDs, unsupported protocol versions and malformed profiles could replace active peer identity.
+Change: Reject unsupported/non-integer versions, malformed IT-XXXX-XXXX IDs, blank/control/oversize names, missing/unknown/duplicate languages and oversize payloads. Rejected profiles never reach the existing identity-update branch.
+Verification / boundary: Regression covers valid round-trip plus malformed JSON, blank IDs, v999/v1.5/string versions, control text, duplicate/unknown languages, and byte/name limits. Existing blank-row DAO guard remains.
+
+F08 - FIXED IN SOURCE
+Problem: Unconditional profile logs exposed peer IDs and names in release logs.
+Change: Profile sent/received logs now describe validation state without identity values.
+Verification / boundary: Source check performed. Installed release log capture and external privacy certification: Not verified.
+
+F09 - FIXED AND STRESS-TESTED
+Problem: Concurrent decrypt calls could authenticate the same counter before replay state was committed.
+Change: After AEAD authentication, require the existing synchronized replay-window accept/commit to succeed before returning plaintext.
+Verification / boundary: 50 rounds x 8 concurrent decrypt calls: exactly one acceptance per authenticated packet in the passing regression. Existing tamper/session tests also pass. No remote exploit or phone attack was claimed.
+
+F10 - FIXED AND TESTED
+Problem: Native notes grouped offsets 2..7 as seven days, while preview used 2..6.
+Change: Native rolling seven-date interval now covers today through six days ago, with Today/Yesterday kept separate.
+Verification / boundary: Fixed-date tests cover today, yesterday, 6/7/10 days ago, last month and 13 months ago, plus local midnight and a Europe/Berlin daylight-saving boundary. Note deletion isolation tests remain green.
+
+F11 - REMOVED FROM DEFAULT APK
+Problem: Unused Nearby dependency and experimental CTranslate2 JNI increased the shipped runtime.
+Change: Removed unused Nearby. CMake/CTranslate2 build is explicitly opt-in with -PitantraExperimentalTranslation=true; default APK uses existing ML Kit translation.
+Verification / boundary: Fresh debug/release APK inventories contain 8 arm64 native libraries, no libitantra_mt_jni, and no ONNX weight assets. Selective downloads are preserved. JNI load-alignment metadata is >=16 KiB; this is not an Android device-load test.
+
+F12 - FIXED IN SOURCE
+Problem: Settings displayed an ANDROID_ID-derived hash/fake fallback rather than the peer protocol ID.
+Change: Settings reads the persistent DeviceProfileManager IT-XXXX-XXXX identity used by the handshake. Missing identity is labelled unavailable.
+Verification / boundary: Source wiring checked and builds pass. Pairing-screen comparison on phones: Not verified. An unrelated internal node-ID hash is still used by the coordinator and is not presented as this Settings ID.
+
+F13 - COMPATIBILITY AND CLEANUP FIXED; DEVICE REPRODUCTION PENDING
+Problem: API29 used the API30 microphone foreground-service type; startup failures left operation flags/wakelocks running.
+Change: API26-29 use the two-argument foreground call; API30+ use microphone type. Acquire a bounded renewable wakelock only after foreground startup succeeds. Clear readiness on stop/failure, report errors to the hub, wait for service readiness before capture, and stop capture on failure/timeout. Preserve an already-active emergency when continuous startup fails.
+Verification / boundary: API type compatibility unit check passes. Android permission denial, service lifecycle, screen-off capture and wakelock behavior were not exercised on a phone.
+
+FRESH KANNADA BEFORE/AFTER
+==========================
+Tiny: WER 169.80%; mean 892.0 ms; native 0/30.
+CTC: WER 17.23%; CER 6.32%; mean 439.6 ms; p95 1123.3 ms; RTF 0.0349; native 30/30.
+CTC peak desktop working set: 554,360,832 bytes. Model + tokens: 197,663,333 bytes; full Kannada speech pack: 311,709,264 bytes.
+These are 30 clean FLEURS desktop recordings with checked WAV hashes, not an independent noisy field corpus. Timings exclude model load and were taken while other development work ran.
+Hindi/English model files, decoding flags and translation engine were not changed. Exact digital-zero gating affects only empty/all-zero audio for every language; nonzero quiet samples retain the old inference path.
+No fresh 30-utterance TTS benchmark was run during these fixes; previously reported TTS numbers stay explicitly desktop references.
+
+APKS
+====
+Deliverable debug APK: D:\new itantra\artifacts\audit-fixes-2026-10-04\app-debug.apk
+Build path: D:\new itantra\audit\2026-10-04\build\app\outputs\apk\debug\app-debug.apk
+Bytes: 94,600,164; SHA-256: cff0548d54ccec998dca570e636c88bd8cfe656324efc1065cd92179dac76359
+Native libraries: 8; bundled ONNX weights: 0.
+Build path: D:\new itantra\audit\2026-10-04\build\app\outputs\apk\release\app-release-unsigned.apk
+Bytes: 78,360,680; SHA-256: 416b05b5f8c82c6034f1d65e3817ce8a5b8f1a965839fa5ee103a88d6013e5d2
+Native libraries: 8; bundled ONNX weights: 0.
+Debug is installable for compatible arm64 Android devices. Release is unsigned and is not ready for installation/distribution.
+Delivered APK DEX was checked for the new digital-silence, payload-limit, service-failure and ten-language self-test code markers.
+The build directory is a junction to temporary C: storage because D: had limited free space. The deliverable debug copy above is stored in the repository artifacts folder and its hash was checked.
+
+FILES TOUCHED IN THIS FIX PASS
+=============================
+Pre-existing work was present. The main-source list is compared against SHA-256 snapshots taken at this fix pass start; this is not the full historical git diff.
+app/src/main/assets/benchmark/five_self_test/kn.wav
+app/src/main/assets/benchmark/five_self_test/manifest.json
+app/src/main/assets/language_packs/kn_dev_manifest.json
+app/src/main/java/com/itantra/core/inference/TtsTextCoverage.kt
+app/src/test/java/com/example/itantra/data/settings/AppearancePersistenceTest.kt
+app/src/test/java/com/example/itantra/ui/screens/voicenotes/VoiceNoteGroupingTest.kt
+app/src/test/java/com/example/itantra/ui/theme/AppearanceRegressionTest.kt
+app/src/test/java/com/itantra/core/crypto/AuditFixRegressionTest.kt
+app/src/test/java/com/itantra/core/inference/AdditionalSttModelTest.kt
+app/src/test/java/com/itantra/core/inference/DigitalSilenceTest.kt
+app/src/test/java/com/itantra/core/inference/FiveLanguageSelfTestTest.kt
+app/src/test/java/com/itantra/core/inference/MultilingualTtsIntegrationTest.kt
+app/src/test/java/com/itantra/core/inference/TtsTextCoverageTest.kt
+app/src/test/java/com/itantra/core/service/ForegroundServiceCompatibilityTest.kt
+app/src/test/java/com/itantra/core/transceiver/PipelineGeneralizationTest.kt
+app\build.gradle.kts
+app\src\main\java\com\example\itantra\MainActivity.kt
+app\src\main\java\com\example\itantra\data\settings\AppSettings.kt
+app\src\main\java\com\example\itantra\data\settings\SettingsRepository.kt
+app\src\main\java\com\example\itantra\ui\components\BatteryIndicator.kt
+app\src\main\java\com\example\itantra\ui\components\MessageFilterChipsRow.kt
+app\src\main\java\com\example\itantra\ui\screens\chat\DedicatedChatScreen.kt
+app\src\main\java\com\example\itantra\ui\screens\connect\ConnectScreenContent.kt
+app\src\main\java\com\example\itantra\ui\screens\diagnostics\DiagnosticsScreen.kt
+app\src\main\java\com\example\itantra\ui\screens\hub\TransceiverHubScreen.kt
+app\src\main\java\com\example\itantra\ui\screens\language\LanguagePacksScreen.kt
+app\src\main\java\com\example\itantra\ui\screens\settings\SettingsScreen.kt
+app\src\main\java\com\example\itantra\ui\screens\settings\SettingsViewModel.kt
+app\src\main\java\com\example\itantra\ui\screens\voicenotes\VoiceNoteGrouping.kt
+app\src\main\java\com\example\itantra\ui\theme\Color.kt
+app\src\main\java\com\example\itantra\ui\theme\Theme.kt
+app\src\main\java\com\itantra\core\crypto\SecureSessionManager.kt
+app\src\main\java\com\itantra\core\inference\AdditionalSttModel.kt
+app\src\main\java\com\itantra\core\inference\FiveLanguageSelfTest.kt
+app\src\main\java\com\itantra\core\inference\SherpaOnnxSpeechRecognizer.kt
+app\src\main\java\com\itantra\core\inference\SherpaOnnxSpeechSynthesizer.kt
+app\src\main\java\com\itantra\core\service\OperationalForegroundService.kt
+app\src\main\java\com\itantra\core\transceiver\TransceiverCoordinator.kt
+app\src\main\java\com\itantra\core\transport\packet\PacketEncoder.kt
+app\src\main\java\com\itantra\core\transport\packet\ProfilePayload.kt
+docs/AUDIT_FIXES_2026-10-04.txt
+docs/FRESH_AUDIT_2026-10-04.txt
+docs/LANGUAGE_BENCHMARKS.md
+docs/QUICK_STAT_SUMMARY.md
+audit/2026-10-04/fixes/: new benchmark/verification/report scripts, logs and evidence files.
+
+VERIFICATION EVIDENCE
+=====================
+Evidence directory: D:\new itantra\audit\2026-10-04\fixes
+final-main-verification.log: completed Gradle verification with unit/Android-test source lint exclusions; earlier attempt logs are retained separately.
+test-results-summary.json / test-results/: copied final XML evidence and totals.
+lint-results-debug.xml / lint-results-debug.txt: final issues, including retained warnings/hints.
+dependencies.json / dependency-security.json: resolved runtime Maven versions and OSV results.
+packages.json / package.log: APK hashes, weight inventory, native libraries and ELF alignment metadata.
+kn-tiny-30.json / five-language-kn-30.json: fresh same-corpus results.
+kannada-silence.json: raw model zero-PCM behavior motivating the app guard.
+marathi-published-vocabulary.json / marathi-vocab.json: upstream vocabulary check.
+
+BUILD/TEST ISSUES ENCOUNTERED AND RESOLVED
+=======================================
+Initial sandbox Gradle attempts could not write the installed cache; authorized elevated execution reused that cache.
+Stale incremental Kotlin metadata caused unresolved top-level symbols. Full Kotlin compilation resolved this; a few real composable color/coroutine import errors were corrected.
+The first regression run had a JUnit test method return-type mistake and an obsolete Kannada Tiny expectation. Both were corrected; the full suite was rerun.
+Unit-source static lint stalled during file traversal under JDK25 and JDK21; Android-test source analysis also stalled. The repository daemon pin overrode the initial JAVA_HOME=JDK21 retry; it was temporarily changed for the JDK21 run and then restored. Only this audit daemon was stopped after checking its process command. Final lint excludes both stalled test-source analyses and stale scratch results were removed. Production lint remains enabled. Full test-source static lint is Not verified; the root cause of the stall is not established.
+A desktop probe console hit Windows cp1252 Unicode output; its JSON was saved correctly. Console output was made ASCII-safe and the probe rerun.
+
+REMAINING LIMITS / NEXT PHONE CHECKS
+===================================
+1. Install the deliverable APK. Select manual Kannada and download the new dedicated STT pack; an old Tiny download is insufficient. Run Diagnostics ten-language self-test.
+2. Marathi: supported native text can synthesize; unsupported letters now show an error. A voice supporting the doctor vowel is still required before calling Marathi fully ready.
+3. Verify all ten voices with native listeners; record microphone transcripts, audibility, latency, RAM and real two-phone outcomes. Do not mark a language validated from a desktop run or the one-clip self-test.
+4. Confirm Android foreground-service permission rejection and screen-off behavior, native theme screens, real Settings/peer ID consistency, and release logs on devices.
+5. Tamil, Telugu, Odia, Marathi, Kannada and Malayalam still miss at least the current accuracy target. These audit fixes did not train models or produce new WER claims for the other languages.
+6. General Malayalam/Odia translation and radio/satellite/mesh capability remain as previously documented. No new gateway integration is claimed.
+7. OSV scan covers resolved runtime Maven packages only. Existing dependency-maintenance and lint warnings remain. Review the original audit for licence and field-readiness limits.
+8. Native visual rendering/browser interaction was not verified here. A prior local-file browser policy rejection was not bypassed.
+No phone was controlled, no user history/database was wiped, and no Git commit or push was performed in this pass.

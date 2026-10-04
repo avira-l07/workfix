@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.metrics.AudioAnalysisTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:18.076Z" hostname="AVII" time="0.076">
+  <properties/>
+  <testcase name="analyzeTailSilence" classname="com.itantra.core.metrics.AudioAnalysisTest" time="0.076"/>
+  <system-out><![CDATA[[EN-CRIT-017.wav] Total=2016ms | SpeechEnd=1800ms | ExistingTrailingSilence=216ms | Tail500msRMS=0.039714160111014175
+[EN-CRIT-018.wav] Total=1632ms | SpeechEnd=1425ms | ExistingTrailingSilence=207ms | Tail500msRMS=0.041430830159975514
+[EN-CRIT-020.wav] Total=1416ms | SpeechEnd=1175ms | ExistingTrailingSilence=241ms | Tail500msRMS=0.009039446155468261
+[EN-CRIT-021.wav] Total=1800ms | SpeechEnd=1575ms | ExistingTrailingSilence=225ms | Tail500msRMS=0.027519469729392662
+[EN-CRIT-022.wav] Total=1992ms | SpeechEnd=1750ms | ExistingTrailingSilence=242ms | Tail500msRMS=0.02270396825426062
+[EN-CRIT-024.wav] Total=1968ms | SpeechEnd=1700ms | ExistingTrailingSilence=268ms | Tail500msRMS=0.04497070674528632
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.storage.EmergencyEncryptionTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:18.233Z" hostname="AVII" time="0.152">
+  <properties/>
+  <testcase name="migratesLegacyJson" classname="com.itantra.core.storage.EmergencyEncryptionTest" time="0.028"/>
+  <testcase name="encryptedRoundTrip" classname="com.itantra.core.storage.EmergencyEncryptionTest" time="0.018"/>
+  <testcase name="tamperedFileRejected" classname="com.itantra.core.storage.EmergencyEncryptionTest" time="0.029"/>
+  <testcase name="encryptedTempSurvivesInterruptedFirstWrite" classname="com.itantra.core.storage.EmergencyEncryptionTest" time="0.021"/>
+  <testcase name="validEncryptedTempRecoversCorruptMain" classname="com.itantra.core.storage.EmergencyEncryptionTest" time="0.02"/>
+  <testcase name="legacyRecoveryCopySurvivesKeystoreWriteFailure" classname="com.itantra.core.storage.EmergencyEncryptionTest" time="0.035"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.transport.peer.WifiDirectPeerTransportTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:21.330Z" hostname="AVII" time="0.135">
+  <properties/>
+  <testcase name="testWifiDirectPeerDataModelAndMasking" classname="com.itantra.core.transport.peer.WifiDirectPeerTransportTest" time="0.002"/>
+  <testcase name="testFix019_replayBufferRetainsFramesForLateSubscriber" classname="com.itantra.core.transport.peer.WifiDirectPeerTransportTest" time="0.122"/>
+  <testcase name="testWifiDirectErrorValuesExist" classname="com.itantra.core.transport.peer.WifiDirectPeerTransportTest" time="0.001"/>
+  <testcase name="testTransportCoordinatorSwitchTransport" classname="com.itantra.core.transport.peer.WifiDirectPeerTransportTest" time="0.003"/>
+  <testcase name="testWifiDirectLocationModeRequirementContract" classname="com.itantra.core.transport.peer.WifiDirectPeerTransportTest" time="0.002"/>
+  <testcase name="testWifiDirectPeerTransportInitialStateAndGuards" classname="com.itantra.core.transport.peer.WifiDirectPeerTransportTest" time="0.002"/>
+  <testcase name="testFix010_016_transportRestoreIdempotence" classname="com.itantra.core.transport.peer.WifiDirectPeerTransportTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

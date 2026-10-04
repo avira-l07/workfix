@@ -1,0 +1,16 @@
+[
+  {
+    "text": "Hello",
+    "samples": 4338,
+    "sample_rate": 16000,
+    "max_amplitude": 0.013846030458807945,
+    "error": null
+  },
+  {
+    "text": "ಸಹಾಯ ಬೇಕು",
+    "samples": 17724,
+    "sample_rate": 16000,
+    "max_amplitude": 0.7118430733680725,
+    "error": null
+  }
+]

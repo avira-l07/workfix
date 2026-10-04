@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.regression.SecureHandshakeIntegrationTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:35.596Z" hostname="AVII" time="0.021">
+  <properties/>
+  <testcase name="testDuplicateHelloDoesNotCorruptSession" classname="com.itantra.regression.SecureHandshakeIntegrationTest" time="0.006"/>
+  <testcase name="testDisconnectResetsSessionCleanly" classname="com.itantra.regression.SecureHandshakeIntegrationTest" time="0.001"/>
+  <testcase name="testMalformedHelloDoesNotEstablishSession" classname="com.itantra.regression.SecureHandshakeIntegrationTest" time="0.0"/>
+  <testcase name="testRetransmittingCachedVerifyPacketDoesNotCorruptSession" classname="com.itantra.regression.SecureHandshakeIntegrationTest" time="0.005"/>
+  <testcase name="testResponderDoesNotIndependentlySendFirstHello" classname="com.itantra.regression.SecureHandshakeIntegrationTest" time="0.0"/>
+  <testcase name="testAsymmetricSasConfirmationTiming" classname="com.itantra.regression.SecureHandshakeIntegrationTest" time="0.005"/>
+  <testcase name="testTwoPartyHandshakeFullLifecycle" classname="com.itantra.regression.SecureHandshakeIntegrationTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

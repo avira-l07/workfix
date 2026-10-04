@@ -1,0 +1,20 @@
+{
+  "scope": "Direct desktop engine, all-zero PCM only; production VAD and phone noise not tested",
+  "rows": [
+    {
+      "seconds": 1,
+      "output": "ಸ",
+      "decode_ms": 45.08260008879006
+    },
+    {
+      "seconds": 2,
+      "output": "ಸ",
+      "decode_ms": 69.47330001275986
+    },
+    {
+      "seconds": 5,
+      "output": "",
+      "decode_ms": 179.70199999399483
+    }
+  ]
+}

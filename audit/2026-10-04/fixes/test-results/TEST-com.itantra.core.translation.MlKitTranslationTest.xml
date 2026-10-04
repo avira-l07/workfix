@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.translation.MlKitTranslationTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:19.758Z" hostname="AVII" time="0.001">
+  <properties/>
+  <testcase name="TranslationResult carries source and target languages" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="EN to HI is a supported route" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="same-language bypass returns input text unchanged" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="TRANSLATION_READY_NOTE exists and is meaningful" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.001"/>
+  <testcase name="TranslationModelState values are correct" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="HI to EN output should not be empty" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="EN to HI output without Devanagari is script mismatch" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="unsupported route returns error" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="EN to HI output must contain Devanagari" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="same-language bypass for English" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="TranslationResult error field for model not provisioned" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="HI to EN is a supported route" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <testcase name="TRANSLATION_SCOPE_NOTE is updated from stale copy" classname="com.itantra.core.translation.MlKitTranslationTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,321 @@
+[
+  {
+    "path": "D:\\new itantra\\audit\\2026-10-04\\build\\app\\outputs\\apk\\debug\\app-debug.apk",
+    "bytes": 94600164,
+    "sha256": "cff0548d54ccec998dca570e636c88bd8cfe656324efc1065cd92179dac76359",
+    "onnx_weight_assets": [],
+    "bundled_benchmark_wav_count": 34,
+    "native_libraries": [
+      {
+        "path": "lib/arm64-v8a/libandroidx.graphics.path.so",
+        "bytes": 10096,
+        "compressed_bytes": 10096,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+        "bytes": 7112,
+        "compressed_bytes": 7112,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libonnxruntime.so",
+        "bytes": 22249552,
+        "compressed_bytes": 22249552,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsherpa-onnx-c-api.so",
+        "bytes": 4465168,
+        "compressed_bytes": 4465168,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsherpa-onnx-cxx-api.so",
+        "bytes": 440688,
+        "compressed_bytes": 440688,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsherpa-onnx-jni.so",
+        "bytes": 5036448,
+        "compressed_bytes": 5036448,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsqlcipher.so",
+        "bytes": 2100672,
+        "compressed_bytes": 2100672,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libtranslate_jni.so",
+        "bytes": 16361032,
+        "compressed_bytes": 16361032,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      }
+    ]
+  },
+  {
+    "path": "D:\\new itantra\\audit\\2026-10-04\\build\\app\\outputs\\apk\\release\\app-release-unsigned.apk",
+    "bytes": 78360680,
+    "sha256": "416b05b5f8c82c6034f1d65e3817ce8a5b8f1a965839fa5ee103a88d6013e5d2",
+    "onnx_weight_assets": [],
+    "bundled_benchmark_wav_count": 34,
+    "native_libraries": [
+      {
+        "path": "lib/arm64-v8a/libandroidx.graphics.path.so",
+        "bytes": 10096,
+        "compressed_bytes": 10096,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+        "bytes": 7112,
+        "compressed_bytes": 7112,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libonnxruntime.so",
+        "bytes": 22249552,
+        "compressed_bytes": 22249552,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsherpa-onnx-c-api.so",
+        "bytes": 4465168,
+        "compressed_bytes": 4465168,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsherpa-onnx-cxx-api.so",
+        "bytes": 440688,
+        "compressed_bytes": 440688,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsherpa-onnx-jni.so",
+        "bytes": 5036448,
+        "compressed_bytes": 5036448,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsqlcipher.so",
+        "bytes": 2100672,
+        "compressed_bytes": 2100672,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libtranslate_jni.so",
+        "bytes": 16361032,
+        "compressed_bytes": 16361032,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      }
+    ]
+  },
+  {
+    "path": "D:\\new itantra\\app\\libs\\sherpa-onnx.aar",
+    "bytes": 78836277,
+    "sha256": "43625a96e4824a2ca3d456483d08b0358c4328d0665a7d4ed7cf88c44926b396",
+    "onnx_weight_assets": [],
+    "bundled_benchmark_wav_count": 0,
+    "native_libraries": [
+      {
+        "path": "jni/arm64-v8a/libonnxruntime.so",
+        "bytes": 22249560,
+        "compressed_bytes": 8316566,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "jni/arm64-v8a/libsherpa-onnx-c-api.so",
+        "bytes": 4465168,
+        "compressed_bytes": 1966830,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "jni/arm64-v8a/libsherpa-onnx-cxx-api.so",
+        "bytes": 440688,
+        "compressed_bytes": 148340,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "jni/arm64-v8a/libsherpa-onnx-jni.so",
+        "bytes": 119076960,
+        "compressed_bytes": 29173563,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "jni/armeabi-v7a/libonnxruntime.so",
+        "bytes": 15359592,
+        "compressed_bytes": 7477787,
+        "elf_load_segment_alignments": []
+      },
+      {
+        "path": "jni/armeabi-v7a/libsherpa-onnx-c-api.so",
+        "bytes": 3202700,
+        "compressed_bytes": 1843649,
+        "elf_load_segment_alignments": []
+      },
+      {
+        "path": "jni/armeabi-v7a/libsherpa-onnx-cxx-api.so",
+        "bytes": 282008,
+        "compressed_bytes": 123317,
+        "elf_load_segment_alignments": []
+      },
+      {
+        "path": "jni/armeabi-v7a/libsherpa-onnx-jni.so",
+        "bytes": 3428780,
+        "compressed_bytes": 1943984,
+        "elf_load_segment_alignments": []
+      },
+      {
+        "path": "jni/x86/libonnxruntime.so",
+        "bytes": 26491148,
+        "compressed_bytes": 9433831,
+        "elf_load_segment_alignments": []
+      },
+      {
+        "path": "jni/x86/libsherpa-onnx-c-api.so",
+        "bytes": 5051192,
+        "compressed_bytes": 2130559,
+        "elf_load_segment_alignments": []
+      },
+      {
+        "path": "jni/x86/libsherpa-onnx-cxx-api.so",
+        "bytes": 392768,
+        "compressed_bytes": 153855,
+        "elf_load_segment_alignments": []
+      },
+      {
+        "path": "jni/x86/libsherpa-onnx-jni.so",
+        "bytes": 5358928,
+        "compressed_bytes": 2204665,
+        "elf_load_segment_alignments": []
+      },
+      {
+        "path": "jni/x86_64/libonnxruntime.so",
+        "bytes": 25581120,
+        "compressed_bytes": 9157782,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "jni/x86_64/libsherpa-onnx-c-api.so",
+        "bytes": 4927096,
+        "compressed_bytes": 2148144,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "jni/x86_64/libsherpa-onnx-cxx-api.so",
+        "bytes": 436952,
+        "compressed_bytes": 149610,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "jni/x86_64/libsherpa-onnx-jni.so",
+        "bytes": 5201192,
+        "compressed_bytes": 2238154,
+        "elf_load_segment_alignments": [
+          16384,
+          16384,
+          16384
+        ]
+      }
+    ]
+  }
+]

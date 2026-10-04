@@ -1,0 +1,78 @@
+{
+  "language": "mr",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Manual language: IndicConformer CTC INT8",
+  "stt_load_ms": 1528.468200005591,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\mr\\model.int8.onnx",
+      "bytes": 197595593,
+      "sha256": "1ea81e55c4b9b12624c9d02a5b9c1b6f7c871c78a55ff52d333f81cb5136eaf2"
+    },
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\tokens.txt",
+      "bytes": 67605,
+      "sha256": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
+    }
+  ],
+  "stt": {
+    "reference": "एखादी संस्था नाविन्यपूर्ण होण्यापूर्वी त्यातील प्रमुखांनी नाविन्यतेची एक संस्कृती निर्माण केली पाहिजे तसेच ज्ञानाची देवाण-घेवाण आणि संस्थात्मक अध्ययन केले पाहिजे",
+    "output": "एखादी संस्था नावीन्यपूर्ण होण्यापूर्वी त्यातील प्रामुख्याने नावीन्यतेची एक संस्कृती निर्माण केली पाहिजे तसेच ज्ञानाची देवाणघेवाण आणि संस्थात्मक अध्ययन केले पाहिजे",
+    "native_script_majority": true,
+    "decode_ms": 1047.203499940224,
+    "audio_seconds": 15.3,
+    "rtf": 0.06844467319870745,
+    "single_recording_wer": 0.23809523809523808,
+    "word_errors": 5,
+    "reference_words": 21
+  },
+  "silence": {
+    "output": "",
+    "decode_ms": 70.00419998075813
+  },
+  "tts_load_ms": 1898.8208000082523,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\models\\bundled\\mr\\tts\\model.onnx",
+      "bytes": 114043908,
+      "sha256": "046cecf7cca77680c9ca319953e777c8d0233ce78e9b55a47aa909edf87d99e8"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\mr\\tts\\tokens.txt",
+      "bytes": 490,
+      "sha256": "4d968029d0754b41633cb0871cce6796a5ab3d3bc2b9b91c5721cfdf85156083"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "मदत हवी आहे",
+      "synthesis_ms": 821.1659000953659,
+      "sample_rate": 16000,
+      "samples": 17160,
+      "peak_amplitude": 0.7356778383255005,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "पाणी पाठवा",
+      "synthesis_ms": 929.0307000046596,
+      "sample_rate": 16000,
+      "samples": 18490,
+      "peak_amplitude": 0.8883847594261169,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "डॉक्टरांना बोलवा",
+      "synthesis_ms": 1102.9630000703037,
+      "sample_rate": 16000,
+      "samples": 18136,
+      "peak_amplitude": 0.8410413265228271,
+      "finite": true,
+      "missing_token_letters": [
+        "U+0949"
+      ]
+    }
+  ]
+}

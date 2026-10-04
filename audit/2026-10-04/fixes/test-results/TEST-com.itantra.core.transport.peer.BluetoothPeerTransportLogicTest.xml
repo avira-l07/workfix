@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.transport.peer.BluetoothPeerTransportLogicTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:21.321Z" hostname="AVII" time="0.007">
+  <properties/>
+  <testcase name="testBluetoothUuidAndServiceRecord" classname="com.itantra.core.transport.peer.BluetoothPeerTransportLogicTest" time="0.005"/>
+  <testcase name="testBluetoothErrorEnumContainsAllPhase2Errors" classname="com.itantra.core.transport.peer.BluetoothPeerTransportLogicTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

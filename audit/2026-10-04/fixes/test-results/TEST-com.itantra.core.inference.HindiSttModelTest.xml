@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.HindiSttModelTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:15.938Z" hostname="AVII" time="0.148">
+  <properties/>
+  <testcase name="corrupt replacement preserves installed model and leaves shared tiny untouched" classname="com.itantra.core.inference.HindiSttModelTest" time="0.063"/>
+  <testcase name="downloaded files must pass every checksum before activation" classname="com.itantra.core.inference.HindiSttModelTest" time="0.023"/>
+  <testcase name="interrupted install never becomes ready and retry can complete" classname="com.itantra.core.inference.HindiSttModelTest" time="0.05"/>
+  <testcase name="old tiny files cannot satisfy Hindi readiness" classname="com.itantra.core.inference.HindiSttModelTest" time="0.01"/>
+  <testcase name="Hindi specialization does not hijack other languages or auto detection" classname="com.itantra.core.inference.HindiSttModelTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

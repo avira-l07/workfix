@@ -1,0 +1,17 @@
+import groovy.json.JsonOutput
+
+allprojects { project ->
+    layout.buildDirectory.set(new File(rootProject.projectDir, "audit/2026-10-04/build/${project.name}"))
+    afterEvaluate {
+        if (project.name == 'app') {
+            tasks.register('fixRuntimeInventory') {
+                doLast {
+                    def modules = configurations.debugRuntimeClasspath.incoming.resolutionResult.allComponents
+                        .collect { it.id }.findAll { it instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier }
+                        .collect { [group: it.group, artifact: it.module, version: it.version] }
+                    new File(rootProject.projectDir, 'audit/2026-10-04/fixes/dependencies.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(modules))
+                }
+            }
+        }
+    }
+}

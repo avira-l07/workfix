@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.TtsLifecycleAndStorageTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:16.620Z" hostname="AVII" time="0.175">
+  <properties/>
+  <testcase name="test_englishText_generatesNonEmptyPcm" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.007"/>
+  <testcase name="test_missingTts_doesNotBreakStt" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.005"/>
+  <testcase name="test_explicitLoadTtsFalse_loadsSttOnly" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.005"/>
+  <testcase name="test_hindiTtsModelDetection_success" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.025"/>
+  <testcase name="test_zeroByteModel_rejected" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.009"/>
+  <testcase name="test_hindiText_generatesNonEmptyPcm" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.004"/>
+  <testcase name="test_emptyAndBlankText_rejectedGracefully" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.003"/>
+  <testcase name="test_missingModel_returnsFalse" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.004"/>
+  <testcase name="test_atomicImportFromDirectory" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.087"/>
+  <testcase name="test_englishTtsModelDetection_success" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.02"/>
+  <testcase name="test_languageSwitch_unloadsPreviousTtsAndLoadsNext" classname="com.itantra.core.inference.TtsLifecycleAndStorageTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,121 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+w: file:///D:/new%20itantra/app/build.gradle.kts:85:35: 'fun setSrcDirs(srcDirs: Iterable<*>): Any' is deprecated. Use `directories` mutable set instead.
+w: file:///D:/new%20itantra/app/build.gradle.kts:86:34: 'fun srcDirs(vararg srcDirs: Any): Any' is deprecated. Use `directories` mutable set instead.
+w: file:///D:/new%20itantra/app/build.gradle.kts:87:41: 'fun srcDirs(vararg srcDirs: Any): Any' is deprecated. Use `directories` mutable set instead.
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+
+> Task :app:kspDebugKotlin
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+
+> Task :app:fixRuntimeInventory
+
+> Task :app:compileDebugKotlin FAILED
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:30:48 Unresolved reference 'MessagesScreen'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:31:48 Unresolved reference 'buildConversationSummaries'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:37:51 Unresolved reference 'DiagnosticsScreen'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:43:50 Unresolved reference 'VoiceNotesScreen'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:237:65 Unresolved reference 'WipeDataAction'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:784:25 Unresolved reference 'VoiceNotesScreen'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:787:42 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:788:98 Unresolved reference 'id'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:799:25 Unresolved reference 'MessagesScreen'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:800:45 Unresolved reference 'buildConversationSummaries'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:801:52 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:802:65 Unresolved reference 'peerId'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:803:75 Unresolved reference 'transportAddress'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:804:72 Unresolved reference 'transportName'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:835:89 Unresolved reference 'rememberBluetoothHardwareStatus'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:1220:73 Unresolved reference 'rememberBatteryState'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:1221:81 Unresolved reference 'rememberBluetoothHardwareStatus'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:1288:71 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:1288:78 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:1288:83 'operator' modifier is required on 'FirNamedFunctionSymbol kotlin/compareTo' in 'compareTo'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:1295:25 Unresolved reference 'DiagnosticsScreen'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/chat/DedicatedChatScreen.kt:50:42 Unresolved reference 'belongsToConversation'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/chat/DedicatedChatScreen.kt:51:48 Unresolved reference 'conversationMatchesActivePeer'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/chat/DedicatedChatScreen.kt:84:9 Unresolved reference 'conversationMatchesActivePeer'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/chat/DedicatedChatScreen.kt:92:39 Unresolved reference 'belongsToConversation'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:3:37 Unresolved reference 'TRANSLATION_SCOPE_NOTE'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:46:42 Unresolved reference 'applyMessageFilter'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:48:42 Unresolved reference 'TacticalBatteryPill'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:61:33 Unresolved reference 'VOICE_OUTPUT_UNAVAILABLE_NOTE'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:199:58 Unresolved reference 'TRANSLATION_SCOPE_NOTE'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:200:47 Unresolved reference 'VOICE_OUTPUT_UNAVAILABLE_NOTE'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:204:40 Unresolved reference 'applyMessageFilter'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:206:20 Unresolved reference 'it'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:207:22 Unresolved reference 'it'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:208:25 Unresolved reference 'it'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:305:21 Unresolved reference 'TacticalBatteryPill'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1113:148 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1526:60 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1527:37 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1530:71 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1533:57 Unresolved reference 'isEmergency'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1533:84 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1534:62 Unresolved reference 'isFailed'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1535:68 @Composable invocations can only happen from the context of a @Composable function
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1550:57 Unresolved reference 'sender'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1553:69 Unresolved reference 'isEmergency'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1560:69 Unresolved reference 'isEmergency'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1561:74 Unresolved reference 'isFailed'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1567:69 Unresolved reference 'isEmergency'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1568:74 Unresolved reference 'isFailed'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1575:61 Unresolved reference 'langPair'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1579:73 Unresolved reference 'isEmergency'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1580:70 Unresolved reference 'isFailed'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1586:53 Unresolved reference 'time'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1601:49 Unresolved reference 'isVoiceNote'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1601:68 Unresolved reference 'statusDetail'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1610:57 Unresolved reference 'statusDetail'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1618:49 Unresolved reference 'statusDetail'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1618:73 Condition type mismatch: inferred type is 'WideNavigationRailValue' but 'Boolean' was expected.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1618:78 Unresolved reference 'isTranslationScopeNote'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1618:104 Condition type mismatch: inferred type is 'WideNavigationRailValue' but 'Boolean' was expected.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1618:109 Unresolved reference 'isVoiceNote'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1627:57 Unresolved reference 'statusDetail'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1638:53 Unresolved reference 'text'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1645:50 Unresolved reference 'translation'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1656:57 Unresolved reference 'translation'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1679:53 Unresolved reference 'duration'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1686:49 Unresolved reference 'isFailed'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1688:72 Unresolved reference 'statusDetail'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:1720:57 Unresolved reference 'state'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/language/LanguagePacksScreen.kt:125:34 Unresolved reference 'isOfflineTranslationReady'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/settings/SettingsScreen.kt:24:42 Unresolved reference 'rememberBatteryState'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/settings/SettingsScreen.kt:79:20 Unresolved reference 'WipeDataAction'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/settings/SettingsScreen.kt:264:27 Unresolved reference 'rememberBatteryState'.
+e: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/theme/Theme.kt:87:54 Argument type mismatch: actual type is 'kotlin.text.Typography', but 'androidx.compose.material3.Typography' was expected.
+e: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:7:37 Unresolved reference 'TRANSLATION_SCOPE_NOTE'.
+e: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:1460:88 Unresolved reference 'TRANSLATION_SCOPE_NOTE'.
+e: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:1808:41 Unresolved reference 'TRANSLATION_SCOPE_NOTE'.
+e: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:1977:29 Unresolved reference 'TRANSLATION_SCOPE_NOTE'.
+e: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:2391:45 Unresolved reference 'BROADCAST_PEER_ID'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin' (registered by plugin 'com.android.internal.application').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 2m 23s
+9 actionable tasks: 3 executed, 6 up-to-date

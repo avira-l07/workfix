@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.audio.WavWriterTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:14.153Z" hostname="AVII" time="0.117">
+  <properties/>
+  <testcase name="bundled Malayalam float samples match independent soundfile decoder" classname="com.itantra.core.audio.WavWriterTest" time="0.083"/>
+  <testcase name="PCM16 written audio retains sample count and amplitudes" classname="com.itantra.core.audio.WavWriterTest" time="0.021"/>
+  <testcase name="float WAV skips metadata and honors data chunk size" classname="com.itantra.core.audio.WavWriterTest" time="0.006"/>
+  <testcase name="wrong rate truncated chunks and nonfinite audio fail explicitly" classname="com.itantra.core.audio.WavWriterTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

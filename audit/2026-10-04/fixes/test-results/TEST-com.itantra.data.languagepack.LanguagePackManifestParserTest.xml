@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.data.languagepack.LanguagePackManifestParserTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:22.070Z" hostname="AVII" time="0.002">
+  <properties/>
+  <testcase name="parses the dev sample manifest correctly" classname="com.itantra.data.languagepack.LanguagePackManifestParserTest" time="0.0"/>
+  <testcase name="rejects an unsupported schema version instead of guessing" classname="com.itantra.data.languagepack.LanguagePackManifestParserTest" time="0.0"/>
+  <testcase name="returns null for malformed JSON instead of throwing" classname="com.itantra.data.languagepack.LanguagePackManifestParserTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:15.018Z" hostname="AVII" time="0.229">
+  <properties/>
+  <testcase name="testTransportAckDoesNotClearUnresolvedEmergencyState" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.087"/>
+  <testcase name="testUnresolvedEmergencyPersistsAcrossAppRestart" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.058"/>
+  <testcase name="testHalfDuplexContinuousModeSuppression" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.002"/>
+  <testcase name="testRecoveryFromTempFileWhenStoreFileMissingOrEmpty" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.024"/>
+  <testcase name="testAll100EmergencyPhraseCombinationsNonEmptyAndScriptValid" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.01"/>
+  <testcase name="testAecFallbackDiagnostics" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.002"/>
+  <testcase name="testBoundedRetryPolicyTransitionsToFailedAfterMaxRetries" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.017"/>
+  <testcase name="testProcessDeathBetweenTempFileWriteAndRenamePreservesOriginalFile" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.023"/>
+  <testcase name="testEmergencyReceiverLanguageContract" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.002"/>
+  <testcase name="testNormalMessageDoesNotPreemptActiveEmergencyAlert" classname="com.itantra.core.emergency.EmergencyAndOperationalHardeningTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

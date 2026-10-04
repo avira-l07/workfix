@@ -31,6 +31,27 @@ import java.io.File
  */
 class MultilingualTtsIntegrationTest {
 
+    @Test
+    fun `Kannada Malayalam and Marathi startup phrases use characters supported by the real voice tokens`() {
+        for ((language, range) in listOf(
+            LanguageCode.KANNADA to (0x0C80..0x0CFF),
+            LanguageCode.MALAYALAM to (0x0D00..0x0D7F),
+            LanguageCode.MARATHI to (0x0900..0x097F),
+        )) {
+            val phrase = ttsSmokeText(language)
+            val letters = phrase.filter { it.isLetter() || Character.getType(it) in setOf(
+                Character.NON_SPACING_MARK.toInt(), Character.COMBINING_SPACING_MARK.toInt(),
+            ) }
+            val tokens = File("src/main/assets/language_packs/${language.wireCode}/tts/tokens.txt")
+                .readLines().map { it.substringBeforeLast(' ') }.toSet()
+            assertTrue(language.name, letters.isNotEmpty() && letters.all { it.code in range })
+            assertTrue("Smoke phrase must not silently skip characters for $language",
+                phrase.all { it.toString() in tokens })
+        }
+        assertEquals("Hello", ttsSmokeText(LanguageCode.ENGLISH))
+        assertEquals("नमस्ते", ttsSmokeText(LanguageCode.HINDI))
+    }
+
     @get:Rule
     val tempFolder = TemporaryFolder()
 

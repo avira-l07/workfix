@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.inference.SpeechRecognizerConcurrencyTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:16.324Z" hostname="AVII" time="0.285">
+  <properties/>
+  <testcase name="test finalizeUtterance throws IllegalStateException safely when recognizer is not loaded" classname="com.itantra.core.inference.SpeechRecognizerConcurrencyTest" time="0.012"/>
+  <testcase name="test language switch in ActiveLanguageSessionManager waits for mid-decode operation" classname="com.itantra.core.inference.SpeechRecognizerConcurrencyTest" time="0.166"/>
+  <testcase name="test mid-decode unload is blocked by recognizerMutex until decode completes" classname="com.itantra.core.inference.SpeechRecognizerConcurrencyTest" time="0.104"/>
+  <testcase name="test decodeDirect throws IllegalStateException safely when recognizer is not loaded" classname="com.itantra.core.inference.SpeechRecognizerConcurrencyTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

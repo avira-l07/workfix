@@ -17,6 +17,7 @@ class VoiceNoteGroupingTest {
         assertEquals(VoiceNoteBucket.TODAY, VoiceNoteGrouping.keyFor(now, now, zone).bucket)
         assertEquals(VoiceNoteBucket.YESTERDAY, VoiceNoteGrouping.keyFor(daysAgo(1), now, zone).bucket)
         assertEquals(VoiceNoteBucket.THIS_WEEK, VoiceNoteGrouping.keyFor(daysAgo(6), now, zone).bucket)
+        assertEquals(VoiceNoteBucket.THIS_MONTH, VoiceNoteGrouping.keyFor(daysAgo(7), now, zone).bucket)
         assertEquals(VoiceNoteBucket.THIS_MONTH, VoiceNoteGrouping.keyFor(daysAgo(10), now, zone).bucket)
         assertEquals(VoiceNoteBucket.OLDER, VoiceNoteGrouping.keyFor(nowDate.minusMonths(1).toInstant().toEpochMilli(), now, zone).bucket)
 
@@ -24,5 +25,19 @@ class VoiceNoteGroupingTest {
         val oldKey = VoiceNoteGrouping.keyFor(thirteenMonthsAgo.toInstant().toEpochMilli(), now, zone)
         assertEquals(VoiceNoteBucket.OLDER, oldKey.bucket)
         assertEquals(YearMonth.of(2025, 7), oldKey.olderMonth)
+    }
+
+    @Test fun localMidnightAndDaylightSavingUseCalendarDates() {
+        for (testZone in listOf(ZoneId.of("Asia/Kolkata"), ZoneId.of("Europe/Berlin"))) {
+            val localNow = ZonedDateTime.of(2026, 3, 30, 0, 1, 0, 0, testZone)
+            val millis = localNow.toInstant().toEpochMilli()
+            val justBeforeMidnight = localNow.minusMinutes(2).toInstant().toEpochMilli()
+            assertEquals(VoiceNoteBucket.YESTERDAY,
+                VoiceNoteGrouping.keyFor(justBeforeMidnight, millis, testZone).bucket)
+            assertEquals(VoiceNoteBucket.THIS_WEEK,
+                VoiceNoteGrouping.keyFor(localNow.minusDays(6).toInstant().toEpochMilli(), millis, testZone).bucket)
+            assertEquals(VoiceNoteBucket.THIS_MONTH,
+                VoiceNoteGrouping.keyFor(localNow.minusDays(7).toInstant().toEpochMilli(), millis, testZone).bucket)
+        }
     }
 }

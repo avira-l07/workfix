@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.itantra.PacketProtocolTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:13.328Z" hostname="AVII" time="0.027">
+  <properties/>
+  <testcase name="corruptedPacket_failsChecksumValidation" classname="com.example.itantra.PacketProtocolTest" time="0.022"/>
+  <testcase name="ackGeneration_matchesMessageIdentity" classname="com.example.itantra.PacketProtocolTest" time="0.001"/>
+  <testcase name="nackGeneration_containsReason" classname="com.example.itantra.PacketProtocolTest" time="0.001"/>
+  <testcase name="roundTripSerialization_preservesAll12Fields" classname="com.example.itantra.PacketProtocolTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

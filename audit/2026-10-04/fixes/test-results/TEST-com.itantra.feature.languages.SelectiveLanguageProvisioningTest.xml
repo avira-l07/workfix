@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.feature.languages.SelectiveLanguageProvisioningTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:22.806Z" hostname="AVII" time="0.022">
+  <properties/>
+  <testcase name="mlKitSupportedLanguages_excludesMalayalamAndOdia" classname="com.itantra.feature.languages.SelectiveLanguageProvisioningTest" time="0.003"/>
+  <testcase name="selectiveProvisioning_triggersDownloadsOnlyForSelectedLanguagesNotAll10" classname="com.itantra.feature.languages.SelectiveLanguageProvisioningTest" time="0.005"/>
+  <testcase name="offlineReadinessChecker_malayalamAndOdiaReturnNotInstalledForMtBypass" classname="com.itantra.feature.languages.SelectiveLanguageProvisioningTest" time="0.007"/>
+  <testcase name="resetStagedLanguages_clearsStagingWithoutDownloading" classname="com.itantra.feature.languages.SelectiveLanguageProvisioningTest" time="0.005"/>
+  <testcase name="baselineHindiEnglishFlow_persistsAndRetainsFullReadiness" classname="com.itantra.feature.languages.SelectiveLanguageProvisioningTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

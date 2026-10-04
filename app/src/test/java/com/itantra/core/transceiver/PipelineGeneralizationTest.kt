@@ -211,7 +211,7 @@ class PipelineGeneralizationTest {
             val recognizer = createRecognizer(src, LanguageCode.ENGLISH)
             assertEquals(
                 "Specialized STT must stay in transcription mode",
-                src !in setOf(LanguageCode.HINDI, LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.ODIA),
+                src !in setOf(LanguageCode.HINDI, LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.ODIA, LanguageCode.BENGALI, LanguageCode.GUJARATI, LanguageCode.MARATHI, LanguageCode.MALAYALAM, LanguageCode.KANNADA),
                 recognizer.isTranslateMode
             )
         }
@@ -243,13 +243,32 @@ class PipelineGeneralizationTest {
         assertFalse("Null target language must not enable translate mode", recognizer.isTranslateMode)
     }
 
+    @Test
+    fun `missing Marathi pack reports download required instead of falling back to Tiny`() = runBlocking {
+        val recognizer = createRecognizer(LanguageCode.MARATHI, LanguageCode.ENGLISH)
+        val failure = runCatching { recognizer.load() }.exceptionOrNull()
+        assertTrue(failure is IllegalStateException)
+        assertTrue(failure?.message.orEmpty().contains("Download it in Language Packs"))
+        assertFalse(recognizer.isLoaded)
+    }
+
+    @Test
+    fun `missing Malayalam model surfaces error without Tiny or English translation fallback`() = runBlocking {
+        val recognizer = createRecognizer(LanguageCode.MALAYALAM, LanguageCode.ENGLISH)
+        assertFalse(recognizer.isTranslateMode)
+        val failure = runCatching { recognizer.load() }.exceptionOrNull()
+        assertTrue(failure is IllegalStateException)
+        assertTrue(failure?.message.orEmpty().contains("Download it in Language Packs"))
+        assertFalse(recognizer.isLoaded)
+    }
+
     // =========================================================================
     // TASK 2: Generalized isWhisperNativeTranslate bypass in TransceiverCoordinator
     // =========================================================================
 
     @Test
     fun `test Whisper native translate bypass applies only to shared multilingual speech models`() {
-        val testSources = listOf(LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.BENGALI)
+        val testSources = listOf(LanguageCode.TAMIL, LanguageCode.TELUGU, LanguageCode.BENGALI, LanguageCode.GUJARATI, LanguageCode.MARATHI, LanguageCode.MALAYALAM)
 
         for (src in testSources) {
             val engine = createRecognizer(src, LanguageCode.ENGLISH)
@@ -257,11 +276,7 @@ class PipelineGeneralizationTest {
 
             // Evaluates generalized condition in TransceiverCoordinator:
             val isWhisperNativeTranslate = targetLang == LanguageCode.ENGLISH && engine.isTranslateMode
-            assertEquals(
-                "Dedicated Indic models must use the text translation router",
-                src == LanguageCode.BENGALI,
-                isWhisperNativeTranslate,
-            )
+            assertFalse("Dedicated Indic models must use the text translation router", isWhisperNativeTranslate)
         }
     }
 

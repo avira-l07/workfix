@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.regression.CryptoCounterConcurrencyTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:22.838Z" hostname="AVII" time="0.017">
+  <properties/>
+  <testcase name="testConcurrentEncryptionProducesUniqueCountersAndValidDecryption" classname="com.itantra.regression.CryptoCounterConcurrencyTest" time="0.017"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

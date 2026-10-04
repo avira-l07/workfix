@@ -1,0 +1,76 @@
+{
+  "language": "te",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Manual language: IndicConformer CTC INT8",
+  "stt_load_ms": 786.3573000067845,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\te\\model.int8.onnx",
+      "bytes": 197595693,
+      "sha256": "710f176e33080f1be84b4f38bb5f33be3f522dcf4f191bf4d5cc89f7a85924f3"
+    },
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\tokens.txt",
+      "bytes": 67605,
+      "sha256": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
+    }
+  ],
+  "stt": {
+    "reference": "చాలా సందర్భాల్లో విదేశాల్లో ఒక గ్యాప్ ఇయర్ కోర్సులో చేరడం వల్ల మీ స్వంత దేశంలో తిరిగి ఉన్నత విద్యకు వెళ్లే మీ అవకాశాలను మెరుగుపరుచుకోవచ్చు",
+    "output": "చాలా సందర్భాల్లో విదేశాల్లో ఒక గ్యాప్ ఇయర్ కోర్సులో చేరడం వల్ల మీ స్వంత దేశంలో తిరిగి ఉన్నత విద్యకు వెళ్లేే మీ అవకాశాలను మెరుగుపరుచుకోవచ్చు",
+    "native_script_majority": true,
+    "decode_ms": 401.51170000899583,
+    "audio_seconds": 10.98,
+    "rtf": 0.03656755009189397,
+    "single_recording_wer": 0.05263157894736842,
+    "word_errors": 1,
+    "reference_words": 19
+  },
+  "silence": {
+    "output": "",
+    "decode_ms": 39.97370006982237
+  },
+  "tts_load_ms": 754.0884000482038,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\models\\bundled\\te\\tts\\model.onnx",
+      "bytes": 114037764,
+      "sha256": "a8ec6093c0ec3c6dcb7edc0c4cd6c08e312cd3299b00d0aa4988d2a7fea2baa5"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\te\\tts\\tokens.txt",
+      "bytes": 435,
+      "sha256": "528152cb4121272e6e71f7a1d91c8d4922b92fae414ae599db608cb92a738bb7"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "సహాయం కావాలి",
+      "synthesis_ms": 983.4026000462472,
+      "sample_rate": 16000,
+      "samples": 21913,
+      "peak_amplitude": 0.8835964798927307,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "నీరు పంపండి",
+      "synthesis_ms": 589.5047000376508,
+      "sample_rate": 16000,
+      "samples": 16429,
+      "peak_amplitude": 0.870185136795044,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "వైద్యుడిని పిలవండి",
+      "synthesis_ms": 623.3996000373736,
+      "sample_rate": 16000,
+      "samples": 19612,
+      "peak_amplitude": 0.7546294331550598,
+      "finite": true,
+      "missing_token_letters": []
+    }
+  ]
+}

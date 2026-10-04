@@ -1,0 +1,76 @@
+{
+  "language": "bn",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Manual language: IndicConformer CTC INT8",
+  "stt_load_ms": 661.7410000180826,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\bn\\model.int8.onnx",
+      "bytes": 197595578,
+      "sha256": "e9120a534f69df065314be468bf15579f1b92a4cd8c07ad119b80b69244718a8"
+    },
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\tokens.txt",
+      "bytes": 67605,
+      "sha256": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
+    }
+  ],
+  "stt": {
+    "reference": "বাঁধের উপর 100 ফুট চওড়া একটি জায়গা থেকে জল ছিটকে বেরোচ্ছে",
+    "output": "বাঁধ উপর একশো ফুট চওড়া একটি জায়গা থেকে জল ছিটকে বেরোচ্ছে",
+    "native_script_majority": true,
+    "decode_ms": 240.01960002351552,
+    "audio_seconds": 6.6,
+    "rtf": 0.03636660606416902,
+    "single_recording_wer": 0.18181818181818182,
+    "word_errors": 2,
+    "reference_words": 11
+  },
+  "silence": {
+    "output": "এ ব",
+    "decode_ms": 39.58260000217706
+  },
+  "tts_load_ms": 849.4045999832451,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\models\\bundled\\bn\\tts\\model.onnx",
+      "bytes": 114044676,
+      "sha256": "c67081369061e87ba302bfbc0445543c4c23c04133514b7d6c7be2710363bc42"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\bn\\tts\\tokens.txt",
+      "bytes": 480,
+      "sha256": "a74190ec42b8f0afb349276430c716f1b585090d8fe6d3c1d6d5fe510798a387"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "সাহায্য দরকার",
+      "synthesis_ms": 1022.4114999873564,
+      "sample_rate": 16000,
+      "samples": 22772,
+      "peak_amplitude": 0.8221816420555115,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "পানি পাঠান",
+      "synthesis_ms": 622.1054000779986,
+      "sample_rate": 16000,
+      "samples": 13778,
+      "peak_amplitude": 0.9318497180938721,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "ডাক্তার ডাকুন",
+      "synthesis_ms": 581.8390999920666,
+      "sample_rate": 16000,
+      "samples": 16148,
+      "peak_amplitude": 0.9170282483100891,
+      "finite": true,
+      "missing_token_letters": []
+    }
+  ]
+}

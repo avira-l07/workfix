@@ -376,9 +376,9 @@ private fun ActiveChannelCard(channelName: String, isWifi: Boolean = false) {
             .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
             .padding(16.dp),
     ) {
-        Text("ACTIVE CHANNEL", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted)
+        Text("PEER CONNECTION", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted)
         Spacer(Modifier.height(4.dp))
-        Text("# $channelName", style = MaterialTheme.typography.titleMedium)
+        Text(channelName, style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(6.dp).background(ITantraColors.StatusSuccess, RoundedCornerShape(50)))

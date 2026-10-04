@@ -1,0 +1,76 @@
+{
+  "language": "gu",
+  "scope": "Windows desktop; 1 clean recording, 1 silence probe, 3 TTS phrases; phone NOT VERIFIED",
+  "runtime": "1.13.8",
+  "stt_model": "Manual language: IndicConformer CTC INT8",
+  "stt_load_ms": 769.7063999949023,
+  "stt_files": [
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\gu\\model.int8.onnx",
+      "bytes": 197595461,
+      "sha256": "822ed7f0b809bbd479275bf91c913d05564b88c0d082bbcba2f37999b88cb598"
+    },
+    {
+      "path": "D:\\new itantra\\tools\\stt_models\\indicconformer-candidates\\tokens.txt",
+      "bytes": 67605,
+      "sha256": "ee60967630213f31951817ac8b402b92ec18cce80718a24a49b388e56672dfb2"
+    }
+  ],
+  "stt": {
+    "reference": "તીબેટનો બૌદ્ધવાદ બુદ્ધનાં ઉપદેશો ઉપર આધારિત છે પરંતુ તેનો પ્રેમના મહાયાન પંથ દ્વારા અને ભારતીય યોગની ઘણી બધી પ્રયુક્તિઓ દ્વારા વિસ્તાર કરવામાં આવ્યો છે",
+    "output": "તિબેટનો બૌદ્ધવાદ બૌદ્ધના ઉપદેશો પર આધારિત છે પરંતુ તેનો પ્રેમના મહયાન પંથ દ્વારા અને ભારતીય યોગની ઘણી બધી પ્રયુક્તિઓ દ્વારા વિસ્તાર કરવામાં આવ્યો છે",
+    "native_script_majority": true,
+    "decode_ms": 591.2335000466555,
+    "audio_seconds": 11.88,
+    "rtf": 0.04976712963355686,
+    "single_recording_wer": 0.16666666666666666,
+    "word_errors": 4,
+    "reference_words": 24
+  },
+  "silence": {
+    "output": "બ",
+    "decode_ms": 51.30289995577186
+  },
+  "tts_load_ms": 2263.1371000315994,
+  "tts_files": [
+    {
+      "path": "D:\\new itantra\\models\\bundled\\gu\\tts\\model.onnx",
+      "bytes": 114033924,
+      "sha256": "6d9b4f268765e19b6620983bd698c5e4fa943309560b6c7b199b50a4aae30d47"
+    },
+    {
+      "path": "D:\\new itantra\\app\\src\\main\\assets\\language_packs\\gu\\tts\\tokens.txt",
+      "bytes": 402,
+      "sha256": "2d855f2affb7586cc6be095a4382eb0bee2a22242deda32c86aab6b1a810d8c4"
+    }
+  ],
+  "tts": [
+    {
+      "phrase": "મદદ જોઈએ છે",
+      "synthesis_ms": 649.0879999473691,
+      "sample_rate": 16000,
+      "samples": 15616,
+      "peak_amplitude": 0.2052164077758789,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "પાણી મોકલો",
+      "synthesis_ms": 577.671300037764,
+      "sample_rate": 16000,
+      "samples": 13568,
+      "peak_amplitude": 0.22788695991039276,
+      "finite": true,
+      "missing_token_letters": []
+    },
+    {
+      "phrase": "ડોક્ટરને બોલાવો",
+      "synthesis_ms": 785.3373000398278,
+      "sample_rate": 16000,
+      "samples": 18176,
+      "peak_amplitude": 0.21963460743427277,
+      "finite": true,
+      "missing_token_letters": []
+    }
+  ]
+}

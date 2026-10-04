@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:22.720Z" hostname="AVII" time="0.017">
+  <properties/>
+  <testcase name="testFailedModelLoadState" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.004"/>
+  <testcase name="testMtStorageAggregation" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.0"/>
+  <testcase name="testTtsPerLanguageStorage" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.001"/>
+  <testcase name="testStorageAggregationAndSharedSttCountedOnce" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.0"/>
+  <testcase name="testPerformanceReportSerialization" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.004"/>
+  <testcase name="testCapabilityProfileBoundaries" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.0"/>
+  <testcase name="testNoUnknownMetricSilentlyRepresentedAsZero" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.0"/>
+  <testcase name="testCoreOnlyFallback" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.004"/>
+  <testcase name="testUnloadBeforeSwitchLifecycle" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.003"/>
+  <testcase name="testMeasurementNotMeasuredIntegrity" classname="com.itantra.feature.diagnostics.PerformanceEfficiencyTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.itantra.ui.screens.messages.ConversationListTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:14.014Z" hostname="AVII" time="0.019">
+  <properties/>
+  <testcase name="stableSenderIdAssociatesOldWifiAddressWithVerifiedPeer" classname="com.example.itantra.ui.screens.messages.ConversationListTest" time="0.012"/>
+  <testcase name="verifiedPeerAndLegacyAddressMessagesBecomeOneChat" classname="com.example.itantra.ui.screens.messages.ConversationListTest" time="0.004"/>
+  <testcase name="unmatchedPreviousMessageRemainsAccessibleAsItsOwnChat" classname="com.example.itantra.ui.screens.messages.ConversationListTest" time="0.002"/>
+  <testcase name="previousChatDoesNotInheritAnotherPeersLiveConnection" classname="com.example.itantra.ui.screens.messages.ConversationListTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

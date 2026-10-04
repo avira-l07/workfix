@@ -12,13 +12,18 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FiveLanguageSelfTestTest {
-    @Test fun `five scripts are accepted and romanized output is rejected`() {
+    @Test fun `ten scripts are accepted and romanized output is rejected`() {
         val native = mapOf(
             LanguageCode.HINDI to "मदद चाहिए",
             LanguageCode.ENGLISH to "We need help",
             LanguageCode.TAMIL to "உதவி தேவை",
             LanguageCode.TELUGU to "సహాయం కావాలి",
             LanguageCode.ODIA to "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+            LanguageCode.BENGALI to "সাহায্য দরকার",
+            LanguageCode.GUJARATI to "મદદ જોઈએ છે",
+            LanguageCode.MARATHI to "मदत हवी आहे",
+            LanguageCode.MALAYALAM to "സഹായം വേണം",
+            LanguageCode.KANNADA to "ಸಹಾಯ ಬೇಕು",
         )
         assertEquals(FiveLanguageSelfTest.languages.toSet(), native.keys)
         native.forEach { (code, text) ->
@@ -31,11 +36,11 @@ class FiveLanguageSelfTestTest {
         }
     }
 
-    @Test fun `five bundled recordings match their source hashes`() {
+    @Test fun `ten bundled recordings match their source hashes`() {
         val root = File("src/main/assets/benchmark/five_self_test")
         val rows = Json.parseToJsonElement(File(root, "manifest.json").readText()).jsonArray
-        assertEquals(5, rows.size)
-        assertEquals(setOf("hi", "en", "ta", "te", "or"), rows.map {
+        assertEquals(10, rows.size)
+        assertEquals(setOf("hi", "en", "ta", "te", "or", "bn", "gu", "mr", "ml", "kn"), rows.map {
             it.jsonObject.getValue("language").jsonPrimitive.content
         }.toSet())
         rows.forEach { row ->

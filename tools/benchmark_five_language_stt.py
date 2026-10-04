@@ -1,4 +1,4 @@
-"""Reproducible 30-recording desktop STT benchmark for the five target languages.
+"""Reproducible 30-recording desktop STT benchmark for the target languages.
 
     python tools/benchmark_five_language_stt.py fetch --languages en ta te or
     python tools/benchmark_five_language_stt.py benchmark --languages hi en ta te or
@@ -24,7 +24,26 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "tools/stt_models/five-language-validation"
 MODELS = ROOT / "tools/stt_models/indicconformer-candidates"
 REPORTS = ROOT / "tools/stt_results"
+INDIC_REPO = "parismitaglobalsolutions/indicconformer-sherpa-onnx"
+INDIC_REVISION = "9721eb71eea141fae0982cfcdb9dd2e3d4953c4a"
+NEW_MODELS = {
+    "kn": (197595728, "b226ce7e4ea35b0dd66991964bd00e011b6b14b0fcdf4f7d1cccd777781c94dc"),
+    "ml": (197595555, "dcbdfa9f773db910508b40b703cb76c5974e8d4c6f123ea81265b40853c3f0c2"),
+    "mr": (197595593, "1ea81e55c4b9b12624c9d02a5b9c1b6f7c871c78a55ff52d333f81cb5136eaf2"),
+    "bn": (197595578, "e9120a534f69df065314be468bf15579f1b92a4cd8c07ad119b80b69244718a8"),
+    "gu": (197595461, "822ed7f0b809bbd479275bf91c913d05564b88c0d082bbcba2f37999b88cb598"),
+}
 SOURCES = {
+    "kn": ("kn_in", "168de341b3db6859a9bac1c50a2ef5e3b47647e0", 299080789,
+           "ab2721cf60f02a1f8911baddfa725e1d98af83d67d89a51b9313ae18a0f059ac"),
+    "ml": ("ml_in", "168de341b3db6859a9bac1c50a2ef5e3b47647e0", 386773831,
+           "0a118e7e8920fd31f283cfdc0c55fc00537e93c726b3e0727aebc6700b3bacce"),
+    "mr": ("mr_in", "168de341b3db6859a9bac1c50a2ef5e3b47647e0", 359315258,
+           "b94d93579851303530cb0ae0bf66b78f60e4e2e9bc767f62c223681520f5ff0d"),
+    "bn": ("bn_in", "168de341b3db6859a9bac1c50a2ef5e3b47647e0", 333716566,
+           "f45b98e38812554174a7a13b7f66a778f1f63c48d9723fc37619f3f24132f340"),
+    "gu": ("gu_in", "168de341b3db6859a9bac1c50a2ef5e3b47647e0", 275179201,
+           "a740a6a5b2853e46604fdc0a503e918e051474861cb8b2044214b419f861e296"),
     "en": ("en_us", "7e091085abba9be9d2772cee2aa59b9bb4140112", 236549523,
            "7c3eeb11a9597bd52cdc1b0d637e85389fe094cfd8763913e7bf4fdf7a853959"),
     "ta": ("ta_in", "3c66608478c631530e8191bd124449803b75a772", 288019911,
@@ -56,8 +75,9 @@ def fetch(lang):
     if not parquet.exists() or digest(parquet) != expected_sha:
         partial = parquet.with_suffix(".parquet.part")
         offset = partial.stat().st_size if partial.exists() else 0
-        url = (f"https://huggingface.co/datasets/google/fleurs/resolve/{revision}/"
-               f"{config}/validation-00000-of-00001.parquet?download=true")
+        suffix = (f"{config}/validation/0000.parquet" if lang in ("bn", "gu", "mr", "kn", "ml")
+                  else f"{config}/validation-00000-of-00001.parquet")
+        url = f"https://huggingface.co/datasets/google/fleurs/resolve/{revision}/{suffix}?download=true"
         with requests.get(url, headers={"Range": f"bytes={offset}-"} if offset else {},
                           stream=True, timeout=(30, 180)) as response:
             response.raise_for_status()
@@ -97,6 +117,32 @@ def fetch(lang):
     (DATA / f"manifest-{lang}-30.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"{lang}: verified publisher Parquet, extracted 30 recordings", flush=True)
+
+
+def fetch_model(lang):
+    import requests
+    expected_bytes, expected_sha = NEW_MODELS[lang]
+    destination = MODELS / lang / "model.int8.onnx"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.is_file() and destination.stat().st_size == expected_bytes and digest(destination) == expected_sha:
+        print(f"{lang}: model already verified", flush=True)
+        return
+    partial = destination.with_suffix(".onnx.part")
+    offset = partial.stat().st_size if partial.exists() else 0
+    url = (f"https://huggingface.co/{INDIC_REPO}/resolve/{INDIC_REVISION}/"
+           f"{lang}/model.int8.onnx?download=true")
+    with requests.get(url, headers={"Range": f"bytes={offset}-"} if offset else {},
+                      stream=True, timeout=(30, 180)) as response:
+        response.raise_for_status()
+        append = offset > 0 and response.status_code == 206
+        with partial.open("ab" if append else "wb") as output:
+            for chunk in response.iter_content(1024 * 1024):
+                if chunk:
+                    output.write(chunk)
+    if partial.stat().st_size != expected_bytes or digest(partial) != expected_sha:
+        raise RuntimeError(f"Publisher model checksum mismatch or incomplete download: {lang}")
+    partial.replace(destination)
+    print(f"{lang}: verified {expected_bytes}-byte model", flush=True)
 
 
 def benchmark(lang):
@@ -164,8 +210,10 @@ def benchmark(lang):
 
 
 def script_ok(lang, text):
-    ranges = {"hi": (0x0900, 0x097F), "ta": (0x0B80, 0x0BFF),
-              "te": (0x0C00, 0x0C7F), "or": (0x0B00, 0x0B7F)}
+    ranges = {"hi": (0x0900, 0x097F), "mr": (0x0900, 0x097F), "ta": (0x0B80, 0x0BFF),
+              "te": (0x0C00, 0x0C7F), "or": (0x0B00, 0x0B7F),
+              "bn": (0x0980, 0x09FF), "gu": (0x0A80, 0x0AFF),
+              "kn": (0x0C80, 0x0CFF), "ml": (0x0D00, 0x0D7F)}
     letters = [c for c in text if unicodedata.category(c)[0] in "LM"]
     if not letters:
         return False
@@ -177,13 +225,17 @@ def script_ok(lang, text):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("fetch", "benchmark"))
-    parser.add_argument("--languages", nargs="+", choices=("hi", "en", "ta", "te", "or"),
+    parser.add_argument("action", choices=("fetch", "fetch-model", "benchmark"))
+    parser.add_argument("--languages", nargs="+", choices=("hi", "en", "ta", "te", "or", "bn", "gu", "mr", "kn", "ml"),
                         default=["hi", "en", "ta", "te", "or"])
     arguments = parser.parse_args()
     for language in arguments.languages:
         if arguments.action == "fetch":
             if language != "hi":
                 fetch(language)
+        elif arguments.action == "fetch-model":
+            if language not in NEW_MODELS:
+                raise ValueError("fetch-model is for Bengali, Gujarati, Marathi, Kannada and Malayalam candidates only")
+            fetch_model(language)
         else:
             benchmark(language)

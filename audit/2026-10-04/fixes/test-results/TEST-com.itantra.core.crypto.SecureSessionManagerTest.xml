@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.core.crypto.SecureSessionManagerTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-04T04:41:14.886Z" hostname="AVII" time="0.125">
+  <properties/>
+  <testcase name="testLocalSasOnlyDoesNotVerify" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.011"/>
+  <testcase name="testFix014_processSecureVerify_rejectsEmptyPayload" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.011"/>
+  <testcase name="testReplayedSecureVerifyDoesNotCorruptState" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.006"/>
+  <testcase name="testFix003_confirmSasMatch_throwsInNoSession" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.002"/>
+  <testcase name="testFix014_transcriptBindingPreventsReplay" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.009"/>
+  <testcase name="testPeerSasOnlyDoesNotVerify" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.01"/>
+  <testcase name="testFix014_processSecureVerify_rejectsTokenFromDifferentSession" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.018"/>
+  <testcase name="testAadMetadataTampering" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.011"/>
+  <testcase name="testSuccessfulHandshakeAndEncryption" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.009"/>
+  <testcase name="testFix003_confirmSasMatch_throwsWhileHandshaking" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.003"/>
+  <testcase name="testRejectSasTransitionsToFailedAndResets" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.014"/>
+  <testcase name="testReplayProtection" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.009"/>
+  <testcase name="testFix003_confirmSasMatch_succeedsInWaitingVerification" classname="com.itantra.core.crypto.SecureSessionManagerTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
