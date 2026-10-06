@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-06",
+  "android_build": "PASS",
+  "unit_tests": {
+    "tests": 464,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "signature": "APK v2, one signer; verified by apksigner",
+  "apk": "iTantra-tts-replay-debug.apk",
+  "apk_sha256": "7a37c3ee019271deba3f30a882206d0ebdf3db2952b159e22e4faa1b73a082d2",
+  "apk_bytes": 94600345,
+  "apk_integrity": "PASS; archive CRC and replay control strings verified",
+  "tts_check": {
+    "languages": [
+      "hi",
+      "en",
+      "bn",
+      "gu",
+      "mr",
+      "kn",
+      "ml",
+      "ta",
+      "te",
+      "or"
+    ],
+    "two_synthesis_trials_per_language": true,
+    "checksums_verified": true,
+    "finite_non_silent_audio": true,
+    "report": "all-language-tts-check.json"
+  },
+  "android_device_audio": "Not run; no device connected",
+  "native_speaker_pronunciation": "Not rated",
+  "replay_scope": "Local TTS of stored text; does not resend messages or store original microphone audio"
+}

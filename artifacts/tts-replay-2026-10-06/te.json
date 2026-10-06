@@ -1,0 +1,23 @@
+{
+  "language": "te",
+  "passed": true,
+  "phrase": "సహాయం కావాలి",
+  "model_sha256": "a8ec6093c0ec3c6dcb7edc0c4cd6c08e312cd3299b00d0aa4988d2a7fea2baa5",
+  "tokens_sha256": "528152cb4121272e6e71f7a1d91c8d4922b92fae414ae599db608cb92a738bb7",
+  "trials": [
+    {
+      "play": 1,
+      "samples": 24285,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 1520.4895000206307,
+      "peak": 0.9231622219085693
+    },
+    {
+      "play": 2,
+      "samples": 21868,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 1612.2657000087202,
+      "peak": 0.845717191696167
+    }
+  ]
+}

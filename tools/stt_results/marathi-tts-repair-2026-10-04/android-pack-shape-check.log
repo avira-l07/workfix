@@ -1,0 +1,52 @@
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-vits-model.cc:Init:164 ---vits model---
+model_type=vits
+comment=piper
+has_espeak=1
+language=Marathi
+voice=mr
+n_speakers=9
+sample_rate=22050
+----------input names----------
+0 input
+1 input_lengths
+2 scales
+3 sid
+----------output names----------
+0 output
+
+
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: डॉक्टरांना बोलवा
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: डक्टरांना बोलवा
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: डाक्टरांना बोलवा
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: ऑक्सिजन द्या
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: अॅम्ब्युलन्स बोलवा
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: ॲम्ब्युलन्स बोलवा
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: कॅम्पमध्ये या
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: कॉफी
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: कफी
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: ळ
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: ऱ
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: १२३
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: मदत हवी आहे
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: पाणी पाठवा
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: रस्ता बंद आहे
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: आम्ही सुरक्षित आहोत
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:158 GenerationConfig(silence_scale=0.2, speed=1, sid=0, num_steps=5, reference_audio_len=0, reference_sample_rate=0)
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx/csrc/offline-tts-vits-impl.h:Generate:242 Raw text: डॉक्टरांना बोलवा
+{"scope": "Windows desktop; exact Android metadata and imported six-file frontend; not Android playback or listener validation", "metadata_suffix_bytes": 128, "metadata_suffix_sha256": "73f79db63b661f00559a6b1868b119be10359f6ef0882ca929ae6df82abf1cd6", "all_probes_passed": true}

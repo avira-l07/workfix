@@ -1,0 +1,23 @@
+{
+  "language": "or",
+  "passed": true,
+  "phrase": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+  "model_sha256": "ab867f39b00f1fcb39dc97f5079150959b50df50d7f10e75232c56b52f19c021",
+  "tokens_sha256": "bc90e5423446ca730aef6b56a4656cb07421c7538429a50b9c396fe0758fd587",
+  "trials": [
+    {
+      "play": 1,
+      "samples": 15537,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 880.4808999411762,
+      "peak": 0.6662128567695618
+    },
+    {
+      "play": 2,
+      "samples": 17932,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 1191.8636000482365,
+      "peak": 0.76078200340271
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+Marathi TTS: Piper mr_IN-google-medium (9 speakers; default speaker 0)
+Source: rhasspy/piper-voices
+Revision: c10ece1aade47bb51c153c893d14e5bf8e5b7117
+Model card: https://huggingface.co/rhasspy/piper-voices/blob/c10ece1aade47bb51c153c893d14e5bf8e5b7117/mr/mr_IN/google/medium/MODEL_CARD
+
+The source model card identifies OpenSLR 64 as its Marathi dataset:
+https://openslr.org/64/
+Dataset terms: Attribution-ShareAlike 4.0 International
+https://creativecommons.org/licenses/by-sa/4.0/
+The card states that the model was fine-tuned from a LibriTTS-R base model.
+It does not separately state a model-weight licence. Final redistribution
+and attribution review remains pending; this notice is not a rights clearance.
+
+iTantra's preparation leaves the trained graph and weights unchanged and
+appends sherpa-onnx VITS/Piper metadata. The token map retains trained IDs
+for single Unicode phonemes supported by the Sherpa frontend.
+Offline eSpeak NG data is obtained from the sherpa-onnx tts-models release:
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+eSpeak NG source and terms: https://github.com/espeak-ng/espeak-ng
+GPL version 3 or later; applicable notices/source-distribution obligations
+for the existing native frontend and downloaded data need release review.

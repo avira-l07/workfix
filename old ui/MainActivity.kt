@@ -46,6 +46,7 @@ import com.itantra.app.AppGraph
 import com.itantra.core.audio.WavWriter
 import com.itantra.core.inference.SherpaOnnxSpeechRecognizer
 import com.itantra.core.inference.AdditionalSttModel
+import com.itantra.core.inference.FiveLanguageSelfTest
 import com.itantra.core.metrics.TextNormalizer
 import com.itantra.core.metrics.WordErrorRateCalculator
 import com.itantra.core.transport.ConnectionState
@@ -599,7 +600,10 @@ class MainActivity : ComponentActivity() {
                 AppGraph.wifiDirectConnectionManager.registerReceiver(this@MainActivity)
 
                 setContent {
-                    ITantraTheme(dynamicColor = false) {
+                    val appearance by AppGraph.settingsRepository.settings.collectAsState(
+                        initial = com.example.itantra.data.settings.AppSettings()
+                    )
+                    ITantraTheme(dynamicColor = false, themeMode = appearance.themeMode, palette = appearance.colorPalette) {
                         TacticalAppScaffold(
                             permissionsGranted = permissionsGranted,
                             onRequestPermissions = { requestRequiredPermissions() },
@@ -982,7 +986,8 @@ fun TacticalAppScaffold(
                         val selectedWifiPeerAddress by AppGraph.wifiDirectConnectionManager.selectedPeerAddress.collectAsState()
 
                         ConnectScreenContent(
-                            channelName = "TAC-RELIEF-04",
+                            channelName = activePeerProfile?.takeIf { liveSecureSessionState == SecureSessionState.SECURE_VERIFIED }
+                                ?.displayName?.takeIf { it.isNotBlank() } ?: "No verified peer",
                             peersInRange = liveDevices.size,
                             devices = liveDevices,
                             isScanning = isBtDiscovering || transportState == ConnectionState.CONNECTING || transportState == ConnectionState.LISTENING,
@@ -1196,6 +1201,9 @@ fun TacticalAppScaffold(
 
                     AppDestination.DIAGNOSTICS -> {
                         var latestBenchmarkSession by remember { mutableStateOf<com.itantra.domain.model.BenchmarkSession?>(null) }
+                        var fiveSelfTestResults by remember { mutableStateOf<List<FiveLanguageSelfTest.Result>>(emptyList()) }
+                        var fiveSelfTestRunning by remember { mutableStateOf(false) }
+                        var fiveSelfTestError by remember { mutableStateOf<String?>(null) }
                         val liveContinuousState by coordinator.continuousListenEngine.state.collectAsState()
                         val packs by AppGraph.languagePackRepository.observePackSummaries().collectAsState(initial = emptyList())
                         val diagnosticMessages by coordinator.messages.collectAsState()
@@ -1288,6 +1296,34 @@ fun TacticalAppScaffold(
                         DiagnosticsScreen(
                             state = diagnosticsState,
                             diagnosticsEnabled = liveContinuousState == com.itantra.core.inference.ContinuousListenState.OFF,
+                            fiveLanguageSelfTestResults = fiveSelfTestResults,
+                            fiveLanguageSelfTestRunning = fiveSelfTestRunning,
+                            fiveLanguageSelfTestError = fiveSelfTestError,
+                            fiveLanguageSelfTestEnabled = liveContinuousState == com.itantra.core.inference.ContinuousListenState.OFF &&
+                                linkState == ConnectionState.DISCONNECTED,
+                            onRunFiveLanguageSelfTest = {
+                                if (!fiveSelfTestRunning) {
+                                    fiveSelfTestResults = emptyList()
+                                    fiveSelfTestError = null
+                                    fiveSelfTestRunning = true
+                                    coroutineScope.launch(Dispatchers.Default) {
+                                        try {
+                                            FiveLanguageSelfTest.run(context, sessionManager) { result ->
+                                                withContext(Dispatchers.Main) {
+                                                    fiveSelfTestResults = fiveSelfTestResults + result
+                                                }
+                                            }
+                                        } catch (error: Exception) {
+                                            android.util.Log.e("FIVE_LANGUAGE_SELF_TEST", "Self-test stopped", error)
+                                            withContext(Dispatchers.Main) {
+                                                fiveSelfTestError = error.message ?: "Self-test stopped unexpectedly"
+                                            }
+                                        } finally {
+                                            withContext(Dispatchers.Main) { fiveSelfTestRunning = false }
+                                        }
+                                    }
+                                }
+                            },
                             onBack = { currentDestination = AppDestination.HUB },
                             onExportEvidence = { (context as? MainActivity)?.exportFieldEvidence() },
                             onRunDiagnostics = {
@@ -1424,7 +1460,7 @@ private fun PermissionWarningBanner(
     onDismiss: () -> Unit = {}
 ) {
     Surface(
-        color = ITantraColors.StatusWarning.copy(alpha = 0.95f),
+        color = ITantraColors.WarningContainer,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -1434,7 +1470,7 @@ private fun PermissionWarningBanner(
         ) {
             Text(
                 "Audio / Nearby permissions required for P2P voice",
-                color = Color.White,
+                color = ITantraColors.OnWarningContainer,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -1442,10 +1478,10 @@ private fun PermissionWarningBanner(
             Spacer(Modifier.width(6.dp))
             Button(
                 onClick = onRequestPermissions,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.SurfaceWhite),
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
             ) {
-                Text("Grant", color = ITantraColors.StatusWarning, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text("Grant", color = ITantraColors.OnWarningContainer, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.width(4.dp))
             IconButton(
@@ -1455,7 +1491,7 @@ private fun PermissionWarningBanner(
                 Icon(
                     Icons.Filled.Close,
                     contentDescription = "Dismiss",
-                    tint = Color.White,
+                    tint = ITantraColors.OnWarningContainer,
                     modifier = Modifier.size(16.dp)
                 )
             }

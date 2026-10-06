@@ -1,0 +1,48 @@
+Tamil Gate B report review - 5 October 2026
+
+Input: C:/Users/avira/Downloads/itantra_tamil_pilot_reports (2).zip
+Archive CRC check: passed. Received runner exactly matches the reviewed local
+runner including float-WAV reading and validation-config repair.
+
+CONFIRMED RESULTS
+Saved Tamil data passed; original reviewed Gate A SHA-256 matches.
+4,428 train / 555 dev clips; 123 / 14 speakers; zero reported leakage errors.
+Python 3.11.13, PyTorch 2.2.2+cu121, Lightning 2.2.5, pinned AI4Bharat NeMo,
+Tesla T4, one GPU used. Source checkpoint hash and revision match prior report.
+The source baseline succeeded on all 30 protected recordings:
+CTC WER 20.0507614213%, CER 8.00444691495%, Tamil script 30/30.
+RNNT WER 18.5279187817%, CER 8.17120622568%, Tamil script 30/30.
+CTC baseline compatibility gate passed.
+These are source-model GPU baselines, not fine-tuning gains or Android results.
+
+TRAINING FAILURE
+The first freeze-lower / seed 17 process stopped at the beginning of training.
+The log ends after an RNNT warning about calculating loss in FP32 when FP16
+Numba bindings are unavailable. That warning alone does not explain failure.
+No Python traceback, pilot run report, optimizer-update evidence, or process
+exit code is present in the ZIP. The code suppressed the numeric exit status.
+A native-library crash or process kill is possible; memory exhaustion is NOT
+confirmed by these reports. No training success or improved WER can be claimed.
+
+CHANGES MADE
+The notebook command wrapper now records each subprocess's exit code, logs it,
+flushes output, and enables unbuffered Python output and Python fault handling.
+The current-session diagnostic cell retries ONLY freeze-lower / seed 17.
+It preserves the earlier log/config, records GPU use and available host/cgroup
+memory information, and refuses to overwrite an existing report/checkpoint or
+training metrics. It preserves baseline, model/data, seed, losses, precision,
+pilot scope, and leakage guards. No blind package/environment changes were made.
+Full pilot notebook updated for future sessions.
+
+VALIDATION
+CPU pilot safety/regression checks passed. A real failing subprocess's exit code
+was recorded and packed; secret output was redacted. GPU retry was NOT run here.
+
+NEXT ACTION
+Keep current Kaggle session open. Paste tools/kathbath_tamil_training_diagnostic.txt
+into one new cell before the failed training cell; run ONLY this cell.
+Download and share the new itantra_tamil_pilot_reports.zip after success/failure.
+Do not rerun setup, baseline, or the entire bounded-pilot cell.
+
+Remaining: establish first-pilot outcome, run other reviewed seed/mode pilots,
+then review full training and held-out/export/phone evidence. App model unchanged.

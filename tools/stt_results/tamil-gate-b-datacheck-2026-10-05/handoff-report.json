@@ -1,0 +1,15 @@
+{
+  "status": "Prepared; runtime/baseline/pilot not run",
+  "language": "ta",
+  "full_trial": "Not run",
+  "heldout_after_training": "Not run",
+  "export": "Not run",
+  "phone_accuracy": "Not verified",
+  "app_promotion": "Not done",
+  "current_stage": "saved-data-check",
+  "pilot_counts": {
+    "train": 128,
+    "dev": 64
+  },
+  "saved-data-check": "Completed"
+}

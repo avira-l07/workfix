@@ -94,6 +94,7 @@ fun DedicatedChatScreen(
     }
 
     var inputText by remember { mutableStateOf("") }
+    val inputTooLong = inputText.toByteArray(Charsets.UTF_8).size > com.itantra.core.transport.packet.PacketEncoder.MAX_PLAINTEXT_BYTES
     var isRecording by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
@@ -282,7 +283,7 @@ fun DedicatedChatScreen(
                             Icon(
                                 Icons.Filled.Mic,
                                 contentDescription = "Hold to speak",
-                                tint = if (isRecording) Color.White else ITantraColors.Primary,
+                                tint = if (isRecording) ITantraColors.OnError else ITantraColors.Primary,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -311,6 +312,8 @@ fun DedicatedChatScreen(
                         TextField(
                             value = inputText,
                             onValueChange = { inputText = it },
+                            isError = inputTooLong,
+                            supportingText = if (inputTooLong) ({ Text("Message is too long. Shorten it before sending.") }) else null,
                             placeholder = {
                                 Text(
                                     "Type message...",
@@ -337,23 +340,23 @@ fun DedicatedChatScreen(
                         IconButton(
                             onClick = {
                                 val text = inputText.trim()
-                                if (text.isNotBlank() && isConnected) {
+                                if (text.isNotBlank() && isConnected && !inputTooLong) {
                                     coordinator.sendTextMessage(text, targetPeerId = peerId)
                                     inputText = ""
                                 }
                             },
-                            enabled = inputText.isNotBlank() && isConnected,
+                            enabled = inputText.isNotBlank() && isConnected && !inputTooLong,
                             modifier = Modifier
                                 .size(48.dp)
                                 .background(
-                                    if (inputText.isNotBlank() && isConnected) ITantraColors.Primary else ITantraColors.BorderSubtle,
+                                    if (inputText.isNotBlank() && isConnected && !inputTooLong) ITantraColors.Primary else ITantraColors.BorderSubtle,
                                     CircleShape
                                 )
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.Send,
                                 contentDescription = "Send",
-                                tint = if (inputText.isNotBlank() && isConnected) Color.White else ITantraColors.TextMuted,
+                                tint = if (inputText.isNotBlank() && isConnected && !inputTooLong) ITantraColors.OnPrimary else ITantraColors.TextMuted,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -560,7 +563,7 @@ private fun LanguagePickerBottomSheet(
                                 text = language.code.wireCode.uppercase(),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.White else ITantraColors.Primary,
+                                color = if (isSelected) ITantraColors.OnPrimary else ITantraColors.Primary,
                                 fontSize = 10.sp
                             )
                         }

@@ -1,0 +1,17 @@
+{
+  "revision": "c10ece1aade47bb51c153c893d14e5bf8e5b7117",
+  "files": [
+    {
+      "name": "mr_IN-google-medium.onnx",
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/mr/mr_IN/google/medium/mr_IN-google-medium.onnx",
+      "bytes": 76768179,
+      "sha256": "e1200d474a74ebd6d1737be2c7affe56f1f9efc18915d4595d7f5c2b15cf06f4"
+    },
+    {
+      "name": "espeak-ng-data.tar.bz2",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2",
+      "bytes": 7252012,
+      "sha256": "4135ccf82e1f40613491c0874d4945ae9e9c7840933d8e25a6f9e003d9ebf533"
+    }
+  ]
+}

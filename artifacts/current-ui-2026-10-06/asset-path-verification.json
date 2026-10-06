@@ -1,0 +1,12 @@
+{
+  "apk": "D:\\new itantra\\artifacts\\current-ui-2026-10-06\\iTantra-1.7-connected-ui.apk",
+  "required_asset_paths_checked": 59,
+  "ten_language_manifests": "PASS",
+  "ten_bundled_self_test_audio_hashes": "PASS",
+  "english_benchmark_recordings": 24,
+  "pcm_audio_format": "PASS",
+  "native_speech_library": "PASS",
+  "missing_required_packaged_assets": [],
+  "downloaded_model_files": "Installed and checksum-validated on the phone when provisioned; not bundled in full",
+  "live_remote_download_availability": "Not retested by this local APK path check"
+}

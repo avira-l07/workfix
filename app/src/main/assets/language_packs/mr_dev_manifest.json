@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "languageCode": "mr",
   "displayName": "Marathi",
-  "packVersion": "2.0.0",
-  "downloadSizeBytes": 311707596,
-  "installedSizeBytes": 311707596,
+  "packVersion": "3.0.0",
+  "downloadSizeBytes": 283468397,
+  "installedSizeBytes": 292424285,
   "minimumAppVersion": 1,
   "sttModel": {
     "modelId": "indicconformer-ctc-mr-int8",
@@ -22,19 +22,31 @@
     "sizeBytes": 197663198
   },
   "ttsModel": {
-    "modelId": "mms-tts-mr",
+    "modelId": "piper-mr-IN-google-medium",
     "format": "onnx",
     "quantization": "fp32",
     "checksumsSha256": {
-      "model.onnx": "046cecf7cca77680c9ca319953e777c8d0233ce78e9b55a47aa909edf87d99e8",
-      "tokens.txt": "4d968029d0754b41633cb0871cce6796a5ab3d3bc2b9b91c5721cfdf85156083"
+      "model.onnx": "5b180a9fed4abf9877c2fe6be91128a14dca4fbb1f2d93a8144948e5af3caf8e",
+      "tokens.txt": "30615b46df803181140b628ca264f33860e90a0834977936274da840dd36c905",
+      "espeak-ng-data/phontab": "886f3fa402cb0ba73d483aa8ad000af47a6b7cc06293c75a97913fba68a530f6",
+      "espeak-ng-data/phonindex": "3ca7b8fa3b42624e4b0f152707e7a39245fce569aa99ea47c055d9e622fcf0c4",
+      "espeak-ng-data/phondata": "4e0288957874029a8c3c9f41a8f517ad4bf18127046decbdd4b9d1d6807ce3a3",
+      "espeak-ng-data/intonations": "3f8af65fd3eda9759a10f021d61361c120871f463515229c925995c7f90918cc",
+      "espeak-ng-data/mr_dict": "f712a7525db108ef9769aee53fdd1cd141f0df372778924691b89623aa6fc22f",
+      "espeak-ng-data/lang/inc/mr": "29063ff3a5257d0d3d7c215dfd4c14deed39e1d48f15894202e6712459720efd"
     },
-    "downloadUrl": "https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/mar",
+    "downloadUrl": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/mr/mr_IN/google/medium",
     "files": [
       "model.onnx",
-      "tokens.txt"
+      "tokens.txt",
+      "espeak-ng-data/phontab",
+      "espeak-ng-data/phonindex",
+      "espeak-ng-data/phondata",
+      "espeak-ng-data/intonations",
+      "espeak-ng-data/mr_dict",
+      "espeak-ng-data/lang/inc/mr"
     ],
-    "sizeBytes": 114044398
+    "sizeBytes": 94761087
   },
   "minimumRamBytes": 536870912
 }

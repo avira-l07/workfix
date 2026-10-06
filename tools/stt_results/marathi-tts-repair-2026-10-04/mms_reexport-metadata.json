@@ -1,0 +1,51 @@
+{
+  "url": "https://huggingface.co/api/models/naklitechie/mms-tts-mr-ONNX?blobs=true",
+  "sha": "96e4d4ed1f379ea1205aac504423b1b4ab6ebe95",
+  "files": [
+    {
+      "name": ".gitattributes",
+      "size": 1519,
+      "lfs": null
+    },
+    {
+      "name": "README.md",
+      "size": 1179,
+      "lfs": null
+    },
+    {
+      "name": "added_tokens.json",
+      "size": 18,
+      "lfs": null
+    },
+    {
+      "name": "config.json",
+      "size": 1630,
+      "lfs": null
+    },
+    {
+      "name": "model.onnx",
+      "size": 114313491,
+      "lfs": {
+        "sha256": "cacb3ef44b7b2786d9ad993e31516e176bcb3d63f6a9fc265f04b1a97fa4c44c",
+        "size": 114313491,
+        "pointerSize": 134
+      }
+    },
+    {
+      "name": "special_tokens_map.json",
+      "size": 49,
+      "lfs": null
+    },
+    {
+      "name": "tokenizer_config.json",
+      "size": 684,
+      "lfs": null
+    },
+    {
+      "name": "vocab.json",
+      "size": 918,
+      "lfs": null
+    }
+  ],
+  "license": "cc-by-nc-4.0"
+}

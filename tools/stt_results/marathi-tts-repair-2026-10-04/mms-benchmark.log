@@ -1,0 +1,10 @@
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0949.
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0949.
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0949.
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0949.
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0949.
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0949.
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0967.
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0968.
+D:\a\sherpa-onnx\sherpa-onnx\sherpa-onnx\csrc\offline-tts-character-frontend.cc:ConvertTextToTokenIds:133 Skip unknown character. Unicode codepoint: \U+0969.
+{"voice": "mms", "trials": 30, "sample_rate_hz": 16000, "mean_synthesis_ms": 808.3577199994276, "p95_synthesis_ms": 1046.6685000574216, "rtf": 0.7220689733712071, "peak_desktop_working_set_bytes": 259977216, "speech_pack_bytes": 114044398}

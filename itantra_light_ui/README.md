@@ -4,6 +4,11 @@ Open `index.html` in a browser. No install, build step, internet, or external fo
 
 This is an interactive design prototype for review, **not an updated Android APK**. It uses sample data and simulated actions. It does not access a microphone, Bluetooth, Wi-Fi Direct, GPS, real model downloads, the Android database, or emergency contacts. Reloading the page restores the sample data. Only appearance preferences are persisted; sample messages and hardware states remain in memory.
 
+The native Android app now applies this design through its active Compose
+screens. See [`docs/CURRENT_UI_INTEGRATION_2026-10-06.md`](../docs/CURRENT_UI_INTEGRATION_2026-10-06.md)
+for the current source wiring, preserved UI and latest APK. Prototype actions
+below remain simulated; Android controls use the existing real app services.
+
 ## Design
 
 - Four coordinated palettes: Ocean (blue/seafoam), Forest (pine/gold), Iris (violet/rose), and Ember (clay/sage).
@@ -36,7 +41,7 @@ Reviewed against the existing screen code and curated ZIP notes. Bluetooth RFCOM
 
 `UI_OPTION_AUDIT.md` compares every major option in the supplied legacy design breakdown with this preview and the Android source. It lists what is simulated, what routes to an existing screen, and which proposed controls are not supported by the current Android behavior. This is a review draft; the UI is not finalized.
 
-The prototype keeps hardware actions in memory and uses fixed translated sample sentences. It makes no statement about real STT, TTS, translation quality, transport success, or Android performance. There is no account or cloud backend. The Messages inbox behavior has a native Compose counterpart; porting the remaining preview styling remains separate work.
+The prototype keeps hardware actions in memory and uses fixed translated sample sentences. It makes no statement about real STT, TTS, translation quality, transport success, or Android performance. There is no account or cloud backend. The active Compose screens have the native layout integration described in the current UI release document; the prototype's sample data is not shipped into the Android app.
 
 ## Verification
 

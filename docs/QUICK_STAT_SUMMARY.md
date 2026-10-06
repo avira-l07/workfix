@@ -16,6 +16,11 @@ records the published criteria separately.
 
 ## Language evidence
 
+Tamil Gate B: the [baseline and bounded two-seed pilot notebook](KATHBATH_TAMIL_PILOT.md)
+is prepared and locally checked. The user is running the separate Kaggle
+preflight; no new runtime report or trained accuracy result is available yet.
+Current WER values and phone validation status remain unchanged.
+
 **Count:** ten selectable languages; ten selected STT/TTS pairs with desktop
 benchmarks (Hindi, English, Tamil, Telugu, Odia, Bengali, Gujarati, Marathi, Kannada, Malayalam); zero
 languages certified by a recorded live two-device phone test as of this report.
@@ -27,6 +32,12 @@ for Kannada. Human-rated TTS remains
 unverified for every language.
 An installed/ready badge reports files on the device, not that speech is
 accurate. Downloads vary by device and are counted live in Diagnostics.
+Marathi TTS now downloads Piper with an offline phoneme frontend. The
+[Marathi TTS repair](MARATHI_TTS_REPAIR.md) measured 181 ms mean / 252 ms p95
+on desktop and retained the `ॉ` phoneme in the tested doctor phrase. Native
+listener ratings and Android playback are **Not verified**.
+The Marathi repair regression run passed **454 unit tests with zero failures**;
+production debug lint and the fresh debug APK build passed.
 The authorized audit-fix regression run passed **444 unit tests with zero failures**.
 See [the fix report](AUDIT_FIXES_2026-10-04.txt) for build evidence and remaining gaps.
 
@@ -39,7 +50,7 @@ See [the fix report](AUDIT_FIXES_2026-10-04.txt) for build evidence and remainin
 | Odia | Dedicated IndicConformer CTC candidate | 19.3% (30) | 658 ms / 0.057 | 1,040 ms / 0.938 | 311,699,240 | Not measured |
 | Bengali | Dedicated IndicConformer CTC | 14.36% (30) | 729 ms / 0.057 | 1,046 ms / 0.922 | 311,708,339 | Not measured |
 | Gujarati | Dedicated IndicConformer CTC | 18.54% (30) | 511 ms / 0.052 | 529 ms / 0.514 | 311,697,392 | Not measured |
-| Marathi | Dedicated IndicConformer CTC | 15.70% (30); native script 30/30 | 757 ms / 0.058 | 549 ms / 0.500; unsupported letters now fail explicitly | 311,707,596 | Not measured |
+| Marathi | Dedicated IndicConformer CTC | 15.70% (30); native script 30/30 | 757 ms / 0.058 | Piper: 181 ms / 0.162; 30 trials | 292,424,285 | Not verified |
 | Kannada | Dedicated IndicConformer CTC; manual mode | 17.23% (30); native script 30/30 | 440 ms / 0.035; p95 1,123 ms | 1,360 ms / 0.863 (earlier desktop measurement) | 311,709,264 | Not measured |
 | Malayalam | Dedicated IndicConformer CTC; experimental | 28.91% (30); native script 30/30 | 664 ms / 0.040 | 968 ms / 0.915 | 311,716,087 | Not measured |
 
@@ -67,7 +78,7 @@ different clips and phrases do not prove a model improvement.
 | Odia | 19.3% / 5.1% | 658 / 1,272 ms | 0.057 | 1,040 / 1,450 ms | Not verified |
 | Bengali | 14.36% / 3.62% | 729 / 1,552 ms | 0.057 | 1,046 / 1,639 ms | Not verified |
 | Gujarati | 18.54% / 5.75% | 511 / 786 ms | 0.052 | 529 / 668 ms | Not verified |
-| Marathi | 15.70% / 4.64% | 757 / 1,441 ms | 0.058 | 549 / 701 ms; U+0949 skip | Not verified |
+| Marathi | 15.70% / 4.64% | 757 / 1,441 ms | 0.058 | Piper: 181 / 252 ms | Not verified |
 | Malayalam | 28.91% / 7.06% | 664 / 2,194 ms | 0.040 | 968 / 1,229 ms | Not verified |
 
 Tamil, Telugu, Odia, Marathi and Malayalam exceed the requested 15% WER target. Tamil and Telugu
@@ -120,8 +131,11 @@ Tiny path's 133.94% and 0/30 on the same recordings. Manual Marathi now uses
 the dedicated, checksum-verified on-demand pack. Install the new APK, download
 Marathi STT in Language Packs and explicitly select Marathi as the mic
 language; Auto-detect still uses shared Whisper. The old Tiny install does
-not satisfy Marathi readiness. Current Marathi TTS produces audio but skips
-U+0949 in one tested field phrase; it is not pronunciation-certified. The
+not satisfy Marathi readiness. The prior MMS TTS voice skipped U+0949;
+Marathi now requires the new Piper TTS download and its offline phoneme data.
+All 30 short-phrase synthesis trials and 12 character probes produced finite,
+non-silent desktop audio. The phoneme check retains the doctor vowel; it is
+not pronunciation-certified. The
 under-10% WER goal, phone inference, noisy speech and translation quality
 remain unverified or unmet.
 

@@ -1,0 +1,18 @@
+Failed to find real location of C:\Python314\python.exe
+Traceback (most recent call last):
+  File "D:\new itantra\tools\check_saved_tts.py", line 86, in <module>
+    main()
+    ~~~~^^
+  File "D:\new itantra\tools\check_saved_tts.py", line 68, in main
+    check_language(args.language)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\new itantra\tools\check_saved_tts.py", line 40, in check_language
+    assert digest(model) == expected["model.onnx"] and digest(tokens) == expected["tokens.txt"], "Pinned model checksum mismatch"
+           ~~~~~~^^^^^^^
+  File "D:\new itantra\tools\benchmark_five_language_tts.py", line 39, in digest
+    with path.open("rb") as stream:
+         ~~~~~~~~~^^^^^^
+  File "C:\Python314\Lib\pathlib\__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\new itantra\\models\\bundled\\en\\tts\\model.onnx'

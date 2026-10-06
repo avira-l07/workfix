@@ -1,0 +1,157 @@
+---
+license: apache-2.0
+language:
+- mr
+library_name: onnxruntime
+pipeline_tag: text-to-speech
+base_model: shreyask/bol-tts-marathi
+base_model_relation: quantized
+datasets:
+- ai4bharat/Rasa
+- ai4bharat/indicvoices_r
+- SPRINGLab/IndicTTS_Marathi
+tags:
+- text-to-speech
+- tts
+- kokoro
+- marathi
+- minglish
+- indic
+- styletts2
+- bol-tts
+- onnx
+- webgpu
+- transformers.js
+---
+
+# bol-tts-marathi-onnx — ONNX export
+
+ONNX-format export of the Marathi Kokoro-82M fine-tune at [shreyask/bol-tts-marathi](https://huggingface.co/shreyask/bol-tts-marathi). Designed for WebGPU / transformers.js / onnxruntime deployments.
+
+- **Live demo:** [shreyask/bol-tts-marathi](https://huggingface.co/spaces/shreyask/bol-tts-marathi) (in-browser via WebGPU using this very ONNX file)
+- **Write-up:** [kshreyas.dev/post/bol-tts-marathi](https://kshreyas.dev/post/bol-tts-marathi/)
+- **Code + export script:** [github.com/shreyaskarnik/bol-tts-marathi](https://github.com/shreyaskarnik/bol-tts-marathi)
+
+Architecture: Kokoro-82M with `disable_complex=True` (uses `CustomSTFT` instead of `TorchSTFT`, which uses complex tensors that ONNX doesn't support).
+
+## Files
+
+```
+onnx/model.onnx          — fp32 model, 326 MB
+config.json              — Kokoro inference config with ɭ at slot 144 (Marathi retroflex lateral)
+voice_speeds.json        — per-voice optimal default speed
+voices/*.pt              — 25 voicepack .pt files, [510, 1, 256] float32 each
+```
+
+## Model I/O
+
+```
+Inputs:
+  input_ids: int64   [1, n_phonemes]  — phoneme token IDs (per config.json vocab).
+                                         MUST be wrapped with BOS=0 and EOS=0:
+                                         [0, *content_ids, 0]
+  style:     float32 [1, 256]         — voicepack slice at position [content_n_phonemes].
+                                         (Naming follows kokoro-js + thewh1teagle/kokoro-onnx
+                                          ecosystem convention.)
+  speed:     float32 [1]              — pacing multiplier (1.0 = neutral; <1.0 slows, >1.0 fastens).
+                                         Divides the predictor's per-phoneme duration BEFORE
+                                         rounding, so it scales actual frame allocation —
+                                         not just playback rate.
+
+Outputs:
+  audio:     float32 [1, n_samples]   — 24 kHz waveform. Includes BOS+EOS audio at start/end —
+                                         strip `bos_frames * 600` samples from the front and
+                                         `eos_frames * 600` from the back if you want
+                                         content-only audio (Rasa-trained voicepacks generate
+                                         a soft breathy pre-roll for BOS that surfaces as
+                                         "umm" if not stripped).
+  pred_dur:  int64   [1, n_phonemes]  — per-phoneme durations in predictor frames.
+                                         1 frame = 600 audio samples at 24 kHz.
+                                         pred_dur[0] = BOS duration; pred_dur[-1] = EOS.
+```
+
+`pred_dur` is exposed so downstream apps can build phoneme/word-level timestamps.
+
+## Usage — onnxruntime (Python)
+
+```python
+import numpy as np
+import onnxruntime as ort
+import torch
+import soundfile as sf
+import json
+from misaki import espeak
+
+sess = ort.InferenceSession("onnx/model.onnx", providers=["CPUExecutionProvider"])
+vocab = json.load(open("config.json"))["vocab"]
+voice = torch.load("voices/mf_asha.pt", map_location="cpu", weights_only=True)
+
+g2p = espeak.EspeakG2P(language="mr")
+text = "नमस्कार, मी मराठी बोलतो."
+phonemes, _ = g2p(text)
+content_ids = [vocab[p] for p in phonemes if p in vocab]
+
+# Wrap with BOS=0, EOS=0
+input_ids = np.array([[0, *content_ids, 0]], dtype=np.int64)
+# Voicepack indexed by CONTENT length (not wrapped length): [510, 1, 256] -> slot
+style = voice[len(content_ids)].numpy().astype(np.float32)
+speed = np.array([1.0], dtype=np.float32)
+
+audio, pred_dur = sess.run(None, {
+    "input_ids": input_ids,
+    "style": style,
+    "speed": speed,
+})
+
+# Strip BOS+EOS audio (optional but recommended; see I/O notes above)
+HOP = 600
+bos_frames = int(pred_dur.flatten()[0])
+eos_frames = int(pred_dur.flatten()[-1])
+audio = audio[bos_frames * HOP : len(audio) - eos_frames * HOP]
+
+sf.write("out.wav", audio, 24000)
+```
+
+## Usage — WebGPU / transformers.js
+
+The live demo at [shreyask/bol-tts-marathi](https://huggingface.co/spaces/shreyask/bol-tts-marathi) uses this exact ONNX file via `@huggingface/transformers`. The TS client calls `await model({ input_ids, style, speed })` and applies the BOS/EOS strip + per-utterance silence injection at punctuation boundaries client-side. Source: [Space's `src/model.ts`](https://huggingface.co/spaces/shreyask/bol-tts-marathi/blob/main/src/model.ts).
+
+For Marathi support in upstream Kokoro-JS pipelines, you'll need to monkey-patch `'m'` as a Marathi `lang_code` (espeak `'mr'`).
+
+## Voicepacks (25)
+
+This repo ships all 25 voicepacks deployed in the live demo as `.pt` files (use them as `style` input):
+
+- **4 trained on Marathi corpora:** `mf_asha`, `mm_vivek` (Rasa), `mf_mukta`, `mm_dnyanesh` (SPRINGLab)
+- **19 stock-Kokoro crossovers:** `af_heart` (Svara), `af_nova` (Tara), `am_liam` (Atharv), `bf_emma`-style (Ira), `hm_omega` (Vihaan), `zf_xiaoxiao` (Pari, kid), `zf_xiaoyi` (Vir, kid), … etc. See the [demo's voicepacks.json](https://huggingface.co/spaces/shreyask/bol-tts-marathi/blob/main/voicepacks.json) for the full ID → display-name mapping.
+- **2 synthetic:** `syn_sama` (centroid mean of 5 voicepacks), `syn_navya` (centroid + Gaussian noise) — generated arithmetically with no reference audio.
+
+## Export details
+
+Exported via [`scripts/export_onnx.py`](https://github.com/shreyaskarnik/bol-tts-marathi/blob/main/scripts/export_onnx.py):
+
+```python
+torch.onnx.export(
+    KModelForONNX(kmodel),                   # upstream wrapper, runs forward_with_tokens
+    (dummy_input_ids, dummy_style, dummy_speed),
+    output_path,
+    input_names=["input_ids", "style", "speed"],
+    output_names=["audio", "pred_dur"],
+    dynamic_axes={
+        "input_ids": {1: "n_phonemes"},
+        "audio":     {1: "n_samples"},
+        "pred_dur":  {1: "n_phonemes"},
+    },
+    opset_version=17,
+    dynamo=False,                  # legacy TorchScript tracer; pinned for torch ≤ 2.8
+    do_constant_folding=True,
+)
+```
+
+**⚠️ torch ≤ 2.8 required for export.** torch ≥ 2.9 silently emits a static-output ONNX with the legacy tracer (`dynamo=False`) on Kokoro's InstanceNorm-under-spectral-norm + LSTM + CustomSTFT combo. The exported file loads + runs in onnxruntime but produces silence. We pin `torch==2.6` in our export venv. See [bol-tts-marathi pyproject.toml](https://github.com/shreyaskarnik/bol-tts-marathi/blob/main/pyproject.toml) for the constraint.
+
+`disable_complex=True` is mandatory — Kokoro's default `TorchSTFT` uses complex tensors that ONNX doesn't support.
+
+## License
+
+Apache 2.0. See the [base PyTorch model](https://huggingface.co/shreyask/bol-tts-marathi) for full citation/attribution.

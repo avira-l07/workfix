@@ -1,0 +1,125 @@
+{
+  "revision": "8dce88cf8e94963e2033c3137f7b9993b51db88a",
+  "files": [
+    {
+      "path": "setup.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/setup.py",
+      "bytes": 8997,
+      "sha256": "cd80fd7185a49dd6f1a7a19ef56c82718dc1431ac0bb0c54d528dc72957dbbc4"
+    },
+    {
+      "path": "reinstall.sh",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/reinstall.sh",
+      "bytes": 954,
+      "sha256": "d3a7b9f8c8cdc3b354b8ad6271b86f01ef4b4fd7843ad4deb4e5359e139c7e69"
+    },
+    {
+      "path": "requirements/requirements.txt",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/requirements/requirements.txt",
+      "bytes": 178,
+      "sha256": "40a6b046d57af3ebd2e33d1678bb9b9ecdc575b7e70bff846e2fa88ee3b9a8ac"
+    },
+    {
+      "path": "requirements/requirements_asr.txt",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/requirements/requirements_asr.txt",
+      "bytes": 242,
+      "sha256": "a82a1c03591fb38944609fc7f9fb938a9aa7ad6fc95acb228a9aa7c92ae7db26"
+    },
+    {
+      "path": "nemo/collections/asr/models/hybrid_rnnt_ctc_models.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/asr/models/hybrid_rnnt_ctc_models.py",
+      "bytes": 38287,
+      "sha256": "271df36a677fe0a2e8171aa02a80db5ff28dd4b5c6f0e5bae559646de732038d"
+    },
+    {
+      "path": "nemo/collections/asr/models/hybrid_rnnt_ctc_bpe_models.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/asr/models/hybrid_rnnt_ctc_bpe_models.py",
+      "bytes": 47579,
+      "sha256": "0a8d35be899bcea3185d4c7056c5fa4d9afdf34acca4e62004fbedea827abefe"
+    },
+    {
+      "path": "examples/asr/speech_to_text_finetune.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/examples/asr/speech_to_text_finetune.py",
+      "bytes": 8731,
+      "sha256": "2f147e089cc7d6f5c6115dd0d6e01340acb62d51b3ae79adea04e259f498ac78"
+    },
+    {
+      "path": "examples/asr/conf/asr_finetune/speech_to_text_finetune.yaml",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/examples/asr/conf/asr_finetune/speech_to_text_finetune.yaml",
+      "bytes": 3773,
+      "sha256": "72c973928a92092a7d5c9edf6d9776fb23bbab1e5a7691dc4c4355c0b6433aef"
+    },
+    {
+      "path": "nemo/collections/asr/data/audio_to_text.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/asr/data/audio_to_text.py",
+      "bytes": 63536,
+      "sha256": "4b4e3bb11f025f88e2f859f4da97f80c0331f41d5f288f8e36483970e066a6d5"
+    },
+    {
+      "path": "nemo/collections/asr/models/ctc_bpe_models.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/asr/models/ctc_bpe_models.py",
+      "bytes": 33445,
+      "sha256": "63ad9179d4958815dd48c6d5e6e10b0b3247f5c84b6d5f61c8ba79e64b61fde1"
+    },
+    {
+      "path": "nemo/collections/asr/models/ctc_models.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/asr/models/ctc_models.py",
+      "bytes": 40780,
+      "sha256": "eb22a16ed330cc717bf9e72768f8b83606b3359eadef33aa66d77c7a57cda0fe"
+    },
+    {
+      "path": "nemo/collections/asr/losses/rnnt.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/asr/losses/rnnt.py",
+      "bytes": 20243,
+      "sha256": "0a2e0988d56bca6f8c729e574748549b7538a6edf7a53f8c4b77362b04860f94"
+    },
+    {
+      "path": "nemo/utils/exp_manager.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/utils/exp_manager.py",
+      "bytes": 50180,
+      "sha256": "558f93c80ca677fe7d8a225f922c310569b04862b6d93b7000939157f9e0f7d1"
+    },
+    {
+      "path": "requirements/requirements_lightning.txt",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/requirements/requirements_lightning.txt",
+      "bytes": 130,
+      "sha256": "70d4587f5974ae0df3565c5f6a470eb07499c246f9793012474c8f5611a3884e"
+    },
+    {
+      "path": "requirements/requirements_common.txt",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/requirements/requirements_common.txt",
+      "bytes": 63,
+      "sha256": "0364f75ab16a773724f3c887ab32478ebc963614219f6195e84f50338dc8b94d"
+    },
+    {
+      "path": "nemo/collections/asr/data/audio_to_text_dataset.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/asr/data/audio_to_text_dataset.py",
+      "bytes": 40631,
+      "sha256": "8a183da9097b6cccdb7842695dcf3140d584a2949b687a5f0b9c143672be0172"
+    },
+    {
+      "path": "nemo/collections/asr/parts/preprocessing/perturb.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/asr/parts/preprocessing/perturb.py",
+      "bytes": 55434,
+      "sha256": "46354c83cc0e895dab0b004ee0e040a7e0384c5a4806ad963ead454d5b370888"
+    },
+    {
+      "path": "nemo/collections/common/parts/preprocessing/collections.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/common/parts/preprocessing/collections.py",
+      "bytes": 55540,
+      "sha256": "ba428053bebba58cd8ae158269541a685e73ea076627387ddbfb9a613dbb0ed0"
+    },
+    {
+      "path": "nemo/collections/common/parts/preprocessing/manifest.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/collections/common/parts/preprocessing/manifest.py",
+      "bytes": 11220,
+      "sha256": "8958c606d3b7fb9b784da99ec173dc0c85b8692332467acfa9603eab036ec397"
+    },
+    {
+      "path": "nemo/core/classes/modelPT.py",
+      "url": "https://raw.githubusercontent.com/AI4Bharat/NeMo/8dce88cf8e94963e2033c3137f7b9993b51db88a/nemo/core/classes/modelPT.py",
+      "bytes": 81468,
+      "sha256": "5848722ddc55dc52894783ee1d87444308b9e674df9c61b462e476862246ae5c"
+    }
+  ]
+}

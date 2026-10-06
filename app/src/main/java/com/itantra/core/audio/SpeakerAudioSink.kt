@@ -8,6 +8,8 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Build
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
@@ -195,7 +197,8 @@ class SpeakerAudioSink(
         }
         var offset = 0
         while (offset < samples.size) {
-            val written = track.write(samples, offset, samples.size - offset, AudioTrack.WRITE_BLOCKING)
+            currentCoroutineContext().ensureActive()
+            val written = track.write(samples, offset, minOf(samples.size - offset, (sampleRate / 4).coerceAtLeast(1)), AudioTrack.WRITE_BLOCKING)
             if (written <= 0) {
                 throw IllegalStateException("AUDIO_WRITE_FAILED: AudioTrack.write returned $written at offset $offset/${samples.size}")
             }

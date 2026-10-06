@@ -1,0 +1,81 @@
+# Replace the old run_pilots cell with ALL of this, then run this cell once.
+# Completed pilots are checked and kept. Only missing pilots are trained.
+import os, json, math, hashlib, shutil
+from pathlib import Path
+assert all(name in globals() for name in ('work', 'train_python', 'summary', 'command', 'stage', 'pack_reports')), 'Setup variables missing; stop and share this output'
+work = Path(work).resolve()
+MAX_STEPS, SEEDS = 20, (17, 29)
+def digest(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+def completed_pilot(repo, mode, seed):
+    """Skip a completed run only when its measured evidence matches this trial."""
+    repo = Path(repo)
+    path = repo / f"pilot-{mode}-{seed}/report.json"
+    if not path.exists():
+        return None
+    result = json.loads(path.read_text(encoding="utf-8"))
+    valid = (result.get("status") == "Bounded pilot executed; full trial and held-out comparison not run"
+             and not result.get("error") and result.get("weights_changed") is True
+             and result.get("language") == "ta" and result.get("mode") == mode
+             and result.get("seed") == seed and seed in SEEDS and mode in ("freeze-lower", "full")
+             and result.get("max_steps") == MAX_STEPS and result.get("training_precision") == "32-true"
+             and isinstance(result.get("global_step"), int) and 0 < result["global_step"] <= MAX_STEPS
+             and result.get("plan_sha256") == digest(repo / "pilot-plan.json")
+             and result.get("baseline_report_sha256") == digest(repo / "baseline-report.json")
+             and (path.parent / "last-pilot.ckpt").is_file())
+    history = result.get("history", [])
+    valid = (valid and any("dev_ctc_wer" in row for row in history)
+             and any("loss" in row for row in history)
+             and all(math.isfinite(float(row[key])) and float(row[key]) >= 0
+                     for row in history for key in ("loss", "dev_ctc_wer") if key in row))
+    if not valid:
+        raise RuntimeError(f"Existing {mode}/{seed} report is not a verified completed FP32 pilot; preserve it and share the ZIP")
+    return result
+
+# Require the first FP32 pilot to have passed before attempting other runs.
+assert completed_pilot(work, 'freeze-lower', 17) is not None, 'First FP32 pilot report missing; share the ZIP'
+os.environ['NUMBA_CUDA_USE_NVIDIA_BINDING'] = '1'
+os.environ['ITANTRA_NEMO_SOURCE'] = str(work / 'NeMo')
+os.environ['PYTHONPATH'] = str(work)
+os.environ['PYTHONNOUSERSITE'] = '1'
+os.chdir(work)
+
+# Preserve the previous error as history; the current stage will report its outcome.
+if 'error' in summary:
+    summary.setdefault('previous_attempt_errors', []).append({'stage': summary.get('current_stage'), 'error': summary.pop('error')})
+
+def continue_fp32_pilots():
+    for mode in ('freeze-lower', 'full'):
+        for seed in SEEDS:
+            if completed_pilot(work, mode, seed) is not None:
+                print('Keeping completed FP32 pilot:', mode, seed)
+                continue
+            if shutil.disk_usage(work).free < 3 * 1024**3:
+                raise RuntimeError('Too little free disk for the next checkpoint; share the ZIP')
+            if sum(p.stat().st_size for p in work.rglob('*') if p.is_file()) > 16 * 1024**3:
+                raise RuntimeError('Pilot workspace exceeds 16 GiB; share the ZIP')
+            command([train_python, work / 'kathbath_tamil_pilot.py', 'pilot', '--repo', work,
+                     '--mode', mode, '--seed', seed], f'pilot-{mode}-{seed}-fp32-continue')
+            completed_pilot(work, mode, seed)
+            pack_reports()
+    summary['status'] = 'Bounded two-seed FP32 pilot completed; full training and improved held-out WER not established'
+
+stage('bounded-pilot', continue_fp32_pilots)
+
+runs = []
+for mode in ('freeze-lower', 'full'):
+    for seed in SEEDS:
+        result = completed_pilot(work, mode, seed)
+        dev = [row['dev_ctc_wer'] for row in result['history'] if 'dev_ctc_wer' in row]
+        runs.append({'mode': mode, 'seed': seed, 'training_precision': result['training_precision'],
+                     'optimizer_steps': result['global_step'], 'last_subset_dev_ctc_wer': dev[-1],
+                     'peak_gpu_allocated_bytes': result['peak_gpu_allocated_bytes'],
+                     'elapsed_seconds': result['elapsed_seconds']})
+comparison = {'status': 'Measured short pilot only; general accuracy improvement not established',
+              'runs': runs, 'full_trial': 'Not run', 'post_training_heldout_wer': 'Not run',
+              'phone_accuracy': 'Not verified', 'app_promotion': 'Not done'}
+(work / 'pilot-comparison-report.json').write_text(json.dumps(comparison, indent=2, allow_nan=False), encoding='utf-8')
+pack_reports()
+print(json.dumps(comparison, indent=2))
+print('STOP. Download the NEW itantra_tamil_pilot_reports.zip and share it. Do not run the old cells again.')

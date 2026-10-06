@@ -1,7 +1,7 @@
 package com.example.itantra.ui.screens.messages
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,94 +20,117 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.itantra.ui.theme.ITantraColors
 import java.text.DateFormat
 import java.util.Date
 
-@OptIn(ExperimentalMaterial3Api::class)
-@androidx.compose.runtime.Composable
+@Composable
 fun MessagesScreen(
     conversations: List<ConversationSummary>,
     onOpenConversation: (ConversationSummary) -> Unit,
     onFindDevices: () -> Unit,
     onBack: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = ITantraColors.CanvasBg,
-        topBar = {
-            TopAppBar(
-                title = { Text("Messages", style = MaterialTheme.typography.titleLarge) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to talk")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onFindDevices) {
-                        Icon(Icons.Filled.AddLink, contentDescription = "Find devices")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ITantraColors.SurfaceWhite),
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().background(ITantraColors.CanvasBg),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item {
+            Text("Your conversations.", style = MaterialTheme.typography.headlineLarge, color = ITantraColors.TextHeadline)
+            Text(
+                "Your previous devices and saved conversations.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = ITantraColors.TextMuted,
+                modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
             )
-        },
-    ) { padding ->
+        }
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("Conversations", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                TextButton(onClick = onFindDevices) {
+                    Icon(Icons.Filled.AddLink, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Find devices")
+                }
+            }
+            Text(
+                "Open a saved chat. Reconnect its device to send a message.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ITantraColors.TextMuted,
+            )
+        }
         if (conversations.isEmpty()) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Icon(Icons.Filled.ChatBubbleOutline, contentDescription = null, tint = ITantraColors.Primary, modifier = Modifier.size(44.dp))
-                Text("No conversations yet", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 12.dp))
-                Text("Connect and verify a nearby device. Its chat will appear here even after you disconnect.", color = ITantraColors.TextMuted, modifier = Modifier.padding(top = 6.dp, bottom = 18.dp))
-                Button(onClick = onFindDevices) { Text("Find devices") }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                item {
-                    Text("Previous devices", style = MaterialTheme.typography.titleSmall, color = ITantraColors.TextHeadline)
-                    Text("Tap a chat to read its saved messages. Reconnect to send.", style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(22.dp),
+                    border = BorderStroke(1.dp, ITantraColors.BorderSubtle),
+                    colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Box(
+                            modifier = Modifier.size(72.dp).background(ITantraColors.AccentSubtle, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Filled.ChatBubbleOutline, contentDescription = null, tint = ITantraColors.Primary, modifier = Modifier.size(32.dp))
+                        }
+                        Spacer(Modifier.height(18.dp))
+                        Text("No conversations yet", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+                        Text(
+                            "Connect and verify a nearby device. Its chat stays here after you disconnect.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = ITantraColors.TextMuted,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
+                        )
+                        Button(onClick = onFindDevices, shape = RoundedCornerShape(14.dp)) {
+                            Icon(Icons.Filled.AddLink, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Find devices")
+                        }
+                        TextButton(onClick = onBack) { Text("Open Talk") }
+                    }
                 }
-                items(conversations, key = { it.peerId }) { conversation ->
-                    ConversationRow(conversation, onClick = { onOpenConversation(conversation) })
-                }
             }
+        }
+        items(conversations, key = { it.peerId }) { conversation ->
+            ConversationRow(conversation, onClick = { onOpenConversation(conversation) })
         }
     }
 }
 
-@androidx.compose.runtime.Composable
+@Composable
 private fun ConversationRow(conversation: ConversationSummary, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp),
         colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
-        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, if (conversation.connected) ITantraColors.StatusSuccess.copy(alpha = .4f) else ITantraColors.BorderSubtle),
+        shape = RoundedCornerShape(22.dp),
     ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier.size(48.dp).background(ITantraColors.AccentSubtle, CircleShape),
                 contentAlignment = Alignment.Center,
@@ -114,27 +139,31 @@ private fun ConversationRow(conversation: ConversationSummary, onClick: () -> Un
             }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(conversation.displayName, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    if (conversation.connected) {
-                        Text("Connected", style = MaterialTheme.typography.labelSmall, color = ITantraColors.StatusSuccess)
-                    }
-                }
+                Text(conversation.displayName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     conversation.lastMessage ?: "No messages yet",
                     style = MaterialTheme.typography.bodyMedium,
                     color = ITantraColors.TextBody,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp),
                 )
+                if (conversation.connected) {
+                    Surface(color = ITantraColors.SuccessContainer, shape = RoundedCornerShape(8.dp), modifier = Modifier.padding(top = 6.dp)) {
+                        Text("Connected · verified", style = MaterialTheme.typography.labelSmall, color = ITantraColors.OnSuccessContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                    }
+                }
                 Text(
                     "${conversation.transportName} · ${if (conversation.lastActivityMillis > 0) DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(conversation.lastActivityMillis)) else "Previously connected"}",
                     style = MaterialTheme.typography.labelSmall,
                     color = ITantraColors.TextMuted,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 6.dp),
                 )
             }
+            Spacer(Modifier.width(6.dp))
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = ITantraColors.TextMuted)
         }
     }

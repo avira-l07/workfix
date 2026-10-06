@@ -85,8 +85,14 @@ data class TransceiverMessage(
     val remoteAudioStartConfMillis: Long = 0,
     val rawPcmEquivalentBytes: Int = 0,
     val speechDurationMillis: Long = 0,
-    val statusDetail: String? = null
+    val statusDetail: String? = null,
+    val deletedAtMillis: Long? = null
 ) {
+    /** Local translations retain the source language in metadata; replay the displayed text. */
+    val displayedTextLanguage: LanguageCode?
+        get() = if (source == MessageSource.LOCAL && translationStatus == TranslationStatus.SUCCESS)
+            targetLanguage ?: language else language
+
     val isLocationMessage: Boolean
         get() = isLocation || (latitude != null && longitude != null)
 

@@ -1,0 +1,23 @@
+{
+  "language": "mr",
+  "passed": true,
+  "phrase": "मदत हवी आहे",
+  "model_sha256": "5b180a9fed4abf9877c2fe6be91128a14dca4fbb1f2d93a8144948e5af3caf8e",
+  "tokens_sha256": "30615b46df803181140b628ca264f33860e90a0834977936274da840dd36c905",
+  "trials": [
+    {
+      "play": 1,
+      "samples": 23907,
+      "sample_rate_hz": 22050,
+      "synthesis_ms": 2683.3986999699846,
+      "peak": 0.8177042007446289
+    },
+    {
+      "play": 2,
+      "samples": 23636,
+      "sample_rate_hz": 22050,
+      "synthesis_ms": 233.08659996837378,
+      "peak": 0.6514222621917725
+    }
+  ]
+}

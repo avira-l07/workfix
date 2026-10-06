@@ -68,12 +68,14 @@ fun DiagnosticsScreen(
     fiveLanguageSelfTestError: String? = null,
     onExportEvidence: () -> Unit,
     diagnosticsEnabled: Boolean = true,
+    diagnosticsRunning: Boolean = false,
+    diagnosticsError: String? = null,
 ) {
     Scaffold(
         containerColor = ITantraColors.CanvasBg,
         topBar = {
             TopAppBar(
-                title = { Text("Diagnostics", style = MaterialTheme.typography.titleMedium) },
+                title = { Text("Diagnostics", style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -84,18 +86,22 @@ fun DiagnosticsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = ITantraColors.SurfaceWhite,
+                    containerColor = ITantraColors.CanvasBg,
                     titleContentColor = ITantraColors.TextHeadline
                 ),
-                windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
             )
         },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.padding(padding).fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            item {
+                Text("Everything, in view.", style = MaterialTheme.typography.headlineLarge)
+                Text("Speech models, recorded test results and your device connection.",
+                    style = MaterialTheme.typography.bodyMedium, color = ITantraColors.TextMuted)
+            }
             item { QuickStatSummary(state) }
             item { AiBenchmarkSection(state) }
             item {
@@ -110,7 +116,8 @@ fun DiagnosticsScreen(
                     MetricRow("Bengali STT WER / CER", "14.4% / 3.6%")
                     MetricRow("Gujarati STT WER / CER", "18.5% / 5.8%")
                     MetricRow("Marathi STT WER / CER", "15.7% / 4.6%")
-                    MetricRow("Marathi STT / TTS mean", "757 / 549 ms · desktop")
+                    MetricRow("Marathi STT / TTS mean", "757 / 181 ms · desktop")
+                    MetricRow("Marathi Piper TTS p95 / pack", "252 ms / 94.8 MB · desktop")
                     MetricRow("Kannada STT WER / CER", "17.2% / 6.3% · 30 clips")
                     MetricRow("Kannada STT mean / p95", "440 / 1,123 ms · desktop")
                     Text("Kannada: select Kannada mic and download the dedicated CTC pack. Native script 30/30 on desktop; phone and listener validation: Not verified. Auto-detect still uses Tiny and is unreliable for Kannada.",
@@ -120,7 +127,7 @@ fun DiagnosticsScreen(
                     MetricRow("Malayalam STT / TTS mean", "664 / 968 ms · desktop")
                     Text("Malayalam is experimental: download the new STT pack and select Malayalam mic. Desktop peak STT memory was 722–946 MB; phone memory and voice quality are Not verified. General Malayalam translation is unavailable.",
                         style = MaterialTheme.typography.bodySmall, color = ITantraColors.StatusWarning)
-                    Text("Marathi: select Marathi mic and download the new STT pack. This voice lacks U+0949 (ॉ); unsupported text is preserved and speech shows an error. A replacement voice and pronunciation are Not verified.",
+                    Text("Marathi: download the new Piper TTS pack. Offline phoneme probes retain the doctor vowel (ॉ); 30 desktop synthesis trials passed. Phone performance and native-listener pronunciation are Not verified. STT remains the existing dedicated model; select Marathi mic.",
                         style = MaterialTheme.typography.bodySmall, color = ITantraColors.StatusWarning)
                     MetricRow("Fine-tuned ta / te / bn / gu", "Not run; current packs active")
                     Text("Tamil, Telugu, Odia, Marathi, Kannada and Malayalam remain above the 15% WER target.",
@@ -176,12 +183,16 @@ fun DiagnosticsScreen(
             item {
                 Button(
                     onClick = onRunDiagnostics,
-                    enabled = diagnosticsEnabled,
+                    enabled = diagnosticsEnabled && !diagnosticsRunning,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.Primary),
                 ) {
-                    Text(if (diagnosticsEnabled) "RUN ENGLISH STT BENCHMARK" else "STOP CONTINUOUS LISTENING FIRST")
+                    Text(if (diagnosticsRunning) "RUNNING ENGLISH BENCHMARK…"
+                        else if (diagnosticsEnabled) "RUN ENGLISH STT BENCHMARK"
+                        else "DISCONNECT AND STOP OTHER TESTS / LISTENING FIRST")
                 }
+                diagnosticsError?.let { Text("English benchmark stopped: $it", style = MaterialTheme.typography.bodySmall,
+                    color = ITantraColors.StatusWarning) }
             }
             item {
                 OutlinedButton(onClick = onExportEvidence, modifier = Modifier.fillMaxWidth()) {
@@ -354,8 +365,8 @@ private fun DiagnosticsSection(title: String, content: @Composable ColumnScope.(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
-            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
+            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(20.dp))
+            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(20.dp))
             .padding(16.dp),
     ) {
         Text(title, style = MaterialTheme.typography.titleSmall, color = ITantraColors.TextHeadline)

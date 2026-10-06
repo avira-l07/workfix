@@ -1,0 +1,30 @@
+{
+  "status": "Saved Tamil data checks passed on CPU; GPU/runtime not checked; training not run",
+  "language": "ta",
+  "saved_data_verified": true,
+  "gate_a_report_sha256": "73ea703471c99427ce0fbe9757c9854a2607bfe9bb35d6eeda4772a252384451",
+  "saved_root": "/kaggle/input/notebooks/aviraltindori/notebook2efe523570",
+  "repo": "/kaggle/working/itantra-tamil-pilot",
+  "bundle_files_verified": 277,
+  "counts": {
+    "train": 4428,
+    "dev": 555
+  },
+  "hours": {
+    "train": 8.882161840277778,
+    "dev": 1.1179905208333334
+  },
+  "speakers": {
+    "train": 123,
+    "dev": 14
+  },
+  "max_speaker_seconds": 448.3546249999999,
+  "leakage_output": "ta: checked 4983 rows; overlaps/errors=0",
+  "noisy_test_count": 1377,
+  "training_audio_copied": false,
+  "post_training_wer": "Not run",
+  "phone_accuracy": "Not verified",
+  "gpu_runtime": "Not checked",
+  "baseline": "Not run",
+  "pilot_training": "Not run"
+}

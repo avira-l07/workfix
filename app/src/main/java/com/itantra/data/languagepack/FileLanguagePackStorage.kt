@@ -241,6 +241,7 @@ class FileLanguagePackStorage(
             for (requiredFile in spec.requiredFiles) {
                 val srcFile = File(srcTtsDir, requiredFile)
                 val destFile = File(stagingDir, requiredFile)
+                destFile.parentFile?.mkdirs()
                 srcFile.copyTo(destFile, overwrite = true)
                 if (!destFile.exists() || destFile.length() == 0L) {
                     stagingDir.deleteRecursively()

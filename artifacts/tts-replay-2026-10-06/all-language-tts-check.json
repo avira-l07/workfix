@@ -1,0 +1,235 @@
+{
+  "scope": "Fresh Windows desktop synthesis of checksum-verified selected packs, two syntheses per language; no phone or listening-quality certification",
+  "languages": [
+    {
+      "language": "hi",
+      "passed": true,
+      "phrase": "मदद चाहिए",
+      "model_sha256": "c44b4179e7ff0da4d76eac3929fc1dbd67c51f02da8fca083c445e17450c3f75",
+      "tokens_sha256": "aa9abf8320da4ca80b153c51e2d3b6b52cb41e930ccc16dec570e70726ab3dd6",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 11119,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 756.0209999792278,
+          "peak": 0.6874584555625916
+        },
+        {
+          "play": 2,
+          "samples": 11580,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 706.2171000288799,
+          "peak": 0.6290234923362732
+        }
+      ]
+    },
+    {
+      "language": "en",
+      "passed": true,
+      "phrase": "We need help",
+      "model_sha256": "409bafdb550948dc5c0b216e21b341732ef3cefead8008b512b034f1bdb27132",
+      "tokens_sha256": "dff08580748be688d9112d62d6352422c56d372dfe34b24ea3f66fa1b75cfaa9",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 16064,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1149.493399891071,
+          "peak": 0.9179323315620422
+        },
+        {
+          "play": 2,
+          "samples": 14572,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1010.4887000052258,
+          "peak": 0.8961617946624756
+        }
+      ]
+    },
+    {
+      "language": "bn",
+      "passed": true,
+      "phrase": "সাহায্য দরকার",
+      "model_sha256": "c67081369061e87ba302bfbc0445543c4c23c04133514b7d6c7be2710363bc42",
+      "tokens_sha256": "a74190ec42b8f0afb349276430c716f1b585090d8fe6d3c1d6d5fe510798a387",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 23054,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1616.7893999954686,
+          "peak": 0.8603586554527283
+        },
+        {
+          "play": 2,
+          "samples": 21566,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1547.065900056623,
+          "peak": 0.8643542528152466
+        }
+      ]
+    },
+    {
+      "language": "gu",
+      "passed": true,
+      "phrase": "મદદ જોઈએ છે",
+      "model_sha256": "6d9b4f268765e19b6620983bd698c5e4fa943309560b6c7b199b50a4aae30d47",
+      "tokens_sha256": "2d855f2affb7586cc6be095a4382eb0bee2a22242deda32c86aab6b1a810d8c4",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 17408,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 829.5973000349477,
+          "peak": 0.20821447670459747
+        },
+        {
+          "play": 2,
+          "samples": 14592,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 721.7746999813244,
+          "peak": 0.2110678106546402
+        }
+      ]
+    },
+    {
+      "language": "mr",
+      "passed": true,
+      "phrase": "मदत हवी आहे",
+      "model_sha256": "5b180a9fed4abf9877c2fe6be91128a14dca4fbb1f2d93a8144948e5af3caf8e",
+      "tokens_sha256": "30615b46df803181140b628ca264f33860e90a0834977936274da840dd36c905",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 23907,
+          "sample_rate_hz": 22050,
+          "synthesis_ms": 2683.3986999699846,
+          "peak": 0.8177042007446289
+        },
+        {
+          "play": 2,
+          "samples": 23636,
+          "sample_rate_hz": 22050,
+          "synthesis_ms": 233.08659996837378,
+          "peak": 0.6514222621917725
+        }
+      ]
+    },
+    {
+      "language": "kn",
+      "passed": true,
+      "phrase": "ಸಹಾಯ ಬೇಕು",
+      "model_sha256": "9644cfa46c5802c4c2c8196f91eedc0cd54d46527bbc32589ebaf967ed07591f",
+      "tokens_sha256": "a4a44037f7492c9e5b69a4483250e54af9a2d528bd4e19de95a21ff0c5e82a8a",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 18244,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1173.90749999322,
+          "peak": 0.6717236042022705
+        },
+        {
+          "play": 2,
+          "samples": 18896,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1220.3512000851333,
+          "peak": 0.7138416171073914
+        }
+      ]
+    },
+    {
+      "language": "ml",
+      "passed": true,
+      "phrase": "സഹായം വേണം",
+      "model_sha256": "7f03397b7144325dc3deab36315c59e423319b8b575497caacbb08d28072b26c",
+      "tokens_sha256": "3a752c36593cc519193c8caa6c00371369b423366fa6ead8d91945a28b2c46a3",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 16174,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1111.355199944228,
+          "peak": 0.6621866226196289
+        },
+        {
+          "play": 2,
+          "samples": 15774,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1122.0917000900954,
+          "peak": 0.7218868136405945
+        }
+      ]
+    },
+    {
+      "language": "ta",
+      "passed": true,
+      "phrase": "உதவி தேவை",
+      "model_sha256": "c44055b2e7c5719ca26708f6eb03680b0f1bbf6fdcb0df6480478f872f1f6e34",
+      "tokens_sha256": "0b3f692319bb5fae8658e2f84bf252bca92450d0207bbba7273caa1a182d81b8",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 16138,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 931.5007000695914,
+          "peak": 0.6314495801925659
+        },
+        {
+          "play": 2,
+          "samples": 16844,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 962.0779000688344,
+          "peak": 0.6674216389656067
+        }
+      ]
+    },
+    {
+      "language": "te",
+      "passed": true,
+      "phrase": "సహాయం కావాలి",
+      "model_sha256": "a8ec6093c0ec3c6dcb7edc0c4cd6c08e312cd3299b00d0aa4988d2a7fea2baa5",
+      "tokens_sha256": "528152cb4121272e6e71f7a1d91c8d4922b92fae414ae599db608cb92a738bb7",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 24285,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1520.4895000206307,
+          "peak": 0.9231622219085693
+        },
+        {
+          "play": 2,
+          "samples": 21868,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1612.2657000087202,
+          "peak": 0.845717191696167
+        }
+      ]
+    },
+    {
+      "language": "or",
+      "passed": true,
+      "phrase": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+      "model_sha256": "ab867f39b00f1fcb39dc97f5079150959b50df50d7f10e75232c56b52f19c021",
+      "tokens_sha256": "bc90e5423446ca730aef6b56a4656cb07421c7538429a50b9c396fe0758fd587",
+      "trials": [
+        {
+          "play": 1,
+          "samples": 15537,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 880.4808999411762,
+          "peak": 0.6662128567695618
+        },
+        {
+          "play": 2,
+          "samples": 17932,
+          "sample_rate_hz": 16000,
+          "synthesis_ms": 1191.8636000482365,
+          "peak": 0.76078200340271
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "app_version": "1.5-adaptive-ui",
+  "version_code": 6,
+  "application_id": "com.example.itantra",
+  "apk": "D:\\new itantra\\artifacts\\adaptive-ui-2026-10-06\\iTantra-1.5-adaptive-ui.apk",
+  "apk_bytes": 85584065,
+  "apk_sha256": "081c9c88a7d0a7f8db5c6615b720c37b3a43828943c17cd8088af2eecc494662",
+  "conventional_apk_matches": true,
+  "apk_crc_check": "PASS",
+  "new_ui_labels_present_in_dex": true,
+  "host_tests": {
+    "tests": 464,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "preserved_old_ui_files": 21,
+  "old_ui_hash_mismatches": 0,
+  "apk_signature": "v2 verified with apksigner",
+  "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+  "signing_certificate_matches_previous_tts_apk": true,
+  "native_phone_install": "INSTALL_FAILED_USER_RESTRICTED: Install canceled by user",
+  "native_phone_rendering": "Not verified",
+  "other_phone_install": "Requires transferring and installing the new APK"
+}

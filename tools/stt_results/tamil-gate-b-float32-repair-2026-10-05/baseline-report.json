@@ -1,0 +1,33 @@
+{
+  "status": "Failed; stop and review report",
+  "language": "ta",
+  "stage": "baseline",
+  "full_trial": "Not run",
+  "heldout_after_training": "Not run",
+  "export": "Not run",
+  "phone_accuracy": "Not verified",
+  "app_promotion": "Not done",
+  "plan_sha256": "0013520354a4a37bace2e9eeca77ad7286e0852d3bf5af87f1a33b3f32662b55",
+  "runtime": {
+    "python": "3.11.13",
+    "torch": "2.2.2+cu121",
+    "lightning": "2.2.5",
+    "nemo_revision": "8dce88cf8e94963e2033c3137f7b9993b51db88a",
+    "gpu": "Tesla T4",
+    "gpu_total_bytes": 15636037632,
+    "cuda": "12.1",
+    "gpu_count": 2,
+    "devices_used": 1,
+    "precision": "16-mixed"
+  },
+  "checkpoint": "/kaggle/working/itantra-tamil-pilot/model-cache/models--ai4bharat--indicconformer_stt_ta_hybrid_ctc_rnnt_large/snapshots/8c31aa8d04964b8fc87e4eaaee7916f7d2c024da/indicconformer_stt_ta_hybrid_rnnt_large.nemo",
+  "checkpoint_bytes": 523192320,
+  "checkpoint_sha256": "40a6fce3374ceb67daa2a071e92f0948c51c6a95b734d4881a3bcfe0b1bed32a",
+  "model_repo": "ai4bharat/indicconformer_stt_ta_hybrid_ctc_rnnt_large",
+  "model_revision": "8c31aa8d04964b8fc87e4eaaee7916f7d2c024da",
+  "model_class": "EncDecHybridRNNTCTCBPEModel",
+  "error": {
+    "type": "Error",
+    "message": "unknown format: 3"
+  }
+}

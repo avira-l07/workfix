@@ -1,0 +1,23 @@
+{
+  "language": "kn",
+  "passed": true,
+  "phrase": "ಸಹಾಯ ಬೇಕು",
+  "model_sha256": "9644cfa46c5802c4c2c8196f91eedc0cd54d46527bbc32589ebaf967ed07591f",
+  "tokens_sha256": "a4a44037f7492c9e5b69a4483250e54af9a2d528bd4e19de95a21ff0c5e82a8a",
+  "trials": [
+    {
+      "play": 1,
+      "samples": 18244,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 1173.90749999322,
+      "peak": 0.6717236042022705
+    },
+    {
+      "play": 2,
+      "samples": 18896,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 1220.3512000851333,
+      "peak": 0.7138416171073914
+    }
+  ]
+}

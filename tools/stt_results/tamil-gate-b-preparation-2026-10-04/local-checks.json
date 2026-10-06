@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-04",
+  "scope": "Windows CPU synthetic safety checks; no NeMo checkpoint/GPU training",
+  "kaggle_runtime": "Not run",
+  "speech_accuracy_after_training": "Not run",
+  "phone_accuracy": "Not verified",
+  "checks": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "pilot-safety",
+        "cmd": "python tools/test_kathbath_tamil_pilot.py",
+        "exit_code": 0,
+        "output": "Download this report ZIP from Output: C:\\Users\\avira\\AppData\\Local\\Temp\\itantra-pilot-notebook-check-bli4tnob\\itantra_tamil_pilot_reports.zip\r\nDownload this report ZIP from Output: C:\\Users\\avira\\AppData\\Local\\Temp\\itantra-pilot-notebook-check-bli4tnob\\itantra_tamil_pilot_reports.zip\r\nTamil pilot safety checks passed: balanced fixed selection, scope, native baseline gate, freeze/full parameter behavior, real leakage guard, post-plan tamper rejection, embedded source parity and failure-report ZIP redaction. NeMo/GPU/training: Not run.\r\n"
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "saved-data-safety",
+        "cmd": "python tools/test_kathbath_gate_b_data.py",
+        "exit_code": 0,
+        "output": "Saved-data preflight: path rebasing, checksums, leakage, no WAV copies and rejection checks passed (synthetic only)\r\n"
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "leakage-guard",
+        "cmd": "python tools/test_speech_leakage.py",
+        "exit_code": 0,
+        "output": "leakage guard: transcript, source id and audio overlaps rejected\r\n"
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "capped-trial",
+        "cmd": "python tools/test_kathbath_trial.py",
+        "exit_code": 0,
+        "output": "{\"language\": \"ta\", \"input_rows\": 20, \"counts\": {\"train\": 18, \"dev\": 2}, \"hours\": {\"train\": 0.005, \"dev\": 0.0005555555555555556}, \"speaker_or_recording_groups\": 20, \"sources\": [[\"synthetic\", \"test\", \"CC0-1.0\"]], \"speaker_groups_by_split\": {\"train\": 18, \"dev\": 2}, \"speaker_overlap_count\": 0, \"gender_clips\": {\"unknown\": 20}, \"vocabulary_size\": 2, \"source_shards\": [0], \"noisy_percent\": 0.0, \"duration_histogram\": {\"1-5s\": 20, \"5-10s\": 0, \"10-20s\": 0}, \"dev_vocabulary_covered_percent\": 100.0, \"held_out_overlap_count\": 0}\r\nKathbath trial: disjoint speaker split, cap, transcript and three leakage gates passed\r\n"
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "diff-whitespace",
+        "cmd": "git diff --check",
+        "exit_code": 0,
+        "output": "warning: in the working copy of 'app/src/main/java/com/itantra/core/inference/TtsTextCoverage.kt', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/MODEL_PROVENANCE_AND_DISTRIBUTION.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/STT_FINETUNING_RUNBOOK.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tools/benchmark_five_language_tts.py', LF will be replaced by CRLF the next time Git touches it\n"
+      }
+    }
+  ],
+  "files": {
+    "tools\\kathbath_tamil_pilot.py": {
+      "bytes": 22197,
+      "sha256": "12116aa05d69303efdb852b52c32d967b38ce7f7da7dd80f2a62c5c775611d71"
+    },
+    "tools\\kathbath_tamil_pilot.ipynb": {
+      "bytes": 53636,
+      "sha256": "03b66d17d8a9e7d56ad183300b29a0a37bf0a23999b8049e4717f8cd6d0f4c79"
+    },
+    "tools\\test_kathbath_tamil_pilot.py": {
+      "bytes": 6361,
+      "sha256": "95a104c1c62298a8e69a84fbc7cf488ef5fcdb519695ec68d17106faca3c1d5c"
+    }
+  },
+  "pinned_public_source_hashes_rechecked": true
+}

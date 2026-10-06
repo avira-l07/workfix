@@ -16,6 +16,7 @@ class AppearanceRegressionTest {
             val c = itantraColorScheme(dark, palette)
             for ((fg, bg) in listOf(c.onSurface to c.surface, c.onBackground to c.background,
                 c.onSurfaceVariant to c.surfaceVariant, c.onPrimary to c.primary,
+                c.onPrimaryContainer to c.primaryContainer,
                 c.onSecondary to c.secondary, c.onSecondaryContainer to c.secondaryContainer,
                 c.onTertiary to c.tertiary, c.onTertiaryContainer to c.tertiaryContainer,
                 c.onError to c.error, c.onErrorContainer to c.errorContainer)) {

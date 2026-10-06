@@ -1,0 +1,23 @@
+{
+  "language": "bn",
+  "passed": true,
+  "phrase": "সাহায্য দরকার",
+  "model_sha256": "c67081369061e87ba302bfbc0445543c4c23c04133514b7d6c7be2710363bc42",
+  "tokens_sha256": "a74190ec42b8f0afb349276430c716f1b585090d8fe6d3c1d6d5fe510798a387",
+  "trials": [
+    {
+      "play": 1,
+      "samples": 23054,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 1616.7893999954686,
+      "peak": 0.8603586554527283
+    },
+    {
+      "play": 2,
+      "samples": 21566,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 1547.065900056623,
+      "peak": 0.8643542528152466
+    }
+  ]
+}

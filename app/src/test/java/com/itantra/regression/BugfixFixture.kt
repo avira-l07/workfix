@@ -137,7 +137,8 @@ internal class RecordingMessageDao : MessageDao {
         return message.messageId
     }
     override fun insertAll(messages: List<MessageEntity>) = messages.map { insert(it) }
-    override fun getAll() = emptyList<MessageEntity>()
+    override fun getAll() = rows.values.filter { it.deletedAtMillis == null }
+    override fun getAllIncludingTrash() = rows.values.toList()
     override fun observeAll(): Flow<List<MessageEntity>> = emptyFlow()
     override fun observeByPeerId(peerId: String): Flow<List<MessageEntity>> = emptyFlow()
     override fun getByPeerId(peerId: String) = rows.values.filter { it.peerId == peerId }

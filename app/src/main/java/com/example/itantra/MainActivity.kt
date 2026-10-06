@@ -12,11 +12,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,6 +32,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import com.example.itantra.data.settings.SettingsRepository
+import com.example.itantra.data.settings.ThemeMode
 import com.example.itantra.data.settings.settingsDataStore
 import com.example.itantra.ui.screens.chat.DedicatedChatScreen
 import com.example.itantra.ui.screens.messages.MessagesScreen
@@ -37,10 +45,12 @@ import com.itantra.core.crypto.SecureSessionState
 import com.example.itantra.ui.screens.diagnostics.DiagnosticsScreen
 import com.example.itantra.ui.screens.diagnostics.DiagnosticsUiState
 import com.example.itantra.ui.screens.hub.TransceiverHubScreen
+import com.example.itantra.ui.components.ITantraAppHeader
 import com.example.itantra.ui.screens.language.LanguagePacksScreen
 import com.example.itantra.ui.screens.settings.SettingsScreen
 import com.example.itantra.ui.screens.settings.SettingsViewModel
 import com.example.itantra.ui.screens.voicenotes.VoiceNotesScreen
+import com.example.itantra.ui.screens.voicenotes.RecycleBinScreen
 import com.example.itantra.ui.theme.*
 import com.itantra.app.AppGraph
 import com.itantra.core.audio.WavWriter
@@ -70,7 +80,8 @@ enum class AppDestination {
     DIAGNOSTICS,
     CHAT,
     MESSAGES,
-    VOICE_NOTES
+    VOICE_NOTES,
+    RECYCLE_BIN
 }
 
 class MainActivity : ComponentActivity() {
@@ -213,8 +224,16 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("itantra.destination", destinationState.value.name)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        savedInstanceState?.getString("itantra.destination")?.let { saved ->
+            AppDestination.entries.firstOrNull { it.name == saved }?.let { destinationState.value = it }
+        }
         if (com.itantra.core.storage.WipeActivity.marker(this).exists()) {
             launchWipeProcess()
             return
@@ -726,36 +745,94 @@ fun TacticalAppScaffold(
     val peerDao = remember { AppGraph.database.peerDao() }
     val messageDao = remember { AppGraph.database.messageDao() }
     val voiceNotes by voiceNoteDao.observeAll().collectAsState(initial = emptyList())
+    val trashedNotes by voiceNoteDao.observeTrash().collectAsState(initial = emptyList())
+    val trashedMessages by coordinator.trashedMessages.collectAsState()
 
     val liveMetrics by metricsRecorder.latest.collectAsState()
     val activeLang by sessionManager.activeLanguage.collectAsState()
     val liveSasCode by secureSession.sasCode.collectAsState()
 
     var currentDestination by destinationState
-    var activeChatPeerId by remember { mutableStateOf("") }
-    var activeChatTransportAddress by remember { mutableStateOf("") }
-    var activeChatTransportName by remember { mutableStateOf("Direct") }
-    var chatReturnDestination by remember { mutableStateOf(AppDestination.CONNECT) }
+    LaunchedEffect(currentDestination) { coordinator.stopSavedSpeech() }
+    val playbackLifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(playbackLifecycle, coordinator) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) coordinator.stopSavedSpeech()
+        }
+        playbackLifecycle.lifecycle.addObserver(observer)
+        onDispose { playbackLifecycle.lifecycle.removeObserver(observer); coordinator.stopSavedSpeech() }
+    }
+    var activeChatPeerId by rememberSaveable { mutableStateOf("") }
+    var activeChatTransportAddress by rememberSaveable { mutableStateOf("") }
+    var activeChatTransportName by rememberSaveable { mutableStateOf("Direct") }
+    var chatReturnDestination by rememberSaveable { mutableStateOf(AppDestination.CONNECT) }
+    var binReturnDestination by rememberSaveable { mutableStateOf(AppDestination.VOICE_NOTES) }
+    var toolsReturnDestination by rememberSaveable { mutableStateOf(AppDestination.SETTINGS) }
+    val openBin = { binReturnDestination = currentDestination; currentDestination = AppDestination.RECYCLE_BIN }
+    val openPacks = { toolsReturnDestination = currentDestination; currentDestination = AppDestination.LANGUAGE_PACKS }
+    val openDiagnostics = { toolsReturnDestination = currentDestination; currentDestination = AppDestination.DIAGNOSTICS }
 
     // Intercept back button when inside a spoke screen
     BackHandler(enabled = currentDestination != AppDestination.HUB) {
         if (currentDestination == AppDestination.CHAT) {
             currentDestination = chatReturnDestination
+        } else if (currentDestination == AppDestination.RECYCLE_BIN) {
+            currentDestination = binReturnDestination
+        } else if (currentDestination == AppDestination.LANGUAGE_PACKS || currentDestination == AppDestination.DIAGNOSTICS) {
+            currentDestination = toolsReturnDestination
         } else {
             currentDestination = AppDestination.HUB
         }
     }
 
     var bannerDismissed by remember { mutableStateOf(false) }
+    val appearanceDark = MaterialTheme.colorScheme.background.luminance() < .5f
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = ITantraColors.CanvasBg
+        containerColor = ITantraColors.CanvasBg,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
+            if (currentDestination in listOf(AppDestination.HUB, AppDestination.CONNECT, AppDestination.MESSAGES,
+                    AppDestination.VOICE_NOTES, AppDestination.SETTINGS)) {
+                ITantraAppHeader(coordinator = coordinator,
+                    onToggleTheme = { settingsViewModel.setThemeMode(if (appearanceDark) ThemeMode.LIGHT else ThemeMode.DARK) },
+                    onSettings = { currentDestination = AppDestination.SETTINGS })
+            }
+        },
+        bottomBar = {
+            val selected = when (currentDestination) {
+                AppDestination.CHAT -> AppDestination.MESSAGES
+                AppDestination.RECYCLE_BIN -> AppDestination.VOICE_NOTES
+                AppDestination.LANGUAGE_PACKS, AppDestination.DIAGNOSTICS -> AppDestination.SETTINGS
+                else -> currentDestination
+            }
+            Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.navigationBarsPadding()) {
+            NavigationBar(modifier = Modifier.height(64.dp), containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0)) {
+                listOf(
+                    Triple(AppDestination.HUB, "Talk", Icons.Filled.Mic),
+                    Triple(AppDestination.CONNECT, "Connect", Icons.Filled.Link),
+                    Triple(AppDestination.MESSAGES, "Messages", Icons.Filled.ChatBubbleOutline),
+                    Triple(AppDestination.VOICE_NOTES, "Notes", Icons.Filled.Notes),
+                    Triple(AppDestination.SETTINGS, "Settings", Icons.Filled.Settings),
+                ).forEach { (route, title, icon) ->
+                    NavigationBarItem(selected = selected == route, onClick = { currentDestination = route },
+                        icon = { Icon(icon, title, Modifier.size(22.dp)) },
+                        label = { Text(title, maxLines = 1, style = MaterialTheme.typography.labelSmall) },
+                        colors = NavigationBarItemDefaults.colors(selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary, indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant, unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant))
+                }
+            }
+            }
+        },
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 if (!permissionsGranted && !bannerDismissed) {
@@ -771,12 +848,13 @@ fun TacticalAppScaffold(
                             coordinator = coordinator,
                             sessionManager = sessionManager,
                             onNavigateToConnect = { currentDestination = AppDestination.CONNECT },
-                            onNavigateToLanguagePacks = { currentDestination = AppDestination.LANGUAGE_PACKS },
-                            onNavigateToDiagnostics = { currentDestination = AppDestination.DIAGNOSTICS },
-                            onNavigateToSettings = { currentDestination = AppDestination.SETTINGS },
+                            onNavigateToLanguagePacks = openPacks,
                             onNavigateToVoiceNotes = { currentDestination = AppDestination.VOICE_NOTES },
                             onNavigateToMessages = { currentDestination = AppDestination.MESSAGES },
+                            onNavigateToRecycleBin = openBin,
                             operatorName = appSettings.operatorName,
+                            savedNotesCount = voiceNotes.size,
+                            deletedNotesCount = trashedNotes.size,
                         )
                     }
 
@@ -785,10 +863,26 @@ fun TacticalAppScaffold(
                             notes = voiceNotes,
                             onBack = { currentDestination = AppDestination.HUB },
                             onDelete = { note ->
-                                coroutineScope.launch(Dispatchers.IO) { voiceNoteDao.delete(note.id) }
+                                if (coordinator.savedSpeechPlayback.value.itemKey == "note-${note.id}") coordinator.stopSavedSpeech()
+                                coroutineScope.launch(Dispatchers.IO) { voiceNoteDao.moveToTrash(note.id, System.currentTimeMillis()) }
                             },
+                            onOpenRecycleBin = openBin,
                         )
                     }
+
+                    AppDestination.RECYCLE_BIN -> RecycleBinScreen(
+                        messages = trashedMessages, notes = trashedNotes,
+                        onBack = { currentDestination = binReturnDestination },
+                        onRestoreMessage = { id -> coordinator.restoreMessage(id) },
+                        onRestoreNote = { id -> coroutineScope.launch {
+                            val restored = withContext(Dispatchers.IO) {
+                                voiceNoteDao.restore(id, System.currentTimeMillis() - RecycleBinPolicy.RETENTION_MILLIS)
+                            }
+                            if (restored == 0) android.widget.Toast.makeText(context, "This note has expired", android.widget.Toast.LENGTH_SHORT).show()
+                        } },
+                        onDeleteMessage = coordinator::deleteTrashedMessage,
+                        onDeleteNote = { id -> coroutineScope.launch(Dispatchers.IO) { voiceNoteDao.deleteTrashed(id) } },
+                    )
 
                     AppDestination.MESSAGES -> {
                         val savedPeers by remember(peerDao) { peerDao.observeAll() }.collectAsState(initial = emptyList())
@@ -815,10 +909,15 @@ fun TacticalAppScaffold(
                             viewModel = settingsViewModel,
                             onBack = { currentDestination = AppDestination.HUB },
                             onWipe = { (context as? MainActivity)?.beginWipe() },
+                            onLanguagePacks = openPacks,
+                            onDiagnostics = openDiagnostics,
+                            onRecycleBin = openBin,
                         )
                     }
 
                     AppDestination.CONNECT -> {
+                        val localProfile by AppGraph.deviceProfileManager.profile.collectAsState()
+                        val activeConnectTransport by AppGraph.transportEngine.activeTransportFlow.collectAsState()
                         // Observe real transport connection state
                         val transportState by AppGraph.transportEngine.observeConnectionState()
                             .collectAsState(initial = ConnectionState.DISCONNECTED)
@@ -990,6 +1089,10 @@ fun TacticalAppScaffold(
                                 ?.displayName?.takeIf { it.isNotBlank() } ?: "No verified peer",
                             peersInRange = liveDevices.size,
                             devices = liveDevices,
+                            myDeviceId = localProfile.deviceId,
+                            myDisplayName = localProfile.displayName,
+                            selectedTransportMode = if (activeConnectTransport == AppGraph.wifiDirectPeerTransport)
+                                TransportMode.WIFI_DIRECT else TransportMode.BLUETOOTH,
                             isScanning = isBtDiscovering || transportState == ConnectionState.CONNECTING || transportState == ConnectionState.LISTENING,
                             sasCode = liveSasCode,
                             sasRemainingSeconds = liveSasRemainingSeconds,
@@ -1008,6 +1111,10 @@ fun TacticalAppScaffold(
                             wifiDirectInfo = wifiDirectInfo,
                             onBack = { currentDestination = AppDestination.HUB },
                             onBroadcastPing = {
+                                if (AppGraph.transportEngine.activeTransportFlow.value != AppGraph.bluetoothPeerTransport) {
+                                    android.widget.Toast.makeText(context, "Disconnect Wi-Fi Direct before discovering Bluetooth devices", android.widget.Toast.LENGTH_SHORT).show()
+                                    return@ConnectScreenContent
+                                }
                                 coroutineScope.launch {
                                     AppGraph.bluetoothPeerTransport.listenerDesired = true
                                     AppGraph.bluetoothPeerTransport.ensureBluetoothListener()
@@ -1040,6 +1147,8 @@ fun TacticalAppScaffold(
                                                         com.itantra.core.transport.peer.BluetoothError.PERMISSION_DENIED
                                                     )
                                                 }
+                                            } else {
+                                                AppGraph.bluetoothPeerTransport.setLastError(com.itantra.core.transport.peer.BluetoothError.PERMISSION_DENIED)
                                             }
                                         }
                                     }
@@ -1051,12 +1160,19 @@ fun TacticalAppScaffold(
                             },
                             onConnect = { device ->
                                 coroutineScope.launch {
+                                    if (AppGraph.transportEngine.activeTransportFlow.value != AppGraph.bluetoothPeerTransport) {
+                                        android.widget.Toast.makeText(context, "Disconnect Wi-Fi Direct before connecting Bluetooth", android.widget.Toast.LENGTH_SHORT).show()
+                                        return@launch
+                                    }
                                     val hasConnect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                         ContextCompat.checkSelfPermission(
                                             context, Manifest.permission.BLUETOOTH_CONNECT
                                         ) == PackageManager.PERMISSION_GRANTED
                                     } else true
-                                    if (!hasConnect) return@launch
+                                    if (!hasConnect) {
+                                        AppGraph.bluetoothPeerTransport.setLastError(com.itantra.core.transport.peer.BluetoothError.PERMISSION_DENIED)
+                                        return@launch
+                                    }
                                     try {
                                         @Suppress("MissingPermission")
                                         if (btAdapter?.isDiscovering == true) {
@@ -1067,9 +1183,15 @@ fun TacticalAppScaffold(
                                             ?: btAdapter?.getRemoteDevice(device.id)
                                         if (target != null) {
                                             AppGraph.bluetoothPeerTransport.connectToDevice(target)
+                                        } else {
+                                            AppGraph.bluetoothPeerTransport.setLastError(com.itantra.core.transport.peer.BluetoothError.BLUETOOTH_DISABLED)
                                         }
                                     } catch (e: Exception) {
                                         android.util.Log.e("ConnectScreen", "connectToDevice failed", e)
+                                        AppGraph.bluetoothPeerTransport.setLastError(
+                                            if (e is SecurityException) com.itantra.core.transport.peer.BluetoothError.PERMISSION_DENIED
+                                            else com.itantra.core.transport.peer.BluetoothError.RFCOMM_CONNECT_FAILED
+                                        )
                                     }
                                 }
                             },
@@ -1133,7 +1255,8 @@ fun TacticalAppScaffold(
                                 currentDestination = AppDestination.CHAT
                             },
                             onTransportModeChanged = { mode ->
-                                if (mode == TransportMode.BLUETOOTH) {
+                                if (mode == TransportMode.BLUETOOTH &&
+                                    AppGraph.transportEngine.activeTransportFlow.value == AppGraph.bluetoothPeerTransport) {
                                     coroutineScope.launch {
                                         AppGraph.bluetoothPeerTransport.listenerDesired = true
                                         AppGraph.bluetoothPeerTransport.ensureBluetoothListener()
@@ -1152,7 +1275,7 @@ fun TacticalAppScaffold(
                         LanguagePacksScreen(
                             repository = com.itantra.app.AppGraph.languagePackRepository,
                             sessionManager = sessionManager,
-                            onBack = { currentDestination = AppDestination.HUB }
+                            onBack = { currentDestination = toolsReturnDestination }
                         )
                     }
 
@@ -1201,6 +1324,9 @@ fun TacticalAppScaffold(
 
                     AppDestination.DIAGNOSTICS -> {
                         var latestBenchmarkSession by remember { mutableStateOf<com.itantra.domain.model.BenchmarkSession?>(null) }
+                        val diagnosticsScope = rememberCoroutineScope()
+                        var diagnosticsRunning by remember { mutableStateOf(false) }
+                        var diagnosticsError by remember { mutableStateOf<String?>(null) }
                         var fiveSelfTestResults by remember { mutableStateOf<List<FiveLanguageSelfTest.Result>>(emptyList()) }
                         var fiveSelfTestRunning by remember { mutableStateOf(false) }
                         var fiveSelfTestError by remember { mutableStateOf<String?>(null) }
@@ -1295,24 +1421,29 @@ fun TacticalAppScaffold(
 
                         DiagnosticsScreen(
                             state = diagnosticsState,
-                            diagnosticsEnabled = liveContinuousState == com.itantra.core.inference.ContinuousListenState.OFF,
+                            diagnosticsRunning = diagnosticsRunning,
+                            diagnosticsError = diagnosticsError,
+                            diagnosticsEnabled = liveContinuousState == com.itantra.core.inference.ContinuousListenState.OFF &&
+                                !fiveSelfTestRunning && linkState == ConnectionState.DISCONNECTED,
                             fiveLanguageSelfTestResults = fiveSelfTestResults,
                             fiveLanguageSelfTestRunning = fiveSelfTestRunning,
                             fiveLanguageSelfTestError = fiveSelfTestError,
                             fiveLanguageSelfTestEnabled = liveContinuousState == com.itantra.core.inference.ContinuousListenState.OFF &&
-                                linkState == ConnectionState.DISCONNECTED,
+                                !diagnosticsRunning && linkState == ConnectionState.DISCONNECTED,
                             onRunFiveLanguageSelfTest = {
                                 if (!fiveSelfTestRunning) {
                                     fiveSelfTestResults = emptyList()
                                     fiveSelfTestError = null
                                     fiveSelfTestRunning = true
-                                    coroutineScope.launch(Dispatchers.Default) {
+                                    diagnosticsScope.launch(Dispatchers.Default) {
                                         try {
                                             FiveLanguageSelfTest.run(context, sessionManager) { result ->
                                                 withContext(Dispatchers.Main) {
                                                     fiveSelfTestResults = fiveSelfTestResults + result
                                                 }
                                             }
+                                        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                                            throw cancelled
                                         } catch (error: Exception) {
                                             android.util.Log.e("FIVE_LANGUAGE_SELF_TEST", "Self-test stopped", error)
                                             withContext(Dispatchers.Main) {
@@ -1324,21 +1455,22 @@ fun TacticalAppScaffold(
                                     }
                                 }
                             },
-                            onBack = { currentDestination = AppDestination.HUB },
+                            onBack = { currentDestination = toolsReturnDestination },
                             onExportEvidence = { (context as? MainActivity)?.exportFieldEvidence() },
                             onRunDiagnostics = {
-                                coroutineScope.launch(Dispatchers.Default) {
+                                if (diagnosticsRunning || fiveSelfTestRunning || linkState != ConnectionState.DISCONNECTED ||
+                                    liveContinuousState != com.itantra.core.inference.ContinuousListenState.OFF) return@DiagnosticsScreen
+                                diagnosticsRunning = true
+                                diagnosticsError = null
+                                diagnosticsScope.launch(Dispatchers.Default) {
+                                    val stt = SherpaOnnxSpeechRecognizer(context, LanguageCode.ENGLISH, AppGraph.languagePackStorage, metricsRecorder)
                                     try {
                                         // Load benchmark sentence definitions from assets
                                         val jsonText = context.assets.open("benchmark/en_benchmark.json").bufferedReader().use { it.readText() }
                                         val sentenceDefs = BenchmarkJson.decodeFromString<List<BenchmarkSentenceDef>>(jsonText)
 
-                                        // Ensure English STT engine is loaded
-                                        var stt = sessionManager.currentSttEngine
-                                        if (stt == null || stt.languageCode != LanguageCode.ENGLISH || !stt.isLoaded) {
-                                            stt = SherpaOnnxSpeechRecognizer(context, LanguageCode.ENGLISH, AppGraph.languagePackStorage, metricsRecorder)
-                                            stt.load()
-                                        }
+                                        // Keep the benchmark independent of the live microphone recognizer.
+                                        stt.load()
 
                                         val benchmarkResults = mutableListOf<BenchmarkResult>()
                                         val werResults = mutableListOf<com.itantra.core.metrics.WerResult>()
@@ -1346,14 +1478,8 @@ fun TacticalAppScaffold(
 
                                         for (item in sentenceDefs) {
                                             val wavPath = "benchmark/audio/${item.id}.wav"
-                                            val samples = try {
-                                                context.assets.open(wavPath).use { stream ->
-                                                    WavWriter.readWav(stream)
-                                                }
-                                            } catch (e: Exception) {
-                                                android.util.Log.e("Benchmark", "Could not read $wavPath", e)
-                                                continue
-                                            }
+                                            val samples = context.assets.open(wavPath).use { stream -> WavWriter.readWav(stream) }
+                                            check(samples.isNotEmpty()) { "Bundled benchmark recording is empty: $wavPath" }
 
                                             stt.reset()
                                             stt.feed(samples)
@@ -1441,8 +1567,14 @@ fun TacticalAppScaffold(
                                             metricsRecorder.recordSttPureInferenceTime(benchmarkResults.map { it.processingMs }.average().toLong())
                                             metricsRecorder.recordSttRealTimeFactor(meanRtf.toDouble())
                                         }
+                                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                                        throw cancelled
                                     } catch (e: Exception) {
                                         android.util.Log.e("Benchmark", "Failed to run on-device benchmark", e)
+                                        withContext(Dispatchers.Main) { diagnosticsError = e.message ?: "English benchmark failed" }
+                                    } finally {
+                                        withContext(kotlinx.coroutines.NonCancellable) { stt.unload() }
+                                        withContext(kotlinx.coroutines.NonCancellable + Dispatchers.Main) { diagnosticsRunning = false }
                                     }
                                 }
                             }

@@ -1,0 +1,369 @@
+{
+  "scope": "Windows desktop, offline synthesis, same five phrases x six repetitions",
+  "voice": "mms",
+  "threads": 1,
+  "speaker_id": 0,
+  "model_sha256": "046cecf7cca77680c9ca319953e777c8d0233ce78e9b55a47aa909edf87d99e8",
+  "tokens_sha256": "4d968029d0754b41633cb0871cce6796a5ab3d3bc2b9b91c5721cfdf85156083",
+  "model_and_tokens_bytes": 114044398,
+  "frontend_bytes": 0,
+  "speech_pack_bytes": 114044398,
+  "load_ms": 1214.4111000234261,
+  "summary": {
+    "trials": 30,
+    "sample_rate_hz": 16000,
+    "mean_synthesis_ms": 808.3577199994276,
+    "p95_synthesis_ms": 1046.6685000574216,
+    "rtf": 0.7220689733712071,
+    "peak_desktop_working_set_bytes": 259977216
+  },
+  "rows": [
+    {
+      "text": "मदत हवी आहे",
+      "repetition": 0,
+      "synthesis_ms": 613.2456000195816,
+      "audio_ms": 1088.0,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "पाणी पाठवा",
+      "repetition": 0,
+      "synthesis_ms": 795.365700032562,
+      "audio_ms": 1044.25,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "रस्ता बंद आहे",
+      "repetition": 0,
+      "synthesis_ms": 822.2986999899149,
+      "audio_ms": 997.25,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "आम्ही सुरक्षित आहोत",
+      "repetition": 0,
+      "synthesis_ms": 909.5157999545336,
+      "audio_ms": 1280.5625,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "डॉक्टरांना बोलवा",
+      "repetition": 0,
+      "synthesis_ms": 1072.3180999048054,
+      "audio_ms": 1026.1875,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": [
+        "U+0949"
+      ]
+    },
+    {
+      "text": "मदत हवी आहे",
+      "repetition": 1,
+      "synthesis_ms": 924.6591000119224,
+      "audio_ms": 1017.0,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "पाणी पाठवा",
+      "repetition": 1,
+      "synthesis_ms": 887.497799936682,
+      "audio_ms": 952.375,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "रस्ता बंद आहे",
+      "repetition": 1,
+      "synthesis_ms": 762.9652000032365,
+      "audio_ms": 1174.8125,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "आम्ही सुरक्षित आहोत",
+      "repetition": 1,
+      "synthesis_ms": 846.8153000576422,
+      "audio_ms": 1392.0,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "डॉक्टरांना बोलवा",
+      "repetition": 1,
+      "synthesis_ms": 885.0051000481471,
+      "audio_ms": 1082.3125,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": [
+        "U+0949"
+      ]
+    },
+    {
+      "text": "मदत हवी आहे",
+      "repetition": 2,
+      "synthesis_ms": 656.7452000454068,
+      "audio_ms": 1021.375,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "पाणी पाठवा",
+      "repetition": 2,
+      "synthesis_ms": 826.0851999511942,
+      "audio_ms": 1198.9375,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "रस्ता बंद आहे",
+      "repetition": 2,
+      "synthesis_ms": 784.1738000279292,
+      "audio_ms": 1037.3125,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "आम्ही सुरक्षित आहोत",
+      "repetition": 2,
+      "synthesis_ms": 1046.6685000574216,
+      "audio_ms": 1285.0625,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "डॉक्टरांना बोलवा",
+      "repetition": 2,
+      "synthesis_ms": 882.1040999609977,
+      "audio_ms": 1030.8125,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": [
+        "U+0949"
+      ]
+    },
+    {
+      "text": "मदत हवी आहे",
+      "repetition": 3,
+      "synthesis_ms": 660.3390999371186,
+      "audio_ms": 834.75,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "पाणी पाठवा",
+      "repetition": 3,
+      "synthesis_ms": 760.712300078012,
+      "audio_ms": 1141.0,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "रस्ता बंद आहे",
+      "repetition": 3,
+      "synthesis_ms": 769.2842999240384,
+      "audio_ms": 1038.3125,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "आम्ही सुरक्षित आहोत",
+      "repetition": 3,
+      "synthesis_ms": 882.484900066629,
+      "audio_ms": 1364.5,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "डॉक्टरांना बोलवा",
+      "repetition": 3,
+      "synthesis_ms": 890.5003000982106,
+      "audio_ms": 1051.4375,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": [
+        "U+0949"
+      ]
+    },
+    {
+      "text": "मदत हवी आहे",
+      "repetition": 4,
+      "synthesis_ms": 658.5536999627948,
+      "audio_ms": 1031.8125,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "पाणी पाठवा",
+      "repetition": 4,
+      "synthesis_ms": 698.8076999550685,
+      "audio_ms": 985.5625,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "रस्ता बंद आहे",
+      "repetition": 4,
+      "synthesis_ms": 747.2805000143126,
+      "audio_ms": 1167.25,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "आम्ही सुरक्षित आहोत",
+      "repetition": 4,
+      "synthesis_ms": 920.6412000348791,
+      "audio_ms": 1415.75,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "डॉक्टरांना बोलवा",
+      "repetition": 4,
+      "synthesis_ms": 778.3255999675021,
+      "audio_ms": 1148.25,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": [
+        "U+0949"
+      ]
+    },
+    {
+      "text": "मदत हवी आहे",
+      "repetition": 5,
+      "synthesis_ms": 635.5666000163183,
+      "audio_ms": 980.0,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "पाणी पाठवा",
+      "repetition": 5,
+      "synthesis_ms": 767.9433999583125,
+      "audio_ms": 1121.75,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "रस्ता बंद आहे",
+      "repetition": 5,
+      "synthesis_ms": 762.5786999706179,
+      "audio_ms": 1218.8125,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "आम्ही सुरक्षित आहोत",
+      "repetition": 5,
+      "synthesis_ms": 746.6752000618726,
+      "audio_ms": 1376.0,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": []
+    },
+    {
+      "text": "डॉक्टरांना बोलवा",
+      "repetition": 5,
+      "synthesis_ms": 855.5748999351636,
+      "audio_ms": 1081.625,
+      "finite_non_silent": true,
+      "raw_letters_missing_from_grapheme_tokens": [
+        "U+0949"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "text": "डॉक्टरांना बोलवा",
+      "status": "Rejected by current app vocabulary guard",
+      "missing": [
+        "U+0949"
+      ]
+    },
+    {
+      "text": "डक्टरांना बोलवा",
+      "synthesis_ms": 715.05880006589,
+      "finite_non_silent": true,
+      "audio_samples": 16135,
+      "sample_rate_hz": 16000,
+      "wav": "mms-sid0-probe-1.wav"
+    },
+    {
+      "text": "डाक्टरांना बोलवा",
+      "synthesis_ms": 735.7294000685215,
+      "finite_non_silent": true,
+      "audio_samples": 17281,
+      "sample_rate_hz": 16000,
+      "wav": "mms-sid0-probe-2.wav"
+    },
+    {
+      "text": "ऑक्सिजन द्या",
+      "status": "Rejected by current app vocabulary guard",
+      "missing": [
+        "U+0911"
+      ]
+    },
+    {
+      "text": "अॅम्ब्युलन्स बोलवा",
+      "status": "Rejected by current app vocabulary guard",
+      "missing": [
+        "U+0945"
+      ]
+    },
+    {
+      "text": "ॲम्ब्युलन्स बोलवा",
+      "status": "Rejected by current app vocabulary guard",
+      "missing": [
+        "U+0972"
+      ]
+    },
+    {
+      "text": "कॅम्पमध्ये या",
+      "status": "Rejected by current app vocabulary guard",
+      "missing": [
+        "U+0945"
+      ]
+    },
+    {
+      "text": "कॉफी",
+      "status": "Rejected by current app vocabulary guard",
+      "missing": [
+        "U+0949"
+      ]
+    },
+    {
+      "text": "कफी",
+      "synthesis_ms": 163.64299994893372,
+      "finite_non_silent": true,
+      "audio_samples": 4608,
+      "sample_rate_hz": 16000,
+      "wav": "mms-sid0-probe-8.wav"
+    },
+    {
+      "text": "ळ",
+      "synthesis_ms": 120.1335999649018,
+      "finite_non_silent": true,
+      "audio_samples": 3072,
+      "sample_rate_hz": 16000,
+      "wav": "mms-sid0-probe-9.wav"
+    },
+    {
+      "text": "ऱ",
+      "synthesis_ms": 149.99489998444915,
+      "finite_non_silent": true,
+      "audio_samples": 3072,
+      "sample_rate_hz": 16000,
+      "wav": "mms-sid0-probe-10.wav"
+    },
+    {
+      "text": "१२३",
+      "synthesis_ms": 105.56860000360757,
+      "finite_non_silent": true,
+      "audio_samples": 1792,
+      "sample_rate_hz": 16000,
+      "wav": "mms-sid0-probe-11.wav"
+    }
+  ],
+  "human_intelligibility": "Not verified",
+  "phone_validation": "Not verified",
+  "tts_accuracy": "Not measured"
+}

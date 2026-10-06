@@ -96,6 +96,8 @@ object FiveLanguageSelfTest {
                     if (result.script != "Native script") {
                         result = result.copy(sttError = "No native-script transcript")
                     }
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
                 } catch (error: Exception) {
                     result = result.copy(sttError = error.message ?: "STT failed")
                 }
@@ -125,6 +127,8 @@ object FiveLanguageSelfTest {
                         ttsSampleRateHz = synthesized.sampleRateHz,
                         audioPlaybackAttempted = true,
                     )
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
                 } catch (error: Exception) {
                     result = result.copy(ttsError = error.message ?: "TTS or playback failed")
                 }
@@ -132,9 +136,11 @@ object FiveLanguageSelfTest {
                 onResult(result)
             }
         } finally {
-            session.releaseAll()
-            runCatching { if (previousStt != null) session.ensureStt(previousStt, previousAuto, previousTarget) }
-            runCatching { if (previousTts != null) session.ensureTts(previousTts) }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                session.releaseAll()
+                runCatching { if (previousStt != null) session.ensureStt(previousStt, previousAuto, previousTarget) }
+                runCatching { if (previousTts != null) session.ensureTts(previousTts) }
+            }
         }
     }
 }

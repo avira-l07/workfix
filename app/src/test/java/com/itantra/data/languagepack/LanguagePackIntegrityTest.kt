@@ -45,7 +45,12 @@ class LanguagePackIntegrityTest {
             val ttsSpec = ModelFileSpecs.getTtsSpec(lang)
             assertNotNull("TTS spec missing for $lang", ttsSpec)
             assertEquals(ModelFileSpec.EngineType.TTS, ttsSpec?.type)
-            assertEquals(listOf("model.onnx", "tokens.txt"), ttsSpec?.requiredFiles)
+            val expectedTtsFiles = listOf("model.onnx", "tokens.txt") +
+                if (lang == LanguageCode.MARATHI) listOf(
+                    "espeak-ng-data/phontab", "espeak-ng-data/phonindex", "espeak-ng-data/phondata",
+                    "espeak-ng-data/intonations", "espeak-ng-data/mr_dict", "espeak-ng-data/lang/inc/mr"
+                ) else emptyList()
+            assertEquals(expectedTtsFiles, ttsSpec?.requiredFiles)
         }
     }
 

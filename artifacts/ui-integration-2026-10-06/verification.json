@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-06",
+  "apk": "D:\\new itantra\\artifacts\\ui-integration-2026-10-06\\iTantra-new-ui-debug.apk",
+  "apk_sha256": "c5a06eecc6ea30e3cb6ef8e6603b2dbc316b7cb16902e0e5cbd5c44ab57b92db",
+  "apk_bytes": 94600345,
+  "build_log": "final-verification.log",
+  "unit_suites": 88,
+  "unit_tests": {
+    "tests": 459,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "backup_files_verified": 21,
+  "apk_signature": "APK Signature Scheme v2 verified by Android apksigner",
+  "android_device_connected": false,
+  "native_visual_test": "Not run: no Android device or runnable emulator available",
+  "voice_content_scope": "Encrypted text transcripts and messages; original microphone audio remains in memory",
+  "retention_millis": 604800000
+}

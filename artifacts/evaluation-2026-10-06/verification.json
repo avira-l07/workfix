@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-06",
+  "saved_pairs_rechecked": 300,
+  "selected_stt_model_hashes_matched": 10,
+  "selected_tts_model_hashes_matched": 10,
+  "chart_visual_review": "PASS",
+  "phone_scorer_standalone_self_check": "PASS",
+  "phone_scorer_saved_corpus_regression": "All ten WER/CER values reproduced on 300 pairs",
+  "zip_integrity": "PASS",
+  "zip_sha256": "46453eef54fb01dfc607fcc1513a90e894811442fad135710b95201ec7efb64e",
+  "android_inference_or_phone_accuracy": "Not run by this reporting task",
+  "phone_test_apk": "D:\\new itantra\\artifacts\\current-ui-2026-10-06\\iTantra-1.7-connected-ui.apk"
+}

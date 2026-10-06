@@ -1,0 +1,32 @@
+[
+  {
+    "type": "directory",
+    "oid": "12e144fe6be190791b5ed27d549a4262f45e305b",
+    "size": 0,
+    "path": "mr/mr_IN/google/medium/samples"
+  },
+  {
+    "type": "file",
+    "oid": "b40be977cc4fcb780ad3b6653bce7b06737ffb34",
+    "size": 272,
+    "path": "mr/mr_IN/google/medium/MODEL_CARD"
+  },
+  {
+    "type": "file",
+    "oid": "a3edb7e5d213bd8bfde06ef1f3005f29e33ace01",
+    "size": 76768179,
+    "lfs": {
+      "oid": "e1200d474a74ebd6d1737be2c7affe56f1f9efc18915d4595d7f5c2b15cf06f4",
+      "size": 76768179,
+      "pointerSize": 133
+    },
+    "xetHash": "1603d48e887c102afb3c6701cb19a43b66039bde6785013aa4dad34047e73267",
+    "path": "mr/mr_IN/google/medium/mr_IN-google-medium.onnx"
+  },
+  {
+    "type": "file",
+    "oid": "2578c91742a34a3ce4e99a977a403da6f8a1138a",
+    "size": 5467,
+    "path": "mr/mr_IN/google/medium/mr_IN-google-medium.onnx.json"
+  }
+]

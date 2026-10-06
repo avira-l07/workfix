@@ -1,0 +1,58 @@
+{
+  "received_archive_sha256": "17ee4dc4deb688df489868c1ff9780f4212e6336d88dc2e6402ecbdff1f28792",
+  "zip_crc_passed": true,
+  "source_dev_ctc_wer": 0.20219436287879944,
+  "same_dev_count": 64,
+  "plan_sha256": "0013520354a4a37bace2e9eeca77ad7286e0852d3bf5af87f1a33b3f32662b55",
+  "source_checkpoint_sha256": "40a6fce3374ceb67daa2a071e92f0948c51c6a95b734d4881a3bcfe0b1bed32a",
+  "evaluation_precision": "32-true",
+  "comparisons": [
+    {
+      "mode": "freeze-lower",
+      "seed": 17,
+      "last_dev_ctc_wer": 0.352664589881897,
+      "change_from_source_percentage_points": 15.047022700309753,
+      "training_precision": "32-true",
+      "global_step": 20,
+      "step_10_dev_ctc_wer": 0.32758620381355286
+    },
+    {
+      "mode": "freeze-lower",
+      "seed": 29,
+      "last_dev_ctc_wer": 0.36206895112991333,
+      "change_from_source_percentage_points": 15.98745882511139,
+      "training_precision": "32-true",
+      "global_step": 20,
+      "step_10_dev_ctc_wer": 0.3228840231895447
+    },
+    {
+      "mode": "full",
+      "seed": 17,
+      "last_dev_ctc_wer": 0.3636363744735718,
+      "change_from_source_percentage_points": 16.144201159477234,
+      "training_precision": "32-true",
+      "global_step": 20,
+      "step_10_dev_ctc_wer": 0.3401253819465637
+    },
+    {
+      "mode": "full",
+      "seed": 29,
+      "last_dev_ctc_wer": 0.35736677050590515,
+      "change_from_source_percentage_points": 15.517240762710571,
+      "training_precision": "32-true",
+      "global_step": 20,
+      "step_10_dev_ctc_wer": 0.3322884142398834
+    }
+  ],
+  "decision": "Do not promote any pilot; all four regressed against the original source on the same DEV subset",
+  "cause": "Not established",
+  "app_models_changed": false,
+  "checkpoint_bytes_in_archive": false,
+  "checks": [
+    "source checksum metadata and plan hash",
+    "four completed reports match CSV metrics and successful process logs",
+    "comparison arithmetic",
+    "same-DEV source validation completed 64/64",
+    "received run_pilot matches reviewed local implementation"
+  ]
+}

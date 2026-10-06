@@ -1,0 +1,23 @@
+{
+  "language": "hi",
+  "passed": true,
+  "phrase": "मदद चाहिए",
+  "model_sha256": "c44b4179e7ff0da4d76eac3929fc1dbd67c51f02da8fca083c445e17450c3f75",
+  "tokens_sha256": "aa9abf8320da4ca80b153c51e2d3b6b52cb41e930ccc16dec570e70726ab3dd6",
+  "trials": [
+    {
+      "play": 1,
+      "samples": 11119,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 756.0209999792278,
+      "peak": 0.6874584555625916
+    },
+    {
+      "play": 2,
+      "samples": 11580,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 706.2171000288799,
+      "peak": 0.6290234923362732
+    }
+  ]
+}

@@ -1,0 +1,378 @@
+{
+  "url": "https://huggingface.co/api/models/shreyask/bol-tts-marathi-onnx?blobs=true",
+  "sha": "985c7c42652bc9353598cc7ea8e086512bb04643",
+  "files": [
+    {
+      "name": ".gitattributes",
+      "size": 1519,
+      "lfs": null
+    },
+    {
+      "name": "README.md",
+      "size": 7146,
+      "lfs": null
+    },
+    {
+      "name": "config.json",
+      "size": 2613,
+      "lfs": null
+    },
+    {
+      "name": "onnx/model.onnx",
+      "size": 325500108,
+      "lfs": {
+        "sha256": "9281f8616059bda80c18135a499071ed9fa9e67ea2f3cd5cf8027178c2f88a84",
+        "size": 325500108,
+        "pointerSize": 134
+      }
+    },
+    {
+      "name": "onnx/model_q8.onnx",
+      "size": 283189621,
+      "lfs": {
+        "sha256": "5377c3fba0aeb5fe8363f9caa38f9ffa20959da50e40a49f501206b58becc1c3",
+        "size": 283189621,
+        "pointerSize": 134
+      }
+    },
+    {
+      "name": "onnx/model_quantized.onnx",
+      "size": 283189621,
+      "lfs": {
+        "sha256": "5377c3fba0aeb5fe8363f9caa38f9ffa20959da50e40a49f501206b58becc1c3",
+        "size": 283189621,
+        "pointerSize": 134
+      }
+    },
+    {
+      "name": "voice_speeds.json",
+      "size": 656,
+      "lfs": null
+    },
+    {
+      "name": "voices/af_alloy.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "6d877149dd8b348fbad12e5845b7e43d975390e9f3b68a811d1d86168bef5aa3",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/af_aoede.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "c03bd1a4c3716c2d8eaa3d50022f62d5c31cfbd6e15933a00b17fefe13841cc4",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/af_bella.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "8cb64e02fcc8de0327a8e13817e49c76c945ecf0052ceac97d3081480e8e48d6",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/af_heart.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "0ab5709b8ffab19bfd849cd11d98f75b60af7733253ad0d67b12382a102cb4ff",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/af_jessica.pt",
+      "size": 523435,
+      "lfs": {
+        "sha256": "cdfdccb8cc975aa34ee6b89642963b0064237675de0e41a30ae64cc958dd4e87",
+        "size": 523435,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/af_nova.pt",
+      "size": 523420,
+      "lfs": {
+        "sha256": "e0233676ddc21908c37a1f102f6b88a59e4e5c1bd764983616eb9eda629dbcd2",
+        "size": 523420,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/af_sarah.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "49bd364ea3be9eb3e9685e8f9a15448c4883112a7c0ff7ab139fa4088b08cef9",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/af_sky.pt",
+      "size": 523351,
+      "lfs": {
+        "sha256": "c799548aed06e0cb0d655a85a01b48e7f10484d71663f9a3045a5b9362e8512c",
+        "size": 523351,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/am_liam.pt",
+      "size": 523420,
+      "lfs": {
+        "sha256": "c82550757ddb31308b97f30040dda8c2d609a9e2de6135848d0a948368138518",
+        "size": 523420,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/bf_isabella.pt",
+      "size": 523440,
+      "lfs": {
+        "sha256": "cdd4c37003805104d1d08fb1e05855c8fb2c68de24ca6e71f264a30aaa59eefd",
+        "size": 523440,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/bm_fable.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "d44935f3135257a9064df99f007fc1342ff1aa767552b4a4fa4c3b2e6e59079c",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/ff_siwis.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "8073bf2d2c4b9543a90f2f0fd2144de4ed157e2d4b79ddeb0d5123066171fbc9",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/hm_omega.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "b55f02a8e8483fffe0afa566e7d22ed8013acf47ad4f6bbee2795a840155703e",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/im_nicola.pt",
+      "size": 523430,
+      "lfs": {
+        "sha256": "9c8573c6783be9a7d61da63e2312b1a06137b43c83983d3c1b2756913eb12145",
+        "size": 523430,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/ivr_mr_s1418_stage2_e2.pt",
+      "size": 523986,
+      "lfs": {
+        "sha256": "961303f3a6e98f27f629cf01d02cac19c4a7427ea747c6a8b856d611edd143cb",
+        "size": 523986,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/ivr_mr_s3df3_stage2_e2.pt",
+      "size": 523986,
+      "lfs": {
+        "sha256": "38b1e419c188c626ab1bb9eee7b1d29227f7ebd84ae348b9560e167556a1dee9",
+        "size": 523986,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/ivr_mr_s746a_stage2_e2.pt",
+      "size": 523986,
+      "lfs": {
+        "sha256": "425161026725f7027e622c18a3aa607b772dc466400fd56dd434031cd0f83516",
+        "size": 523986,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/ivr_mr_sec31_stage2_e2.pt",
+      "size": 523986,
+      "lfs": {
+        "sha256": "25862abcb9286dc50b327330adda37bc470f7a8800da4ece1bbfdc82b49726d1",
+        "size": 523986,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mf_asha.pt",
+      "size": 523420,
+      "lfs": {
+        "sha256": "563090a5f61a8670f88c031cbf525bf627d56c3848431c38c3f95a29304a1937",
+        "size": 523420,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mf_asha_epoch6.pt",
+      "size": 523866,
+      "lfs": {
+        "sha256": "6ffe801f16dc9120cf8b90dd7a0d3194d4dc378f91c1a4e310d064336e0934cc",
+        "size": 523866,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mf_asha_epoch8.pt",
+      "size": 523866,
+      "lfs": {
+        "sha256": "81e672b29b3006ab1f7671a16074ab877bf21c2c5017f3c6200c762459db6178",
+        "size": 523866,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mf_asha_final.pt",
+      "size": 523859,
+      "lfs": {
+        "sha256": "eddd4539fa4027c99fdb71b53dfdf16fbee6f41a636165154f1a4984e38665f0",
+        "size": 523859,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mf_asha_stage1.pt",
+      "size": 523866,
+      "lfs": {
+        "sha256": "c30b16b6bde3b887d1d2865ccda6b53567e342f03893f818b9044557ce7caa2b",
+        "size": 523866,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mf_asha_stage2_e2.pt",
+      "size": 523887,
+      "lfs": {
+        "sha256": "2c24b4d5f0f4aa98ee3b1e079066632f53a1da3e617001d47c39dd4874c52e6d",
+        "size": 523887,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mf_mukta.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "07ce35cab66957efe28e6382e7ccc0b1bff160d7944900793af5868500bf1eb0",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mm_dnyanesh.pt",
+      "size": 523440,
+      "lfs": {
+        "sha256": "02b98f5f2cdf5b34a75e6e801c19baf627b6e03dbe54242362f62660e00409db",
+        "size": 523440,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mm_vivek.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "b207976db2de9e3ae71ca85eb374f0712960d9945204b9c196b6107ffd8e75e1",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mm_vivek_stage1.pt",
+      "size": 523873,
+      "lfs": {
+        "sha256": "497ee9476654e60a79cf4ac2af0c1e5080381547bc1a2b65551e3c78dc64b807",
+        "size": 523873,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/mm_vivek_stage2_e2.pt",
+      "size": 523894,
+      "lfs": {
+        "sha256": "c00b6fc7aabcb30588fd198adbb8232e577a847b9d4e51d02079a488fe4867ed",
+        "size": 523894,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/pf_dora.pt",
+      "size": 523420,
+      "lfs": {
+        "sha256": "3e97fab34360e0ba10fb25c1f54bf510a1feb05c1943d4193e8af9d5503605d6",
+        "size": 523420,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/syn_navya.pt",
+      "size": 523430,
+      "lfs": {
+        "sha256": "dae2aeff840e72b5ec299acfc521e136d53d28b69e4900a3cf2c7358756817d2",
+        "size": 523430,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/syn_sama.pt",
+      "size": 523425,
+      "lfs": {
+        "sha256": "96cd4eb015b78f9968b2e95627850a55715135810f6b061dc33c1dd798f66725",
+        "size": 523425,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/zf_xiaoni.pt",
+      "size": 523430,
+      "lfs": {
+        "sha256": "95b49f169bf1640f4f43c25e13daa39f7b98d15d00823e83ef5c14b3ced59e49",
+        "size": 523430,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/zf_xiaoxiao.pt",
+      "size": 523440,
+      "lfs": {
+        "sha256": "cfaf6f2ded1ee56f1ff94fcd2b0e6cdf32e5b794bdc05b44e7439d44aef5887c",
+        "size": 523440,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/zf_xiaoyi.pt",
+      "size": 523430,
+      "lfs": {
+        "sha256": "b5235dbaeef85a4c613bf78af9a88ff63c25bac5f26ba77e36186d8b7ebf05e2",
+        "size": 523430,
+        "pointerSize": 131
+      }
+    },
+    {
+      "name": "voices/zm_yunyang.pt",
+      "size": 523435,
+      "lfs": {
+        "sha256": "5238ac22e0c7f8b6cdd2eddd6e444b8a700b73c4674d9a047d59a94ff96379a2",
+        "size": 523435,
+        "pointerSize": 131
+      }
+    }
+  ],
+  "license": "apache-2.0"
+}

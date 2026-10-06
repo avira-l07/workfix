@@ -1,0 +1,66 @@
+# Paste all of this into ONE new Kaggle cell BEFORE the failed training cell.
+# Run only this cell. It retries just freeze-lower / seed 17 with exit diagnostics.
+import os
+import json
+import subprocess
+import shutil
+from pathlib import Path
+
+assert 'work' in globals() and 'train_python' in globals(), 'Keep the existing setup session open'
+work = Path(work)
+logs = work / 'logs'
+assert not (logs / 'pilot-freeze-lower-17-diagnostic.log').exists(), 'Diagnostic retry already ran; send its ZIP'
+baseline = json.loads((work / 'baseline-report.json').read_text(encoding='utf-8'))
+assert baseline.get('ctc_baseline_gate_passed') is True, 'A passing baseline is required'
+run = work / 'pilot-freeze-lower-17'
+assert not (run / 'report.json').exists(), 'A run report now exists; send it before another retry'
+assert not list(run.rglob('*.ckpt')) and not list(run.rglob('metrics.csv')), 'Preserve existing training evidence; send the ZIP'
+config = run / 'effective-model-config.yaml'
+backup = run / 'before-process-diagnostic-config.yaml'
+if config.exists() and not backup.exists():
+    shutil.copyfile(config, backup)
+
+def command(args, name):
+    token = os.environ.get('HF_TOKEN') or '<no-token>'
+    path = logs / (name + '.log')
+    with path.open('w', encoding='utf-8') as log:
+        process = subprocess.Popen(list(map(str, args)), stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT, text=True, bufsize=1,
+                                   env=dict(os.environ, PYTHONUNBUFFERED='1', PYTHONFAULTHANDLER='1'))
+        for line in process.stdout:
+            clean = line.replace(token, '[REDACTED]')
+            log.write(clean)
+            log.flush()
+            print(clean, end='', flush=True)
+        returncode = process.wait()
+        summary.setdefault('process_exit_codes', {})[name] = returncode
+        footer = f'\n[process_exit] {name}: returncode={returncode}\n'
+        log.write(footer)
+        print(footer, end='', flush=True)
+        if returncode:
+            raise RuntimeError(f'{name} failed (returncode={returncode}); see {path.name} and the report ZIP')
+
+def retry_first_pilot():
+    command(['nvidia-smi', '--query-gpu=name,memory.used,memory.total', '--format=csv'], 'training-diagnostic-gpu')
+    memory = Path('/proc/meminfo')
+    if memory.is_file():
+        summary['training_host_memory_before_retry'] = [line for line in memory.read_text().splitlines()
+                        if line.startswith(('MemTotal:', 'MemAvailable:', 'SwapTotal:', 'SwapFree:'))]
+    def cgroup_memory():
+        return {name: (Path('/sys/fs/cgroup') / name).read_text().strip()
+                for name in ('memory.max', 'memory.current', 'memory.events')
+                if (Path('/sys/fs/cgroup') / name).is_file()}
+    summary['training_cgroup_memory_before_retry'] = cgroup_memory()
+    if shutil.disk_usage(work).free < 3 * 1024**3:
+        raise RuntimeError('Too little free disk for the pilot checkpoint; preserve reports')
+    if sum(p.stat().st_size for p in work.rglob('*') if p.is_file()) > 16 * 1024**3:
+        raise RuntimeError('Pilot workspace exceeds the reviewed 16 GiB output bound')
+    try:
+        command([train_python, work / 'kathbath_tamil_pilot.py', 'pilot', '--repo', work,
+                 '--mode', 'freeze-lower', '--seed', '17'], 'pilot-freeze-lower-17-diagnostic')
+    finally:
+        summary['training_cgroup_memory_after_retry'] = cgroup_memory()
+    summary['status'] = 'First pilot retry completed; other seeds/modes and full trial not completed'
+
+stage('first-pilot-diagnostic', retry_first_pilot)
+print('Download the NEW itantra_tamil_pilot_reports.zip and share it. Do not rerun baseline or setup.')

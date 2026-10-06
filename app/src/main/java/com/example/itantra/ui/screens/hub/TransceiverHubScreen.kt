@@ -1,2156 +1,327 @@
 package com.example.itantra.ui.screens.hub
 
-import com.itantra.core.translation.TRANSLATION_SCOPE_NOTE
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.res.painterResource
-import com.example.itantra.R
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.DirectionsRun
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.itantra.data.messages.MessageFilter
 import com.example.itantra.data.messages.applyMessageFilter
+import com.example.itantra.ui.components.HistoryMessageCard
 import com.example.itantra.ui.components.MessageFilterChipsRow
-import com.example.itantra.ui.components.TacticalBatteryPill
-import com.example.itantra.ui.theme.ITantraColors
+import com.example.itantra.ui.screens.voicenotes.VoiceNoteGrouping
 import com.itantra.app.AppGraph
 import com.itantra.core.crypto.SecureSessionState
 import com.itantra.core.inference.ActiveLanguageSessionManager
-import com.itantra.domain.model.LanguageCode
 import com.itantra.core.inference.ContinuousListenState
 import com.itantra.core.transceiver.TransceiverCoordinator
-import com.itantra.core.transport.ConnectionState
-import com.itantra.domain.model.EmergencyCode
-import com.itantra.domain.model.Measurement
-import com.itantra.domain.model.MessageSource
-import com.itantra.domain.model.MessageState
-import com.itantra.domain.model.VOICE_OUTPUT_UNAVAILABLE_NOTE
+import com.itantra.domain.model.*
 import kotlinx.coroutines.delay
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
-data class HubMessage(
-    val id: Long,
-    val sender: String,
-    val isSent: Boolean,
-    val langPair: String,
-    val text: String,
-    val translation: String? = null,
-    val time: String,
-    val state: String,
-    val isEmergency: Boolean = false,
-    val isFailed: Boolean = false,
-    val duration: String = "0:00s Audio",
-    val statusDetail: String? = null,
-    // True when statusDetail is the standing "translation not included in this build" note
-    // rather than a real per-message failure (peer disconnected, silence, etc). This note is
-    // a stated scope decision for the whole app, not something to repeat as a red error on
-    // every single message - see the persistent header note instead.
-    val isTranslationScopeNote: Boolean = false,
-    val isVoiceNote: Boolean = false
-)
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransceiverHubScreen(
     coordinator: TransceiverCoordinator = remember { AppGraph.transceiverCoordinator },
     sessionManager: ActiveLanguageSessionManager = remember { AppGraph.activeLanguageSessionManager },
-    onNavigateToConnect: () -> Unit = {},
-    onNavigateToLanguagePacks: () -> Unit = {},
-    onNavigateToDiagnostics: () -> Unit = {},
-    onNavigateToSettings: () -> Unit = {},
-    onNavigateToVoiceNotes: () -> Unit = {},
-    onNavigateToMessages: () -> Unit = {},
-    onSendEmergency: (String) -> Unit = {},
-    operatorName: String = "",
+    onNavigateToConnect: () -> Unit = {}, onNavigateToLanguagePacks: () -> Unit = {},
+    onNavigateToVoiceNotes: () -> Unit = {}, onNavigateToMessages: () -> Unit = {},
+    onNavigateToRecycleBin: () -> Unit = {}, operatorName: String = "",
+    savedNotesCount: Int = 0, deletedNotesCount: Int = 0,
 ) {
-    val liveMessages by coordinator.messages.collectAsState()
-    val activePeer by coordinator.activePeerProfile.collectAsState()
-    val sessionState by coordinator.secureSessionManager.state.collectAsState()
-    val activeLanguage by sessionManager.activeSttLanguage.collectAsState()
-    val micAutoDetect by sessionManager.isSttAutoDetect.collectAsState()
-    val targetLanguage by AppGraph.languagePackRepository.observeTargetLanguage().collectAsState(initial = null)
-    val transportConnectionState by AppGraph.transportEngine.observeConnectionState().collectAsState(initial = ConnectionState.DISCONNECTED)
-    val activeTransport by AppGraph.transportEngine.activeTransportFlow.collectAsState()
-    val liveMetrics by AppGraph.metricsRecorder.latest.collectAsState()
-    val continuousListenState by coordinator.continuousListenEngine.state.collectAsState()
-    val continuousModeError by coordinator.continuousModeError.collectAsState()
+    val messages by coordinator.messages.collectAsState()
+    val trash by coordinator.trashedMessages.collectAsState()
+    val peer by coordinator.activePeerProfile.collectAsState()
+    val security by coordinator.secureSessionManager.state.collectAsState()
+    val mic by sessionManager.activeSttLanguage.collectAsState()
+    val auto by sessionManager.isSttAutoDetect.collectAsState()
+    val session by sessionManager.sessionState.collectAsState()
+    val targetFlow = remember { AppGraph.languagePackRepository.observeTargetLanguage() }
+    val target by targetFlow.collectAsState(initial = null)
+    val packsFlow = remember { AppGraph.languagePackRepository.observePackSummaries() }
+    val packs by packsFlow.collectAsState(initial = emptyList())
+    val mtStates = remember { (AppGraph.translationEngine as? com.itantra.core.translation.MlKitOfflineTranslationEngine)?.pairModelStates
+        ?: MutableStateFlow(emptyMap<LanguageCode, com.itantra.core.translation.TranslationModelState>()) }
+    val mt by mtStates.collectAsState()
+    val activeEmergency by coordinator.activeEmergencyAlert.collectAsState()
+    val continuous by coordinator.continuousListenEngine.state.collectAsState()
+    val voiceError by coordinator.continuousModeError.collectAsState()
+    var handsFree by remember { mutableStateOf(false) }
+    val recording = messages.any { it.source == MessageSource.LOCAL && it.state == MessageState.RECORDING }
+    var locked by remember { mutableStateOf(false) }
+    var filter by remember { mutableStateOf(MessageFilter.ALL) }
+    var pendingDelete by remember { mutableStateOf<TransceiverMessage?>(null) }
+    var picker by remember { mutableStateOf<String?>(null) }
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val scope = rememberCoroutineScope()
+    val snack = remember { SnackbarHostState() }
+    val listState = rememberLazyListState()
+    val showDock by remember { derivedStateOf {
+        listState.firstVisibleItemIndex > 3 && listState.layoutInfo.visibleItemsInfo.none { it.key == "talk-controls" }
+    } }
+    val verified = security == SecureSessionState.SECURE_VERIFIED && peer?.isConnected == true
+    val modelReady = session != com.itantra.core.inference.LanguageSessionState.LOADING_STT && sessionManager.currentSttEngine?.isLoaded == true
+    val stop = { locked = false; coordinator.stopActiveRecording() }
+    val cancel = { locked = false; coordinator.cancelActiveRecording() }
+    val start = { if (modelReady) coordinator.startRecording() else onNavigateToLanguagePacks() }
+    val toggle = { when {
+        !modelReady -> onNavigateToLanguagePacks()
+        handsFree -> when (continuous) {
+            ContinuousListenState.OFF, ContinuousListenState.ERROR -> coordinator.setContinuousMode(true)
+            ContinuousListenState.PAUSED -> coordinator.continuousListenEngine.resumeListening()
+            else -> coordinator.continuousListenEngine.pauseListening()
+        }
+        recording || locked -> stop()
+        else -> { start(); locked = true }
+    } }
+    val lifecycle = LocalLifecycleOwner.current
+    DisposableEffect(lifecycle, coordinator) {
+        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP) cancel() }
+        lifecycle.lifecycle.addObserver(observer)
+        onDispose { lifecycle.lifecycle.removeObserver(observer); cancel(); coordinator.setContinuousMode(false) }
+    }
+    LaunchedEffect(recording) { if (!recording) locked = false }
+    LaunchedEffect(Unit) { while (true) { now = System.currentTimeMillis(); delay(60_000L) } }
+    val filtered = messages.applyMessageFilter(filter, { it.source == MessageSource.LOCAL }, { it.state == MessageState.ERROR }, { it.priority == MessagePriority.CRITICAL })
+    val groups = remember(filtered, now) { VoiceNoteGrouping.group(filtered, { it.createdAtLocal }, now) }
+    val micName = if (auto) "Auto detect" else LanguageCatalog.all.firstOrNull { it.code == mic }?.nativeDisplayName ?: "Choose language"
+    val targetName = LanguageCatalog.all.firstOrNull { it.code == target }?.nativeDisplayName ?: "Auto · peer language"
+    val swapReady = !auto && !recording && !handsFree && mic != null && target != null && mic != target &&
+        packs.any { it.language.code == target && it.isSttDownloaded } && packs.any { it.language.code == mic && it.isTtsDownloaded } &&
+        mt[mic] == com.itantra.core.translation.TranslationModelState.READY && mt[target] == com.itantra.core.translation.TranslationModelState.READY
 
-    var isPttMode by remember { mutableStateOf(true) }
-    var isTransmitting by remember { mutableStateOf(false) }
-    var isPttLocked by remember { mutableStateOf(false) }
-    var selectedFilter by remember { mutableStateOf(MessageFilter.ALL) }
-    var showEmergencyConfirm by remember { mutableStateOf(false) }
-    var showEmergencySheet by remember { mutableStateOf(false) }
-    var showHubMenu by remember { mutableStateOf(false) }
-    var pendingEmergencyCode by remember { mutableStateOf<String?>(null) }
-
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner, coordinator) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) {
-                if (isTransmitting || isPttLocked) {
-                    isTransmitting = false
-                    isPttLocked = false
-                    coordinator.stopActiveRecording()
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snack) },
+        floatingActionButton = { if (showDock) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ExtendedFloatingActionButton(onClick = toggle,
+                icon = { Icon(Icons.Filled.Mic, null) }, text = { Text(if (recording) "Finish recording" else if (handsFree) "Pause / resume" else "Tap to talk") })
+            if (recording) SmallFloatingActionButton(onClick = cancel) {
+                Icon(Icons.Filled.Close, "Cancel recording")
+            }
+        } }) { padding ->
+        LazyColumn(Modifier.fillMaxSize().padding(padding), state = listState,
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = if (showDock) 100.dp else 20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item {
+                Text(if (modelReady) "Ready to talk." else "Prepare your voice.", style = MaterialTheme.typography.headlineLarge)
+                if (operatorName.isNotBlank()) Text("Hello, $operatorName", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            item { Card(onClick = onNavigateToConnect, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(22.dp)) {
+                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(38.dp).background(MaterialTheme.colorScheme.secondaryContainer, CircleShape), contentAlignment = Alignment.Center) {
+                        Icon(if (verified) Icons.Filled.VerifiedUser else Icons.Filled.Link, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(20.dp))
+                    }
+                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                        Text(if (verified) "Connected to ${peer?.displayName?.takeIf { it.isNotBlank() } ?: "verified peer"}" else "Connect a nearby device", style = MaterialTheme.typography.titleSmall)
+                        Text(if (verified) "Verified peer · encrypted direct link" else "Save locally. Connect to share.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.Filled.ArrowForward, "Open connections", modifier = Modifier.size(20.dp))
                 }
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            isTransmitting = false
-            isPttLocked = false
-            coordinator.stopActiveRecording()
-            coordinator.setContinuousMode(false)
-        }
-    }
-    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
-
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseScale"
-    )
-
-    val timeFormat = remember {
-        SimpleDateFormat("HH:mm 'IST'", Locale.US).apply {
-            timeZone = java.util.TimeZone.getTimeZone("Asia/Kolkata")
-        }
-    }
-
-    val allMessages = liveMessages.map { msg ->
-        val totalSecs = ((msg.speechDurationMillis + 500) / 1000).coerceAtLeast(0)
-        val mins = totalSecs / 60
-        val secs = totalSecs % 60
-        val formattedDuration = String.format(Locale.US, "%d:%02ds Audio", mins, secs)
-
-        val isMtSuccess = msg.translationStatus == com.itantra.domain.model.TranslationStatus.SUCCESS
-        val srcName = msg.language?.name ?: "HI"
-        val tgtName = msg.targetLanguage?.name ?: "EN"
-        val langPair = if (isMtSuccess && msg.targetLanguage != null && msg.targetLanguage != msg.language) {
-            "$srcName → $tgtName"
-        } else {
-            srcName
-        }
-
-        HubMessage(
-            id = msg.messageId,
-            sender = if (msg.source == MessageSource.LOCAL) {
-                if (operatorName.isNotBlank()) operatorName else "OPERATOR (Local)"
-            } else "REMOTE PEER",
-            isSent = msg.source == MessageSource.LOCAL,
-            langPair = langPair,
-            text = if (isMtSuccess && msg.originalText != null) msg.originalText!! else msg.text,
-            translation = if (isMtSuccess && msg.originalText != null) msg.text else null,
-            time = timeFormat.format(Date(msg.createdAtLocal)),
-            state = when (msg.state) {
-                MessageState.DELIVERED -> "DELIVERED"
-                MessageState.WAITING_ACK -> "WAITING ACK"
-                MessageState.ERROR -> "FAILED"
-                MessageState.STT_PROCESSING -> "PROCESSING"
-                MessageState.RECORDING -> "RECORDING"
-                else -> "SENDING"
-            },
-            isEmergency = msg.priority == com.itantra.domain.model.MessagePriority.CRITICAL,
-            isFailed = msg.state == MessageState.ERROR,
-            duration = formattedDuration,
-            statusDetail = msg.statusDetail,
-            isTranslationScopeNote = msg.statusDetail == TRANSLATION_SCOPE_NOTE,
-            isVoiceNote = msg.statusDetail == VOICE_OUTPUT_UNAVAILABLE_NOTE
-        )
-    }
-
-    val filteredMessages = allMessages.applyMessageFilter(
-        filter = selectedFilter,
-        isSent = { it.isSent },
-        isFailed = { it.isFailed },
-        isEmergency = { it.isEmergency },
-    )
-
-    // Tracks message IDs already seen, so we can tell an addition from a state-only update
-    // (updateMessage() mutates an existing entry in place, so it never changes .size/.id set).
-    var previousMessageIds by remember { mutableStateOf(emptySet<Long>()) }
-    // Set when a new LOCAL message appears while PTT is actively held - almost always our own
-    // "Listening..." placeholder from starting this very hold - and cleared once the hold ends,
-    // at which point we do the deferred scroll instead.
-    var pendingScrollAfterHold by remember { mutableStateOf(false) }
-
-    LaunchedEffect(allMessages) {
-        if (previousMessageIds.isEmpty()) {
-            previousMessageIds = allMessages.map { it.id }.toSet()
-            return@LaunchedEffect
-        }
-        val currentIds = allMessages.map { it.id }.toSet()
-        val newlyAdded = allMessages.filter { it.id !in previousMessageIds }
-        previousMessageIds = currentIds
-        if (newlyAdded.isEmpty()) return@LaunchedEffect
-
-        val isOwnHoldPlaceholder = (isTransmitting || isPttLocked) && newlyAdded.all { it.isSent }
-        if (isOwnHoldPlaceholder) {
-            // Don't yank the viewport out from under the operator's thumb mid-press. An incoming
-            // REMOTE message still scrolls immediately even while holding - newlyAdded.all above
-            // only matches when every newly-added message is our own outgoing one.
-            pendingScrollAfterHold = true
-            return@LaunchedEffect
-        }
-
-        kotlinx.coroutines.delay(100)
-        val total = listState.layoutInfo.totalItemsCount
-        if (total > 0) {
-            listState.animateScrollToItem(total - 1)
-        }
-    }
-
-    // Catches up the scroll we deferred above once the hold actually ends (release, slide-to-lock
-    // release via "TAP TO SEND", or the lifecycle-driven stop). This is a proxy for "the outgoing
-    // message is done" - true completion (STT -> translate -> transmit -> ACK) only updates the
-    // existing message in place and never changes allMessages' size, so there's no size-based
-    // signal to hook for that later point without a larger restructure.
-    LaunchedEffect(isTransmitting, isPttLocked) {
-        if (!isTransmitting && !isPttLocked && pendingScrollAfterHold) {
-            pendingScrollAfterHold = false
-            kotlinx.coroutines.delay(100)
-            val total = listState.layoutInfo.totalItemsCount
-            if (total > 0) {
-                listState.animateScrollToItem(total - 1)
-            }
-        }
-    }
-
-    Scaffold(
-        containerColor = ITantraColors.CanvasBg,
-        topBar = {
-            TopAppBar(
-                title = {
+            } }
+            activeEmergency?.let { alert -> item { Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    Text("Active emergency", style = MaterialTheme.typography.titleMedium)
+                    Text(alert.resolvedPhrase)
+                    Button(onClick = { coordinator.sendHumanAck(alert.messageId) }) { Text("Acknowledge & silence alarm") }
+                }
+            } } }
+            item { Card(shape = RoundedCornerShape(22.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Tactical Logo Icon
-                        Image(
-                            painter = painterResource(id = R.drawable.app_logo),
-                            contentDescription = "iTantra Logo",
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(CircleShape)
-                        )
-                        Spacer(Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                "ITANTRA",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = ITantraColors.TextHeadline,
-                                letterSpacing = 0.5.sp
-                            )
-                            Text(
-                                when (transportConnectionState) {
-                                    ConnectionState.CONNECTED -> if (sessionState == SecureSessionState.SECURE_VERIFIED) "ENCRYPTED · PEER CONNECTED" else "PEER CONNECTED"
-                                    ConnectionState.CONNECTING, ConnectionState.LISTENING -> "SEARCHING FOR PEERS…"
-                                    ConnectionState.ERROR -> "RECONNECTING…"
-                                    ConnectionState.DISCONNECTED -> "DISCONNECTED"
-                                },
-                                style = MaterialTheme.typography.labelSmall,
-                                fontFamily = FontFamily.Monospace,
-                                color = if (transportConnectionState == ConnectionState.CONNECTED && sessionState == SecureSessionState.SECURE_VERIFIED) ITantraColors.StatusSuccess else ITantraColors.TextMuted,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.6.sp,
-                                fontSize = 8.5.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+                        Text("Recent messages", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                        TextButton(onNavigateToMessages) { Text("Open chats", style = MaterialTheme.typography.labelMedium); Spacer(Modifier.width(4.dp)); Icon(Icons.Filled.ArrowForward, null, Modifier.size(16.dp)) }
                     }
-                },
-                actions = {
-                    // Battery Pill
-                    TacticalBatteryPill()
-                    Spacer(Modifier.width(8.dp))
-
-                    IconButton(
-                        onClick = { showEmergencySheet = true },
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(ITantraColors.ErrorContainer)
-                            .border(1.dp, ITantraColors.StatusDanger, RoundedCornerShape(10.dp))
-                    ) {
-                        Icon(
-                            Icons.Filled.Sos,
-                            contentDescription = "Open emergency actions",
-                            tint = ITantraColors.StatusDanger,
-                            modifier = Modifier.size(22.dp)
-                        )
+                    MessageFilterChipsRow(filter, { filter = it })
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    if (filtered.isEmpty()) Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Your conversation starts here.", style = MaterialTheme.typography.bodyMedium)
+                        Text("Saved transcripts and incoming messages appear here.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Spacer(Modifier.width(4.dp))
-
-                    Box {
-                        IconButton(onClick = { showHubMenu = true }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "Hub navigation")
-                        }
-                        DropdownMenu(expanded = showHubMenu, onDismissRequest = { showHubMenu = false }) {
-                            DropdownMenuItem(
-                                text = { Text("Messages") },
-                                leadingIcon = { Icon(Icons.Filled.Chat, contentDescription = null) },
-                                onClick = { showHubMenu = false; onNavigateToMessages() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Connect") },
-                                leadingIcon = { Icon(Icons.Filled.Hub, contentDescription = null) },
-                                onClick = { showHubMenu = false; onNavigateToConnect() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Language packs") },
-                                leadingIcon = { Icon(Icons.Filled.Translate, contentDescription = null) },
-                                onClick = { showHubMenu = false; onNavigateToLanguagePacks() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Diagnostics") },
-                                leadingIcon = { Icon(Icons.Filled.QueryStats, contentDescription = null) },
-                                onClick = { showHubMenu = false; onNavigateToDiagnostics() }
-                            )
-                        }
-                    }
-
-                    // Settings Button
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(ITantraColors.CanvasBg)
-                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
-                            .clickable { onNavigateToSettings() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            contentDescription = "Settings",
-                            tint = ITantraColors.TextHeadline,
-                            modifier = Modifier.size(17.dp)
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ITantraColors.SurfaceWhite),
-            )
-        },
-        bottomBar = {
-            HubBottomControls(
-                coordinator = coordinator,
-                isPttMode = isPttMode,
-                onPttModeChange = { next ->
-                    if (next != isPttMode) {
-                        isPttMode = next
-                        if (!next) {
-                            if (isTransmitting || isPttLocked) {
-                                isTransmitting = false
-                                isPttLocked = false
-                                coordinator.stopActiveRecording()
-                            }
-                            coordinator.setContinuousMode(true)
-                        } else {
-                            coordinator.setContinuousMode(false)
-                        }
-                    }
-                },
-                isTransmitting = isTransmitting,
-                isPttLocked = isPttLocked,
-                continuousListenState = continuousListenState,
-                onStart = { isTransmitting = true; coordinator.startRecording() },
-                onStop = { isTransmitting = false; isPttLocked = false; coordinator.stopActiveRecording() },
-                onLock = { isPttLocked = true },
-                onEmergency = { showEmergencySheet = true },
-            )
-        },
-    ) { padding ->
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            // 0. Translation scope note - shown once, calmly, rather than as a repeated
-            // per-message red error. See TRANSLATION_SCOPE_NOTE / UnavailableTranslationEngine.
-            item { TranslationScopeBanner() }
-
-            // Navigation is in the top-bar overflow menu to keep the message area primary.
-            if (false) {
-            // 1. Hub Spoke Entry Navigation Cards (3 Columns)
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    SpokeCard(
-                        icon = Icons.Filled.Hub,
-                        title = "Connect",
-                        subtitle = "Nearby Devices",
-                        modifier = Modifier.weight(1f),
-                        onClick = onNavigateToConnect,
-                    )
-                    SpokeCard(
-                        icon = Icons.Filled.Translate,
-                        title = "Language",
-                        subtitle = "${activeLanguage?.name ?: "HINDI"} Active",
-                        modifier = Modifier.weight(1f),
-                        onClick = onNavigateToLanguagePacks,
-                    )
-                    SpokeCard(
-                        icon = Icons.Filled.QueryStats,
-                        title = "Diagnostics",
-                        subtitle = "Benchmark · TTS",
-                        modifier = Modifier.weight(1f),
-                        onClick = onNavigateToDiagnostics,
-                    )
-                }
-            }
-
-            }
-
-            // 2. Dynamic Security Indicator & Real Peer State (Stacked Rows matching code.html / screen.png)
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val isSecured = sessionState == SecureSessionState.SECURE_VERIFIED
-
-                    // Card 1: Dynamic Security State Indicator
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
-                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
-                            .padding(horizontal = 12.dp, vertical = 9.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(ITantraColors.SuccessContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Filled.VerifiedUser,
-                                    contentDescription = null,
-                                    tint = ITantraColors.StatusSuccess,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        if (isSecured) "ENCRYPTED (SECURE SESSION ACTIVE)" else "STANDBY (READY TO LINK)",
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 10.5.sp,
-                                        color = ITantraColors.TextHeadline,
-                                        letterSpacing = 0.2.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Spacer(Modifier.width(6.dp))
-                                    Box(
-                                        Modifier
-                                            .size(6.dp)
-                                            .scale(if (isSecured) pulseScale else 1f)
-                                            .clip(CircleShape)
-                                            .background(if (isSecured) ITantraColors.StatusSuccess else ITantraColors.TextMuted)
-                                    )
-                                }
-                                Spacer(Modifier.height(1.dp))
-                                Text(
-                                    if (isSecured) "SecureSessionState: Established (E2EE P2P)" else "SecureSessionState: Standby (Ready to Link)",
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 9.sp,
-                                    color = ITantraColors.TextMuted,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
-
-                    // Card 2: Real Peer Connection Status (from live transportConnectionState)
-                    val peerLabel = when (transportConnectionState) {
-                        ConnectionState.CONNECTED -> "PEER: CONNECTED"
-                        ConnectionState.CONNECTING -> "PEER: CONNECTING…"
-                        ConnectionState.LISTENING -> "PEER: LISTENING…"
-                        ConnectionState.DISCONNECTED -> "PEER: DISCONNECTED"
-                        ConnectionState.ERROR -> "PEER: LINK ERROR"
-                    }
-                    val peerBadgeLabel = when (transportConnectionState) {
-                        ConnectionState.CONNECTED -> "ACTIVE"
-                        ConnectionState.CONNECTING, ConnectionState.LISTENING -> "LINKING"
-                        else -> "OFFLINE"
-                    }
-                    val peerBadgeBg = when (transportConnectionState) {
-                        ConnectionState.CONNECTED -> ITantraColors.SuccessContainer
-                        ConnectionState.CONNECTING, ConnectionState.LISTENING -> ITantraColors.WarningContainer
-                        else -> ITantraColors.SurfaceVariant
-                    }
-                    val peerBadgeColor = when (transportConnectionState) {
-                        ConnectionState.CONNECTED -> ITantraColors.StatusSuccess
-                        ConnectionState.CONNECTING, ConnectionState.LISTENING -> ITantraColors.StatusWarning
-                        else -> ITantraColors.TextMuted
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
-                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
-                            .padding(horizontal = 12.dp, vertical = 9.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(ITantraColors.AccentSubtle),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Filled.Sensors,
-                                    contentDescription = null,
-                                    tint = ITantraColors.Primary,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        peerLabel,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 10.5.sp,
-                                        color = ITantraColors.TextHeadline,
-                                        letterSpacing = 0.2.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f, fill = false)
-                                    )
-                                    Spacer(Modifier.width(6.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .background(peerBadgeBg, RoundedCornerShape(3.dp))
-                                            .padding(horizontal = 5.dp, vertical = 1.dp)
-                                    ) {
-                                        Text(
-                                            peerBadgeLabel,
-                                            fontFamily = FontFamily.Monospace,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 8.sp,
-                                            color = peerBadgeColor,
-                                            softWrap = false
-                                        )
-                                    }
-                                }
-                                Spacer(Modifier.height(1.dp))
-                                Text(
-                                    if (transportConnectionState == ConnectionState.CONNECTED) "E2EE session active · Use Connect screen to switch" else "Go to Connect to pair a peer device",
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 9.sp,
-                                    color = ITantraColors.TextMuted,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
+                    filtered.sortedByDescending { it.createdAtLocal }.take(2).forEach { message ->
+                        HistoryMessageCard(message, { pendingDelete = message }, {
+                            if (!coordinator.retryMessage(message.messageId)) scope.launch { snack.showSnackbar("Reconnect the original peer, or copy the transcript into a new message.") }
+                        }, { coordinator.sendHumanAck(message.messageId) }, compact = true)
                     }
                 }
-            }
-
-            // 3. Live Telemetry Instrument Cluster (real metrics from MetricsRecorder)
-            item {
-                // Derive real values; show null/"--" when not yet measured
-                val latencyText = when (val e2e = liveMetrics.endToEndMillis) {
-                    is Measurement.Measured<*> -> "${e2e.value} ms"
-                    else -> when (val tx = liveMetrics.transport.transmissionLatencyMillis) {
-                        is Measurement.Measured<*> -> "${tx.value} ms"
-                        else -> "-- ms"
-                    }
-                }
-                val measuredReduction = liveMessages.lastOrNull {
-                    it.isVoiceGenerated && it.source == com.itantra.domain.model.MessageSource.LOCAL
-                }
-                    ?.measuredWireReductionVsPcmPercent
-                val bwSavedText = measuredReduction?.let {
-                    String.format(java.util.Locale.US, "%.1f%%", it)
-                } ?: "-- %"
-                val linkText = when (transportConnectionState) {
-                    ConnectionState.CONNECTED -> if (activeTransport is com.itantra.core.transport.peer.WifiDirectPeerTransport) "Wi-Fi Direct" else "Bluetooth"
-                    ConnectionState.CONNECTING -> "Linking…"
-                    ConnectionState.LISTENING -> "Listening…"
-                    ConnectionState.DISCONNECTED -> "No Link"
-                    ConnectionState.ERROR -> "Link Error"
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
-                        .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Stat 1: Latency
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
-                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
-                            .padding(8.dp)
-                    ) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("LATENCY", fontFamily = FontFamily.Monospace, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = ITantraColors.TextMuted)
-                                Icon(Icons.Filled.Speed, contentDescription = null, tint = ITantraColors.StatusSuccess, modifier = Modifier.size(12.dp))
-                            }
-                            Spacer(Modifier.height(4.dp))
-                            Text(latencyText, fontFamily = FontFamily.Monospace, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = ITantraColors.TextHeadline)
+            } }
+            item(key = "talk-controls") { Card(shape = RoundedCornerShape(22.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = .3f)),
+                colors = CardDefaults.cardColors(containerColor = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.primaryContainer, .45f))) {
+                Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(17.dp))
+                        Spacer(Modifier.width(6.dp)); Text("Speak & translate", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                        Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(20.dp)) {
+                            Text(if (modelReady) "On-device" else "Models needed", style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                         }
                     }
-
-                    // Stat 2: same-message wire frame versus uncompressed PCM reference
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
-                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
-                            .padding(8.dp)
-                    ) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("VS RAW PCM", fontFamily = FontFamily.Monospace, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = ITantraColors.TextMuted)
-                                Icon(Icons.Filled.Compress, contentDescription = null, tint = ITantraColors.Primary, modifier = Modifier.size(12.dp))
-                            }
-                            Spacer(Modifier.height(4.dp))
-                            Text(bwSavedText, fontFamily = FontFamily.Monospace, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = ITantraColors.Primary)
-                            Text("Latest local voice", fontFamily = FontFamily.Monospace, fontSize = 7.5.sp, color = ITantraColors.TextMuted)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        HubLanguageChoice("Speak", micName, Icons.Filled.Mic, !recording && !handsFree, Modifier.weight(1f)) { picker = "mic" }
+                        OutlinedIconButton(onClick = { val previous = mic!!; AppGraph.setMicLanguage(target!!); AppGraph.setTargetLanguage(previous) }, enabled = swapReady, shape = RoundedCornerShape(14.dp)) {
+                            Icon(Icons.Filled.SwapHoriz, "Swap microphone and target languages", tint = if (swapReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                         }
+                        HubLanguageChoice("Translate to", targetName, Icons.Filled.Translate, !recording && !handsFree, Modifier.weight(1f)) { picker = "target" }
                     }
-
-                    // Stat 3: Link (real transport type)
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
-                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
-                            .padding(8.dp)
-                    ) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("LINK", fontFamily = FontFamily.Monospace, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = ITantraColors.TextMuted)
-                                Icon(Icons.Filled.WifiTethering, contentDescription = null, tint = ITantraColors.Primary, modifier = Modifier.size(12.dp))
+                    Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(12.dp)) {
+                        Row(Modifier.padding(3.dp)) {
+                            TextButton(onClick = { stop(); handsFree = false; coordinator.setContinuousMode(false) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(9.dp),
+                                colors = ButtonDefaults.textButtonColors(containerColor = if (!handsFree) MaterialTheme.colorScheme.surface else androidx.compose.ui.graphics.Color.Transparent)) {
+                                Icon(Icons.Filled.Mic, null, Modifier.size(16.dp)); Spacer(Modifier.width(5.dp)); Text("Push to talk", style = MaterialTheme.typography.labelMedium)
                             }
-                            Spacer(Modifier.height(4.dp))
-                            Text(linkText, fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = ITantraColors.TextHeadline, maxLines = 1)
-                        }
-                    }
-                }
-            }
-
-            // 4. Operational Tactical Channel Banner
-            if (continuousModeError != null) item {
-                Text(continuousModeError.orEmpty(), color = ITantraColors.OnErrorContainer,
-                    modifier = Modifier.fillMaxWidth().background(ITantraColors.ErrorContainer, RoundedCornerShape(12.dp)).padding(12.dp))
-            }
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
-                        .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            Modifier
-                                .size(8.dp)
-                                .scale(pulseScale)
-                                .background(ITantraColors.Primary, CircleShape)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    if (sessionState == SecureSessionState.SECURE_VERIFIED)
-                                        activePeer?.displayName?.takeIf { it.isNotBlank() } ?: "Peer profile pending"
-                                    else "No verified peer",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .background(ITantraColors.SurfaceVariant, RoundedCornerShape(3.dp))
-                                        .padding(horizontal = 4.dp, vertical = 1.dp)
-                                ) {
-                                    Text(
-                                        "P2P",
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 8.sp,
-                                        color = ITantraColors.TextHeadline
-                                    )
-                                }
-                            }
-                            Text(
-                                "DIRECT DEVICE-TO-DEVICE CONNECTION",
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 8.5.sp,
-                                color = ITantraColors.TextMuted,
-                                letterSpacing = 0.5.sp
-                            )
-                        }
-                    }
-                    Text(
-                        "RSSI: -- dBm",
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 9.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ITantraColors.TextMuted
-                    )
-                }
-            }
-
-
-
-            // 5b. Tactical Speech Language Quick Selector
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(ITantraColors.SurfaceWhite, RoundedCornerShape(10.dp))
-                        .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(10.dp))
-                        .padding(horizontal = 10.dp, vertical = 7.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Filled.Translate,
-                            contentDescription = null,
-                            tint = ITantraColors.Primary,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            if (micAutoDetect) "MIC: AUTO-DETECT" else "MIC LANGUAGE:",
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 9.5.sp,
-                            color = ITantraColors.TextMuted,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Hindi Chip
-                        val isHindi = !micAutoDetect && activeLanguage == LanguageCode.HINDI
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (isHindi) ITantraColors.Primary else ITantraColors.SurfaceVariant,
-                            modifier = Modifier.clickable {
-                                android.util.Log.d("ITANTRA_MIC_FLOW", "TransceiverHubScreen: Hindi chip CLICKED. Current activeLanguage=$activeLanguage")
-                                AppGraph.setMicLanguage(LanguageCode.HINDI)
-                            }
-                        ) {
-                            Text(
-                                "\u0939\u093F\u0928\u094D\u0926\u0940 (HI)",
-                                fontSize = 11.sp,
-                                fontWeight = if (isHindi) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isHindi) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-
-                        // English Chip
-                        val isEnglish = !micAutoDetect && activeLanguage == LanguageCode.ENGLISH
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (isEnglish) ITantraColors.Primary else ITantraColors.SurfaceVariant,
-                            modifier = Modifier.clickable {
-                                android.util.Log.d("ITANTRA_MIC_FLOW", "TransceiverHubScreen: English chip CLICKED. Current activeLanguage=$activeLanguage")
-                                AppGraph.setMicLanguage(LanguageCode.ENGLISH)
-                            }
-                        ) {
-                            Text(
-                                "English (EN)",
-                                fontSize = 11.sp,
-                                fontWeight = if (isEnglish) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isEnglish) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-
-                        // More / All Languages button
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = ITantraColors.SurfaceVariant,
-                            modifier = Modifier.clickable { onNavigateToLanguagePacks() }
-                        ) {
-                            Text(
-                                "More ▾",
-                                fontWeight = FontWeight.Medium,
-                                color = ITantraColors.Primary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 5c. Tactical Target Language Quick Selector (FIX 030)
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(ITantraColors.SurfaceWhite, RoundedCornerShape(10.dp))
-                        .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(10.dp))
-                        .padding(horizontal = 10.dp, vertical = 7.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Filled.Translate,
-                            contentDescription = null,
-                            tint = ITantraColors.Primary,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            "TRANSLATE TO:",
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 9.5.sp,
-                            color = ITantraColors.TextMuted,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Auto / Same Chip
-                        val isAuto = (targetLanguage == null)
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (isAuto) ITantraColors.Primary else ITantraColors.SurfaceVariant,
-                            modifier = Modifier.clickable {
-                                AppGraph.setTargetLanguage(null)
-                            }
-                        ) {
-                            Text(
-                                "Auto",
-                                fontSize = 11.sp,
-                                fontWeight = if (isAuto) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isAuto) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-
-                        // Hindi Chip
-                        val isTargetHindi = (targetLanguage == LanguageCode.HINDI)
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (isTargetHindi) ITantraColors.Primary else ITantraColors.SurfaceVariant,
-                            modifier = Modifier.clickable {
-                                AppGraph.setTargetLanguage(LanguageCode.HINDI)
-                            }
-                        ) {
-                            Text(
-                                "हिन्दी (HI)",
-                                fontSize = 11.sp,
-                                fontWeight = if (isTargetHindi) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isTargetHindi) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-
-                        // English Chip
-                        val isTargetEnglish = (targetLanguage == LanguageCode.ENGLISH)
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (isTargetEnglish) ITantraColors.Primary else ITantraColors.SurfaceVariant,
-                            modifier = Modifier.clickable {
-                                AppGraph.setTargetLanguage(LanguageCode.ENGLISH)
-                            }
-                        ) {
-                            Text(
-                                "English (EN)",
-                                fontSize = 11.sp,
-                                fontWeight = if (isTargetEnglish) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isTargetEnglish) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-
-                        // More / All Languages button
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = ITantraColors.SurfaceVariant,
-                            modifier = Modifier.clickable { onNavigateToLanguagePacks() }
-                        ) {
-                            Text(
-                                "More ▾",
-                                fontWeight = FontWeight.Medium,
-                                color = ITantraColors.Primary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // The PTT/VAD controls and emergency presets are rendered in the fixed
-            // bottom bar and SOS sheet below. Keep this legacy block intact so its
-            // handlers remain easy to audit while the new containers own the layout.
-            if (false) {
-            // 6. Segmented Toggle Switch (PTT vs VAD)
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(ITantraColors.BorderSubtle, RoundedCornerShape(10.dp))
-                        .padding(3.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isPttMode) ITantraColors.SurfaceWhite else Color.Transparent)
-                            .clickable {
-                                if (!isPttMode) {
-                                    isPttMode = true
-                                    coordinator.setContinuousMode(false)
-                                }
-                            }
-                            .padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Filled.TouchApp,
-                                contentDescription = null,
-                                tint = if (isPttMode) ITantraColors.Primary else ITantraColors.TextMuted,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Spacer(Modifier.width(5.dp))
-                            Text(
-                                "PUSH-TO-TALK (PTT)",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isPttMode) ITantraColors.Primary else ITantraColors.TextMuted
-                            )
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (!isPttMode) ITantraColors.SurfaceWhite else Color.Transparent)
-                            .clickable {
-                                if (isPttMode) {
-                                    isPttMode = false
-                                    if (isTransmitting || isPttLocked) {
-                                        isTransmitting = false
-                                        isPttLocked = false
-                                        coordinator.stopActiveRecording()
-                                    }
-                                    coordinator.setContinuousMode(true)
-                                }
-                            }
-                            .padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Filled.GraphicEq,
-                                contentDescription = null,
-                                tint = if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.TextMuted,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Spacer(Modifier.width(5.dp))
-                            Text(
-                                "CONTINUOUS VAD",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (!isPttMode) ITantraColors.TextHeadline else ITantraColors.TextMuted
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        if (!isPttMode) Color(0xFFDCFCE7) else ITantraColors.BorderStrong,
-                                        RoundedCornerShape(3.dp)
-                                    )
-                                    .padding(horizontal = 4.dp, vertical = 1.dp)
-                            ) {
-                                Text(
-                                    if (!isPttMode) "ACTIVE" else "AUTO",
-                                    fontSize = 7.5.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (!isPttMode) Color(0xFF15803D) else Color(0xFF475569)
-                                )
+                            TextButton(onClick = { stop(); handsFree = true; coordinator.setContinuousMode(true) }, enabled = modelReady, modifier = Modifier.weight(1f), shape = RoundedCornerShape(9.dp),
+                                colors = ButtonDefaults.textButtonColors(containerColor = if (handsFree) MaterialTheme.colorScheme.surface else androidx.compose.ui.graphics.Color.Transparent)) {
+                                Icon(Icons.Filled.GraphicEq, null, Modifier.size(16.dp)); Spacer(Modifier.width(5.dp)); Text("Hands-free", style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
-                }
-            }
-
-            // 7. Tactical Push-to-Talk Command Reticle & Dial
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        val isRecordingActive = if (isPttMode) (isTransmitting || isPttLocked)
-                            else (continuousListenState == ContinuousListenState.SPEECH_DETECTED || continuousListenState == ContinuousListenState.FINALIZING)
-                        // Concentric Audio Visualizer Reticle (192dp outer)
-                        Box(
-                            modifier = Modifier
-                                .size(192.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (isRecordingActive) ITantraColors.ErrorContainer.copy(alpha = 0.6f)
-                                    else if (!isPttMode) Color(0xFFF0FDF4).copy(alpha = 0.7f)
-                                    else ITantraColors.AccentSubtle.copy(alpha = 0.4f)
-                                )
-                                .border(
-                                    1.dp,
-                                    if (isRecordingActive) ITantraColors.ErrorContainer else if (!isPttMode) Color(0xFF86EFAC) else Color(0x99BFDBFE),
-                                    CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            // Mid ring with dashed circular track
-                            Box(
-                                modifier = Modifier
-                                    .size(160.dp)
-                                    .clip(CircleShape)
-                                    .background(ITantraColors.SurfaceWhite.copy(alpha = 0.7f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                val trackColor = if (isRecordingActive) ITantraColors.StatusDanger
-                                    else if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.BorderStrong
-                                Canvas(modifier = Modifier.fillMaxSize()) {
-                                    drawCircle(
-                                        color = trackColor,
-                                        radius = size.minDimension / 2 - 2.dp.toPx(),
-                                        style = Stroke(
-                                            width = 1.dp.toPx(),
-                                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 8f), 0f)
-                                        )
-                                    )
-                                }
-
-                                // PTT Action Button (124dp)
-                                Box(
-                                    modifier = Modifier
-                                        .size(124.dp)
-                                        .clip(CircleShape)
-                                        .background(ITantraColors.SurfaceWhite)
-                                        .border(
-                                            1.5.dp,
-                                            if (isRecordingActive) ITantraColors.StatusDanger else if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.BorderStrong,
-                                            CircleShape
-                                        )
-                                        .pointerInput(coordinator, isPttMode) {
-                                            if (!isPttMode) {
-                                                awaitEachGesture {
-                                                    val down = awaitFirstDown(requireUnconsumed = false)
-                                                    down.consume()
-                                                    if (continuousListenState == ContinuousListenState.PAUSED) {
-                                                        coordinator.continuousListenEngine.resumeListening()
-                                                    } else {
-                                                        coordinator.continuousListenEngine.pauseListening()
-                                                    }
-                                                }
-                                            } else {
-                                                val lockSlidePx = 64.dp.toPx()
-                                                awaitEachGesture {
-                                                    val down = awaitFirstDown(requireUnconsumed = false)
-                                                    down.consume()
-
-                                                    if (isPttLocked) {
-                                                        isPttLocked = false
-                                                        isTransmitting = false
-                                                        coordinator.stopActiveRecording()
-                                                        return@awaitEachGesture
-                                                    }
-
-                                                    isTransmitting = true
-                                                    coordinator.startRecording()
-
-                                                    var locked = false
-                                                    try {
-                                                        while (true) {
-                                                            val event = awaitPointerEvent()
-                                                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                                            if (!change.pressed) break
-                                                            change.consume()
-                                                            if (down.position.y - change.position.y >= lockSlidePx) {
-                                                                locked = true
-                                                                break
-                                                            }
-                                                        }
-                                                    } finally {
-                                                        if (locked) {
-                                                            isPttLocked = true
-                                                        } else {
-                                                            isTransmitting = false
-                                                            coordinator.stopActiveRecording()
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(44.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    if (isRecordingActive) ITantraColors.ErrorContainer
-                                                    else if (!isPttMode) Color(0xFFDCFCE7)
-                                                    else ITantraColors.AccentSubtle
-                                                )
-                                                .border(
-                                                    1.dp,
-                                                    if (isRecordingActive) ITantraColors.ErrorContainer
-                                                    else if (!isPttMode) Color(0xFFBBF7D0)
-                                                    else ITantraColors.AccentSubtle,
-                                                    CircleShape
-                                                ),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                if (isRecordingActive) Icons.Filled.GraphicEq
-                                                else if (!isPttMode) Icons.Filled.Mic
-                                                else Icons.Filled.Mic,
-                                                contentDescription = null,
-                                                tint = if (isRecordingActive) ITantraColors.StatusDanger
-                                                else if (!isPttMode) ITantraColors.StatusSuccess
-                                                else ITantraColors.Primary,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                        }
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            if (!isPttMode) {
-                                                when (continuousListenState) {
-                                                    ContinuousListenState.SPEECH_DETECTED -> "VOICE ACTIVE"
-                                                    ContinuousListenState.FINALIZING -> "PROCESSING"
-                                                    ContinuousListenState.SEGMENT_READY -> "TRANSMITTING"
-                                                    ContinuousListenState.PAUSED -> "PAUSED"
-                                                    else -> "LISTENING..."
-                                                }
-                                            }
-                                            else if (isPttLocked) "TAP TO SEND"
-                                            else if (isTransmitting) "TRANSMITTING"
-                                            else "HOLD TO TALK",
-                                            fontFamily = FontFamily.SansSerif,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (isRecordingActive) ITantraColors.StatusDanger else ITantraColors.TextHeadline,
-                                            letterSpacing = 0.5.sp
-                                        )
-                                        Text(
-                                            if (!isPttMode) {
-                                                if (continuousListenState == ContinuousListenState.PAUSED) "TAP TO RESUME" else "HANDS-FREE VAD"
-                                            }
-                                            else if (isPttLocked) "RECORD LOCKED" else "AI TRANSCEIVER",
-                                            fontFamily = FontFamily.Monospace,
-                                            fontSize = 7.5.sp,
-                                            color = if (isPttLocked) ITantraColors.StatusDanger else ITantraColors.TextMuted,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (!isPttMode) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "HANDS-FREE SILERO VAD · PAUSE TO TRANSMIT",
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 8.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF16A34A),
-                            letterSpacing = 0.5.sp
-                        )
-                    } else if (isTransmitting && !isPttLocked) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "↑ SLIDE UP TO LOCK",
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ITantraColors.TextMuted,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-
-                    if (isPttLocked) {
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = {
-                                isPttLocked = false
-                                isTransmitting = false
-                                coordinator.stopActiveRecording()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger, contentColor = ITantraColors.OnError),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.padding(horizontal = 24.dp)
-                        ) {
-                            Icon(Icons.Filled.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("RECORDING LOCKED — TAP TO SEND", fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                        }
-                    }
-                }
-            }
-
-            // 8. Emergency Quick Codes Panel (Clean, Fixed Flex Row, No Collision!)
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.ErrorContainer),
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f, fill = false)
-                            ) {
-                                Icon(
-                                    Icons.Filled.Warning,
-                                    contentDescription = null,
-                                    tint = ITantraColors.StatusDanger,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    "EMERGENCY QUICK CODES",
-                                    fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = ITantraColors.StatusDanger,
-                                    letterSpacing = 0.3.sp
-                                )
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .background(Color(0xFFFEF2F2), RoundedCornerShape(4.dp))
-                                    .border(1.dp, ITantraColors.ErrorContainer, RoundedCornerShape(4.dp))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    "REQUIRES CONFIRMATION DIALOG",
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 7.5.sp,
-                                    color = ITantraColors.StatusDanger,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
-                        }
-
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            "Select critical tactical preset code or trigger priority broadcast. Transmission requires operator authorization.",
-                            fontSize = 10.sp,
-                            color = ITantraColors.TextMuted,
-                            lineHeight = 14.sp
-                        )
-                        Spacer(Modifier.height(10.dp))
-
-                        // 2x2 Grid of Emergency Preset Buttons
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TacticalEmergencyPresetButton(
-                                title = "EVACUATE",
-                                code = "CODE-E1",
-                                icon = Icons.AutoMirrored.Filled.DirectionsRun,
-                                iconColor = ITantraColors.StatusDanger,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                pendingEmergencyCode = "EVACUATION (CODE-E1)"
-                                showEmergencyConfirm = true
-                            }
-                            TacticalEmergencyPresetButton(
-                                title = "MEDICAL SOS",
-                                code = "CODE-M2",
-                                icon = Icons.Filled.MedicalServices,
-                                iconColor = ITantraColors.StatusDanger,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                pendingEmergencyCode = "MEDICAL SOS (CODE-M2)"
-                                showEmergencyConfirm = true
-                            }
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TacticalEmergencyPresetButton(
-                                title = "ROUTE BLOCKED",
-                                code = "CODE-B3",
-                                icon = Icons.Filled.Block,
-                                iconColor = ITantraColors.StatusWarning,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                pendingEmergencyCode = "ROUTE BLOCKED (CODE-B3)"
-                                showEmergencyConfirm = true
-                            }
-                            TacticalEmergencyPresetButton(
-                                title = "ASSISTANCE REQ.",
-                                code = "CODE-A4",
-                                icon = Icons.Filled.Sos,
-                                iconColor = ITantraColors.Primary,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                pendingEmergencyCode = "ASSISTANCE REQUIRED (CODE-A4)"
-                                showEmergencyConfirm = true
-                            }
-                        }
-
-                        Spacer(Modifier.height(10.dp))
-
-                        // Full-width Critical PTT Trigger Button
-                        Button(
-                            onClick = {
-                                pendingEmergencyCode = "CRITICAL PRIORITY BROADCAST"
-                                showEmergencyConfirm = true
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger, contentColor = ITantraColors.OnError),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Icon(Icons.Filled.Campaign, contentDescription = null, tint = ITantraColors.OnError, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "TRIGGER CRITICAL PTT BROADCAST",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.5.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-            }
-
-            // 9. Comms Message History Section
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.BorderSubtle),
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Filled.History,
-                                    contentDescription = null,
-                                    tint = ITantraColors.Primary,
-                                    modifier = Modifier.size(17.dp)
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    "COMMS MESSAGE HISTORY",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.5.sp,
-                                    color = ITantraColors.TextHeadline,
-                                    letterSpacing = 0.3.sp
-                                )
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                TextButton(
-                                    onClick = onNavigateToMessages,
-                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                                    modifier = Modifier.height(30.dp)
-                                ) {
-                                    Text(
-                                        "CHATS",
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 8.5.sp,
-                                        color = ITantraColors.Primary
-                                    )
-                                }
-                                TextButton(
-                                    onClick = onNavigateToVoiceNotes,
-                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                                    modifier = Modifier.height(30.dp)
-                                ) {
-                                    Text(
-                                        "VOICE NOTES",
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 8.5.sp,
-                                        color = ITantraColors.Primary
-                                    )
-                                }
-                                Text(
-                                    "REV-CHRONOLOGICAL",
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 8.5.sp,
-                                    color = ITantraColors.TextMuted
-                                )
-                            }
-                        }
-
-                        Spacer(Modifier.height(10.dp))
-
-                        // Filter Chips
-                        val filterCounts = remember(allMessages) {
-                            mapOf(
-                                MessageFilter.ALL to allMessages.size,
-                                MessageFilter.FAILED to allMessages.count { it.isFailed },
-                                MessageFilter.EMERGENCY to allMessages.count { it.isEmergency }
-                            )
-                        }
-                        MessageFilterChipsRow(
-                            selected = selectedFilter,
-                            onSelect = { selectedFilter = it },
-                            counts = filterCounts
-                        )
-
-                        Spacer(Modifier.height(10.dp))
-
-                        // Message Items
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            if (filteredMessages.isEmpty()) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
-                                        .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
-                                        .padding(20.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "No radio transmissions yet. Hold PTT to transmit.",
-                                        fontSize = 11.sp,
-                                        color = ITantraColors.TextMuted,
-                                        fontFamily = FontFamily.Monospace
-                                    )
-                                }
-                            } else {
-                                filteredMessages.forEach { msg ->
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
-                                            .border(
-                                                1.dp,
-                                                if (msg.isEmergency) ITantraColors.ErrorContainer
-                                                else if (msg.isFailed) Color(0xFFFED7AA)
-                                                else ITantraColors.BorderSubtle,
-                                                RoundedCornerShape(8.dp)
-                                            )
-                                            .padding(10.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.weight(1f, fill = false),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    msg.sender,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 11.sp,
-                                                    color = if (msg.isEmergency) ITantraColors.StatusDanger else ITantraColors.TextHeadline,
-                                                    maxLines = 1
-                                                )
-                                                Spacer(Modifier.width(6.dp))
-                                                Box(
-                                                    modifier = Modifier
-                                                        .background(
-                                                            if (msg.isEmergency) ITantraColors.ErrorContainer
-                                                            else if (msg.isFailed) ITantraColors.WarningContainer
-                                                            else ITantraColors.AccentSubtle,
-                                                            RoundedCornerShape(3.dp)
-                                                        )
-                                                        .border(
-                                                            1.dp,
-                                                            if (msg.isEmergency) ITantraColors.ErrorContainer
-                                                            else if (msg.isFailed) ITantraColors.WarningContainer
-                                                            else Color(0xFFBFDBFE),
-                                                            RoundedCornerShape(3.dp)
-                                                        )
-                                                        .padding(horizontal = 4.dp, vertical = 1.dp)
-                                                ) {
-                                                    Text(
-                                                        msg.langPair,
-                                                        fontFamily = FontFamily.Monospace,
-                                                        fontSize = 8.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = if (msg.isEmergency) ITantraColors.StatusDanger
-                                                        else if (msg.isFailed) ITantraColors.StatusWarning
-                                                        else ITantraColors.Primary
-                                                    )
-                                                }
-                                            }
-                                            Text(
-                                                msg.time,
-                                                fontFamily = FontFamily.Monospace,
-                                                fontSize = 9.sp,
-                                                color = ITantraColors.TextMuted,
-                                                softWrap = false,
-                                                maxLines = 1,
-                                                modifier = Modifier.padding(start = 8.dp)
-                                            )
-                                        }
-
-                                        // The translation-scope note is a standing fact about
-                                        // this build, not a per-message failure - it's shown
-                                        // once, calmly, near the top of the screen instead (see
-                                        // TranslationScopeBanner) rather than as a red error
-                                        // repeated on every single message card.
-                                        if (msg.isVoiceNote && msg.statusDetail != null) {
-                                            Spacer(Modifier.height(4.dp))
-                                            Box(
-                                                modifier = Modifier
-                                                    .background(ITantraColors.SurfaceVariant, RoundedCornerShape(3.dp))
-                                                    .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(3.dp))
-                                                    .padding(horizontal = 5.dp, vertical = 2.dp)
-                                            ) {
-                                                Text(
-                                                    msg.statusDetail.uppercase(),
-                                                    fontFamily = FontFamily.Monospace,
-                                                    fontSize = 7.5.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = ITantraColors.TextMuted
-                                                )
-                                            }
-                                        }
-                                        if (msg.statusDetail != null && !msg.isTranslationScopeNote && !msg.isVoiceNote) {
-                                            Spacer(Modifier.height(4.dp))
-                                            Box(
-                                                modifier = Modifier
-                                                    .background(ITantraColors.ErrorContainer, RoundedCornerShape(3.dp))
-                                                    .border(1.dp, ITantraColors.ErrorContainer, RoundedCornerShape(3.dp))
-                                                    .padding(horizontal = 5.dp, vertical = 2.dp)
-                                            ) {
-                                                Text(
-                                                    msg.statusDetail.uppercase(),
-                                                    fontFamily = FontFamily.Monospace,
-                                                    fontSize = 7.5.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = ITantraColors.StatusDanger
-                                                )
-                                            }
-                                        }
-
-                                        Spacer(Modifier.height(6.dp))
-                                        Text(
-                                            "“${msg.text}”",
-                                            fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = ITantraColors.TextHeadline,
-                                            lineHeight = 16.sp
-                                        )
-
-                                        if (!msg.translation.isNullOrBlank()) {
-                                            Spacer(Modifier.height(4.dp))
-                                            Row(verticalAlignment = Alignment.Top) {
-                                                Text(
-                                                    "EN: ",
-                                                    fontFamily = FontFamily.Monospace,
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = ITantraColors.Primary
-                                                )
-                                                Text(
-                                                    msg.translation,
-                                                    fontSize = 11.5.sp,
-                                                    color = ITantraColors.TextBody,
-                                                    lineHeight = 16.sp
-                                                )
-                                            }
-                                        }
-
-                                    Spacer(Modifier.height(6.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                Icons.Filled.PlayArrow,
-                                                contentDescription = null,
-                                                tint = ITantraColors.TextMuted,
-                                                modifier = Modifier.size(13.dp)
-                                            )
-                                            Spacer(Modifier.width(3.dp))
-                                            Text(
-                                                msg.duration,
-                                                fontFamily = FontFamily.Monospace,
-                                                fontSize = 8.5.sp,
-                                                color = ITantraColors.TextMuted
-                                            )
-                                        }
-
-                                        if (msg.isFailed) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                val failureLabel = msg.statusDetail ?: "Transmission Failed"
-                                                Text(
-                                                    failureLabel,
-                                                    fontSize = 8.5.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = ITantraColors.StatusDanger
-                                                )
-                                                Spacer(Modifier.width(4.dp))
-                                                Box(
-                                                    modifier = Modifier
-                                                        .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(4.dp))
-                                                        .padding(horizontal = 4.dp, vertical = 1.dp)
-                                                        .clickable { }
-                                                ) {
-                                                    Text(
-                                                        "↻ Retry",
-                                                        fontSize = 8.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = ITantraColors.TextHeadline
-                                                    )
-                                                }
-                                            }
-                                        } else {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    Icons.Filled.DoneAll,
-                                                    contentDescription = null,
-                                                    tint = ITantraColors.StatusSuccess,
-                                                    modifier = Modifier.size(11.dp)
-                                                )
-                                                Spacer(Modifier.width(2.dp))
-                                                Text(
-                                                    msg.state,
-                                                    fontFamily = FontFamily.Monospace,
-                                                    fontSize = 8.5.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = ITantraColors.StatusSuccess
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (showEmergencySheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showEmergencySheet = false },
-            containerColor = ITantraColors.SurfaceWhite,
-        ) {
-            Column(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Warning, contentDescription = null, tint = ITantraColors.StatusDanger)
-                    Spacer(Modifier.width(8.dp))
-                    Column {
-                        Text("Emergency actions", fontWeight = FontWeight.ExtraBold, color = ITantraColors.StatusDanger)
-                        Text("Every action requires confirmation before transmission.", fontSize = 11.sp, color = ITantraColors.TextMuted)
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    TacticalEmergencyPresetButton("EVACUATE", "CODE-E1", Icons.AutoMirrored.Filled.DirectionsRun, ITantraColors.StatusDanger, Modifier.weight(1f)) {
-                        pendingEmergencyCode = "EVACUATION (CODE-E1)"; showEmergencySheet = false; showEmergencyConfirm = true
-                    }
-                    TacticalEmergencyPresetButton("MEDICAL SOS", "CODE-M2", Icons.Filled.MedicalServices, ITantraColors.StatusDanger, Modifier.weight(1f)) {
-                        pendingEmergencyCode = "MEDICAL SOS (CODE-M2)"; showEmergencySheet = false; showEmergencyConfirm = true
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    TacticalEmergencyPresetButton("ROUTE BLOCKED", "CODE-B3", Icons.Filled.Block, ITantraColors.StatusWarning, Modifier.weight(1f)) {
-                        pendingEmergencyCode = "ROUTE BLOCKED (CODE-B3)"; showEmergencySheet = false; showEmergencyConfirm = true
-                    }
-                    TacticalEmergencyPresetButton("ASSISTANCE REQ.", "CODE-A4", Icons.Filled.Sos, ITantraColors.Primary, Modifier.weight(1f)) {
-                        pendingEmergencyCode = "ASSISTANCE REQUIRED (CODE-A4)"; showEmergencySheet = false; showEmergencyConfirm = true
-                    }
-                }
-                Button(
-                    onClick = { pendingEmergencyCode = "CRITICAL PRIORITY BROADCAST"; showEmergencySheet = false; showEmergencyConfirm = true },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger, contentColor = ITantraColors.OnError),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(Icons.Filled.Campaign, contentDescription = null, tint = ITantraColors.OnError)
-                    Spacer(Modifier.width(8.dp))
-                    Text("TRIGGER CRITICAL BROADCAST", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    }
-
-    if (showEmergencyConfirm) {
-        Dialog(onDismissRequest = { showEmergencyConfirm = false }) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
-                border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.StatusDanger),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(ITantraColors.ErrorContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Filled.Warning,
-                                contentDescription = null,
-                                tint = ITantraColors.StatusDanger,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Column {
-                            Text(
-                                "Confirm Emergency Broadcast",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = ITantraColors.TextHeadline
-                            )
-                            Text(
-                                "PRIORITY OVERRIDE TRANSMISSION",
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 9.sp,
-                                color = ITantraColors.StatusDanger
-                            )
-                        }
-                    }
-
-                    Text(
-                        "Emergency Priority Broadcast: Are you sure you want to transmit on active radio channel? (Preset: ${pendingEmergencyCode ?: "EVACUATE"})",
-                        fontSize = 12.sp,
-                        color = ITantraColors.TextBody,
-                        lineHeight = 17.sp
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(ITantraColors.WarningContainer, RoundedCornerShape(6.dp))
-                            .border(1.dp, ITantraColors.WarningContainer, RoundedCornerShape(6.dp))
-                            .padding(8.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.Top) {
-                            Icon(
-                                Icons.Filled.Info,
-                                contentDescription = null,
-                                tint = ITantraColors.OnWarningContainer,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                "This priority transmission interrupts active non-critical voice streams across connected peers.",
-                                fontSize = 10.sp,
-                                color = Color(0xFF78350F),
-                                lineHeight = 14.sp
-                            )
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Button(
-                            onClick = { showEmergencyConfirm = false },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.SurfaceVariant),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text("Cancel", color = ITantraColors.TextHeadline, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                        Button(
-                            onClick = {
-                                val emergencyCode = when {
-                                    pendingEmergencyCode?.contains("EVACUATE") == true || pendingEmergencyCode?.contains("CODE-E1") == true -> EmergencyCode.EVACUATE
-                                    pendingEmergencyCode?.contains("MEDICAL") == true || pendingEmergencyCode?.contains("CODE-M2") == true -> EmergencyCode.MEDICAL_EMERGENCY
-                                    pendingEmergencyCode?.contains("ROUTE") == true || pendingEmergencyCode?.contains("CODE-B3") == true -> EmergencyCode.ROAD_BLOCKED
-                                    else -> EmergencyCode.HELP_REQUIRED
-                                }
-                                coordinator.sendEmergencyCode(emergencyCode)
-                                pendingEmergencyCode?.let { onSendEmergency(it) }
-                                showEmergencyConfirm = false
-                            },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger, contentColor = ITantraColors.OnError),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text("Authorize & Send", color = ITantraColors.OnError, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-}
-
-/**
- * Standing, calm notice that translation isn't included in this build. Deliberately styled
- * neutral (TextMuted, outlined) rather than a warning/error color - this is a stated scope
- * decision, not something wrong with the app. Shown once at the top of the hub instead of
- * repeated as a red badge on every message.
- */
-@Composable
-private fun TranslationScopeBanner() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(ITantraColors.CanvasBg)
-            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            Icons.Filled.Mic,
-            contentDescription = null,
-            tint = ITantraColors.TextMuted,
-            modifier = Modifier.size(13.dp)
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            "Voice transcripts only \u2014 translation not included in this build",
-            fontSize = 9.5.sp,
-            color = ITantraColors.TextMuted,
-        )
-    }
-}
-
-@Composable
-private fun SpokeCard(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    Card(
-        modifier = modifier.clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.BorderSubtle),
-    ) {
-        Column(modifier = Modifier.padding(8.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(26.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(ITantraColors.AccentSubtle),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(icon, contentDescription = null, tint = ITantraColors.Primary, modifier = Modifier.size(15.dp))
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = ITantraColors.TextMuted,
-                    modifier = Modifier.size(14.dp)
-                )
-            }
-            Spacer(Modifier.height(6.dp))
-            Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = ITantraColors.TextHeadline, maxLines = 1)
-            Text(subtitle, fontSize = 8.5.sp, color = ITantraColors.TextMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-    }
-}
-
-@Composable
-private fun HubBottomControls(
-    coordinator: TransceiverCoordinator,
-    isPttMode: Boolean,
-    onPttModeChange: (Boolean) -> Unit,
-    isTransmitting: Boolean,
-    isPttLocked: Boolean,
-    continuousListenState: ContinuousListenState,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onLock: () -> Unit,
-    onEmergency: () -> Unit,
-) {
-    val isRecordingActive = if (isPttMode) isTransmitting || isPttLocked else
-        continuousListenState == ContinuousListenState.SPEECH_DETECTED || continuousListenState == ContinuousListenState.FINALIZING
-
-    Surface(color = ITantraColors.SurfaceWhite, shadowElevation = 8.dp) {
-        Column(
-            modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().background(ITantraColors.BorderSubtle, RoundedCornerShape(10.dp)).padding(3.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
-                        .background(if (isPttMode) ITantraColors.SurfaceWhite else Color.Transparent)
-                        .clickable { onPttModeChange(true) }.padding(vertical = 7.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.TouchApp, contentDescription = null, tint = if (isPttMode) ITantraColors.Primary else ITantraColors.TextMuted, modifier = Modifier.size(15.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("PUSH TO TALK", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = if (isPttMode) ITantraColors.Primary else ITantraColors.TextMuted)
-                    }
-                }
-                Box(
-                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
-                        .background(if (!isPttMode) ITantraColors.SurfaceWhite else Color.Transparent)
-                        .clickable { onPttModeChange(false) }.padding(vertical = 7.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.GraphicEq, contentDescription = null, tint = if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.TextMuted, modifier = Modifier.size(15.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("CONTINUOUS VAD", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = if (!isPttMode) ITantraColors.TextHeadline else ITantraColors.TextMuted)
-                    }
-                }
-            }
-
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onEmergency,
-                    modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(ITantraColors.ErrorContainer).border(1.dp, ITantraColors.StatusDanger, RoundedCornerShape(12.dp))
-                ) {
-                    Icon(Icons.Filled.Sos, contentDescription = "Open emergency actions", tint = ITantraColors.StatusDanger, modifier = Modifier.size(25.dp))
-                }
-                Spacer(Modifier.weight(1f))
-                Box(
-                    modifier = Modifier.size(124.dp).clip(CircleShape)
-                        .background(if (isRecordingActive) ITantraColors.ErrorContainer else if (!isPttMode) Color(0xFFF0FDF4) else ITantraColors.AccentSubtle)
-                        .border(2.dp, if (isRecordingActive) ITantraColors.StatusDanger else if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.Primary, CircleShape)
-                        .pointerInput(coordinator, isPttMode, isPttLocked, continuousListenState) {
-                            if (!isPttMode) {
-                                awaitEachGesture {
-                                    val down = awaitFirstDown(requireUnconsumed = false)
-                                    down.consume()
-                                    if (continuousListenState == ContinuousListenState.PAUSED) coordinator.continuousListenEngine.resumeListening()
-                                    else coordinator.continuousListenEngine.pauseListening()
-                                }
-                            } else {
-                                val lockSlidePx = 64.dp.toPx()
-                                awaitEachGesture {
-                                    val down = awaitFirstDown(requireUnconsumed = false)
-                                    down.consume()
-                                    if (isPttLocked) {
-                                        onStop()
-                                        return@awaitEachGesture
-                                    }
-                                    onStart()
-                                    var locked = false
-                                    try {
-                                        while (true) {
-                                            val event = awaitPointerEvent()
-                                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                            if (!change.pressed) break
+                    val label = if (!modelReady) "Prepare speech models" else if (handsFree) "Pause or resume listening" else if (recording) "Finish recording" else "Start recording"
+                    Box(Modifier.size(132.dp).border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = .2f), CircleShape), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(118.dp).border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = .35f), CircleShape), contentAlignment = Alignment.Center) {
+                            Box(Modifier.size(104.dp).shadow(6.dp, CircleShape)
+                                .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, lerp(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary, .15f))), CircleShape)
+                                .semantics { role = Role.Button; stateDescription = if (recording) "Recording" else "Idle"; onClick(label) { toggle(); true } }
+                                .onKeyEvent { event -> if (event.type == KeyEventType.KeyUp && event.key in listOf(Key.Enter, Key.Spacebar, Key.DirectionCenter)) { toggle(); true } else false }
+                                .focusable().pointerInput(handsFree, locked, modelReady, continuous) {
+                                    awaitEachGesture {
+                                        val down = awaitFirstDown(requireUnconsumed = false); down.consume()
+                                        if (handsFree || !modelReady || locked) { toggle(); return@awaitEachGesture }
+                                        start(); var slideLocked = false; var released = false
+                                        try { while (true) {
+                                            val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                                            if (!change.pressed) { released = true; break }
+                                            if (down.position.y - change.position.y > 64.dp.toPx()) { slideLocked = true; break }
                                             change.consume()
-                                            if (down.position.y - change.position.y >= lockSlidePx) { locked = true; break }
-                                        }
-                                    } finally {
-                                        if (locked) onLock() else onStop()
+                                        } } finally { when { slideLocked -> locked = true; released -> stop(); else -> cancel() } }
                                     }
+                                }, contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Icon(if (!modelReady) Icons.Filled.Download else if (recording || handsFree) Icons.Filled.GraphicEq else Icons.Filled.Mic,
+                                        null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(30.dp))
+                                    Text(if (!modelReady) "Get models" else if (recording) "Recording" else if (handsFree) when (continuous) {
+                                        ContinuousListenState.OFF, ContinuousListenState.ERROR -> "Tap to retry"
+                                        ContinuousListenState.PAUSED -> "Paused"
+                                        else -> "Listening"
+                                    } else "Hold to talk",
+                                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary)
                                 }
                             }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(if (isRecordingActive) Icons.Filled.GraphicEq else Icons.Filled.Mic, contentDescription = "Push to talk", tint = if (isRecordingActive) ITantraColors.StatusDanger else if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.Primary, modifier = Modifier.size(30.dp))
-                        Text(
-                            if (!isPttMode) when (continuousListenState) {
-                                ContinuousListenState.SPEECH_DETECTED -> "VOICE ACTIVE"
-                                ContinuousListenState.FINALIZING -> "PROCESSING"
-                                ContinuousListenState.SEGMENT_READY -> "TRANSMITTING"
-                                ContinuousListenState.PAUSED -> "PAUSED"
-                                else -> "LISTENING"
-                            } else if (isPttLocked) "TAP TO SEND" else if (isTransmitting) "TRANSMITTING" else "HOLD TO TALK",
-                            fontSize = 9.sp, fontWeight = FontWeight.Bold, color = ITantraColors.TextHeadline
-                        )
+                        }
+                    }
+                    Text(if (locked) "Recording locked" else if (!modelReady) "Prepare once. Speak offline." else if (handsFree) continuous.name.replace('_', ' ').lowercase() else "Press. Speak. Release.", style = MaterialTheme.typography.titleSmall)
+                    Text(if (!modelReady) "Tap to open language packs" else if (handsFree) "Tap to start or pause listening" else "Slide up while holding to record hands-free",
+                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (recording) Row { Button(onClick = stop) { Text("Finish") }; Spacer(Modifier.width(8.dp))
+                        OutlinedButton(onClick = cancel) { Text("Cancel") } }
+                    voiceError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Icon(Icons.Filled.Shield, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(14.dp))
+                        Text(if (verified) "Processed locally · sent directly to your peer" else "No peer connected · transcripts saved locally", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                Spacer(Modifier.weight(1f))
-                if (isPttLocked) {
-                    IconButton(onClick = onStop, modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(ITantraColors.StatusDanger)) {
-                        Icon(Icons.Filled.Stop, contentDescription = "Send recording", tint = ITantraColors.OnError)
-                    }
-                } else {
-                    Spacer(Modifier.size(52.dp))
+            } }
+            item { Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                HubShortcut("Voice notes", "$savedNotesCount saved transcripts", Icons.Filled.Notes, Modifier.weight(1f), onNavigateToVoiceNotes)
+                HubShortcut("Language packs", "${packs.count { it.isSttDownloaded && it.isTtsDownloaded }} speech pairs installed", Icons.Filled.Language, Modifier.weight(1f), onNavigateToLanguagePacks)
+            } }
+            item { OutlinedButton(onClick = onNavigateToRecycleBin, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                Icon(Icons.Filled.RestoreFromTrash, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                Text("Recycle bin · ${trash.size + deletedNotesCount} items · restore within 7 days", style = MaterialTheme.typography.labelMedium)
+            } }
+            if (filtered.isNotEmpty()) {
+                item { Text("Saved messages", style = MaterialTheme.typography.titleMedium) }
+                groups.forEach { (group, rows) ->
+                    item(key = "date-${group.bucket}-${group.olderMonth}") { Text(group.title(), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary) }
+                    items(rows, key = { it.messageId }) { message -> HistoryMessageCard(message, { pendingDelete = message }, {
+                        if (!coordinator.retryMessage(message.messageId)) scope.launch { snack.showSnackbar("Reconnect the original peer, or copy the transcript into a new message.") }
+                    }, { coordinator.sendHumanAck(message.messageId) }) }
                 }
             }
-            Text(
-                if (!isPttMode) "Tap the microphone to pause or resume hands-free listening" else "Hold to talk · slide up to lock",
-                modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                fontFamily = FontFamily.Monospace, fontSize = 8.5.sp, color = ITantraColors.TextMuted
-            )
+            item { Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(18.dp)) {
+                Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(Icons.Filled.Phonelink, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Column { Text("A connection, even without the internet.", style = MaterialTheme.typography.titleSmall)
+                        Text("Pair nearby phones. Installed speech models work locally.", style = MaterialTheme.typography.bodySmall) }
+                }
+            } }
+        }
+    }
+
+    picker?.let { kind -> AlertDialog(onDismissRequest = { picker = null }, title = { Text(if (kind == "mic") "Microphone language" else "Translate to") }, text = { LazyColumn {
+        item { TextButton(onClick = { if (kind == "target") AppGraph.setTargetLanguage(null) else scope.launch { AppGraph.languagePackRepository.setSpeechInputMode(SpeechInputMode.AUTO) }; picker = null }) { Text("Auto") } }
+        items(LanguageCatalog.all) { language -> val installed = packs.any { it.language.code == language.code && it.isSttDownloaded }
+            TextButton(onClick = { if (kind == "mic") AppGraph.setMicLanguage(language.code) else AppGraph.setTargetLanguage(language.code); picker = null }, enabled = kind != "mic" || installed) {
+                Text(language.nativeDisplayName + if (kind == "mic" && !installed) " · download first" else "")
+            }
+        }
+    } }, confirmButton = { TextButton(onClick = { picker = null; onNavigateToLanguagePacks() }) { Text("Language packs") } }) }
+    pendingDelete?.let { message -> AlertDialog(onDismissRequest = { pendingDelete = null }, title = { Text("Move to recycle bin?") },
+        text = { Text("Restore within 7 days. This deletes only your local history, not a peer's copy or the separate voice note.") },
+        confirmButton = { TextButton(onClick = { pendingDelete = null; if (coordinator.moveMessageToTrash(message.messageId)) scope.launch {
+            if (snack.showSnackbar("Moved to recycle bin", "Undo") == SnackbarResult.ActionPerformed) coordinator.restoreMessage(message.messageId)
+        } }) { Text("Move to bin") } }, dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Keep") } }) }
+}
+
+@Composable
+private fun HubLanguageChoice(label: String, value: String, icon: ImageVector, enabled: Boolean,
+    modifier: Modifier, onClick: () -> Unit) {
+    OutlinedCard(onClick = onClick, enabled = enabled, modifier = modifier.heightIn(min = 68.dp),
+        shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(icon, null, Modifier.size(13.dp), tint = MaterialTheme.colorScheme.primary)
+                Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(value, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Icon(Icons.Filled.ExpandMore, null, Modifier.size(16.dp))
+            }
         }
     }
 }
 
 @Composable
-private fun TacticalEmergencyPresetButton(
-    title: String,
-    code: String,
-    icon: ImageVector,
-    iconColor: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(ITantraColors.CanvasBg)
-            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 7.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f, fill = false)
-            ) {
-                Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(14.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 9.5.sp,
-                    color = ITantraColors.TextHeadline,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+private fun HubShortcut(title: String, subtitle: String, icon: ImageVector, modifier: Modifier,
+    onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = modifier.heightIn(min = 76.dp), shape = RoundedCornerShape(18.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(icon, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+            Column {
+                Text(title, style = MaterialTheme.typography.labelMedium)
+                Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
-            Spacer(Modifier.width(4.dp))
-            Text(
-                code,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 8.sp,
-                color = ITantraColors.TextMuted
-            )
         }
     }
 }

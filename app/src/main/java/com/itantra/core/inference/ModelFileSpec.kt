@@ -61,7 +61,7 @@ object ModelFileSpecs {
             requiredFiles = listOf(
                 modelFile,
                 "tokens.txt"
-            ),
+            ) + if (lang == LanguageCode.MARATHI) MarathiPiperVoice.requiredDataFiles else emptyList(),
             mainModelFile = modelFile,
             tokensFile = "tokens.txt",
             auxFile = ""

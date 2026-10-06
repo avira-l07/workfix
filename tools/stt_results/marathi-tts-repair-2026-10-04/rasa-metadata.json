@@ -1,0 +1,61 @@
+{
+  "url": "https://huggingface.co/api/models/ai4bharat/vits_rasa_13?blobs=true",
+  "sha": "00b1590501b55708d5d66be51bae336b51bce1d2",
+  "files": [
+    {
+      "name": ".gitattributes",
+      "size": 1519,
+      "lfs": null
+    },
+    {
+      "name": "README.md",
+      "size": 4130,
+      "lfs": null
+    },
+    {
+      "name": "config.json",
+      "size": 1918,
+      "lfs": null
+    },
+    {
+      "name": "configuration_vits.py",
+      "size": 13394,
+      "lfs": null
+    },
+    {
+      "name": "model.safetensors",
+      "size": 160708568,
+      "lfs": {
+        "sha256": "0596e963e176aa71b4f581ea3e69d9deceff4ae20caa2752b6ffa970e721fc91",
+        "size": 160708568,
+        "pointerSize": 134
+      }
+    },
+    {
+      "name": "modeling_vits.py",
+      "size": 67963,
+      "lfs": null
+    },
+    {
+      "name": "special_tokens_map.json",
+      "size": 275,
+      "lfs": null
+    },
+    {
+      "name": "tokenization_vits.py",
+      "size": 7176,
+      "lfs": null
+    },
+    {
+      "name": "tokenizer_config.json",
+      "size": 795,
+      "lfs": null
+    },
+    {
+      "name": "vocab.json",
+      "size": 17178,
+      "lfs": null
+    }
+  ],
+  "license": "cc-by-4.0"
+}

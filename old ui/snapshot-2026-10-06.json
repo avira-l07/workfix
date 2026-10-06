@@ -1,0 +1,107 @@
+[
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\components\\BatteryIndicator.kt",
+    "backup": "old ui\\components\\BatteryIndicator.kt",
+    "sha256": "4424919cddd4019bf2ecc880d09dc4312a59e04a21de94dc08ce876938078df1"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\components\\MessageFilterChipsRow.kt",
+    "backup": "old ui\\components\\MessageFilterChipsRow.kt",
+    "sha256": "75cce10dca41a856aef08d32529087dfadeb16eba4983ee9c9942c3e449e1111"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\components\\RadioHardwareStatus.kt",
+    "backup": "old ui\\components\\RadioHardwareStatus.kt",
+    "sha256": "04d10420265db50556757bec6e4a1b436333ba1b13623d19441d85576eccbafb"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\theme\\Color.kt",
+    "backup": "old ui\\theme\\Color.kt",
+    "sha256": "07b15b0ef1122ecd459ddc9d4a4f7ae7ab6ca5430328c4b77229073c22fc425a"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\theme\\Theme.kt",
+    "backup": "old ui\\theme\\Theme.kt",
+    "sha256": "360dff32286da46927d5a837369613eb55c518884d777dcf14158df914fc2547"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\theme\\Type.kt",
+    "backup": "old ui\\theme\\Type.kt",
+    "sha256": "b90ec46fa605518996c670caea1290195469e0ff1929c6982ee9897d9054c428"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\chat\\DateUtils.kt",
+    "backup": "old ui\\screens\\chat\\DateUtils.kt",
+    "sha256": "5f5d2ed8cb236b6a8b330f26826bdef5fac63f0d1d01596e097e0dc3844f509a"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\chat\\DedicatedChatScreen.kt",
+    "backup": "old ui\\screens\\chat\\DedicatedChatScreen.kt",
+    "sha256": "5b02b6a63c2840807d9af84289c88f9f0c80e6a2554f1f69d241c25a08615f34"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\connect\\ConnectScreenContent.kt",
+    "backup": "old ui\\screens\\connect\\ConnectScreenContent.kt",
+    "sha256": "579f7a2c6690cd8622607f0fa612ade611d71cc4b59fcdeb8796b59503bf46e5"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\diagnostics\\DiagnosticsScreen.kt",
+    "backup": "old ui\\screens\\diagnostics\\DiagnosticsScreen.kt",
+    "sha256": "fe49ea7f9ef80eb875ac9f693bff589cfb6e639970a01b4cc5c09ba5d73eaff5"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\hub\\TransceiverHubScreen.kt",
+    "backup": "old ui\\screens\\hub\\TransceiverHubScreen.kt",
+    "sha256": "7f6391bd63004e8088b4282b1dce09585ef39bc52533e9f12830bb0e4c1f2ab8"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\language\\LanguagePacksScreen.kt",
+    "backup": "old ui\\screens\\language\\LanguagePacksScreen.kt",
+    "sha256": "a0d7cf51233cdd3e07aa7de000ec3c5731551f65cf401debe69afc07ff054478"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\language\\TranslationReadiness.kt",
+    "backup": "old ui\\screens\\language\\TranslationReadiness.kt",
+    "sha256": "4543a7f5f18b36631c43ff9fb8414f0c0535cdaab4e75e1becc798867918b02e"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\messages\\ConversationList.kt",
+    "backup": "old ui\\screens\\messages\\ConversationList.kt",
+    "sha256": "edc72576d755755274b91d188b11b34bf1dd7449f8daa24d1fdbee44e847a157"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\messages\\MessagesScreen.kt",
+    "backup": "old ui\\screens\\messages\\MessagesScreen.kt",
+    "sha256": "685c0f3e52d59f54dcf0c0d092cf695be2ab91dd2ecc757e8ce82a80c79da61a"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\settings\\SettingsScreen.kt",
+    "backup": "old ui\\screens\\settings\\SettingsScreen.kt",
+    "sha256": "74fcc9d23cce4c84c4f16a10f32da5b02fd279a229d6b59776366990b34f4f61"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\settings\\SettingsViewModel.kt",
+    "backup": "old ui\\screens\\settings\\SettingsViewModel.kt",
+    "sha256": "4d64b05855652c9f43251d001496dce404b45a03b4572fb73bedd54d51135c19"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\settings\\WipeDataAction.kt",
+    "backup": "old ui\\screens\\settings\\WipeDataAction.kt",
+    "sha256": "a00aa6d79f07c8ba2872926d24e9b811e9135a2d10d4e9dd4a5c4f347a175111"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\voicenotes\\VoiceNoteGrouping.kt",
+    "backup": "old ui\\screens\\voicenotes\\VoiceNoteGrouping.kt",
+    "sha256": "5a2afbd1ff388ed6fb870a77a0c77855cb659f3c7f268cdadd573b3a4fcdc73d"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\ui\\screens\\voicenotes\\VoiceNotesScreen.kt",
+    "backup": "old ui\\screens\\voicenotes\\VoiceNotesScreen.kt",
+    "sha256": "af0511231014f145c17cf7e4fe1b4ae406398deeca2b2155843cd2828aaecb11"
+  },
+  {
+    "source": "app\\src\\main\\java\\com\\example\\itantra\\MainActivity.kt",
+    "backup": "old ui\\MainActivity.kt",
+    "sha256": "5c461b226633a2f059851ad5b6769131e107bbbeca0ea61d2fe9c4ec5f0aff80"
+  }
+]

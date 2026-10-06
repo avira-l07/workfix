@@ -43,6 +43,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,7 +72,7 @@ import kotlinx.coroutines.launch
  * Dedicated 1-on-1 Chat Screen for an isolated Bluetooth peer.
  * Groups messages by date with WhatsApp-style date separators,
  * displays 12-hour timestamps and delivery state indicators,
- * supports typed text messages and press-to-talk voice messages via Whisper STT.
+ * supports typed text messages and press-to-talk voice messages via offline speech recognition.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +103,7 @@ fun DedicatedChatScreen(
 
     var inputText by remember { mutableStateOf("") }
     val inputTooLong = inputText.toByteArray(Charsets.UTF_8).size > com.itantra.core.transport.packet.PacketEncoder.MAX_PLAINTEXT_BYTES
-    var isRecording by remember { mutableStateOf(false) }
+    val isRecording = chatMessages.any { it.source == MessageSource.LOCAL && it.state == MessageState.RECORDING }
     val listState = rememberLazyListState()
 
     // Auto-scroll to bottom when new message arrives
@@ -109,8 +117,17 @@ fun DedicatedChatScreen(
     DisposableEffect(peerId) {
         coordinator.setActiveConversation(peerId)
         onDispose {
+            coordinator.cancelActiveRecording()
             coordinator.setActiveConversation(null)
         }
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, coordinator) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) coordinator.cancelActiveRecording()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val effectivePeerName = matchingActivePeer?.displayName?.takeIf { it.isNotBlank() }
@@ -248,7 +265,7 @@ fun DedicatedChatScreen(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "Recording voice (Whisper STT)... Release to send",
+                                "Recording voice… Release to send",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = ITantraColors.OnErrorContainer,
                                 fontWeight = FontWeight.Medium
@@ -267,14 +284,22 @@ fun DedicatedChatScreen(
                                 .size(48.dp)
                                 .clip(CircleShape)
                                 .background(if (isRecording) ITantraColors.StatusDanger else ITantraColors.AccentSubtle)
-                                .then(if (isConnected) Modifier.pointerInput(Unit) {
+                                .then(if (isConnected) Modifier.semantics {
+                                    role = Role.Button
+                                    stateDescription = if (isRecording) "Recording" else "Idle"
+                                    onClick(if (isRecording) "Finish recording" else "Start recording") {
+                                        if (isRecording) coordinator.stopActiveRecording() else coordinator.startRecording()
+                                        true
+                                    }
+                                }.pointerInput(isConnected, peerId) {
                                     detectTapGestures(
                                         onPress = {
-                                            isRecording = true
                                             coordinator.startRecording()
-                                            tryAwaitRelease()
-                                            isRecording = false
-                                            coordinator.stopActiveRecording()
+                                            var released = false
+                                            try { released = tryAwaitRelease() } finally {
+                                                if (released) coordinator.stopActiveRecording()
+                                                else coordinator.cancelActiveRecording()
+                                            }
                                         }
                                     )
                                 } else Modifier),
@@ -681,6 +706,10 @@ fun MessageBubble(message: TransceiverMessage) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = ITantraColors.TextHeadline
                 )
+                com.example.itantra.ui.components.SavedSpeechButton("message-${message.messageId}",
+                    { com.itantra.app.AppGraph.transceiverCoordinator.replayMessage(message.messageId) },
+                    enabled = message.text.isNotBlank() && message.displayedTextLanguage != null &&
+                        message.state !in listOf(MessageState.RECORDING, MessageState.STT_PROCESSING))
 
                 Spacer(Modifier.height(4.dp))
 

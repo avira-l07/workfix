@@ -196,7 +196,7 @@ fun LanguagePacksScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Language Packs", style = MaterialTheme.typography.titleMedium)
+                        Text("Language packs", style = MaterialTheme.typography.titleLarge)
                         Text(
                             "On-device speech models & translation",
                             style = MaterialTheme.typography.bodySmall,
@@ -209,7 +209,7 @@ fun LanguagePacksScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to hub")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ITantraColors.SurfaceWhite),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = ITantraColors.CanvasBg),
             )
         },
     ) { padding ->
@@ -217,14 +217,19 @@ fun LanguagePacksScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            item {
+                Text("A world of words.", style = MaterialTheme.typography.headlineLarge)
+                Text("Choose your languages. Download once, then use them offline.",
+                    style = MaterialTheme.typography.bodyMedium, color = ITantraColors.TextMuted)
+            }
             // Staged Selection / Apply & Provision Banner
             if (hasStagedChanges) {
                 item {
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(20.dp),
                         color = ITantraColors.Primary.copy(alpha = 0.08f),
                         border = androidx.compose.foundation.BorderStroke(1.5.dp, ITantraColors.Primary),
                         modifier = Modifier.fillMaxWidth()
@@ -525,8 +530,8 @@ private fun StorageOverviewCard(packs: List<LanguagePackItem>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
-            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
+            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(20.dp))
+            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(20.dp))
             .padding(16.dp),
     ) {
         Row(
@@ -625,7 +630,7 @@ private fun LanguagePackCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.5.dp,
             if (pack.isActiveCore) ITantraColors.Primary else ITantraColors.BorderSubtle,

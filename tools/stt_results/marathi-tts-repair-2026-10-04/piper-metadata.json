@@ -1,0 +1,45 @@
+{
+  "url": "https://huggingface.co/rhasspy/piper-voices/raw/main/voices.json",
+  "marathi_voices": {
+    "mr_IN-google-medium": {
+      "key": "mr_IN-google-medium",
+      "name": "google",
+      "language": {
+        "code": "mr_IN",
+        "family": "mr",
+        "region": "IN",
+        "name_native": "मराठी, 𑘦𑘨𑘰𑘙𑘲",
+        "name_english": "Marathi",
+        "country_english": "India"
+      },
+      "quality": "medium",
+      "num_speakers": 9,
+      "speaker_id_map": {
+        "mrt_01523": 0,
+        "mrt_02436": 1,
+        "mrt_02484": 2,
+        "mrt_02624": 3,
+        "mrt_03349": 4,
+        "mrt_03397": 5,
+        "mrt_03398": 6,
+        "mrt_04310": 7,
+        "mrt_09697": 8
+      },
+      "files": {
+        "mr/mr_IN/google/medium/mr_IN-google-medium.onnx": {
+          "size_bytes": 76768179,
+          "md5_digest": "331957abd31bff58aaa10934cd3ac58f"
+        },
+        "mr/mr_IN/google/medium/mr_IN-google-medium.onnx.json": {
+          "size_bytes": 5467,
+          "md5_digest": "6cba88c1e90cdc81a061d9f6d6d48943"
+        },
+        "mr/mr_IN/google/medium/MODEL_CARD": {
+          "size_bytes": 272,
+          "md5_digest": "db5f8c628d672a4382e5044141c0d977"
+        }
+      },
+      "aliases": []
+    }
+  }
+}

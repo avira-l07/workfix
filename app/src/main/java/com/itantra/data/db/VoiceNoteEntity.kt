@@ -10,4 +10,5 @@ data class VoiceNoteEntity(
     val transcribedText: String,
     val languageWireCode: String,
     val createdAtMillis: Long,
+    @androidx.room.ColumnInfo(defaultValue = "NULL") val deletedAtMillis: Long? = null,
 )

@@ -7,8 +7,14 @@ provenance checks; the [measured audit](KATHBATH_DATA_AUDIT.md) records about
 8.88 training hours plus 1.12 dev hours per language and zero reported overlaps.
 Raw audio/manifests were not independently rescanned on this host. Follow
 [the Gate A handoff](KATHBATH_GATE_A.md) for files and preservation instructions.
-Training is **Not run**; Gate B remains a guarded template requiring runtime
-checks. Bengali/Gujarati work below is historical and outside this trial.
+Training is **Not run**. The [Tamil baseline/pilot notebook](KATHBATH_TAMIL_PILOT.md)
+is prepared with guarded runner code; its Kaggle runtime checks remain
+unexecuted here. Bengali/Gujarati work below is historical and outside this trial.
+
+Current handoff: finish the [Tamil saved-data/GPU preflight](KATHBATH_GATE_B_PREFLIGHT.md)
+and return its JSON. Next is `tools/kathbath_tamil_pilot.ipynb`, including the
+same data checks, isolated runtime setup, measured CTC/RNNT baseline and four
+bounded 20-step pilots. It reuses complete saved Gate A output.
 
 Status on 3 October 2026: **training and export not run**. The existing
 checksum-verified on-demand packs remain active. A desktop 30-clip score is
@@ -81,7 +87,10 @@ may evade a byte hash, so source provenance must be reviewed as well.
 
 ## Cloud training and export
 
-Open `tools/finetune_indicconformer.ipynb` on a CUDA Linux runtime. Set
+Use [the bounded pilot](KATHBATH_TAMIL_PILOT.md) for the current Tamil handoff.
+`tools/finetune_indicconformer.ipynb` is the historical full-trial template;
+its older instructions below are retained for subsequent trial design, not
+as the current pilot or a claim of executed training. Set
 `ITANTRA_REPO`, `ITANTRA_TRAIN_OUT` (outside Git), and a secret `HF_TOKEN` after
 accepting all needed checkpoint gates. Transfer the **private** prepared
 manifests/audio and protected indexes to that runtime. The notebook restores

@@ -1,0 +1,56 @@
+# Paste into a NEW Kaggle code cell immediately before the failed baseline cell.
+# Keep this current GPU session open. Run this cell once, then retry ONLY baseline.
+import ast
+import importlib
+import json
+import shutil
+from pathlib import Path
+
+assert 'work' in globals() and 'train_python' in globals(), 'Run setup first in this session'
+runner = Path(work) / 'kathbath_tamil_pilot.py'
+source = runner.read_text(encoding='utf-8')
+failed_path = Path(work) / 'baseline-report.json'
+if failed_path.exists():
+    failed = json.loads(failed_path.read_text(encoding='utf-8'))
+    assert (failed.get('status') == 'Failed; stop and review report'
+            and failed.get('error', {}).get('message') == "'NoneType' object has no attribute 'get'"), 'Preserve this different result and send its report'
+
+old = '        config.validation_ds = None'
+new = '''        # The pinned BPE transcribe loader still reads validation_ds.get().
+        config.validation_ds = {
+            "use_start_end_token": (config.validation_ds or {}).get("use_start_end_token", False),
+            "manifest_filepath": None, "defer_setup": True,
+        }'''
+if old in source:
+    assert source.count(old) == 1, 'Unexpected runner source'
+    fixed = source.replace(old, new)
+    assert 'import traceback' not in fixed, 'Unexpected diagnostic patch; send report'
+    fixed = fixed.replace('import time\n', 'import time\nimport traceback\n', 1)
+    old_error = '        report["error"] = {"type": type(exc).__name__, "message": message[:2000]}'
+    new_error = old_error + '''
+        report["error"]["traceback"] = traceback.format_exc().replace(
+            os.environ.get("HF_TOKEN") or "<no-token>", "[REDACTED]")[-12000:]'''
+    assert fixed.count(old_error) == 1
+    fixed = fixed.replace(old_error, new_error)
+    compile(fixed, str(runner), 'exec')
+    backup = runner.with_name('kathbath_tamil_pilot_before_validation_config_fix.py')
+    assert not backup.exists(), 'Preserve the existing backup before another patch'
+    shutil.copyfile(runner, backup)
+    runner.write_text(fixed, encoding='utf-8')
+else:
+    assert new in source, 'Runner differs from the reviewed fix'
+
+if failed_path.exists():
+    backup = Path(work) / 'baseline-before-validation-config-fix-report.json'
+    assert not backup.exists(), 'Preserve both failed reports before another retry'
+    failed_path.rename(backup)
+log = Path(work) / 'logs/source-baseline.log'
+backup_log = Path(work) / 'logs/source-baseline-before-validation-config-fix.log'
+if log.exists() and not backup_log.exists():
+    shutil.copyfile(log, backup_log)
+pilot = importlib.reload(pilot)
+summary.pop('error', None)
+summary['validation-config-recovery'] = 'Completed; baseline retry pending'
+summary['status'] = 'Restore config repaired; baseline retry and training not run'
+pack_reports()
+print('Validation config repaired. Rerun ONLY the source-baseline cell. No runtime reinstall or audio changes.')

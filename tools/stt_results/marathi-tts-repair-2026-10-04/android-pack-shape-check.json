@@ -1,0 +1,110 @@
+{
+  "scope": "Windows desktop; exact Android metadata and imported six-file frontend; not Android playback or listener validation",
+  "metadata_suffix_bytes": 128,
+  "metadata_suffix_sha256": "73f79db63b661f00559a6b1868b119be10359f6ef0882ca929ae6df82abf1cd6",
+  "all_probes_passed": true,
+  "probes": [
+    {
+      "text": "डॉक्टरांना बोलवा",
+      "finite_non_silent": true,
+      "samples": 25727,
+      "sample_rate": 22050
+    },
+    {
+      "text": "डक्टरांना बोलवा",
+      "finite_non_silent": true,
+      "samples": 25096,
+      "sample_rate": 22050
+    },
+    {
+      "text": "डाक्टरांना बोलवा",
+      "finite_non_silent": true,
+      "samples": 23137,
+      "sample_rate": 22050
+    },
+    {
+      "text": "ऑक्सिजन द्या",
+      "finite_non_silent": true,
+      "samples": 22610,
+      "sample_rate": 22050
+    },
+    {
+      "text": "अॅम्ब्युलन्स बोलवा",
+      "finite_non_silent": true,
+      "samples": 24273,
+      "sample_rate": 22050
+    },
+    {
+      "text": "ॲम्ब्युलन्स बोलवा",
+      "finite_non_silent": true,
+      "samples": 24283,
+      "sample_rate": 22050
+    },
+    {
+      "text": "कॅम्पमध्ये या",
+      "finite_non_silent": true,
+      "samples": 20522,
+      "sample_rate": 22050
+    },
+    {
+      "text": "कॉफी",
+      "finite_non_silent": true,
+      "samples": 16767,
+      "sample_rate": 22050
+    },
+    {
+      "text": "कफी",
+      "finite_non_silent": true,
+      "samples": 11625,
+      "sample_rate": 22050
+    },
+    {
+      "text": "ळ",
+      "finite_non_silent": true,
+      "samples": 6755,
+      "sample_rate": 22050
+    },
+    {
+      "text": "ऱ",
+      "finite_non_silent": true,
+      "samples": 10480,
+      "sample_rate": 22050
+    },
+    {
+      "text": "१२३",
+      "finite_non_silent": true,
+      "samples": 22798,
+      "sample_rate": 22050
+    },
+    {
+      "text": "मदत हवी आहे",
+      "finite_non_silent": true,
+      "samples": 21837,
+      "sample_rate": 22050
+    },
+    {
+      "text": "पाणी पाठवा",
+      "finite_non_silent": true,
+      "samples": 19549,
+      "sample_rate": 22050
+    },
+    {
+      "text": "रस्ता बंद आहे",
+      "finite_non_silent": true,
+      "samples": 24259,
+      "sample_rate": 22050
+    },
+    {
+      "text": "आम्ही सुरक्षित आहोत",
+      "finite_non_silent": true,
+      "samples": 31479,
+      "sample_rate": 22050
+    },
+    {
+      "text": "डॉक्टरांना बोलवा",
+      "finite_non_silent": true,
+      "samples": 25074,
+      "sample_rate": 22050
+    }
+  ]
+}

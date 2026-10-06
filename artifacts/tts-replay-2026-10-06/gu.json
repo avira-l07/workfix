@@ -1,0 +1,23 @@
+{
+  "language": "gu",
+  "passed": true,
+  "phrase": "મદદ જોઈએ છે",
+  "model_sha256": "6d9b4f268765e19b6620983bd698c5e4fa943309560b6c7b199b50a4aae30d47",
+  "tokens_sha256": "2d855f2affb7586cc6be095a4382eb0bee2a22242deda32c86aab6b1a810d8c4",
+  "trials": [
+    {
+      "play": 1,
+      "samples": 17408,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 829.5973000349477,
+      "peak": 0.20821447670459747
+    },
+    {
+      "play": 2,
+      "samples": 14592,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 721.7746999813244,
+      "peak": 0.2110678106546402
+    }
+  ]
+}

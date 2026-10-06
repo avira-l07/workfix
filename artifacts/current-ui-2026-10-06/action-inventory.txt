@@ -1,0 +1,256 @@
+app/src/main/java/com/example/itantra/MainActivity.kt:75:enum class AppDestination {
+app/src/main/java/com/example/itantra/MainActivity.kt:91:    val destinationState = mutableStateOf(AppDestination.HUB)
+app/src/main/java/com/example/itantra/MainActivity.kt:134:    private var onWifiDirectPermissionCallback: ((Boolean) -> Unit)? = null
+app/src/main/java/com/example/itantra/MainActivity.kt:149:    private var onDiscoverableResult: ((Boolean) -> Unit)? = null
+app/src/main/java/com/example/itantra/MainActivity.kt:160:    fun requestBluetoothDiscoverable(durationSeconds: Int = 120, onResult: (Boolean) -> Unit) {
+app/src/main/java/com/example/itantra/MainActivity.kt:189:    fun requestWifiDirectPermission(onResult: (Boolean) -> Unit) {
+app/src/main/java/com/example/itantra/MainActivity.kt:235:            AppDestination.entries.firstOrNull { it.name == saved }?.let { destinationState.value = it }
+app/src/main/java/com/example/itantra/MainActivity.kt:255:                        Button(onClick = { finish() }) { Text("Close") }
+app/src/main/java/com/example/itantra/MainActivity.kt:537:                        destinationState.value = AppDestination.valueOf(navTo.uppercase())
+app/src/main/java/com/example/itantra/MainActivity.kt:723:    onRequestPermissions: () -> Unit,
+app/src/main/java/com/example/itantra/MainActivity.kt:724:    destinationState: MutableState<AppDestination> = remember { mutableStateOf(AppDestination.HUB) }
+app/src/main/java/com/example/itantra/MainActivity.kt:738:        confirmButton = { TextButton(onClick = { showEmergencyStorageWarning = false }) { Text("Continue") } }
+app/src/main/java/com/example/itantra/MainActivity.kt:768:    var chatReturnDestination by rememberSaveable { mutableStateOf(AppDestination.CONNECT) }
+app/src/main/java/com/example/itantra/MainActivity.kt:769:    var binReturnDestination by rememberSaveable { mutableStateOf(AppDestination.VOICE_NOTES) }
+app/src/main/java/com/example/itantra/MainActivity.kt:770:    var toolsReturnDestination by rememberSaveable { mutableStateOf(AppDestination.SETTINGS) }
+app/src/main/java/com/example/itantra/MainActivity.kt:771:    val openBin = { binReturnDestination = currentDestination; currentDestination = AppDestination.RECYCLE_BIN }
+app/src/main/java/com/example/itantra/MainActivity.kt:772:    val openPacks = { toolsReturnDestination = currentDestination; currentDestination = AppDestination.LANGUAGE_PACKS }
+app/src/main/java/com/example/itantra/MainActivity.kt:773:    val openDiagnostics = { toolsReturnDestination = currentDestination; currentDestination = AppDestination.DIAGNOSTICS }
+app/src/main/java/com/example/itantra/MainActivity.kt:776:    BackHandler(enabled = currentDestination != AppDestination.HUB) {
+app/src/main/java/com/example/itantra/MainActivity.kt:777:        if (currentDestination == AppDestination.CHAT) {
+app/src/main/java/com/example/itantra/MainActivity.kt:779:        } else if (currentDestination == AppDestination.RECYCLE_BIN) {
+app/src/main/java/com/example/itantra/MainActivity.kt:781:        } else if (currentDestination == AppDestination.LANGUAGE_PACKS || currentDestination == AppDestination.DIAGNOSTICS) {
+app/src/main/java/com/example/itantra/MainActivity.kt:784:            currentDestination = AppDestination.HUB
+app/src/main/java/com/example/itantra/MainActivity.kt:796:            if (currentDestination in listOf(AppDestination.HUB, AppDestination.CONNECT, AppDestination.MESSAGES,
+app/src/main/java/com/example/itantra/MainActivity.kt:797:                    AppDestination.VOICE_NOTES, AppDestination.SETTINGS)) {
+app/src/main/java/com/example/itantra/MainActivity.kt:800:                    onSettings = { currentDestination = AppDestination.SETTINGS })
+app/src/main/java/com/example/itantra/MainActivity.kt:805:                AppDestination.CHAT -> AppDestination.MESSAGES
+app/src/main/java/com/example/itantra/MainActivity.kt:806:                AppDestination.RECYCLE_BIN -> AppDestination.VOICE_NOTES
+app/src/main/java/com/example/itantra/MainActivity.kt:807:                AppDestination.LANGUAGE_PACKS, AppDestination.DIAGNOSTICS -> AppDestination.SETTINGS
+app/src/main/java/com/example/itantra/MainActivity.kt:814:                    Triple(AppDestination.HUB, "Talk", Icons.Filled.Mic),
+app/src/main/java/com/example/itantra/MainActivity.kt:815:                    Triple(AppDestination.CONNECT, "Connect", Icons.Filled.Link),
+app/src/main/java/com/example/itantra/MainActivity.kt:816:                    Triple(AppDestination.MESSAGES, "Messages", Icons.Filled.ChatBubbleOutline),
+app/src/main/java/com/example/itantra/MainActivity.kt:817:                    Triple(AppDestination.VOICE_NOTES, "Notes", Icons.Filled.Notes),
+app/src/main/java/com/example/itantra/MainActivity.kt:818:                    Triple(AppDestination.SETTINGS, "Settings", Icons.Filled.Settings),
+app/src/main/java/com/example/itantra/MainActivity.kt:820:                    NavigationBarItem(selected = selected == route, onClick = { currentDestination = route },
+app/src/main/java/com/example/itantra/MainActivity.kt:846:                    AppDestination.HUB -> {
+app/src/main/java/com/example/itantra/MainActivity.kt:850:                            onNavigateToConnect = { currentDestination = AppDestination.CONNECT },
+app/src/main/java/com/example/itantra/MainActivity.kt:851:                            onNavigateToLanguagePacks = openPacks,
+app/src/main/java/com/example/itantra/MainActivity.kt:852:                            onNavigateToVoiceNotes = { currentDestination = AppDestination.VOICE_NOTES },
+app/src/main/java/com/example/itantra/MainActivity.kt:853:                            onNavigateToMessages = { currentDestination = AppDestination.MESSAGES },
+app/src/main/java/com/example/itantra/MainActivity.kt:854:                            onNavigateToRecycleBin = openBin,
+app/src/main/java/com/example/itantra/MainActivity.kt:861:                    AppDestination.VOICE_NOTES -> {
+app/src/main/java/com/example/itantra/MainActivity.kt:864:                            onBack = { currentDestination = AppDestination.HUB },
+app/src/main/java/com/example/itantra/MainActivity.kt:873:                    AppDestination.RECYCLE_BIN -> RecycleBinScreen(
+app/src/main/java/com/example/itantra/MainActivity.kt:875:                        onBack = { currentDestination = binReturnDestination },
+app/src/main/java/com/example/itantra/MainActivity.kt:887:                    AppDestination.MESSAGES -> {
+app/src/main/java/com/example/itantra/MainActivity.kt:899:                                chatReturnDestination = AppDestination.MESSAGES
+app/src/main/java/com/example/itantra/MainActivity.kt:900:                                currentDestination = AppDestination.CHAT
+app/src/main/java/com/example/itantra/MainActivity.kt:902:                            onFindDevices = { currentDestination = AppDestination.CONNECT },
+app/src/main/java/com/example/itantra/MainActivity.kt:903:                            onBack = { currentDestination = AppDestination.HUB },
+app/src/main/java/com/example/itantra/MainActivity.kt:907:                    AppDestination.SETTINGS -> {
+app/src/main/java/com/example/itantra/MainActivity.kt:910:                            onBack = { currentDestination = AppDestination.HUB },
+app/src/main/java/com/example/itantra/MainActivity.kt:918:                    AppDestination.CONNECT -> {
+app/src/main/java/com/example/itantra/MainActivity.kt:1112:                            onBack = { currentDestination = AppDestination.HUB },
+app/src/main/java/com/example/itantra/MainActivity.kt:1209:                                chatReturnDestination = AppDestination.CONNECT
+app/src/main/java/com/example/itantra/MainActivity.kt:1221:                                currentDestination = AppDestination.CHAT
+app/src/main/java/com/example/itantra/MainActivity.kt:1243:                                chatReturnDestination = AppDestination.CONNECT
+app/src/main/java/com/example/itantra/MainActivity.kt:1255:                                currentDestination = AppDestination.CHAT
+app/src/main/java/com/example/itantra/MainActivity.kt:1274:                    AppDestination.LANGUAGE_PACKS -> {
+app/src/main/java/com/example/itantra/MainActivity.kt:1278:                            onBack = { currentDestination = toolsReturnDestination }
+app/src/main/java/com/example/itantra/MainActivity.kt:1282:                    AppDestination.CHAT -> {
+app/src/main/java/com/example/itantra/MainActivity.kt:1290:                            if (chatReturnDestination == AppDestination.CONNECT &&
+app/src/main/java/com/example/itantra/MainActivity.kt:1320:                            onBack = { currentDestination = chatReturnDestination },
+app/src/main/java/com/example/itantra/MainActivity.kt:1321:                            onReconnect = { currentDestination = AppDestination.CONNECT },
+app/src/main/java/com/example/itantra/MainActivity.kt:1325:                    AppDestination.DIAGNOSTICS -> {
+app/src/main/java/com/example/itantra/MainActivity.kt:1458:                            onBack = { currentDestination = toolsReturnDestination },
+app/src/main/java/com/example/itantra/MainActivity.kt:1591:    onRequestPermissions: () -> Unit,
+app/src/main/java/com/example/itantra/MainActivity.kt:1592:    onDismiss: () -> Unit = {}
+app/src/main/java/com/example/itantra/MainActivity.kt:1612:                onClick = onRequestPermissions,
+app/src/main/java/com/example/itantra/MainActivity.kt:1620:                onClick = onDismiss,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:73:    onBack: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:74:    onBroadcastPing: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:75:    onConnect: (PeerDevice) -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:76:    onSasConfirmed: (PeerDevice) -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:77:    onSasRejected: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:78:    onOpenChat: (PeerDevice) -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:79:    onDiscoverWifiDirectPeers: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:80:    onConnectWifiDirect: (com.itantra.core.transport.peer.WifiDirectPeer) -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:81:    onDisconnectWifiDirect: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:82:    onOpenChatWifiDirect: (com.itantra.core.transport.peer.WifiDirectPeer) -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:83:    onTransportModeChanged: (TransportMode) -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:154:                        OutlinedButton(onClick = onDisconnectWifiDirect, modifier = Modifier.fillMaxWidth()) {
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:180:                        onClick = onBroadcastPing,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:213:                        onClick = onDiscoverWifiDirectPeers,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:223:                            onClick = onDisconnectWifiDirect,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:284:private fun TransportSelector(currentMode: TransportMode, onModeChanged: (TransportMode) -> Unit) {
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:297:                    .selectable(selected = selected, role = Role.Tab, onClick = { onModeChanged(mode) })
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:466:private fun PeerDeviceCard(device: PeerDevice, onConnect: () -> Unit, onOpenChat: () -> Unit = {}, canConnect: Boolean = true) {
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:501:                PeerConnectionState.SECURE_CONNECTED -> FilledTonalButton(onClick = onOpenChat, shape = RoundedCornerShape(12.dp)) { Text("Open chat") }
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:502:                PeerConnectionState.AVAILABLE, PeerConnectionState.DISCONNECTED, PeerConnectionState.ERROR -> OutlinedButton(onClick = onConnect, enabled = canConnect, shape = RoundedCornerShape(12.dp)) {
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:517:    onConfirm: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:518:    onDismiss: () -> Unit
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:596:                onClick = onConfirm,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:608:            TextButton(onClick = onDismiss) {
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:619:    onConfirm: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:620:    onDismiss: () -> Unit
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:755:    onConnect: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:756:    onOpenChat: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:792:                isSecureConnected -> FilledTonalButton(onClick = onOpenChat, shape = RoundedCornerShape(12.dp)) { Text("Open chat") }
+app/src/main/java/com/example/itantra/ui/screens\connect\ConnectScreenContent.kt:793:                !isVerifyingSas && !isHandshaking && !isConnecting -> OutlinedButton(onClick = onConnect, enabled = canConnect, shape = RoundedCornerShape(12.dp)) {
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:5:import androidx.compose.foundation.clickable
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:47:import androidx.compose.ui.semantics.onClick
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:83:    onBack: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:84:    onReconnect: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:222:                    IconButton(onClick = onBack) {
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:232:                        TextButton(onClick = onReconnect) { Text("Reconnect") }
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:237:                        onClick = { showLanguagePicker = true }
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:290:                                    onClick(if (isRecording) "Finish recording" else "Start recording") {
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:320:                            onClick = onShareLocation,
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:339:                            onValueChange = { inputText = it },
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:366:                            onClick = {
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:466:    onClick: () -> Unit
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:472:        onClick = onClick,
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:515:    onLanguageSelected: (LanguageCode) -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:516:    onDismiss: () -> Unit
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:562:                    onClick = { onLanguageSelected(language.code) },
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:877:                        onClick = {
+app/src/main/java/com/example/itantra/ui/screens\chat\DedicatedChatScreen.kt:924:                        onClick = {
+app/src/main/java/com/example/itantra/ui/screens\diagnostics\DiagnosticsScreen.kt:62:    onBack: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\diagnostics\DiagnosticsScreen.kt:63:    onRunDiagnostics: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\diagnostics\DiagnosticsScreen.kt:64:    onRunFiveLanguageSelfTest: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\diagnostics\DiagnosticsScreen.kt:69:    onExportEvidence: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\diagnostics\DiagnosticsScreen.kt:80:                    IconButton(onClick = onBack) {
+app/src/main/java/com/example/itantra/ui/screens\diagnostics\DiagnosticsScreen.kt:146:                        onClick = onRunFiveLanguageSelfTest,
+app/src/main/java/com/example/itantra/ui/screens\diagnostics\DiagnosticsScreen.kt:185:                    onClick = onRunDiagnostics,
+app/src/main/java/com/example/itantra/ui/screens\diagnostics\DiagnosticsScreen.kt:198:                OutlinedButton(onClick = onExportEvidence, modifier = Modifier.fillMaxWidth()) {
+app/src/main/java/com/example/itantra/ui/screens\diagnostics\DiagnosticsScreen.kt:296:                onClick = {
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:53:    onNavigateToConnect: () -> Unit = {}, onNavigateToLanguagePacks: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:54:    onNavigateToVoiceNotes: () -> Unit = {}, onNavigateToMessages: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:55:    onNavigateToRecycleBin: () -> Unit = {}, operatorName: String = "",
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:90:    val start = { if (modelReady) coordinator.startRecording() else onNavigateToLanguagePacks() }
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:92:        !modelReady -> onNavigateToLanguagePacks()
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:119:            ExtendedFloatingActionButton(onClick = toggle,
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:121:            if (recording) SmallFloatingActionButton(onClick = cancel) {
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:132:            item { Card(onClick = onNavigateToConnect, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:149:                    Button(onClick = { coordinator.sendHumanAck(alert.messageId) }) { Text("Acknowledge & silence alarm") }
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:157:                        TextButton(onNavigateToMessages) { Text("Open chats", style = MaterialTheme.typography.labelMedium); Spacer(Modifier.width(4.dp)); Icon(Icons.Filled.ArrowForward, null, Modifier.size(16.dp)) }
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:185:                        OutlinedIconButton(onClick = { val previous = mic!!; AppGraph.setMicLanguage(target!!); AppGraph.setTargetLanguage(previous) }, enabled = swapReady, shape = RoundedCornerShape(14.dp)) {
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:192:                            TextButton(onClick = { stop(); handsFree = false; coordinator.setContinuousMode(false) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(9.dp),
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:196:                            TextButton(onClick = { stop(); handsFree = true; coordinator.setContinuousMode(true) }, enabled = modelReady, modifier = Modifier.weight(1f), shape = RoundedCornerShape(9.dp),
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:207:                                .semantics { role = Role.Button; stateDescription = if (recording) "Recording" else "Idle"; onClick(label) { toggle(); true } }
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:238:                    if (recording) Row { Button(onClick = stop) { Text("Finish") }; Spacer(Modifier.width(8.dp))
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:239:                        OutlinedButton(onClick = cancel) { Text("Cancel") } }
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:249:                HubShortcut("Voice notes", "$savedNotesCount saved transcripts", Icons.Filled.Notes, Modifier.weight(1f), onNavigateToVoiceNotes)
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:250:                HubShortcut("Language packs", "${packs.count { it.isSttDownloaded && it.isTtsDownloaded }} speech pairs installed", Icons.Filled.Language, Modifier.weight(1f), onNavigateToLanguagePacks)
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:252:            item { OutlinedButton(onClick = onNavigateToRecycleBin, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:276:        item { TextButton(onClick = { if (kind == "target") AppGraph.setTargetLanguage(null) else scope.launch { AppGraph.languagePackRepository.setSpeechInputMode(SpeechInputMode.AUTO) }; picker = null }) { Text("Auto") } }
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:278:            TextButton(onClick = { if (kind == "mic") AppGraph.setMicLanguage(language.code) else AppGraph.setTargetLanguage(language.code); picker = null }, enabled = kind != "mic" || installed) {
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:282:    } }, confirmButton = { TextButton(onClick = { picker = null; onNavigateToLanguagePacks() }) { Text("Language packs") } }) }
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:285:        confirmButton = { TextButton(onClick = { pendingDelete = null; if (coordinator.moveMessageToTrash(message.messageId)) scope.launch {
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:287:        } }) { Text("Move to bin") } }, dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Keep") } }) }
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:292:    modifier: Modifier, onClick: () -> Unit) {
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:293:    OutlinedCard(onClick = onClick, enabled = enabled, modifier = modifier.heightIn(min = 68.dp),
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:311:    onClick: () -> Unit) {
+app/src/main/java/com/example/itantra/ui/screens\hub\TransceiverHubScreen.kt:312:    Card(onClick = onClick, modifier = modifier.heightIn(min = 76.dp), shape = RoundedCornerShape(18.dp),
+app/src/main/java/com/example/itantra/ui/components\HistoryMessageCard.kt:39:fun HistoryMessageCard(message: TransceiverMessage, onDelete: () -> Unit, onRetry: () -> Unit, onAcknowledge: () -> Unit, compact: Boolean = false) {
+app/src/main/java/com/example/itantra/ui/components\HistoryMessageCard.kt:78:                IconButton(onClick = { clipboard.setText(AnnotatedString(message.text)) }) { Icon(Icons.Filled.ContentCopy, "Copy transcript") }
+app/src/main/java/com/example/itantra/ui/components\HistoryMessageCard.kt:81:                    TextButton(onClick = onRetry) { Text("Retry") }
+app/src/main/java/com/example/itantra/ui/components\HistoryMessageCard.kt:83:                    TextButton(onClick = onAcknowledge) { Text("Acknowledge") }
+app/src/main/java/com/example/itantra/ui/components\HistoryMessageCard.kt:85:                if (RecycleBinPolicy.canTrash(message)) IconButton(onClick = onDelete) { Icon(Icons.Filled.DeleteOutline, "Move message to recycle bin") }
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:21:fun ITantraAppHeader(coordinator: TransceiverCoordinator, onToggleTheme: () -> Unit,
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:22:    onSettings: () -> Unit) {
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:35:            IconButton(onClick = onToggleTheme) {
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:39:            Button(onClick = { showSos = true }, shape = RoundedCornerShape(15.dp), contentPadding = PaddingValues(horizontal = 12.dp),
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:44:            IconButton(onClick = onSettings) { Icon(Icons.Filled.Settings, "Settings and appearance") }
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:50:            TextButton(onClick = { emergency = code; showSos = false }) { Text(name) }
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:52:        TextButton(onClick = { emergency = EmergencyCode.HELP_REQUIRED; showSos = false }) { Text("Critical priority alert") }
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:53:    } }, confirmButton = { TextButton(onClick = { showSos = false }) { Text("Close") } })
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:57:        confirmButton = { TextButton(onClick = { coordinator.sendEmergencyCode(code); emergency = null }, enabled = verified) { Text("Send alert") } },
+app/src/main/java/com/example/itantra/ui/components\ITantraAppHeader.kt:58:        dismissButton = { TextButton(onClick = { emergency = null }) { Text("Cancel") } }) }
+app/src/main/java/com/example/itantra/ui/components\MessageFilterChipsRow.kt:23:    onSelect: (MessageFilter) -> Unit,
+app/src/main/java/com/example/itantra/ui/components\MessageFilterChipsRow.kt:33:                onClick = { onSelect(filter) },
+app/src/main/java/com/example/itantra/ui/components\SavedSpeechButton.kt:16:fun SavedSpeechButton(itemKey: String, onPlay: () -> Unit, enabled: Boolean = true, compact: Boolean = false) {
+app/src/main/java/com/example/itantra/ui/components\SavedSpeechButton.kt:23:        if (compact) IconButton(onClick = action, enabled = enabled && (!playback.busy || active)) {
+app/src/main/java/com/example/itantra/ui/components\SavedSpeechButton.kt:26:        } else TextButton(onClick = action,
+app/src/main/java/com/example/itantra/ui/screens\messages\MessagesScreen.kt:48:    onOpenConversation: (ConversationSummary) -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\messages\MessagesScreen.kt:49:    onFindDevices: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\messages\MessagesScreen.kt:50:    onBack: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\messages\MessagesScreen.kt:69:                TextButton(onClick = onFindDevices) {
+app/src/main/java/com/example/itantra/ui/screens\messages\MessagesScreen.kt:108:                        Button(onClick = onFindDevices, shape = RoundedCornerShape(14.dp)) {
+app/src/main/java/com/example/itantra/ui/screens\messages\MessagesScreen.kt:113:                        TextButton(onClick = onBack) { Text("Open Talk") }
+app/src/main/java/com/example/itantra/ui/screens\messages\MessagesScreen.kt:119:            ConversationRow(conversation, onClick = { onOpenConversation(conversation) })
+app/src/main/java/com/example/itantra/ui/screens\messages\MessagesScreen.kt:125:private fun ConversationRow(conversation: ConversationSummary, onClick: () -> Unit) {
+app/src/main/java/com/example/itantra/ui/screens\messages\MessagesScreen.kt:127:        onClick = onClick,
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:39:    onBack: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:40:    pairingSectionContent: (@Composable () -> Unit)? = null,
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:42:    onWipe: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:43:    onLanguagePacks: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:44:    onDiagnostics: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:45:    onRecycleBin: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:108:                                onClick = { com.itantra.app.AppGraph.setTargetLanguage(null) },
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:115:                                onClick = { com.itantra.app.AppGraph.setTargetLanguage(language.code) },
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:148:                    OutlinedButton(onClick = onLanguagePacks, modifier = Modifier.fillMaxWidth()) {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:153:                    OutlinedButton(onClick = onDiagnostics, modifier = Modifier.fillMaxWidth()) {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:158:                    OutlinedButton(onClick = onRecycleBin, modifier = Modifier.fillMaxWidth()) {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:178:                        onClick = { showResetConfirm = true },
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:205:                    TextButton(onClick = { uriHandler.openUri("https://huggingface.co/parismitaglobalsolutions/indicconformer-sherpa-onnx") }) {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:208:                    TextButton(onClick = { uriHandler.openUri("https://huggingface.co/willwade/mms-tts-multilingual-models-onnx") }) {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:211:                    TextButton(onClick = { uriHandler.openUri("https://huggingface.co/rhasspy/piper-voices/blob/c10ece1aade47bb51c153c893d14e5bf8e5b7117/mr/mr_IN/google/medium/MODEL_CARD") }) {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:214:                    TextButton(onClick = { uriHandler.openUri("https://developers.google.com/ml-kit/language/translation/translation-terms") }) {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:255:                TextButton(onClick = {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:261:                TextButton(onClick = { showResetConfirm = false }) { Text("Cancel") }
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:312:                onClick = { deviceId?.let { clipboard.setText(AnnotatedString(it)) } },
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:323:private fun OperatorIdentitySection(operatorName: String, onNameChange: (String) -> Unit) {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:347:            onValueChange = onNameChange,
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:384:    onThemeModeChange: (ThemeMode) -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:385:    onPaletteChange: (ColorPalette) -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:405:                modifier = Modifier.weight(1f).selectable(selected = selected, role = Role.RadioButton, onClick = { onThemeModeChange(mode) }),
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:439:                        onClick = { onPaletteChange(palette) },
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:453:private fun PaletteCard(palette: ColorPalette, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+app/src/main/java/com/example/itantra/ui/screens\settings\SettingsScreen.kt:456:        modifier = modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:5:import androidx.compose.foundation.clickable
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:89:    onBack: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:90:    onDownloadPack: (LanguagePackItem) -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:208:                    IconButton(onClick = onBack) {
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:256:                                TextButton(onClick = { viewModel.resetStagedLanguages() }) {
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:262:                                onClick = { viewModel.applyAndProvisionSelected() },
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:439:                    onValueChange = { searchQuery = it },
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:454:                            onClick = { selectedFilter = filter },
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:620:    onToggleMic: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:621:    onToggleListen: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:622:    onActivate: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:623:    onDownload: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:624:    onRetry: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:625:    onProvisionTranslation: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:626:    onCancelDownload: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:627:    onSetTarget: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:628:    onClearTarget: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:704:                    onClick = onToggleMic,
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:730:                    onClick = onToggleListen,
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:774:                OutlinedButton(onClick = onProvisionTranslation, modifier = Modifier.fillMaxWidth()) {
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:789:                    onClick = onCancelDownload,
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:800:                    onClick = onRetry,
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:812:                    onClick = onRetry,
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:843:                    onClick = onActivate,
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:877:                        onClick = onClearTarget,
+app/src/main/java/com/example/itantra/ui/screens\language\LanguagePacksScreen.kt:885:                        onClick = onSetTarget,
+app/src/main/java/com/example/itantra/ui/screens\settings\WipeDataAction.kt:13:fun WipeDataAction(onWipe: () -> Unit) {
+app/src/main/java/com/example/itantra/ui/screens\settings\WipeDataAction.kt:15:    OutlinedButton(onClick = { confirm = true }) { Text("Wipe all data") }
+app/src/main/java/com/example/itantra/ui/screens\settings\WipeDataAction.kt:22:                modifier = Modifier.combinedClickable(onClick = {}, onLongClickLabel = "Wipe all private data", onLongClick = { confirm = false; onWipe() })) {
+app/src/main/java/com/example/itantra/ui/screens\settings\WipeDataAction.kt:26:        dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } }
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\RecycleBinScreen.kt:23:fun RecycleBinScreen(messages: List<TransceiverMessage>, notes: List<VoiceNoteEntity>, onBack: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\RecycleBinScreen.kt:24:    onRestoreMessage: (Long) -> Unit, onRestoreNote: (Long) -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\RecycleBinScreen.kt:25:    onDeleteMessage: (Long) -> Unit, onDeleteNote: (Long) -> Unit) {
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\RecycleBinScreen.kt:34:            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } })
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\RecycleBinScreen.kt:52:        confirmButton = { TextButton(onClick = { if (type == "message") onDeleteMessage(id) else onDeleteNote(id); permanentDelete = null }) { Text("Delete permanently", color = MaterialTheme.colorScheme.error) } },
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\RecycleBinScreen.kt:53:        dismissButton = { TextButton(onClick = { permanentDelete = null }) { Text("Keep in bin") } }) }
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\RecycleBinScreen.kt:66:            Row { TextButton(onClick = restore) { Text("Restore") }; Spacer(Modifier.weight(1f)); TextButton(onClick = delete) { Text("Delete forever", color = MaterialTheme.colorScheme.error) } }
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\VoiceNotesScreen.kt:35:    onBack: () -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\VoiceNotesScreen.kt:36:    onDelete: (VoiceNoteEntity) -> Unit,
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\VoiceNotesScreen.kt:37:    onOpenRecycleBin: () -> Unit = {},
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\VoiceNotesScreen.kt:68:                TextButton(onClick = onOpenRecycleBin) {
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\VoiceNotesScreen.kt:107:                        Button(onClick = onBack, shape = RoundedCornerShape(14.dp)) {
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\VoiceNotesScreen.kt:140:                            IconButton(onClick = { pendingDelete = note }) {
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\VoiceNotesScreen.kt:160:            confirmButton = { TextButton(onClick = { onDelete(note); pendingDelete = null }) { Text("Move to bin", color = ITantraColors.StatusDanger) } },
+app/src/main/java/com/example/itantra/ui/screens\voicenotes\VoiceNotesScreen.kt:161:            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Cancel") } }

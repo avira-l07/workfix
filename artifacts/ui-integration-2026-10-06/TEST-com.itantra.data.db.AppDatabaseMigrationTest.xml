@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.data.db.AppDatabaseMigrationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-06T04:26:26.976Z" hostname="AVII" time="0.254">
+  <properties/>
+  <testcase name="testMigration2To3SurvivesOldRowsAndDefaultsLocationColumns" classname="com.itantra.data.db.AppDatabaseMigrationTest" time="0.222"/>
+  <testcase name="testAppDatabaseDoesNotUseDestructiveMigrationFallback" classname="com.itantra.data.db.AppDatabaseMigrationTest" time="0.0"/>
+  <testcase name="migration5To6PreservesHistoryAndVoiceNoteQueriesEnforceSevenDayRestore" classname="com.itantra.data.db.AppDatabaseMigrationTest" time="0.022"/>
+  <testcase name="testExportedSchemasExistAndValidate" classname="com.itantra.data.db.AppDatabaseMigrationTest" time="0.002"/>
+  <testcase name="testFreshInstallCreatesV3Cleanly" classname="com.itantra.data.db.AppDatabaseMigrationTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+]]></system-err>
+</testsuite>

@@ -1,0 +1,131 @@
+iTantra Marathi offline TTS repair
+Date: 4 October 2026
+Repository: D:\new itantra
+
+WHAT WAS WRONG
+The old Marathi MMS-VITS voice lacks the trained token for U+0949 (ॉ).
+The doctor phrase lost that vowel in raw synthesis. The previous app guard
+made the failure explicit, but could not repair the voice's pronunciation.
+Adding an arbitrary token or replacing the vowel would not fix trained weights.
+
+WHAT CHANGED
+Marathi TTS now downloads Piper mr_IN-google-medium, speaker 0, with an
+offline eSpeak phoneme frontend. The trained graph and weights are unchanged;
+download preparation appends 128 bytes of Sherpa metadata and installs the
+trained single-codepoint phoneme IDs. Unsupported multi-codepoint token keys
+were removed after the first conversion caused a native loader termination.
+The final desktop model loaded and synthesized every targeted probe.
+
+The Marathi manifest is now version 3.0.0. Raw model, archive, converted
+model, tokens and required frontend files have pinned SHA-256 checksums.
+ZIP extraction rejects traversal/duplicates/unrelated paths and excess size.
+Downloads remain selective and staged before replacement. Old MMS-only
+installs are marked incomplete and require the new Marathi TTS download.
+Missing frontend data and foreign-alphabet text give explicit errors while
+preserving the message. No runtime network API or native dependency was added.
+Offline import now supports nested frontend paths. A six-file minimal import
+produced valid desktop audio on all 17 tested texts.
+
+Diagnostics shows the measured desktop references and keeps phone results
+Not verified. Settings credits and saved TTS evaluation reports now identify
+the Piper voice correctly. Installed storage counts include its frontend.
+
+FRESH SAME-PHRASE DESKTOP COMPARISON
+Windows, sherpa-onnx 1.13.8, one CPU thread, speaker 0, five short phrases
+repeated six times after warm-up. These are 30 trials, not 30 unique sentences.
+                         Legacy MMS              Piper replacement
+Mean synthesis:          808.36 ms                181.14 ms
+p95 synthesis:           1046.67 ms               252.30 ms
+Synthesis RTF:           0.7221                   0.1620
+Engine load:             1214.41 ms               1426.62 ms
+Peak process RAM:        259,977,216 bytes        226,062,336 bytes
+Installed TTS files:     114,044,398 bytes        94,761,087 bytes
+Output rate:             16,000 Hz               22,050 Hz
+
+The raw MMS comparison bypassed the app guard and skipped U+0949 in all
+six doctor trials. Non-silent legacy audio is not a pronunciation pass.
+Piper produced finite, non-silent audio in 30/30 trials and all 12 character
+probes. The separate 17-text phoneme check retained the doctor's ɔ vowel,
+distinguished doctor/coffee spellings, and found no missing trained phonemes.
+This checks signals and frontend coverage; TTS accuracy/MOS was not measured.
+Cold model load did not improve. Desktop peak RAM includes runtime/libraries.
+
+DOWNLOAD AND APK
+TTS network download: 85,805,199 bytes (85.8 MB decimal).
+Full installed TTS: 94,761,087 bytes (94.8 MB).
+Marathi dedicated STT plus TTS: 292,424,285 bytes (292.4 MB).
+No speech model weights were added to the APK. Tiny tokens/source notice only.
+Fresh debug APK:
+D:\new itantra\artifacts\marathi-tts-repair-2026-10-04\app-debug.apk
+APK bytes: 94,600,345 (94.6 MB).
+APK SHA-256: 41fe70a8bb9e401aa7ba472729a4a4a283d1dc1a85d1f2a202fa0935cbadce67
+
+VERIFICATION
+454 unit tests passed: zero failures, errors or skipped tests.
+Ten new Marathi tests cover text guards, pack completeness, nested import,
+upgrade rejection, ZIP extraction safety, checksums and metadata bytes.
+The existing pack-layout assertion was updated to check Marathi's extra files.
+Production debug lint passed: zero errors, 68 warnings and one hint.
+Unit/Android-test-source lint analysis was excluded as in the existing audit.
+Debug assembly and ZIP CRC inspection passed. New manifest/tokens/notice/error
+strings are present, with no language-pack ONNX weights in the APK.
+Marathi STT and all nine other language manifests match Git HEAD.
+Marathi STT WER remains 15.70% on the earlier 30-clip desktop corpus.
+Hindi, English and all other language models were not changed.
+
+OTHER CANDIDATES
+Bol Q8: 283,189,621-byte ONNX before voice/G2P assets; inspected, not benchmarked.
+Rasa: 160,708,568-byte source safetensors; gated access returned 401; not benchmarked.
+Another MMS export: 114,313,491 bytes; no proof of repaired vowel coverage.
+No RAM, speed or quality scores are claimed for unbenchmarked candidates.
+
+STILL NOT VERIFIED
+Android model download/upgrade, native playback and synthesis latency.
+Phone RAM, thermal/battery behavior and low/mid-range device fit.
+Native Marathi listener intelligibility, naturalness and broader pronunciation.
+Two-phone offline transmission and speech-end-to-remote-playback delay.
+Coverage beyond the limited 17 frontend texts and 12 signal probes.
+Public redistribution rights/attribution: source card identifies its OpenSLR 64
+dataset as CC BY-SA 4.0 but does not separately state a model-weight licence.
+Base-model terms and applicable GPL eSpeak notice/source obligations need
+release review. Source credits are included; commercial clearance is not claimed.
+
+WHEN A PHONE IS AVAILABLE
+Install the new APK. Download Marathi TTS in Language Packs. Keep the dedicated
+Marathi STT pack and select Marathi mic. Disconnect internet and run Diagnostics.
+Play/speak the doctor, oxygen, ambulance, coffee and numeral probes. Have a
+Marathi listener record specific failures and ratings, then run the two-phone
+offline test. Keep the status Not verified until those results are recorded.
+
+FILES CHANGED
+app/src/main/assets/language_packs/mr_dev_manifest.json
+app/src/main/assets/language_packs/mr/piper-tokens.txt
+app/src/main/assets/language_packs/mr/PIPER_SOURCE_NOTICE.txt
+app/src/main/java/com/itantra/core/inference/MarathiPiperVoice.kt
+app/src/main/java/com/itantra/core/inference/ModelFileSpec.kt
+app/src/main/java/com/itantra/core/inference/TtsTextCoverage.kt
+app/src/main/java/com/itantra/core/inference/SherpaOnnxSpeechSynthesizer.kt
+app/src/main/java/com/itantra/data/languagepack/FileLanguagePackStorage.kt
+app/src/main/java/com/itantra/data/languagepack/RealLanguagePackRepository.kt
+app/src/main/java/com/itantra/feature/benchmark/TtsEvaluationViewModel.kt
+app/src/main/java/com/example/itantra/ui/screens/diagnostics/DiagnosticsScreen.kt
+app/src/main/java/com/example/itantra/ui/screens/settings/SettingsScreen.kt
+app/src/test/java/com/itantra/core/inference/MarathiPiperVoiceTest.kt
+app/src/test/java/com/itantra/data/languagepack/LanguagePackIntegrityTest.kt
+tools/evaluate_marathi_piper.py
+tools/benchmark_five_language_tts.py
+docs/QUICK_STAT_SUMMARY.md
+docs/LANGUAGE_BENCHMARKS.md
+docs/MARATHI_LANGUAGE_CHECK.md
+docs/MODEL_PROVENANCE_AND_DISTRIBUTION.md
+docs/MARATHI_TTS_REPAIR.md and this TXT summary
+Saved benchmark/phoneme/packaging evidence and the fresh debug APK.
+
+DETAILED EVIDENCE
+D:\new itantra\docs\MARATHI_TTS_REPAIR.md
+D:\new itantra\tools\stt_results\marathi-tts-repair-2026-10-04\
+Reproduce: python tools/evaluate_marathi_piper.py prepare
+           python tools/evaluate_marathi_piper.py benchmark --voice mms
+           python tools/evaluate_marathi_piper.py benchmark --voice piper --debug
+           python tools/evaluate_marathi_piper.py phonemes
+No Kaggle training, STT model change or phone validation was performed in this task.

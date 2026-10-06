@@ -1,0 +1,32 @@
+{
+  "apk_path": "D:\\new itantra\\artifacts\\marathi-tts-repair-2026-10-04\\app-debug.apk",
+  "apk_bytes": 94600345,
+  "apk_sha256": "41fe70a8bb9e401aa7ba472729a4a4a283d1dc1a85d1f2a202fa0935cbadce67",
+  "zip_crc_checked": true,
+  "no_bundled_speech_model_weights": true,
+  "marathi_pack_version": "3.0.0",
+  "marathi_stt_manifest_unchanged": true,
+  "other_language_manifests_unchanged": [
+    "hi",
+    "en",
+    "ta",
+    "te",
+    "or",
+    "bn",
+    "gu",
+    "kn",
+    "ml"
+  ],
+  "unit_tests": {
+    "tests": 454,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "production_lint": {
+    "Warning": 68,
+    "Hint": 1
+  },
+  "phone_validation": "Not verified",
+  "native_listener_quality": "Not verified"
+}

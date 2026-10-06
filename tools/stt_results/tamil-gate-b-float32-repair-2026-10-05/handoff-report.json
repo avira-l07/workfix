@@ -1,0 +1,35 @@
+{
+  "status": "Stopped; review failure report",
+  "language": "ta",
+  "full_trial": "Not run",
+  "heldout_after_training": "Not run",
+  "export": "Not run",
+  "phone_accuracy": "Not verified",
+  "app_promotion": "Not done",
+  "current_stage": "source-baseline",
+  "pilot_counts": {
+    "train": 128,
+    "dev": 64
+  },
+  "filesystem_free_bytes_before_setup": 20934483968,
+  "hf_token_present": true,
+  "saved-data-preflight": "Completed",
+  "runtime": {
+    "python": "3.11.13",
+    "torch": "2.2.2+cu121",
+    "lightning": "2.2.5",
+    "nemo_revision": "8dce88cf8e94963e2033c3137f7b9993b51db88a",
+    "gpu": "Tesla T4",
+    "gpu_total_bytes": 15636037632,
+    "cuda": "12.1",
+    "gpu_count": 2,
+    "devices_used": 1,
+    "precision": "16-mixed"
+  },
+  "runtime-setup": "Completed",
+  "source-baseline": "Failed",
+  "error": {
+    "type": "RuntimeError",
+    "message": "source-baseline failed; see source-baseline.log and the report ZIP"
+  }
+}

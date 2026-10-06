@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.StatFs
 import com.itantra.core.inference.ModelFileSpecs
 import com.itantra.core.inference.AdditionalSttModel
+import com.itantra.core.inference.MarathiPiperVoice
 import com.itantra.core.storage.LanguagePackStorage
 import com.itantra.domain.model.LanguageCatalog
 import com.itantra.domain.model.LanguageCode
@@ -185,9 +186,13 @@ class RealLanguagePackRepository(
                 var ttsSize = 0L
                 if (ttsState == LanguagePackInstallState.INSTALLED) {
                     val dir = File(storage.packDirectory(lang.code), "tts")
-                    ModelFileSpecs.getTtsSpec(lang.code)?.requiredFiles?.forEach { f ->
-                        val file = File(dir, f)
-                        if (file.exists()) ttsSize += file.length()
+                    if (lang.code == LanguageCode.MARATHI) {
+                        ttsSize = dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+                    } else {
+                        ModelFileSpecs.getTtsSpec(lang.code)?.requiredFiles?.forEach { f ->
+                            val file = File(dir, f)
+                            if (file.exists()) ttsSize += file.length()
+                        }
                     }
                 }
 
@@ -364,7 +369,9 @@ class RealLanguagePackRepository(
 
                     val totalExpectedBytes = (if (needSharedStt) manifest.sttModel.sizeBytes else 0L) +
                         (if (needAdditionalStt) additionalModel!!.totalBytes else 0L) +
-                        (if (needTts) manifest.ttsModel.sizeBytes else 0L)
+                        (if (needTts) {
+                            if (code == LanguageCode.MARATHI) MarathiPiperVoice.DOWNLOAD_BYTES else manifest.ttsModel.sizeBytes
+                        } else 0L)
                     var cumulativeBytesDownloaded = 0L
 
                     val onBytesRead: (Int) -> Unit = { count ->
@@ -423,9 +430,23 @@ class RealLanguagePackRepository(
                         val ttsUrlBase = manifest.ttsModel.downloadUrl ?: throw Exception("No TTS URL")
                         val tmpTts = File(tmpDir, "tts")
                         check(tmpTts.mkdirs()) { "Cannot stage TTS download" }
+                        if (code == LanguageCode.MARATHI) {
+                            val modelFile = File(tmpTts, "model.onnx")
+                            downloadFile(MarathiPiperVoice.MODEL_URL, modelFile, onBytesRead)
+                            verifySha256(modelFile, MarathiPiperVoice.SOURCE_SHA256)
+                            modelFile.appendBytes(MarathiPiperVoice.metadataSuffix)
+                            context.assets.open(MarathiPiperVoice.TOKENS_ASSET).use { input ->
+                                File(tmpTts, "tokens.txt").outputStream().use { input.copyTo(it) }
+                            }
+                            val archive = File(tmpDir, "marathi-frontend.zip")
+                            downloadFile(MarathiPiperVoice.FRONTEND_URL, archive, onBytesRead)
+                            verifySha256(archive, MarathiPiperVoice.FRONTEND_SHA256)
+                            MarathiPiperVoice.extractFrontend(archive, tmpTts)
+                            check(archive.delete()) { "Cannot remove staged Marathi archive" }
+                        }
                         for (file in ttsSpec.requiredFiles) {
                             val targetFile = File(tmpTts, file)
-                            downloadFile("$ttsUrlBase/$file", targetFile, onBytesRead)
+                            if (code != LanguageCode.MARATHI) downloadFile("$ttsUrlBase/$file", targetFile, onBytesRead)
                             val expectedSha = manifest.ttsModel.checksumsSha256[file]
                             if (!expectedSha.isNullOrEmpty()) verifySha256(targetFile, expectedSha)
                         }

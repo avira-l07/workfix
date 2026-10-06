@@ -1,0 +1,64 @@
+# Paste ALL of this into ONE new Kaggle Code cell in the CURRENT session.
+# Run ONLY this cell once. It preserves the failed FP16 report and retries FP32.
+import os, json, shutil
+from pathlib import Path
+
+assert all(name in globals() for name in ('work', 'train_python', 'summary', 'command', 'stage', 'pack_reports')), 'Setup variables missing; stop and share this output'
+work = Path(work).resolve()
+logs = work / 'logs'
+run = work / 'pilot-freeze-lower-17'
+report_path = run / 'report.json'
+backup_report = work / 'pilot-freeze-lower-17-before-fp32-report.json'
+runner = work / 'kathbath_tamil_pilot.py'
+backup_runner = work / 'kathbath_tamil_pilot_before_fp32.py'
+assert Path(train_python).is_file() and runner.is_file(), 'Installed setup files missing; stop and share this output'
+assert not backup_report.exists() and not backup_runner.exists(), 'FP32 recovery already prepared; share the latest ZIP'
+assert not (logs / 'pilot-freeze-lower-17-fp32.log').exists(), 'FP32 retry already ran; share the latest ZIP'
+failed = json.loads(report_path.read_text(encoding='utf-8'))
+assert failed.get('status') == 'Failed; stop and review report', 'Preserve the existing result; this is only for the reviewed failure'
+assert failed.get('error', {}).get('message') == 'Non-finite gradients; review precision/runtime', 'Different failure; share the ZIP before retrying'
+assert failed.get('global_step') == 0 and failed.get('seed') == 17 and failed.get('mode') == 'freeze-lower', 'Recovery requires the reviewed zero-update run'
+assert failed.get('runtime', {}).get('precision') == '16-mixed', 'The reviewed failed run must use FP16 mixed precision'
+assert not list(run.rglob('*.ckpt')), 'Checkpoint exists; preserve it and share the ZIP'
+baseline = json.loads((work / 'baseline-report.json').read_text(encoding='utf-8'))
+assert baseline.get('ctc_baseline_gate_passed') is True, 'A passing baseline is required'
+check = json.loads((work / 'rnnt-cuda-check-report.json').read_text(encoding='utf-8'))
+assert check.get('numba_cuda_use_nvidia_binding') is True and check.get('cuda_python') == '12.4.0', 'Passing NVIDIA-binding CUDA check required'
+assert check.get('status') == 'Tiny RNNT CUDA forward/backward passed; pilot not run', 'CUDA loss check has not passed'
+
+old = '    trainer = pl.Trainer(accelerator="gpu", devices=1, precision=report["runtime"]["precision"],'
+new = '    # FP16 produced non-finite gradients before the first update in the reviewed pilot.\n    report["training_precision"] = "32-true"\n    trainer = pl.Trainer(accelerator="gpu", devices=1, precision=report["training_precision"],'
+text = runner.read_text(encoding='utf-8')
+assert text.count(old) == 1, 'Unexpected runner version; stop and share the ZIP'
+patched = text.replace(old, new, 1)
+compile(patched, str(runner), 'exec')
+assert 'raise RuntimeError("Non-finite gradients; review precision/runtime")' in patched, 'Keep finite-gradient protection enabled'
+
+os.environ['NUMBA_CUDA_USE_NVIDIA_BINDING'] = '1'
+os.environ['ITANTRA_NEMO_SOURCE'] = str(work / 'NeMo')
+os.environ['PYTHONPATH'] = str(work)
+os.environ['PYTHONNOUSERSITE'] = '1'
+os.chdir(work)
+if shutil.disk_usage(work).free < 3 * 1024**3:
+    raise RuntimeError('Too little free disk for the pilot checkpoint; preserve reports')
+if sum(p.stat().st_size for p in work.rglob('*') if p.is_file()) > 16 * 1024**3:
+    raise RuntimeError('Pilot workspace exceeds 16 GiB; preserve reports')
+
+shutil.copyfile(runner, backup_runner)
+config = run / 'effective-model-config.yaml'
+if config.is_file():
+    shutil.copyfile(config, run / 'before-fp32-config.yaml')
+runner.write_text(patched, encoding='utf-8')
+# Preserve the failed report at a root path already included by pack_reports.
+report_path.rename(backup_report)
+summary['fp32_recovery'] = {'previous_report': backup_report.name, 'training_precision': '32-true',
+                          'mode': 'freeze-lower', 'seed': 17, 'max_steps': 20}
+pack_reports()
+
+def retry_fp32():
+    command([train_python, work / 'kathbath_tamil_pilot.py', 'pilot', '--repo', work,
+             '--mode', 'freeze-lower', '--seed', '17'], 'pilot-freeze-lower-17-fp32')
+    summary['status'] = 'First FP32 pilot completed; remaining seeds/modes not completed'
+
+stage('fp32-first-pilot-recovery', retry_fp32)
+print('Download the NEW itantra_tamil_pilot_reports.zip and share it. Keep this session open.')

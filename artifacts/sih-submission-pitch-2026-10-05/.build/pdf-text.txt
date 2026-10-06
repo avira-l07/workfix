@@ -1,0 +1,175 @@
+iT antra
+SMART INDIA HACKATHON 2026
+• Problem Statement ID – SIH26173
+• Problem Statement Title- iTantra
+• Problem Statement- Indian Multilingual TTS & STT Aided
+Neural Transceiver Radio Access for low bitrate links
+• Software Theme-Smart Automation
+• PS Category- Software
+• Team ID- 165027
+• Team Name- GIT BIT
+Git Bit
+
+SMART INDIA HACKATHON 2026
+@SIH Idea submission- Template
+THE PROBLEM + CORE INSIGHT
+iTANTRA brings spoken communication to constrained links through local speech AI and compact text transport.
+FIELD / DISTRESS SCENARIO
+Continuous voice is data-heavy
+Low-bitrate links cannot carry rich audio reliably
+Users still need spoken output for accessibility
+ITANTRA APPROACH
+Keep VOICE at both ends. Send only COMPACT TEXT in 
+between.
+1
+Speech
+2
+STT + pause
+detection
+3
+Compact
+text packet
+4
+Wi-Fi /
+Bluetooth
+5
+TTS
+6
+Voice
+TEN LANGUAGES. ONE OFFLINE SPEECH PIPELINE.
+Hindi
+ Gujarati
+ Marathi
+ Kannada
+ Malayalam
+Tamil
+ Telugu
+ Odia
+ Bengali
+ English
+Core design: Speech -> local STT -> compact text -> local TTS
+Selected speech packs run locally after initial model download.
+2/6
+Git Bit
+On-device speech processing and direct Bluetooth / Wi-Fi Direct transport keep the core voice flow 
+independent of cloud inference.
+
+SMART INDIA HACKATHON 2026
+3/6
+Kotlin / Compose + sherpa-onnx: local speech processing and encrypted direct peer links.
+NODE A
+Android
+NODE B
+Android
+STT
+Selected pack
+TXT
+compact packet
+P2P LINK
+Bluetooth RFCOMM
+Wi-Fi Direct TCP
+AES-GCM secured
+TTS
+Selected voice
+APPLICATION FEATURES
+✓ Local speech STT/TTS after model provisioning ✓ Text transport Compact messages instead of audio ✓ Speech modes PTT and pause-delimited segments
+✓ Emergency alert Four compact SOS codes + playback ✓ Encrypted peers ECDH / SAS / AES-GCM session ✓ Local history Room / SQLCipher storage
+Demo flow: pair two Android devices -> push to talk -> encrypted text -> local voice playback
+Git Bit
+TECHNICAL APPROACH & FEASIBILITY
+DESIGN CHOICES
+Speech clarity
+Pause detection creates speech segments. 
+Dedicated language models handle recognition.
+Reliable delivery
+Direct Bluetooth / Wi-Fi links use message 
+acknowledgements and retry.
+Selective packs
+Download the chosen language pack; speech 
+model weights are managed separately from the 
+APK.
+Resource control
+VAD gates speech processing. Diagnostics expose 
+timing and runtime counters.
+
+SMART INDIA HACKATHON 2026
+@SIH Idea submission- Template
+MEASURED PROGRESS + DEMO PLAN
+MEASURED PROGRESS & SUBMISSION PLAN
+REMOTE / LOW-CONNECTIVITY FIELD
+10 LANGUAGES → 454 TESTS → LOCAL AI
+454 unit tests passed. Benchmarks cover ten languages; the 
+Tamil GPU baseline provides the next training reference.
+MEASURED RESULTS
+Hindi WER 9.1%
+ English WER 6.9%
+ Tamil CTC WER 20.05%
+Tamil RNNT WER 18.53%
+ Marathi TTS 181 ms
+ Tamil data overlap: 0
+BENCHMARK CONTEXT
+Hindi/English: desktop WER. Tamil: source GPU WER. 30 clips per set. Marathi: 
+desktop synthesis-only mean.
+Accuracy 40%
+WER + speech quality
+Efficiency 20%
+APK / RAM / CPU
+Latency 20%
+Speech + delivery time
+Demo plan
+Two-device voice flow
+4/6
+Git Bit
+
+@SIH Idea submission- Template
+SMART INDIA HACKATHON 2026
+SYSTEM ARCHITECTURE
+HOW iTANTRA WORKS — END TO END
+CORE OFFLINE PIPELINE
+MIC
+Speech
+VAD
+Pause / stop
+detection
+STT
+Selected
+STT pack
+TXT
+Compact
+packet
+P2P
+Bluetooth /
+Wi-Fi Direct
+TTS
+Selected
+TTS voice
+SPK
+Voice out
+OPERATING MODES
+PTT ON Walkie-talkie style push-to-
+talk
+ PTT OFF Speech segments after pauses
+ ALERT Priority alert playback
+ SECURE SESSION
+ECDH • SAS • AES-GCM
+FINAL DEMO DELIVERY PLAN
+Tamil tuning
+ Train / dev selection
+ Locked WER tests
+ ONNX / INT8 checks
+ Two-phone demo
+ SIGNED RELEASE
+5/6
+Git Bit
+
+SMART INDIA HACKATHON 2026
+Git Bit
+• Official problem SIH26173: sih.gov.in/sih2026PS
+• Offline speech runtime: sherpa-onnx for Android
+• STT: IndicConformer / English FastConformer
+• TTS: MMS-VITS / Marathi Piper voice
+• Speech benchmarks: FLEURS, 30 clips per language
+• Tamil data: Kathbath, 4,428 train / 555 dev clips
+• Validation design: speaker-separated splits + locked tests
+• Delivery sequence: model tuning -> demo -> signed APK
+REFERENCES & DELIVERY APPROACH

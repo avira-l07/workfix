@@ -1,0 +1,23 @@
+{
+  "language": "ta",
+  "passed": true,
+  "phrase": "உதவி தேவை",
+  "model_sha256": "c44055b2e7c5719ca26708f6eb03680b0f1bbf6fdcb0df6480478f872f1f6e34",
+  "tokens_sha256": "0b3f692319bb5fae8658e2f84bf252bca92450d0207bbba7273caa1a182d81b8",
+  "trials": [
+    {
+      "play": 1,
+      "samples": 16138,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 931.5007000695914,
+      "peak": 0.6314495801925659
+    },
+    {
+      "play": 2,
+      "samples": 16844,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 962.0779000688344,
+      "peak": 0.6674216389656067
+    }
+  ]
+}

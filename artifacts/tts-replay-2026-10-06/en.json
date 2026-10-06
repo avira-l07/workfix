@@ -1,0 +1,23 @@
+{
+  "language": "en",
+  "passed": true,
+  "phrase": "We need help",
+  "model_sha256": "409bafdb550948dc5c0b216e21b341732ef3cefead8008b512b034f1bdb27132",
+  "tokens_sha256": "dff08580748be688d9112d62d6352422c56d372dfe34b24ea3f66fa1b75cfaa9",
+  "trials": [
+    {
+      "play": 1,
+      "samples": 16064,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 1149.493399891071,
+      "peak": 0.9179323315620422
+    },
+    {
+      "play": 2,
+      "samples": 14572,
+      "sample_rate_hz": 16000,
+      "synthesis_ms": 1010.4887000052258,
+      "peak": 0.8961617946624756
+    }
+  ]
+}

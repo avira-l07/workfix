@@ -1,8 +1,12 @@
 package com.itantra.core.inference
 
 import com.itantra.domain.model.LanguageCode
+import com.itantra.domain.model.SpeechSynthesisRequest
+import com.itantra.domain.model.SpeechSynthesisResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -150,10 +154,12 @@ class ActiveLanguageSessionManager(
             // Strictly only one TTS model in RAM at once: unload previous TTS first (DO NOT UNLOAD STT)
             currentTtsEngine?.unload()
             currentTtsEngine = null
+            _activeTtsLanguage.value = null
 
             _sessionState.value = LanguageSessionState.LOADING_TTS
+            var newTts: SpeechSynthesizerEngine? = null
             try {
-                val newTts = engineFactory.createSynthesizer(language)
+                newTts = engineFactory.createSynthesizer(language)
                 if (newTts != null) {
                     newTts.load()
                     currentTtsEngine = newTts
@@ -167,11 +173,23 @@ class ActiveLanguageSessionManager(
                     throw IllegalStateException("TTS_MODEL_NOT_INSTALLED: No synthesizer available for ${language.wireCode}")
                 }
             } catch (e: Throwable) {
-                currentTtsEngine?.unload()
+                // A stopped Play request can be cancelled after native allocation but
+                // before the engine becomes current. Release that partially loaded voice.
+                withContext(NonCancellable) { newTts?.unload() }
                 currentTtsEngine = null
                 _sessionState.value = LanguageSessionState.ERROR
                 throw e
             }
+        }
+    }
+
+    /** Keeps the selected TTS alive throughout synthesis, without changing the STT language. */
+    suspend fun synthesizeTts(request: SpeechSynthesisRequest): SpeechSynthesisResult {
+        ensureTts(request.languageCode)
+        return switchMutex.withLock {
+            val engine = currentTtsEngine
+            check(engine?.isLoaded == true && engine.languageCode == request.languageCode) { "Speech language changed; tap Play again" }
+            engine.synthesize(request)
         }
     }
 

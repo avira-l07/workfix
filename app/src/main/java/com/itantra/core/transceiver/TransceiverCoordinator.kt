@@ -99,10 +99,13 @@ class TransceiverCoordinator(
 
     private val _messages = MutableStateFlow<List<TransceiverMessage>>(emptyList())
     val messages: StateFlow<List<TransceiverMessage>> = _messages.asStateFlow()
+    private val _trashedMessages = MutableStateFlow<List<TransceiverMessage>>(emptyList())
+    val trashedMessages: StateFlow<List<TransceiverMessage>> = _trashedMessages.asStateFlow()
     // Order state mutations and snapshot enqueueing together. The IO consumer never
     // takes this lock, and persistence/alert side effects stay outside update lambdas.
     private val messageMutationLock = Any()
-    private val persistenceQueue = Channel<TransceiverMessage>(Channel.UNLIMITED)
+    private data class HistoryWrite(val id: Long, val snapshot: TransceiverMessage?)
+    private val persistenceQueue = Channel<HistoryWrite>(Channel.UNLIMITED)
 
     private val _activePeerProfile = MutableStateFlow<com.itantra.domain.model.PeerProfile?>(null)
     val activePeerProfile: StateFlow<com.itantra.domain.model.PeerProfile?> = _activePeerProfile.asStateFlow()
@@ -158,7 +161,18 @@ class TransceiverCoordinator(
         if (messageDao != null) {
             scope.launch(Dispatchers.IO) {
                 try {
-                    val persisted = messageDao.getAll().map { it.toDomain() }
+                    val persistedRows = messageDao.getAllIncludingTrash().map { it.toDomain() }
+                    val now = System.currentTimeMillis()
+                    val trashed = persistedRows.filter { it.deletedAtMillis != null }
+                    synchronized(messageMutationLock) {
+                        val currentIds = (_messages.value + _trashedMessages.value).map { it.messageId }.toSet()
+                        _trashedMessages.value = trashed.filter {
+                            it.messageId !in currentIds && com.itantra.domain.model.RecycleBinPolicy.canRestore(it.deletedAtMillis!!, now)
+                        } + _trashedMessages.value
+                        trashed.filter { it.messageId !in currentIds && !com.itantra.domain.model.RecycleBinPolicy.canRestore(it.deletedAtMillis!!, now) }
+                            .forEach { persistenceQueue.trySend(HistoryWrite(it.messageId, null)) }
+                    }
+                    val persisted = persistedRows.filter { it.deletedAtMillis == null }
                     if (persisted.isNotEmpty()) {
                         val settled = persisted.map { m ->
                             when {
@@ -185,7 +199,7 @@ class TransceiverCoordinator(
                         }
                         synchronized(messageMutationLock) {
                             _messages.update { current ->
-                                val currentIds = current.map { it.messageId }.toSet()
+                                val currentIds = (current + _trashedMessages.value).map { it.messageId }.toSet()
                                 settled.filter { it.messageId !in currentIds } + current
                             }
                         }
@@ -194,13 +208,25 @@ class TransceiverCoordinator(
                 } catch (e: Throwable) {
                     android.util.Log.e("TransceiverCoord", "Error loading persisted messages", e)
                 }
-                for (snapshot in persistenceQueue) {
+                for (write in persistenceQueue) {
                     try {
-                        messageDao.insert(com.itantra.data.db.MessageEntity.fromDomain(snapshot))
+                        if (write.snapshot == null) messageDao.delete(write.id)
+                        else messageDao.insert(com.itantra.data.db.MessageEntity.fromDomain(write.snapshot))
                     } catch (e: Exception) {
                         android.util.Log.e("TransceiverCoord", "Error persisting message", e)
                     }
                 }
+            }
+        }
+        scope.launch(Dispatchers.IO) {
+            while (isActive) {
+                purgeExpiredHistory()
+                try {
+                    voiceNoteDao?.purgeExpired(System.currentTimeMillis() - com.itantra.domain.model.RecycleBinPolicy.RETENTION_MILLIS)
+                } catch (e: Exception) {
+                    android.util.Log.e("TransceiverCoord", "Could not clear expired recycle-bin notes", e)
+                }
+                delay(60_000L)
             }
         }
     }
@@ -254,6 +280,59 @@ class TransceiverCoordinator(
         }
     }
     private var isTtsPlaying = false
+    @Volatile private var savedAudioSink: SpeakerAudioSink? = null
+    private val savedSpeechPlayer = com.itantra.core.inference.SavedSpeechPlayer(
+        scope, sessionManager, { ttsCapabilityProvider?.isTtsInstalled(it) == true },
+        { audio ->
+            val sink = SpeakerAudioSink(context)
+            savedAudioSink = sink
+            try { sink.init(audio.sampleRateHz); sink.play(audio.pcmAudio); sink.flushAndStop() }
+            finally { sink.release(); if (savedAudioSink === sink) savedAudioSink = null }
+        },
+        { savedAudioSink?.stopImmediate() },
+    )
+    val savedSpeechPlayback = savedSpeechPlayer.state
+    fun stopSavedSpeech() = savedSpeechPlayer.stop()
+
+    fun replayMessage(messageId: Long) {
+        val message = _messages.value.firstOrNull { it.messageId == messageId } ?: return
+        replaySavedText("message-$messageId", message.text, message.displayedTextLanguage)
+    }
+
+    fun replayVoiceNote(note: com.itantra.data.db.VoiceNoteEntity) {
+        if (note.deletedAtMillis != null) return
+        // Older notes stored translated text with a source-language label. Recover the
+        // displayed language from their corresponding message when it is still available.
+        val matching = (_messages.value + _trashedMessages.value).firstOrNull {
+            it.createdAtLocal == note.createdAtMillis && it.text == note.transcribedText && it.source == MessageSource.LOCAL
+        }
+        replaySavedText("note-${note.id}", note.transcribedText,
+            matching?.displayedTextLanguage ?: LanguageCode.fromWireCode(note.languageWireCode))
+    }
+
+    private fun replaySavedText(key: String, text: String, language: LanguageCode?) {
+        val unresolvedCritical = _messages.value.any { it.source == MessageSource.REMOTE && it.priority == com.itantra.domain.model.MessagePriority.CRITICAL && it.state != MessageState.ACKNOWLEDGED }
+        if (recordingJob != null || currentTtsJob?.isActive == true || isTtsPlaying || _activeEmergencyAlert.value != null || unresolvedCritical) {
+            savedSpeechPlayer.unavailable(key, "Finish recording or received speech, and acknowledge active emergencies before replaying")
+            return
+        }
+        cooldownJob?.cancel()
+        continuousListenEngine.pauseListening()
+        savedSpeechPlayer.play(key, text, language)
+    }
+
+    init {
+        scope.launch {
+            savedSpeechPlayback.collect { playback ->
+                if (playback.busy) continuousListenEngine.pauseListening()
+                else {
+                    delay(300)
+                    if (!savedSpeechPlayback.value.busy && !isTtsPlaying && currentTtsJob?.isActive != true && continuousModeJob?.isActive == true)
+                        continuousListenEngine.resetAndResume()
+                }
+            }
+        }
+    }
 
     val emergencyStore = com.itantra.core.emergency.EmergencyPersistenceStore(context.filesDir)
     private val _activeEmergencyAlert = MutableStateFlow<com.itantra.domain.model.EmergencyRecord?>(null)
@@ -513,7 +592,7 @@ class TransceiverCoordinator(
     private fun addMessage(msg: TransceiverMessage) {
         synchronized(messageMutationLock) {
             _messages.update { it + msg }
-            if (messageDao != null) persistenceQueue.trySend(msg)
+            if (messageDao != null) persistenceQueue.trySend(HistoryWrite(msg.messageId, msg))
         }
         updateAlertJob()
     }
@@ -524,7 +603,7 @@ class TransceiverCoordinator(
                 messages.map { if (it.messageId == id) transitionMessage(it, update(it)) else it }
             }
             val snapshot = _messages.value.find { it.messageId == id }
-            if (messageDao != null && snapshot != null) persistenceQueue.trySend(snapshot)
+            if (messageDao != null && snapshot != null) persistenceQueue.trySend(HistoryWrite(snapshot.messageId, snapshot))
         }
         updateAlertJob()
     }
@@ -547,8 +626,67 @@ class TransceiverCoordinator(
                 if (it.messageId in unresolvedIds) it.copy(state = MessageState.ACKNOWLEDGED) else it
             } }
             if (messageDao != null) _messages.value.filter { it.messageId in unresolvedIds }
-                .forEach { persistenceQueue.trySend(it) }
+                .forEach { persistenceQueue.trySend(HistoryWrite(it.messageId, it)) }
         }
+    }
+
+    fun moveMessageToTrash(id: Long, now: Long = System.currentTimeMillis()): Boolean {
+        synchronized(messageMutationLock) {
+            val message = _messages.value.find { it.messageId == id } ?: return false
+            if (!com.itantra.domain.model.RecycleBinPolicy.canTrash(message)) return false
+            if (savedSpeechPlayback.value.itemKey == "message-$id") stopSavedSpeech()
+            val deleted = message.copy(deletedAtMillis = now)
+            _messages.value = _messages.value.filterNot { it.messageId == id }
+            _trashedMessages.value = _trashedMessages.value + deleted
+            if (messageDao != null) persistenceQueue.trySend(HistoryWrite(id, deleted))
+        }
+        return true
+    }
+
+    fun restoreMessage(id: Long, now: Long = System.currentTimeMillis()): Boolean {
+        synchronized(messageMutationLock) {
+            val message = _trashedMessages.value.find { it.messageId == id } ?: return false
+            if (!com.itantra.domain.model.RecycleBinPolicy.canRestore(message.deletedAtMillis!!, now)) return false
+            val restored = message.copy(deletedAtMillis = null)
+            _trashedMessages.value = _trashedMessages.value.filterNot { it.messageId == id }
+            _messages.value = (_messages.value + restored).sortedBy { it.createdAtLocal }
+            if (messageDao != null) persistenceQueue.trySend(HistoryWrite(id, restored))
+        }
+        // Restoration only changes local history. It never sends a packet or restarts playback.
+        return true
+    }
+
+    fun deleteTrashedMessage(id: Long) {
+        synchronized(messageMutationLock) {
+            if (_trashedMessages.value.none { it.messageId == id }) return
+            _trashedMessages.value = _trashedMessages.value.filterNot { it.messageId == id }
+            if (messageDao != null) persistenceQueue.trySend(HistoryWrite(id, null))
+        }
+    }
+
+    fun purgeExpiredHistory(now: Long = System.currentTimeMillis()) {
+        synchronized(messageMutationLock) {
+            val expired = _trashedMessages.value.filter {
+                !com.itantra.domain.model.RecycleBinPolicy.canRestore(it.deletedAtMillis!!, now)
+            }
+            _trashedMessages.value = _trashedMessages.value - expired.toSet()
+            if (messageDao != null) expired.forEach { persistenceQueue.trySend(HistoryWrite(it.messageId, null)) }
+        }
+    }
+
+    fun retryMessage(id: Long): Boolean {
+        val message = _messages.value.find { it.messageId == id } ?: return false
+        val peer = _activePeerProfile.value?.deviceId ?: return false
+        if (message.source != MessageSource.LOCAL || message.state != MessageState.ERROR || message.text.isBlank() ||
+            message.priority == com.itantra.domain.model.MessagePriority.CRITICAL ||
+            message.peerId.isBlank() || message.peerId != peer ||
+            secureSessionManager.state.value != SecureSessionState.SECURE_VERIFIED ||
+            message.translationStatus in setOf(com.itantra.domain.model.TranslationStatus.FAILED,
+                com.itantra.domain.model.TranslationStatus.MODEL_MISSING, com.itantra.domain.model.TranslationStatus.UNSUPPORTED) ||
+            (message.isVoiceGenerated && (message.rawPcmEquivalentBytes <= 0 || message.payloadBytes <= 0))) return false
+        updateMessage(id) { it.copy(state = MessageState.TRANSMITTING, statusDetail = "Retrying delivery") }
+        sendVoiceMessage(id)
+        return true
     }
 
     private fun updateAlertJob() {
@@ -950,6 +1088,8 @@ class TransceiverCoordinator(
     }
 
     internal fun enqueueMessagePacketForPlayback(packet: ItantraPacket) {
+        // Incoming speech and emergency alerts always take precedence over manual replay.
+        stopSavedSpeech()
         scope.launch {
             queueMutex.withLock {
                 messageQueue.add(packet)
@@ -965,6 +1105,8 @@ class TransceiverCoordinator(
     }
 
     private suspend fun processIncomingMessagePacket(packet: ItantraPacket) {
+        stopSavedSpeech()
+        savedSpeechPlayer.awaitStopped()
         val isEmergencyCode = packet.type == PacketType.EMERGENCY_CODE
 
         // Extract packet language metadata first, before building text or choosing local language.
@@ -1320,7 +1462,7 @@ class TransceiverCoordinator(
                 launch {
                     try {
                         audioSource.stream.collect { samples ->
-                            if (!isTtsPlaying) {
+                            if (!isTtsPlaying && !savedSpeechPlayback.value.busy) {
                                 continuousListenEngine.feedAudio(samples)
                             }
                         }
@@ -1508,7 +1650,7 @@ class TransceiverCoordinator(
                     voiceNoteDao?.let { dao ->
                         scope.launch(Dispatchers.IO) {
                             dao.insert(com.itantra.data.db.VoiceNoteEntity(
-                                transcribedText = finalTxt,
+                                transcribedText = result.text,
                                 languageWireCode = srcLang.wireCode,
                                 createdAtMillis = msg.createdAtLocal
                             ))
@@ -1520,7 +1662,7 @@ class TransceiverCoordinator(
                     e.printStackTrace()
                     updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = e.message ?: "Speech processing failed") }
                 } finally {
-                    if (!isTtsPlaying && continuousModeJob?.isActive == true) {
+                    if (!isTtsPlaying && !savedSpeechPlayback.value.busy && continuousModeJob?.isActive == true) {
                         continuousListenEngine.resumeListening()
                     }
                 }
@@ -1529,6 +1671,7 @@ class TransceiverCoordinator(
     }
 
     fun startRecording(isCritical: Boolean = false) {
+        stopSavedSpeech()
         if (recordingJob != null) return
         val engine = sessionManager.currentSttEngine
         val sttLang = sessionManager.activeSttLanguage.value ?: LanguageCode.HINDI
@@ -1644,6 +1787,23 @@ class TransceiverCoordinator(
         }
     }
 
+    fun cancelActiveRecording() {
+        if (recordingJob == null) return
+        recordingJob?.cancel()
+        recordingJob = null
+        synchronized(activeRecordingChunks) {
+            activeRecordingChunks.forEach { it.fill(0f) }
+            activeRecordingChunks.clear()
+        }
+        val id = activeRecordingMessageId
+        activeRecordingMessageId = 0L
+        updateMessage(id) { it.copy(state = MessageState.ERROR, text = "Recording cancelled", statusDetail = "Cancelled before transcription or sending") }
+        scope.launch {
+            sttMutex.withLock { sessionManager.currentSttEngine?.reset() }
+            if (!isTtsPlaying && !savedSpeechPlayback.value.busy && continuousModeJob?.isActive == true) continuousListenEngine.resetAndResume()
+        }
+    }
+
     fun stopRecording(msgId: Long) {
         if (recordingJob == null) return
         recordingJob?.cancel()
@@ -1682,7 +1842,7 @@ class TransceiverCoordinator(
             android.util.Log.i("TransceiverCoordinator", "Silence/low-energy detected (RMS=$rms, ${rmsDbfs} dBFS < 0.003 threshold). Short-circuiting STT.")
             scope.launch {
                 sttMutex.withLock { engine.reset() }
-                if (continuousModeJob?.isActive == true && !isTtsPlaying) {
+                if (continuousModeJob?.isActive == true && !isTtsPlaying && !savedSpeechPlayback.value.busy) {
                     continuousListenEngine.resetAndResume()
                 }
             }
@@ -1702,7 +1862,7 @@ class TransceiverCoordinator(
         if (durationMillis < 300) {
             scope.launch {
                 sttMutex.withLock { engine.reset() }
-                if (continuousModeJob?.isActive == true && !isTtsPlaying) {
+                if (continuousModeJob?.isActive == true && !isTtsPlaying && !savedSpeechPlayback.value.busy) {
                     continuousListenEngine.resetAndResume()
                 }
             }
@@ -1860,7 +2020,7 @@ class TransceiverCoordinator(
                     voiceNoteDao?.let { dao ->
                         scope.launch(Dispatchers.IO) {
                             dao.insert(com.itantra.data.db.VoiceNoteEntity(
-                                transcribedText = finalTxt,
+                                transcribedText = result.text,
                                 languageWireCode = srcLang.wireCode,
                                 createdAtMillis = msg.createdAtLocal
                             ))
@@ -1896,7 +2056,7 @@ class TransceiverCoordinator(
                     e.printStackTrace()
                     updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = e.message ?: "Speech processing failed") }
                 } finally {
-                    if (continuousModeJob?.isActive == true && !isTtsPlaying) {
+                    if (continuousModeJob?.isActive == true && !isTtsPlaying && !savedSpeechPlayback.value.busy) {
                         continuousListenEngine.resetAndResume()
                     }
                 }
@@ -2198,6 +2358,10 @@ class TransceiverCoordinator(
 
             while (attempt < maxAttempts && !success) {
                 attempt++
+                if (msg.peerId.isNotBlank() && _activePeerProfile.value?.deviceId != msg.peerId) {
+                    updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = "Reconnect the original peer before sending") }
+                    return@launch
+                }
                 try {
                     val tCrypto0 = SystemClock.elapsedRealtimeNanos()
                     val securePacket = secureSessionManager.encrypt(packet) // Encrypt inside loop to get a fresh nonce/counter each time
@@ -2558,10 +2722,12 @@ class TransceiverCoordinator(
     }
 
     fun shutdown() {
+        stopSavedSpeech()
         scope.cancel()
     }
 
     suspend fun shutdownForWipe() {
+        stopSavedSpeech()
         val job = scope.coroutineContext[kotlinx.coroutines.Job]
         job?.cancel()
         job?.join()
@@ -2572,6 +2738,7 @@ class TransceiverCoordinator(
             activeRecordingChunks.clear()
         }
         _messages.value = emptyList()
+        _trashedMessages.value = emptyList()
         _activePeerProfile.value = null
         emergencyStore.clearMemoryForWipe()
         secureSessionManager.resetSession()

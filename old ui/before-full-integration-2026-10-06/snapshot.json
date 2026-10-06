@@ -1,0 +1,102 @@
+[
+  {
+    "Sha256": "3bf547c3f8ea01791953e611a0a148ecd3816560d84a77760e8a531b745672b2",
+    "Path": "build.gradle.kts"
+  },
+  {
+    "Sha256": "07efe694007fc945cfe5312ae70e4e49ee2e8bc13ba6c3fc931037bc0870c382",
+    "Path": "MainActivity.kt"
+  },
+  {
+    "Sha256": "4424919cddd4019bf2ecc880d09dc4312a59e04a21de94dc08ce876938078df1",
+    "Path": "ui\\components\\BatteryIndicator.kt"
+  },
+  {
+    "Sha256": "5016a153371aea08133fb6ed4e330068b7974e980d9e9ced0bc4334a6d0e97de",
+    "Path": "ui\\components\\HistoryMessageCard.kt"
+  },
+  {
+    "Sha256": "70d2eebfac3c620b354a731406a20d02fcb83d8a3dc2dd76a0f6dc62cb1a8e0f",
+    "Path": "ui\\components\\MessageFilterChipsRow.kt"
+  },
+  {
+    "Sha256": "04d10420265db50556757bec6e4a1b436333ba1b13623d19441d85576eccbafb",
+    "Path": "ui\\components\\RadioHardwareStatus.kt"
+  },
+  {
+    "Sha256": "b17d04f7c03be9b9cbb4449aee3115aaac72ba17adf7f6eb3aa74420a5c75196",
+    "Path": "ui\\components\\SavedSpeechButton.kt"
+  },
+  {
+    "Sha256": "5f5d2ed8cb236b6a8b330f26826bdef5fac63f0d1d01596e097e0dc3844f509a",
+    "Path": "ui\\screens\\chat\\DateUtils.kt"
+  },
+  {
+    "Sha256": "901c8065ca688c814831bd8a1c2195f2e446f621e76ab8ff5d89729de38ae6e5",
+    "Path": "ui\\screens\\chat\\DedicatedChatScreen.kt"
+  },
+  {
+    "Sha256": "36cdcdbf96397a1d9a4f5b5a388fda58b95002ded534e5b851d76ed3c5d6d159",
+    "Path": "ui\\screens\\connect\\ConnectScreenContent.kt"
+  },
+  {
+    "Sha256": "e577927a2544c116bba9743962180ea7599dc486a2d8ed8c07dfc64114c7b0f5",
+    "Path": "ui\\screens\\diagnostics\\DiagnosticsScreen.kt"
+  },
+  {
+    "Sha256": "7bd91e82cbf00cc569556951389bf53b2b92d85ff21d98c79cae34848ece052b",
+    "Path": "ui\\screens\\hub\\AdaptiveHubScreen.kt"
+  },
+  {
+    "Sha256": "b4a70ea6328585471842855d3cc5aa21734b4907558e7dd8beee77c705ac34c4",
+    "Path": "ui\\screens\\language\\LanguagePacksScreen.kt"
+  },
+  {
+    "Sha256": "4543a7f5f18b36631c43ff9fb8414f0c0535cdaab4e75e1becc798867918b02e",
+    "Path": "ui\\screens\\language\\TranslationReadiness.kt"
+  },
+  {
+    "Sha256": "edc72576d755755274b91d188b11b34bf1dd7449f8daa24d1fdbee44e847a157",
+    "Path": "ui\\screens\\messages\\ConversationList.kt"
+  },
+  {
+    "Sha256": "a172c38eed16a1d7929358ac24c4537a8f7f40ee490c9d02cf2788dc7ca994bb",
+    "Path": "ui\\screens\\messages\\MessagesScreen.kt"
+  },
+  {
+    "Sha256": "786c8e3342e85946d8be7c341f1cd657fb0384ca839e9b9b74589bb7e90d9102",
+    "Path": "ui\\screens\\settings\\SettingsScreen.kt"
+  },
+  {
+    "Sha256": "4d64b05855652c9f43251d001496dce404b45a03b4572fb73bedd54d51135c19",
+    "Path": "ui\\screens\\settings\\SettingsViewModel.kt"
+  },
+  {
+    "Sha256": "a00aa6d79f07c8ba2872926d24e9b811e9135a2d10d4e9dd4a5c4f347a175111",
+    "Path": "ui\\screens\\settings\\WipeDataAction.kt"
+  },
+  {
+    "Sha256": "8d30d0d70f7964f8a5718964fe84689c8fba8e022ec2b3341f20ba601f5412bb",
+    "Path": "ui\\screens\\voicenotes\\RecycleBinScreen.kt"
+  },
+  {
+    "Sha256": "5a2afbd1ff388ed6fb870a77a0c77855cb659f3c7f268cdadd573b3a4fcdc73d",
+    "Path": "ui\\screens\\voicenotes\\VoiceNoteGrouping.kt"
+  },
+  {
+    "Sha256": "190557fa8a85b1404aa151eff2f87491ffc8d822d0af4a17b0a3e398e95002ec",
+    "Path": "ui\\screens\\voicenotes\\VoiceNotesScreen.kt"
+  },
+  {
+    "Sha256": "07b15b0ef1122ecd459ddc9d4a4f7ae7ab6ca5430328c4b77229073c22fc425a",
+    "Path": "ui\\theme\\Color.kt"
+  },
+  {
+    "Sha256": "db794e0cabde25923c857df16603da1caa435cd5c04e5d317dfe86444b66ec5d",
+    "Path": "ui\\theme\\Theme.kt"
+  },
+  {
+    "Sha256": "f407dfbbb1fcebeddf930ffc15c203827179af8be168b72f388b9d63944a1e48",
+    "Path": "ui\\theme\\Type.kt"
+  }
+]

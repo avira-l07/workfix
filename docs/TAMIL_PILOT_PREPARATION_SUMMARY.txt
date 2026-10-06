@@ -1,0 +1,125 @@
+iTantra Tamil Gate B preparation - 4 October 2026
+
+REPAIR UPDATE - 5 October 2026
+The user reported an Unsafe saved path error for tools\stt_models\...\ta-00.wav.
+An older Kaggle runtime cell falsely replaced that failure's status with
+Saved data passed. The provided screenshot therefore does not validate data.
+The current helper safely normalizes Windows/POSIX relative separators while
+keeping source checksums and root containment. Script-copy classification uses
+the normalized paths too. Both notebooks embed the fix. Runtime status changes
+now require saved_data_verified=true and no existing data error.
+Changed in this repair: kathbath_gate_b_data.py, test_kathbath_gate_b_data.py,
+kathbath_gate_b_preflight.ipynb, kathbath_tamil_pilot.ipynb, this TXT and
+KATHBATH_GATE_B_PREFLIGHT.md. Both local safety suites passed.
+Actual Kaggle data recheck and model training remain pending. CPU-only is
+adequate for preflight; the training pilot requires GPU. Reuse saved Gate A input.
+
+DELIVERABLES
+tools/kathbath_tamil_pilot.ipynb - self-contained next Kaggle notebook.
+tools/kathbath_tamil_pilot.py - guarded baseline and short training runner.
+tools/test_kathbath_tamil_pilot.py - CPU-only safety checks.
+docs/KATHBATH_TAMIL_PILOT.md - exact steps and evidence limits.
+
+PROBLEMS AND CHANGES
+The old notebook was a command template, with unapplied seed labels. The new
+runner applies Lightning seed_everything for 17 and 29, restores the same source
+checkpoint for every mode/seed, and actually calls Trainer.fit.
+Generic dataset settings omitted this NeMo fork's language routing. Rows now
+include lang=ta; actual multilingual batches must contain Tamil IDs.
+Old source training paths are cleared on restore. The existing saved-data guard
+rebases manifests to read-only Gate A output and checks actual WAVs/protection.
+An isolated Python 3.11 environment uses pinned Torch and a pinned NeMo checkout.
+Pip/import/CUDA checks and installed versions are recorded. This remains an
+unverified candidate runtime until the real Kaggle run passes.
+CTC and RNNT baselines run before training. The CTC compatibility gate requires
+native Tamil outputs and agreement with the recorded desktop baseline.
+Each short pilot checks finite loss/gradients, actual weight changes, dev CTC
+WER and memory. Failed stages still package redacted reports for download.
+
+EXPERIMENT BOUNDARY
+Tamil only; fixed 128 TRAIN / 64 DEV clips; actual hours/speakers recorded.
+Four runs: freeze lower half vs full encoder, seeds 17 and 29, 20 updates each.
+Both RNNT and CTC losses remain active; dev CTC WER is monitored.
+No full trial, held-out post-training selection, export, app/APK change or Telugu
+training. The three held-out, seed-variance and FP32/INT8 gates remain required.
+
+FILES TOUCHED IN THIS PREPARATION
+New: the notebook, runner, safety check, this TXT and KATHBATH_TAMIL_PILOT.md.
+Updated: STT_FINETUNING_RUNBOOK.md, LANGUAGE_BENCHMARKS.md,
+QUICK_STAT_SUMMARY.md, KATHBATH_GATE_B_PREFLIGHT.md,
+finetune_indicconformer.ipynb (historical-template warning).
+Public source receipts: tools/stt_results/tamil-gate-b-preparation-2026-10-04/.
+Earlier Marathi/app edits and existing preflight files are preserved.
+
+LOCAL COMMANDS EXECUTED
+python tools/test_kathbath_tamil_pilot.py - passed, synthetic safety checks.
+python tools/test_kathbath_gate_b_data.py - passed, synthetic saved-data checks.
+python tools/test_speech_leakage.py - passed.
+python tools/test_kathbath_trial.py - passed, synthetic capped/disjoint trial.
+All new notebook Python cells compile; embedded helpers match source files.
+Failed-stage ZIP and secret redaction were tested with a synthetic token.
+Pinned public NeMo dataset/training/augmentation APIs were inspected and hashed.
+
+HONEST STATUS
+Received Kaggle preflight report: failed despite old misleading status.
+Updated notebook screenshot: FileNotFoundError while opening FLEURS WAV.
+CPU saved-data check subsequently passed; received JSON and ZIP reviewed
+5 October 2026. GPU/runtime compatibility is not yet verified.
+New Kaggle install/import/checkpoint restore: Not run here.
+New CTC/RNNT baseline, training losses, dev WER, GPU/RAM: Not run.
+Post-training 30/100/noisy WER, seed variance, FP32/INT8 export: Not run.
+Phone accuracy, latency and listener validation: Not verified.
+Existing Tamil desktop 30-clip WER: 21.8274%; no new accuracy improvement.
+Under 10% is a research target, not a result or promise.
+
+HANDOFF
+Finish the current preflight; download itantra_gate_b_preflight.json.
+Import tools/kathbath_tamil_pilot.ipynb into a NEW private Kaggle notebook.
+Attach the original successful Gate A Version #1 as Notebook Input. The
+language 2 bundle alone is insufficient. Enable Internet, GPU and HF_TOKEN.
+Accept the Tamil checkpoint access terms. Run All once. On success OR failure,
+download itantra_tamil_pilot_reports.zip, preserve outputs and share reports.
+Do not restart/repeat Gate A merely to download reports. Missing saved audio
+must be investigated before retrying.
+
+FOLLOW-UP PATH FIX - 5 OCTOBER 2026
+The earlier repair normalized and validated the Windows path but still opened
+the original string. Windows tests accepted the backslashes; Linux did not.
+Changed contained_file from root / relative to root / part. Both the preflight
+and pilot notebooks now embed this correction. Added a path-join regression
+that reproduced the original bug before fixing it and passes after the fix.
+Reran test_kathbath_gate_b_data.py and test_kathbath_tamil_pilot.py: both passed.
+git diff --check passed (existing line-ending warnings only).
+Checks are synthetic local evidence; Kaggle training and new WER remain Not run.
+Current-session repair: edit that line in the helper cell, rerun the helper,
+then the saved-data check and remaining cells. No kernel/Gate A restart needed.
+
+RECEIVED CPU DATA CHECK - 5 OCTOBER 2026
+New report verifies the reviewed Gate A SHA-256 and 277 original bundle files.
+4,428 train / 555 dev clips; 123 train / 14 dev speakers.
+Leakage guard: 4,983 rows, overlaps/errors=0. Noisy held-out clips: 1,377.
+Pilot plan: 128 train / 64 dev clips, approximately 0.245 / 0.123 hours.
+ZIP CRC passed; embedded helper and runner match the corrected local source.
+Received reports and archive SHA-256 are preserved in
+tools/stt_results/tamil-gate-b-datacheck-2026-10-05/.
+This evidence comes from user-supplied Kaggle outputs; the full corpus was not
+rescanned locally. Next: isolated CUDA environment and source baseline/pilot.
+No new training, accuracy improvement, export or phone validation is claimed.
+
+FLOAT32 BASELINE REPAIR - 5 OCTOBER 2026
+Received GPU report: pinned Python 3.11.13 / Torch 2.2.2+cu121 / NeMo runtime
+passed on Tesla T4. Source checkpoint restored (523,192,320 bytes).
+Baseline failed before scoring: unknown format: 3. Original FLEURS WAVs are
+IEEE float32; the baseline incorrectly used the PCM16 training duration reader.
+Fixed the evaluation-only reader using existing SoundFile/NumPy dependencies.
+Checks require 16-kHz mono PCM16/float32, nonempty finite audio, original SHA-256.
+No source audio was rewritten, quantized, normalized, resampled or excluded.
+The stricter PCM16 checks for training/noisy audio remain unchanged.
+All 30 original local Tamil evaluation WAVs now pass checksums and duration reading.
+Updated runner and both embedded pilot/CPU notebooks. Added a current-session
+recovery cell (tools/kathbath_tamil_float_wav_recovery.txt), preserving failed
+reports/logs and reusing installed environment and downloaded checkpoint.
+Both Python regression scripts passed, including runnable recovery checks.
+Evidence: tools/stt_results/tamil-gate-b-float32-repair-2026-10-05/.
+Next: run recovery cell, rerun only baseline, then pilots if baseline passes.
+New Kaggle WER, successful baseline, training and phone validation: Not verified.

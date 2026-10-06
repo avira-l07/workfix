@@ -7,7 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [MessageEntity::class, VoiceNoteEntity::class, PeerEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -16,6 +16,12 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun peerDao(): PeerDao
 
     companion object {
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE messages ADD COLUMN deletedAtMillis INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE voice_notes ADD COLUMN deletedAtMillis INTEGER DEFAULT NULL")
+            }
+        }
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE messages ADD COLUMN peerId TEXT NOT NULL DEFAULT ''")

@@ -1,0 +1,271 @@
+{"kind":"layout","layoutId":"/ppt/slideMasters/slideMaster1.xml","name":"","type":"master","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout1.xml","name":"Title Slide","type":"title","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"subtitle","type":"subtitle","textPreview":"Click to edit Master subtitle style"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout2.xml","name":"Title and Content","type":"obj","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"content placeholder 2","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout3.xml","name":"Section Header","type":"secHead","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout4.xml","name":"Two Content","type":"twoObj","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"content placeholder 2","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"content placeholder 3","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout5.xml","name":"Comparison","type":"twoTxTwoObj","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"content placeholder 3","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"content placeholder 5","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout6.xml","name":"Title Only","type":"titleOnly","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout7.xml","name":"Blank","type":"blank","placeholders":[{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout8.xml","name":"Content with Caption","type":"objTx","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"content placeholder 2","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout9.xml","name":"Picture with Caption","type":"picTx","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"picture","type":"picture"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout10.xml","name":"Title and Vertical Text","type":"vertTx","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout11.xml","name":"Vertical Title and Text","type":"vertTitleAndTx","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime"},{"name":"footer","type":"footer","textPreview":"@SIH Idea submission- Template"},{"name":"slideNumber","type":"slideNumber"}]}
+{"kind":"slide","id":"sl/y90nupkv","slide":1,"title":"iTantra","textShapes":4}
+{"kind":"shape","id":"sh/43y1gji9","slide":1,"name":"Rectangle 24","bbox":[160,0,960,720]}
+{"kind":"shape","id":"sh/54r2poju","slide":1,"name":"Freeform: Shape 26","bbox":[593.89,89.4,486.99,541.2]}
+{"kind":"textbox","id":"sh/7qp4be9c","slide":1,"name":"Subtitle 3","placeholder":"subtitle","text":"\niTantra","textPreview":"| iTantra","textChars":8,"textLines":2,"bbox":[130.78,68.1,896,184]}
+{"kind":"textbox","id":"sh/fu94fe98","slide":1,"name":"Title 7","placeholder":"title","text":"SMART INDIA HACKATHON 2026","textPreview":"SMART INDIA HACKATHON 2026","textChars":26,"textLines":1,"bbox":[34.78,9.6,1088,218]}
+{"kind":"textbox","id":"sh/wn6dc7eh","slide":1,"name":"TextBox 9","text":"\nProblem Statement ID – SIH26173\nProblem Statement Title- iTantra\nProblem Statement- Indian Multilingual TTS & STT Aided Neural Transceiver Radio Access for low bitrate links\nSoftware Theme-Smart Automation\nPS Category- Software\nTeam ID- 165027\nTeam Name- GIT BIT","textPreview":"| Problem Statement ID – SIH26173 | Problem Statement Title- iTantra | Problem Statement- Indian Multilingual TTS & STT Aided Neural Tran...","textChars":263,"textLines":8,"bbox":[46.94,163.81,660.01,503.93]}
+{"kind":"textbox","id":"sh/k3yl0zql","slide":1,"name":"Oval 2","text":"Git Bit","textPreview":"Git Bit","textChars":7,"textLines":1,"bbox":[34.62,26.48,131.43,84.76]}
+{"kind":"image","id":"im/t8jihgzm","slide":1,"name":"Picture 4","bbox":[719.67,180.14,336.33,359.71]}
+{"kind":"image","id":"im/s7a1obih","slide":1,"name":"Picture 1","bbox":[1026.78,0.16,236.2,111.53]}
+{"kind":"slide","id":"sl/hwbqtkby","slide":2,"title":"SMART INDIA HACKATHON 2026","textShapes":39}
+{"kind":"textbox","id":"sh/dkvmpszm","slide":2,"name":"Title 1","placeholder":"title","text":"SMART INDIA HACKATHON 2026","textPreview":"SMART INDIA HACKATHON 2026","textChars":26,"textLines":1,"bbox":[19.21,0,1152,120]}
+{"kind":"shape","id":"sh/qx4nud0b","slide":2,"name":"TextBox 8","bbox":[16.19,146.48,1280,171.26]}
+{"kind":"shape","id":"sh/x4r21kru","slide":2,"name":"Slide Number Placeholder 5","placeholder":"slideNumber","bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/w3i1sfa9","slide":2,"name":"Footer Placeholder 6","placeholder":"footer","text":"@SIH Idea submission- Template","textPreview":"@SIH Idea submission- Template","textChars":30,"textLines":1,"bbox":[488,667.33,336.38,38.33]}
+{"kind":"textbox","id":"sh/9072xkry","slide":2,"name":"TextBox 1","text":"THE PROBLEM + CORE INSIGHT","textPreview":"THE PROBLEM + CORE INSIGHT","textChars":26,"textLines":1,"bbox":[59.52,660.55,403.2,24.96]}
+{"kind":"textbox","id":"sh/mtwrmxg7","slide":2,"name":"TextBox 5","text":"iTANTRA keeps the human experience as voice, but moves only compact information across the constrained link.","textPreview":"iTANTRA keeps the human experience as voice, but moves only compact information across the constrained link.","textChars":108,"textLines":1,"bbox":[59.52,139,1132.8,32.64]}
+{"kind":"shape","id":"sh/wjy9sry9","slide":2,"name":"Rounded Rectangle 13","bbox":[62.4,172.8,484.8,244.8]}
+{"kind":"shape","id":"sh/xk7qlczu","slide":2,"name":"Rounded Rectangle 14","bbox":[86.4,193.92,177.6,32.64]}
+{"kind":"textbox","id":"sh/ahwrqhgj","slide":2,"name":"TextBox 9","text":"FIELD / DISTRESS SCENARIO","textPreview":"FIELD / DISTRESS SCENARIO","textChars":25,"textLines":1,"bbox":[91.2,195.84,168,28.8]}
+{"kind":"shape","id":"sh/bip8jmho","slide":2,"name":"Oval 16","bbox":[71.04,450.24,7.68,7.68]}
+{"kind":"textbox","id":"sh/cnupgny5","slide":2,"name":"TextBox 11","text":"Continuous voice is data-heavy","textPreview":"Continuous voice is data-heavy","textChars":30,"textLines":1,"bbox":[86.4,436.8,443.52,34.56]}
+{"kind":"shape","id":"sh/do3q9szq","slide":2,"name":"Oval 18","bbox":[71.04,495.36,7.68,7.68]}
+{"kind":"textbox","id":"sh/t8byxkn2","slide":2,"name":"TextBox 13","text":"Low-bitrate links cannot carry rich audio reliably","textPreview":"Low-bitrate links cannot carry rich audio reliably","textChars":50,"textLines":1,"bbox":[86.4,481.92,443.52,34.56]}
+{"kind":"shape","id":"sh/s72xofmh","slide":2,"name":"Oval 20","bbox":[71.04,541.44,7.68,7.68]}
+{"kind":"textbox","id":"sh/76twva5c","slide":2,"name":"TextBox 15","text":"Users still need spoken output for accessibility","textPreview":"Users still need spoken output for accessibility","textChars":48,"textLines":1,"bbox":[86.4,528,443.52,34.56]}
+{"kind":"textbox","id":"sh/65kfmpor","slide":2,"name":"TextBox 16","text":"ITANTRA APPROACH","textPreview":"ITANTRA APPROACH","textChars":16,"textLines":1,"bbox":[587.52,174.72,211.2,28.8]}
+{"kind":"textbox","id":"sh/hcvy14ne","slide":2,"name":"TextBox 17","text":"Keep VOICE at both ends. Send only COMPACT TEXT in between.","textPreview":"Keep VOICE at both ends. Send only COMPACT TEXT in between.","textChars":59,"textLines":1,"bbox":[587.52,199.68,619.2,69.12]}
+{"kind":"shape","id":"sh/gbmxszmt","slide":2,"name":"Oval 24","bbox":[593.28,312.96,59.52,59.52]}
+{"kind":"textbox","id":"sh/fadgzu58","slide":2,"name":"TextBox 19","text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[607.68,326.4,30.72,32.64]}
+{"kind":"textbox","id":"sh/u94fqp4n","slide":2,"name":"TextBox 20","text":"Speech","textPreview":"Speech","textChars":6,"textLines":1,"bbox":[586.56,381.12,74.88,49.92]}
+{"kind":"shape","id":"sh/p0vy54na","slide":2,"name":"Connector 21","bbox":[653.76,342.72,36.48,0]}
+{"kind":"shape","id":"sh/4zmxwzmp","slide":2,"name":"Oval 28","bbox":[693.12,312.96,59.52,59.52]}
+{"kind":"textbox","id":"sh/mlgvq147","slide":2,"name":"TextBox 23","text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[707.52,326.4,30.72,32.64]}
+{"kind":"textbox","id":"sh/nmpcj6ls","slide":2,"name":"TextBox 24","text":"STT + pause\ndetection","textPreview":"STT + pause | detection","textChars":21,"textLines":2,"bbox":[686.4,381.12,74.88,49.92]}
+{"kind":"shape","id":"sh/onydsbmd","slide":2,"name":"Connector 25","bbox":[753.6,342.72,36.48,0]}
+{"kind":"shape","id":"sh/9o7ulg3y","slide":2,"name":"Oval 32","bbox":[792.96,312.96,59.52,59.52]}
+{"kind":"textbox","id":"sh/a9gvulkj","slide":2,"name":"TextBox 27","text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[807.36,326.4,30.72,32.64]}
+{"kind":"textbox","id":"sh/ba9cn6l4","slide":2,"name":"TextBox 28","text":"Compact\ntext packet","textPreview":"Compact | text packet","textChars":19,"textLines":2,"bbox":[786.24,381.12,74.88,49.92]}
+{"kind":"shape","id":"sh/wbidwb29","slide":2,"name":"Connector 29","bbox":[853.44,342.72,36.48,0]}
+{"kind":"shape","id":"sh/xcrupg3u","slide":2,"name":"Oval 36","bbox":[892.8,312.96,59.52,59.52]}
+{"kind":"textbox","id":"sh/id0vylkf","slide":2,"name":"TextBox 31","text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[907.2,326.4,30.72,32.64]}
+{"kind":"textbox","id":"sh/je9crql0","slide":2,"name":"TextBox 32","text":"Wi‑Fi /\nBluetooth","textPreview":"Wi‑Fi / | Bluetooth","textChars":17,"textLines":2,"bbox":[886.08,381.12,74.88,49.92]}
+{"kind":"shape","id":"sh/ru5cbqd4","slide":2,"name":"Connector 33","bbox":[953.28,342.72,36.48,0]}
+{"kind":"shape","id":"sh/69wbilcj","slide":2,"name":"Oval 40","bbox":[992.64,312.96,59.52,59.52]}
+{"kind":"textbox","id":"sh/tw7ud0va","slide":2,"name":"TextBox 35","text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[1007.04,326.4,30.72,32.64]}
+{"kind":"textbox","id":"sh/svedkvup","slide":2,"name":"TextBox 36","text":"TTS","textPreview":"TTS","textChars":3,"textLines":1,"bbox":[985.92,381.12,74.88,49.92]}
+{"kind":"shape","id":"sh/fypcfqdg","slide":2,"name":"Connector 37","bbox":[1053.12,342.72,36.48,0]}
+{"kind":"shape","id":"sh/exgvmlcv","slide":2,"name":"Oval 44","bbox":[1092.48,312.96,59.52,59.52]}
+{"kind":"textbox","id":"sh/107uh0v6","slide":2,"name":"TextBox 39","text":"6","textPreview":"6","textChars":1,"textLines":1,"bbox":[1106.88,326.4,30.72,32.64]}
+{"kind":"textbox","id":"sh/gzydovul","slide":2,"name":"TextBox 40","text":"Voice","textPreview":"Voice","textChars":5,"textLines":1,"bbox":[1085.76,381.12,74.88,49.92]}
+{"kind":"textbox","id":"sh/v2lc36dw","slide":2,"name":"TextBox 41","text":"10 INDIAN LANGUAGES — ONE COMMON PIPELINE","textPreview":"10 INDIAN LANGUAGES — ONE COMMON PIPELINE","textChars":41,"textLines":1,"bbox":[587.52,436.8,566.4,30.72]}
+{"kind":"shape","id":"sh/a1cba1wb","slide":2,"name":"Rounded Rectangle 48","bbox":[587.52,475.2,103.68,32.64]}
+{"kind":"textbox","id":"sh/0vq1o36x","slide":2,"name":"TextBox 43","text":"Hindi","textPreview":"Hindi","textChars":5,"textLines":1,"bbox":[592.32,477.12,94.08,28.8]}
+{"kind":"shape","id":"sh/1wzix87i","slide":2,"name":"Rounded Rectangle 50","bbox":[702.72,475.2,103.68,32.64]}
+{"kind":"textbox","id":"sh/et8zmto7","slide":2,"name":"TextBox 45","text":"Gujarati","textPreview":"Gujarati","textChars":8,"textLines":1,"bbox":[707.52,477.12,94.08,28.8]}
+{"kind":"shape","id":"sh/zuh0vypc","slide":2,"name":"Rounded Rectangle 52","bbox":[817.92,475.2,103.68,32.64]}
+{"kind":"textbox","id":"sh/c76hk361","slide":2,"name":"TextBox 47","text":"Marathi","textPreview":"Marathi","textChars":7,"textLines":1,"bbox":[822.72,477.12,94.08,28.8]}
+{"kind":"shape","id":"sh/d8zit87m","slide":2,"name":"Rounded Rectangle 54","bbox":[933.12,475.2,103.68,32.64]}
+{"kind":"textbox","id":"sh/q5ozitov","slide":2,"name":"TextBox 49","text":"Kannada","textPreview":"Kannada","textChars":7,"textLines":1,"bbox":[937.92,477.12,94.08,28.8]}
+{"kind":"shape","id":"sh/r6x0rypg","slide":2,"name":"Rounded Rectangle 56","bbox":[1048.32,475.2,103.68,32.64]}
+{"kind":"textbox","id":"sh/w3a1wn65","slide":2,"name":"TextBox 51","text":"Malayalam","textPreview":"Malayalam","textChars":9,"textLines":1,"bbox":[1053.12,477.12,94.08,28.8]}
+{"kind":"shape","id":"sh/xoji5s7q","slide":2,"name":"Rounded Rectangle 58","bbox":[587.52,520.32,103.68,32.64]}
+{"kind":"textbox","id":"sh/5kfipszu","slide":2,"name":"TextBox 53","text":"Tamil","textPreview":"Tamil","textChars":5,"textLines":1,"bbox":[592.32,522.24,94.08,28.8]}
+{"kind":"shape","id":"sh/kj6hgny9","slide":2,"name":"Rounded Rectangle 60","bbox":[702.72,520.32,103.68,32.64]}
+{"kind":"textbox","id":"sh/jix0niho","slide":2,"name":"TextBox 55","text":"Telugu","textPreview":"Telugu","textChars":6,"textLines":1,"bbox":[707.52,522.24,94.08,28.8]}
+{"kind":"shape","id":"sh/ihozedgj","slide":2,"name":"Rounded Rectangle 62","bbox":[817.92,520.32,103.68,32.64]}
+{"kind":"textbox","id":"sh/xgfil8zy","slide":2,"name":"TextBox 57","text":"Odia","textPreview":"Odia","textChars":4,"textLines":1,"bbox":[822.72,522.24,94.08,28.8]}
+{"kind":"shape","id":"sh/wf6hcnyd","slide":2,"name":"Rounded Rectangle 64","bbox":[933.12,520.32,103.68,32.64]}
+{"kind":"textbox","id":"sh/ved0jihs","slide":2,"name":"TextBox 59","text":"Bengali","textPreview":"Bengali","textChars":7,"textLines":1,"bbox":[937.92,522.24,94.08,28.8]}
+{"kind":"shape","id":"sh/ad4zadg7","slide":2,"name":"Rounded Rectangle 66","bbox":[1048.32,520.32,103.68,32.64]}
+{"kind":"textbox","id":"sh/9svih8zm","slide":2,"name":"TextBox 61","text":"English","textPreview":"English","textChars":7,"textLines":1,"bbox":[1053.12,522.24,94.08,28.8]}
+{"kind":"shape","id":"sh/8rmh83y1","slide":2,"name":"Rounded Rectangle 68","bbox":[587.52,574.08,614.4,73.92]}
+{"kind":"textbox","id":"sh/yxkfi9wz","slide":2,"name":"TextBox 63","text":"Core SIH alignment:","textPreview":"Core SIH alignment:","textChars":19,"textLines":1,"bbox":[609.6,583.68,148.8,24.96]}
+{"kind":"textbox","id":"sh/zytgbexk","slide":2,"name":"TextBox 64","text":"Speech → local STT → compact text → local TTS","textPreview":"Speech → local STT → compact text → local TTS","textChars":45,"textLines":1,"bbox":[756.48,578.88,408,26.88]}
+{"kind":"textbox","id":"sh/0j2xkje5","slide":2,"name":"TextBox 65","text":"Optional translation is an enhancement — not the core transport.","textPreview":"Optional translation is an enhancement — not the core transport.","textChars":64,"textLines":1,"bbox":[756.48,606.72,420.48,22.08]}
+{"kind":"textbox","id":"sh/bu9w7uxo","slide":2,"name":"TextBox 68","text":"2/6","textPreview":"2/6","textChars":3,"textLines":1,"bbox":[1152,688.32,67.2,18.24]}
+{"kind":"textbox","id":"sh/ozy1ofad","slide":2,"name":"Oval 2","text":"Git Bit","textPreview":"Git Bit","textChars":7,"textLines":1,"bbox":[34.62,26.48,131.43,84.76]}
+{"kind":"textbox","id":"sh/ryd4nihw","slide":2,"name":"TextBox 15362","text":"Unlike push-to-talk radios or VoIP apps, iTantra reconstructs speech from a few bytes of text — fully offline, with no SIM or internet needed.","textPreview":"Unlike push-to-talk radios or VoIP apps, iTantra reconstructs speech from a few bytes of text — fully offline, with no SIM or internet ne...","textChars":142,"textLines":1,"bbox":[587.52,266.88,619.2,40.32]}
+{"kind":"image","id":"im/5gn2l8ny","slide":2,"name":"Picture 10","bbox":[1026.78,0.16,236.2,111.53]}
+{"kind":"image","id":"im/4felc36d","slide":2,"name":"Picture 12","bbox":[62.4,172.8,484.8,244.8]}
+{"kind":"slide","id":"sl/ofy9wn61","slide":3,"title":"SMART INDIA HACKATHON 2026","textShapes":42}
+{"kind":"textbox","id":"sh/83ulovat","slide":3,"name":"TextBox 12","text":"SMART INDIA HACKATHON 2026","textPreview":"SMART INDIA HACKATHON 2026","textChars":26,"textLines":1,"bbox":[113.28,12.07,878.4,74.32]}
+{"kind":"shape","id":"sh/m1c3mlsn","slide":3,"name":"Rectangle 10","bbox":[52.8,676.8,1176,0.96]}
+{"kind":"textbox","id":"sh/v6l4jq94","slide":3,"name":"TextBox 5","text":"3/6","textPreview":"3/6","textChars":3,"textLines":1,"bbox":[1171.2,684.48,57.6,13.67]}
+{"kind":"textbox","id":"sh/x8nml0ra","slide":3,"name":"TextBox 7","text":"One lightweight architecture for 10-language voice communication over constrained links.","textPreview":"One lightweight architecture for 10-language voice communication over constrained links.","textChars":88,"textLines":1,"bbox":[69.12,140.16,1056,24.96]}
+{"kind":"shape","id":"sh/w7ulsvqp","slide":3,"name":"Rounded Rectangle 16","bbox":[81.6,192,110.4,225.6]}
+{"kind":"shape","id":"sh/ja54na9g","slide":3,"name":"Oval 17","bbox":[127.2,201.6,19.2,3.84]}
+{"kind":"textbox","id":"sh/i9w3u58v","slide":3,"name":"TextBox 10","text":"NODE A","textPreview":"NODE A","textChars":6,"textLines":1,"bbox":[91.2,280.8,91.2,33.6]}
+{"kind":"textbox","id":"sh/e10f2twf","slide":3,"name":"TextBox 11","text":"Android","textPreview":"Android","textChars":7,"textLines":1,"bbox":[91.2,322.08,91.2,28.8]}
+{"kind":"shape","id":"sh/f29gbyx0","slide":3,"name":"Rounded Rectangle 20","bbox":[1132.8,192,96,225.6]}
+{"kind":"shape","id":"sh/03ix43e5","slide":3,"name":"Oval 21","bbox":[1171.2,201.6,19.2,3.84]}
+{"kind":"textbox","id":"sh/14ryd8fq","slide":3,"name":"TextBox 14","text":"NODE B","textPreview":"NODE B","textChars":6,"textLines":1,"bbox":[1142.4,280.8,76.8,33.6]}
+{"kind":"textbox","id":"sh/6d0fytg3","slide":3,"name":"TextBox 15","text":"Android","textPreview":"Android","textChars":7,"textLines":1,"bbox":[1142.4,322.08,76.8,28.8]}
+{"kind":"shape","id":"sh/re9g7yxo","slide":3,"name":"Connector 16","bbox":[196.8,244.8,96,0]}
+{"kind":"shape","id":"sh/sfix03y9","slide":3,"name":"Rounded Rectangle 25","bbox":[297.6,177.6,120,134.4]}
+{"kind":"textbox","id":"sh/tgry9ofu","slide":3,"name":"TextBox 18","text":"STT","textPreview":"STT","textChars":3,"textLines":1,"bbox":[328.32,198.72,57.6,24]}
+{"kind":"textbox","id":"sh/a9kfadwn","slide":3,"name":"TextBox 19","text":"10 languages","textPreview":"10 languages","textChars":12,"textLines":1,"bbox":[314.88,244.8,81.6,21.12]}
+{"kind":"shape","id":"sh/batgjixs","slide":3,"name":"Connector 20","bbox":[417.6,244.8,76.8,0]}
+{"kind":"shape","id":"sh/l4fi9cza","slide":3,"name":"Rounded Rectangle 29","bbox":[499.2,177.6,139.2,134.4]}
+{"kind":"textbox","id":"sh/k3m1g7yp","slide":3,"name":"TextBox 22","text":"TXT","textPreview":"TXT","textChars":3,"textLines":1,"bbox":[535.68,198.72,67.2,24]}
+{"kind":"textbox","id":"sh/z2d07mh4","slide":3,"name":"TextBox 23","text":"compact packet","textPreview":"compact packet","textChars":14,"textLines":1,"bbox":[514.56,244.8,107.52,21.12]}
+{"kind":"shape","id":"sh/y14jehgj","slide":3,"name":"Connector 24","bbox":[638.4,244.8,72,0]}
+{"kind":"shape","id":"sh/x0vi5czy","slide":3,"name":"Rounded Rectangle 33","bbox":[715.2,155.52,216,177.6]}
+{"kind":"textbox","id":"sh/czmhc7id","slide":3,"name":"TextBox 26","text":"P2P LINK","textPreview":"P2P LINK","textChars":8,"textLines":1,"bbox":[758.4,179.52,129.6,24]}
+{"kind":"textbox","id":"sh/byd032h8","slide":3,"name":"TextBox 27","text":"Bluetooth RFCOMM\nWi‑Fi Direct TCP\nAES‑GCM secured","textPreview":"Bluetooth RFCOMM | Wi‑Fi Direct TCP | AES‑GCM secured","textChars":49,"textLines":3,"bbox":[748.8,218.88,148.8,62.4]}
+{"kind":"shape","id":"sh/ax4zax0n","slide":3,"name":"Connector 28","bbox":[931.19,244.8,45.13,0]}
+{"kind":"shape","id":"sh/hwzihwzi","slide":3,"name":"Rounded Rectangle 37","bbox":[979.2,177.6,110.4,134.4]}
+{"kind":"textbox","id":"sh/wv61obyx","slide":3,"name":"TextBox 30","text":"TTS","textPreview":"TTS","textChars":3,"textLines":1,"bbox":[1005.12,198.72,57.6,24]}
+{"kind":"textbox","id":"sh/4nuhs7uh","slide":3,"name":"TextBox 31","text":"10 languages","textPreview":"10 languages","textChars":12,"textLines":1,"bbox":[993.6,244.8,81.6,21.12]}
+{"kind":"textbox","id":"sh/po3ilcvm","slide":3,"name":"TextBox 32","text":"FEASIBILITY PROOF POINTS","textPreview":"FEASIBILITY PROOF POINTS","textChars":24,"textLines":1,"bbox":[81.6,472.32,240,23.04]}
+{"kind":"textbox","id":"sh/21szqxcb","slide":3,"name":"TextBox 33","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[81.6,513.6,17.28,17.28]}
+{"kind":"textbox","id":"sh/32l0j2dw","slide":3,"name":"TextBox 34","text":"Offline operation","textPreview":"Offline operation","textChars":17,"textLines":1,"bbox":[105.6,513.6,249.6,24]}
+{"kind":"textbox","id":"sh/cruhwrud","slide":3,"name":"TextBox 35","text":"STT/TTS models run on device","textPreview":"STT/TTS models run on device","textChars":28,"textLines":1,"bbox":[230.4,514.56,225.6,19.2]}
+{"kind":"textbox","id":"sh/ds3ipcvy","slide":3,"name":"TextBox 36","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[470.4,513.6,17.28,17.28]}
+{"kind":"textbox","id":"sh/qpczuhc7","slide":3,"name":"TextBox 37","text":"Low payload","textPreview":"Low payload","textChars":11,"textLines":1,"bbox":[494.4,513.6,249.6,24]}
+{"kind":"textbox","id":"sh/rql0nmds","slide":3,"name":"TextBox 38","text":"Voice converted to compact text","textPreview":"Voice converted to compact text","textChars":31,"textLines":1,"bbox":[619.2,514.56,225.6,19.2]}
+{"kind":"textbox","id":"sh/0ve10ru9","slide":3,"name":"TextBox 39","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[859.2,513.6,17.28,17.28]}
+{"kind":"textbox","id":"sh/1wnitwvu","slide":3,"name":"TextBox 40","text":"Field modes","textPreview":"Field modes","textChars":11,"textLines":1,"bbox":[883.2,513.6,249.6,24]}
+{"kind":"textbox","id":"sh/v29cfu18","slide":3,"name":"TextBox 41","text":"PTT and continuous conversation","textPreview":"PTT and continuous conversation","textChars":31,"textLines":1,"bbox":[1008,514.56,225.6,19.2]}
+{"kind":"textbox","id":"sh/a10b6p03","slide":3,"name":"TextBox 42","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[81.6,565.44,17.28,17.28]}
+{"kind":"textbox","id":"sh/xoruhkje","slide":3,"name":"TextBox 43","text":"Emergency alert","textPreview":"Emergency alert","textChars":15,"textLines":1,"bbox":[105.6,565.44,249.6,24]}
+{"kind":"textbox","id":"sh/w3it8zit","slide":3,"name":"TextBox 44","text":"Priority compact codes + playback","textPreview":"Priority compact codes + playback","textChars":33,"textLines":1,"bbox":[230.4,566.4,225.6,19.2]}
+{"kind":"textbox","id":"sh/nypcba1c","slide":3,"name":"TextBox 45","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[470.4,565.44,17.28,17.28]}
+{"kind":"textbox","id":"sh/mxgb250r","slide":3,"name":"TextBox 46","text":"Security","textPreview":"Security","textChars":8,"textLines":1,"bbox":[494.4,565.44,249.6,24]}
+{"kind":"textbox","id":"sh/90rudkji","slide":3,"name":"TextBox 47","text":"SAS verified encrypted session","textPreview":"SAS verified encrypted session","textChars":30,"textLines":1,"bbox":[619.2,566.4,225.6,19.2]}
+{"kind":"textbox","id":"sh/8zit4fix","slide":3,"name":"TextBox 48","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[859.2,565.44,17.28,17.28]}
+{"kind":"textbox","id":"sh/7utcne1g","slide":3,"name":"TextBox 49","text":"Practical hardware","textPreview":"Practical hardware","textChars":18,"textLines":1,"bbox":[883.2,565.44,249.6,24]}
+{"kind":"textbox","id":"sh/6tkve90v","slide":3,"name":"TextBox 50","text":"Standard Android devices","textPreview":"Standard Android devices","textChars":24,"textLines":1,"bbox":[1008,566.4,225.6,19.2]}
+{"kind":"shape","id":"sh/2p4f6dk3","slide":3,"name":"Rounded Rectangle 59","bbox":[81.6,628.8,1104,33.6]}
+{"kind":"textbox","id":"sh/3qxwfilo","slide":3,"name":"TextBox 52","text":"Demo metrics to show: STT accuracy/WER • packet size saved vs audio • latency • RAM • two-phone delivery test","textPreview":"Demo metrics to show: STT accuracy/WER • packet size saved vs audio • latency • RAM • two-phone delivery test","textChars":109,"textLines":1,"bbox":[100.8,637.44,1051.2,14.4]}
+{"kind":"shape","id":"sh/or6x8329","slide":3,"name":"Connector 28","bbox":[1089.59,258.13,43.2,0]}
+{"kind":"textbox","id":"sh/cza94vmx","slide":3,"name":"Oval 1","text":"Git Bit","textPreview":"Git Bit","textChars":7,"textLines":1,"bbox":[34.62,26.48,131.43,84.76]}
+{"kind":"textbox","id":"sh/psfeh83u","slide":3,"name":"TextBox 62","text":"TECHNICAL APPROACH & FEASIBILITY","textPreview":"TECHNICAL APPROACH & FEASIBILITY","textChars":32,"textLines":1,"bbox":[69.12,115.2,518.4,21.12]}
+{"kind":"textbox","id":"sh/qtofadkf","slide":3,"name":"TextBox 63","text":"RISKS & MITIGATION","textPreview":"RISKS & MITIGATION","textChars":18,"textLines":1,"bbox":[225.6,388.8,230.4,21.12]}
+{"kind":"textbox","id":"sh/bexwjil0","slide":3,"name":"TextBox 64","text":"STT accuracy\nVAD noise gating + confidence threshold; flag low-confidence phrases for repeat.","textPreview":"STT accuracy | VAD noise gating + confidence threshold; flag low-confidence phrases for repeat.","textChars":93,"textLines":2,"bbox":[225.6,412.8,254.4,52.8]}
+{"kind":"textbox","id":"sh/cf6xcn2l","slide":3,"name":"TextBox 65","text":"Short range\nACK/retry improves reliability; LoRa relay path is scoped for future range extension.","textPreview":"Short range | ACK/retry improves reliability; LoRa relay path is scoped for future range extension.","textChars":97,"textLines":2,"bbox":[465.6,412.8,254.4,52.8]}
+{"kind":"textbox","id":"sh/dgfyls3q","slide":3,"name":"TextBox 66","text":"10-language models\nLoad only the selected language pack at runtime to reduce RAM/storage pressure.","textPreview":"10-language models | Load only the selected language pack at runtime to reduce RAM/storage pressure.","textChars":98,"textLines":2,"bbox":[705.6,412.8,254.4,52.8]}
+{"kind":"textbox","id":"sh/6xkvytkb","slide":3,"name":"TextBox 67","text":"Battery drain\nVAD gates STT/TTS so processing runs during speech instead of continuously.","textPreview":"Battery drain | VAD gates STT/TTS so processing runs during speech instead of continuously.","textChars":89,"textLines":2,"bbox":[945.6,412.8,254.4,52.8]}
+{"kind":"image","id":"im/0v6l8nu9","slide":3,"name":"Picture 8","bbox":[1017.48,-4.27,236.2,111.53]}
+{"kind":"slide","id":"sl/jyx0ra1s","slide":4,"title":"SMART INDIA HACKATHON 2026","textShapes":30}
+{"kind":"textbox","id":"sh/ud8fyt4z","slide":4,"name":"Title 1","placeholder":"title","text":"SMART INDIA HACKATHON 2026","textPreview":"SMART INDIA HACKATHON 2026","textChars":26,"textLines":1,"bbox":[0,-6.2,1152,120]}
+{"kind":"shape","id":"sh/doj29oba","slide":4,"name":"Slide Number Placeholder 5","placeholder":"slideNumber","bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/sna103ap","slide":4,"name":"Footer Placeholder 6","placeholder":"footer","text":"@SIH Idea submission- Template","textPreview":"@SIH Idea submission- Template","textChars":30,"textLines":1,"bbox":[488,667.33,336.38,38.33]}
+{"kind":"textbox","id":"sh/1cj2d8b6","slide":4,"name":"TextBox 1","text":"IMPACT + DEPLOYMENT","textPreview":"IMPACT + DEPLOYMENT","textChars":19,"textLines":1,"bbox":[67.19,660.55,403.2,24.96]}
+{"kind":"textbox","id":"sh/rm1k7yt4","slide":4,"name":"TextBox 2","text":"WHO NEEDS iTANTRA — AND WHY IT MATTERS","textPreview":"WHO NEEDS iTANTRA — AND WHY IT MATTERS","textChars":38,"textLines":1,"bbox":[63.99,101.71,1152,46.08]}
+{"kind":"shape","id":"sh/w72947yt","slide":4,"name":"Rounded Rectangle 13","bbox":[67.2,175.68,504,347.52]}
+{"kind":"shape","id":"sh/x8vaxsfe","slide":4,"name":"Rounded Rectangle 14","bbox":[94.08,197.76,203.52,32.64]}
+{"kind":"textbox","id":"sh/a5kr2xg3","slide":4,"name":"TextBox 9","text":"REMOTE / LOW-CONNECTIVITY FIELD","textPreview":"REMOTE / LOW-CONNECTIVITY FIELD","textChars":31,"textLines":1,"bbox":[98.88,199.68,193.92,28.8]}
+{"kind":"textbox","id":"sh/v6tsv2xo","slide":4,"name":"TextBox 10","text":"VOICE IN","textPreview":"VOICE IN","textChars":8,"textLines":1,"bbox":[614.4,180.48,129.6,32.64]}
+{"kind":"textbox","id":"sh/g36tgryd","slide":4,"name":"TextBox 11","text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[724.8,174.72,43.2,42.24]}
+{"kind":"textbox","id":"sh/h4fa9wfy","slide":4,"name":"TextBox 12","text":"TINY DATA","textPreview":"TINY DATA","textChars":9,"textLines":1,"bbox":[772.8,180.48,148.8,32.64]}
+{"kind":"textbox","id":"sh/p0batw72","slide":4,"name":"TextBox 13","text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[910.08,174.72,43.2,42.24]}
+{"kind":"textbox","id":"sh/oz29krqh","slide":4,"name":"TextBox 14","text":"VOICE OUT","textPreview":"VOICE OUT","textChars":9,"textLines":1,"bbox":[958.08,180.48,163.2,32.64]}
+{"kind":"textbox","id":"sh/3ytsrmpw","slide":4,"name":"TextBox 15","text":"The receiver still hears speech; the link only carries compact information.","textPreview":"The receiver still hears speech; the link only carries compact information.","textChars":75,"textLines":1,"bbox":[614.4,222.72,549.12,52.8]}
+{"kind":"textbox","id":"sh/2xkrih8b","slide":4,"name":"TextBox 16","text":"DEPLOYMENT SCENARIOS","textPreview":"DEPLOYMENT SCENARIOS","textChars":20,"textLines":1,"bbox":[614.4,288,225.6,26.88]}
+{"kind":"shape","id":"sh/1wbapc7q","slide":4,"name":"Rounded Rectangle 23","bbox":[614.4,325.44,155.52,32.64]}
+{"kind":"textbox","id":"sh/gv29g7q5","slide":4,"name":"TextBox 18","text":"Disaster response","textPreview":"Disaster response","textChars":17,"textLines":1,"bbox":[619.2,327.36,145.92,28.8]}
+{"kind":"shape","id":"sh/fu9sn2p0","slide":4,"name":"Rounded Rectangle 25","bbox":[802.56,325.44,155.52,32.64]}
+{"kind":"textbox","id":"sh/et0reh8f","slide":4,"name":"TextBox 20","text":"Remote rescue","textPreview":"Remote rescue","textChars":13,"textLines":1,"bbox":[807.36,327.36,145.92,28.8]}
+{"kind":"shape","id":"sh/tsrqlc7u","slide":4,"name":"Rounded Rectangle 27","bbox":[975.36,325.44,159.36,32.64]}
+{"kind":"textbox","id":"sh/sri9s7q9","slide":4,"name":"TextBox 22","text":"Forest operations","textPreview":"Forest operations","textChars":17,"textLines":1,"bbox":[980.16,327.36,149.76,28.8]}
+{"kind":"shape","id":"sh/ilwf69kv","slide":4,"name":"Rounded Rectangle 29","bbox":[614.4,375.36,155.52,32.64]}
+{"kind":"textbox","id":"sh/jm5gze1g","slide":4,"name":"TextBox 24","text":"Maritime / field teams","textPreview":"Maritime / field teams","textChars":22,"textLines":1,"bbox":[619.2,377.28,145.92,28.8]}
+{"kind":"shape","id":"sh/knex8j21","slide":4,"name":"Rounded Rectangle 31","bbox":[802.56,375.36,155.52,32.64]}
+{"kind":"textbox","id":"sh/5ony1oj6","slide":4,"name":"TextBox 26","text":"Industrial emergencies","textPreview":"Industrial emergencies","textChars":22,"textLines":1,"bbox":[807.36,377.28,145.92,28.8]}
+{"kind":"shape","id":"sh/axcf29kj","slide":4,"name":"Rounded Rectangle 33","bbox":[975.36,375.36,159.36,32.64]}
+{"kind":"textbox","id":"sh/vy5gbe14","slide":4,"name":"TextBox 28","text":"Security operations","textPreview":"Security operations","textChars":19,"textLines":1,"bbox":[980.16,377.28,149.76,28.8]}
+{"kind":"shape","id":"sh/wzex4z2p","slide":4,"name":"Rounded Rectangle 35","bbox":[616.33,450.27,547.2,71]}
+{"kind":"textbox","id":"sh/xknyx4ja","slide":4,"name":"TextBox 30","text":"10-LANGUAGE EXPERIENCE","textPreview":"10-LANGUAGE EXPERIENCE","textChars":22,"textLines":1,"bbox":[637.44,450.24,187.2,21.12]}
+{"kind":"textbox","id":"sh/mtcfypkn","slide":4,"name":"TextBox 31","text":"Speak in any supported language → compact text moves → speech is reconstructed at the receiver.","textPreview":"Speak in any supported language → compact text moves → speech is reconstructed at the receiver.","textChars":95,"textLines":1,"bbox":[637.44,473.28,493.44,32.64]}
+{"kind":"shape","id":"sh/nulw7u18","slide":4,"name":"Rounded Rectangle 38","bbox":[67.2,578,1132.8,82.56]}
+{"kind":"textbox","id":"sh/fm5c3q54","slide":4,"name":"TextBox 33","text":"Accessible","textPreview":"Accessible","textChars":10,"textLines":1,"bbox":[91.2,573.12,132.48,24]}
+{"kind":"textbox","id":"sh/elwba54j","slide":4,"name":"TextBox 34","text":"Spoken output","textPreview":"Spoken output","textChars":13,"textLines":1,"bbox":[91.2,597.12,177.6,22.08]}
+{"kind":"textbox","id":"sh/18nu50nu","slide":4,"name":"TextBox 35","text":"Efficient","textPreview":"Efficient","textChars":9,"textLines":1,"bbox":[367.68,573.12,132.48,24]}
+{"kind":"textbox","id":"sh/0netcvm9","slide":4,"name":"TextBox 36","text":"Less radio payload","textPreview":"Less radio payload","textChars":18,"textLines":1,"bbox":[367.68,597.12,177.6,22.08]}
+{"kind":"textbox","id":"sh/rilczq5s","slide":4,"name":"TextBox 37","text":"Private","textPreview":"Private","textChars":7,"textLines":1,"bbox":[644.16,573.12,132.48,24]}
+{"kind":"textbox","id":"sh/qhcb6l47","slide":4,"name":"TextBox 38","text":"Local processing","textPreview":"Local processing","textChars":16,"textLines":1,"bbox":[644.16,597.12,177.6,22.08]}
+{"kind":"textbox","id":"sh/dknu10ny","slide":4,"name":"TextBox 39","text":"Practical","textPreview":"Practical","textChars":9,"textLines":1,"bbox":[920.64,573.12,132.48,24]}
+{"kind":"textbox","id":"sh/sjut8vmd","slide":4,"name":"TextBox 40","text":"Existing Android devices","textPreview":"Existing Android devices","textChars":24,"textLines":1,"bbox":[920.64,597.12,177.6,22.08]}
+{"kind":"textbox","id":"sh/8jq9c72t","slide":4,"name":"TextBox 43","text":"4/6","textPreview":"4/6","textChars":3,"textLines":1,"bbox":[1152,688.32,67.2,18.24]}
+{"kind":"textbox","id":"sh/kbm987y5","slide":4,"name":"Oval 9","text":"Git Bit","textPreview":"Git Bit","textChars":7,"textLines":1,"bbox":[34.62,26.48,131.43,84.76]}
+{"kind":"image","id":"im/54v25g7y","slide":4,"name":"Picture 10","bbox":[1079.11,-1.97,190.99,90.18]}
+{"kind":"image","id":"im/43m1wbqd","slide":4,"name":"Picture 12","bbox":[67.2,175.68,504,347.52]}
+{"kind":"slide","id":"sl/i107q5of","slide":5,"title":"@SIH Idea submission- Template","textShapes":37}
+{"kind":"shape","id":"sh/l4bupwny","slide":5,"name":"Slide Number Placeholder 5","placeholder":"slideNumber","bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/032tgr6d","slide":5,"name":"Footer Placeholder 6","placeholder":"footer","text":"@SIH Idea submission- Template","textPreview":"@SIH Idea submission- Template","textChars":30,"textLines":1,"bbox":[488,667.33,336.38,38.33]}
+{"kind":"textbox","id":"sh/tcfel0vu","slide":5,"name":"TextBox 18","text":"SMART INDIA HACKATHON 2026","textPreview":"SMART INDIA HACKATHON 2026","textChars":26,"textLines":1,"bbox":[124,13.07,919.8,74.2]}
+{"kind":"textbox","id":"sh/dgbulwnm","slide":5,"name":"TextBox 1","text":"SYSTEM ARCHITECTURE","textPreview":"SYSTEM ARCHITECTURE","textChars":19,"textLines":1,"bbox":[59.52,660.55,403.2,24.96]}
+{"kind":"textbox","id":"sh/z2tcnm5s","slide":5,"name":"TextBox 2","text":"HOW iTANTRA WORKS — END TO END","textPreview":"HOW iTANTRA WORKS — END TO END","textChars":30,"textLines":1,"bbox":[59.52,93.91,1152,46.08]}
+{"kind":"shape","id":"sh/yhkbe1o7","slide":5,"name":"Rectangle 4","bbox":[145.92,156.33,46.08,4.32]}
+{"kind":"shape","id":"sh/m5kbi1oj","slide":5,"name":"Rectangle 8","bbox":[191.99,156.33,17.28,4.32]}
+{"kind":"textbox","id":"sh/ahkvi1cb","slide":5,"name":"TextBox 6","text":"CORE OFFLINE PIPELINE","textPreview":"CORE OFFLINE PIPELINE","textChars":21,"textLines":1,"bbox":[145.93,170.88,220.8,26.88]}
+{"kind":"shape","id":"sh/v2twb6dw","slide":5,"name":"Oval 12","bbox":[85.44,216.96,69.12,69.12]}
+{"kind":"textbox","id":"sh/k7mxovud","slide":5,"name":"TextBox 8","text":"MIC","textPreview":"MIC","textChars":3,"textLines":1,"bbox":[91.2,229.44,57.6,40.32]}
+{"kind":"textbox","id":"sh/58vehgvy","slide":5,"name":"TextBox 9","text":"Speech","textPreview":"Speech","textChars":6,"textLines":1,"bbox":[67.2,297.6,105.6,53.76]}
+{"kind":"shape","id":"sh/i54fmlc7","slide":5,"name":"Connector 10","bbox":[154.56,251.52,96,0]}
+{"kind":"shape","id":"sh/j6dwfqds","slide":5,"name":"Oval 16","bbox":[250.56,216.96,69.12,69.12]}
+{"kind":"textbox","id":"sh/sb6xsvu9","slide":5,"name":"TextBox 12","text":"VAD","textPreview":"VAD","textChars":3,"textLines":1,"bbox":[256.32,229.44,57.6,40.32]}
+{"kind":"textbox","id":"sh/hgrmpwj2","slide":5,"name":"TextBox 13","text":"Pause / stop\ndetection","textPreview":"Pause / stop | detection","textChars":22,"textLines":2,"bbox":[232.32,297.6,105.6,53.76]}
+{"kind":"shape","id":"sh/gfi5grih","slide":5,"name":"Connector 14","bbox":[319.68,251.52,96,0]}
+{"kind":"shape","id":"sh/fe94nm1w","slide":5,"name":"Oval 21","bbox":[415.68,216.96,69.12,69.12]}
+{"kind":"textbox","id":"sh/ud0ne10b","slide":5,"name":"TextBox 16","text":"STT","textPreview":"STT","textChars":3,"textLines":1,"bbox":[421.44,229.44,57.6,40.32]}
+{"kind":"textbox","id":"sh/pkr6tgjy","slide":5,"name":"TextBox 17","text":"10-language\nSTT","textPreview":"10-language | STT","textChars":15,"textLines":2,"bbox":[397.44,297.6,105.6,53.76]}
+{"kind":"shape","id":"sh/4ji5kbid","slide":5,"name":"Connector 18","bbox":[484.8,251.52,96,0]}
+{"kind":"shape","id":"sh/3i94r61s","slide":5,"name":"Oval 25","bbox":[580.8,216.96,69.12,69.12]}
+{"kind":"textbox","id":"sh/2h0ni107","slide":5,"name":"TextBox 20","text":"TXT","textPreview":"TXT","textChars":3,"textLines":1,"bbox":[586.56,229.44,57.6,40.32]}
+{"kind":"textbox","id":"sh/5o7mhcju","slide":5,"name":"TextBox 21","text":"Compact\npacket","textPreview":"Compact | packet","textChars":14,"textLines":2,"bbox":[562.56,297.6,105.6,53.76]}
+{"kind":"shape","id":"sh/kny587i9","slide":5,"name":"Connector 22","bbox":[649.92,251.52,96,0]}
+{"kind":"shape","id":"sh/atcjidg7","slide":5,"name":"Oval 29","bbox":[745.92,216.96,69.12,69.12]}
+{"kind":"textbox","id":"sh/vu5kbihc","slide":5,"name":"TextBox 24","text":"P2P","textPreview":"P2P","textChars":3,"textLines":1,"bbox":[751.68,229.44,57.6,40.32]}
+{"kind":"textbox","id":"sh/wve1knyx","slide":5,"name":"TextBox 25","text":"Bluetooth /\nWi‑Fi Direct","textPreview":"Bluetooth / | Wi‑Fi Direct","textChars":24,"textLines":2,"bbox":[727.68,297.6,105.6,53.76]}
+{"kind":"shape","id":"sh/xwn2dszi","slide":5,"name":"Connector 26","bbox":[815.04,251.52,96,0]}
+{"kind":"shape","id":"sh/ihw3mxg3","slide":5,"name":"Oval 33","bbox":[911.04,216.96,69.12,69.12]}
+{"kind":"textbox","id":"sh/ji5kf2ho","slide":5,"name":"TextBox 28","text":"TTS","textPreview":"TTS","textChars":3,"textLines":1,"bbox":[916.8,229.44,57.6,40.32]}
+{"kind":"textbox","id":"sh/kjelony9","slide":5,"name":"TextBox 29","text":"10-language\nTTS","textPreview":"10-language | TTS","textChars":15,"textLines":2,"bbox":[892.8,297.6,105.6,53.76]}
+{"kind":"shape","id":"sh/5kn2hszu","slide":5,"name":"Connector 30","bbox":[980.16,251.52,96,0]}
+{"kind":"shape","id":"sh/e1sjatgz","slide":5,"name":"Oval 37","bbox":[1076.16,216.96,69.12,69.12]}
+{"kind":"textbox","id":"sh/zmlk3yhk","slide":5,"name":"TextBox 32","text":"SPK","textPreview":"SPK","textChars":3,"textLines":1,"bbox":[1081.92,229.44,57.6,40.32]}
+{"kind":"textbox","id":"sh/fid07u98","slide":5,"name":"TextBox 33","text":"Voice out","textPreview":"Voice out","textChars":9,"textLines":1,"bbox":[1057.92,297.6,105.6,53.76]}
+{"kind":"textbox","id":"sh/ehkzepsn","slide":5,"name":"TextBox 34","text":"OPERATING MODES","textPreview":"OPERATING MODES","textChars":15,"textLines":1,"bbox":[69.12,384,192,26.88]}
+{"kind":"shape","id":"sh/1kvi94re","slide":5,"name":"Rounded Rectangle 41","bbox":[69.12,420.48,297.6,78.72]}
+{"kind":"textbox","id":"sh/gjmhgzqt","slide":5,"name":"TextBox 36","text":"PTT ON","textPreview":"PTT ON","textChars":6,"textLines":1,"bbox":[88.32,434.88,78.72,23.04]}
+{"kind":"textbox","id":"sh/3md0bu94","slide":5,"name":"TextBox 37","text":"Walkie‑talkie style push-to-talk","textPreview":"Walkie‑talkie style push-to-talk","textChars":32,"textLines":1,"bbox":[166.08,428.16,180.48,38.4]}
+{"kind":"shape","id":"sh/2l4zip8j","slide":5,"name":"Rounded Rectangle 44","bbox":[382.08,420.48,305.28,78.72]}
+{"kind":"textbox","id":"sh/povid4ra","slide":5,"name":"TextBox 39","text":"PTT OFF","textPreview":"PTT OFF","textChars":7,"textLines":1,"bbox":[401.28,434.88,84.48,23.04]}
+{"kind":"textbox","id":"sh/onmhkzqp","slide":5,"name":"TextBox 40","text":"Phone-like continuous conversation","textPreview":"Phone-like continuous conversation","textChars":34,"textLines":1,"bbox":[484.8,428.16,182.4,38.4]}
+{"kind":"shape","id":"sh/bqx0fe9g","slide":5,"name":"Rounded Rectangle 47","bbox":[704.64,420.48,268.8,78.72]}
+{"kind":"textbox","id":"sh/qp4jm98v","slide":5,"name":"TextBox 42","text":"ALERT","textPreview":"ALERT","textChars":5,"textLines":1,"bbox":[724.8,434.88,67.2,23.04]}
+{"kind":"textbox","id":"sh/8f6hcj6t","slide":5,"name":"TextBox 43","text":"Priority emergency playback","textPreview":"Priority emergency playback","textChars":27,"textLines":1,"bbox":[786.24,428.16,165.12,38.4]}
+{"kind":"shape","id":"sh/9gfy5o7e","slide":5,"name":"Rounded Rectangle 50","bbox":[991.68,420.48,211.2,78.72]}
+{"kind":"textbox","id":"sh/mdoza9o3","slide":5,"name":"TextBox 45","text":"SECURE SESSION","textPreview":"SECURE SESSION","textChars":14,"textLines":1,"bbox":[1008.96,431.04,177.6,23.04]}
+{"kind":"textbox","id":"sh/nexg3epo","slide":5,"name":"TextBox 46","text":"ECDH • SAS • AES‑GCM","textPreview":"ECDH • SAS • AES‑GCM","textChars":20,"textLines":1,"bbox":[1008,456.96,178.56,21.12]}
+{"kind":"textbox","id":"sh/0r6h8z6x","slide":5,"name":"TextBox 47","text":"OPTIONAL FUTURE RANGE EXTENSION","textPreview":"OPTIONAL FUTURE RANGE EXTENSION","textChars":31,"textLines":1,"bbox":[69.12,535.68,312,26.88]}
+{"kind":"shape","id":"sh/lcfy147i","slide":5,"name":"Rounded Rectangle 54","bbox":[69.12,570.24,1132.8,71.04]}
+{"kind":"shape","id":"sh/yp4z69or","slide":5,"name":"Rounded Rectangle 55","bbox":[94.08,588.48,134.4,32.64]}
+{"kind":"textbox","id":"sh/zqxgzupc","slide":5,"name":"TextBox 50","text":"Android Phone","textPreview":"Android Phone","textChars":13,"textLines":1,"bbox":[98.88,590.4,124.8,28.8]}
+{"kind":"shape","id":"sh/cnmh4z61","slide":5,"name":"Rounded Rectangle 57","bbox":[289.92,588.48,168,32.64]}
+{"kind":"textbox","id":"sh/dovyx476","slide":5,"name":"TextBox 52","text":"Heltec WiFi LoRa 32 V3","textPreview":"Heltec WiFi LoRa 32 V3","textChars":22,"textLines":1,"bbox":[294.72,590.4,158.4,28.8]}
+{"kind":"shape","id":"sh/t8n6lwvy","slide":5,"name":"Rounded Rectangle 59","bbox":[515.52,588.48,134.4,32.64]}
+{"kind":"textbox","id":"sh/s7u5crud","slide":5,"name":"TextBox 54","text":"LoRa Link","textPreview":"LoRa Link","textChars":9,"textLines":1,"bbox":[520.32,590.4,124.8,28.8]}
+{"kind":"shape","id":"sh/r6lojmds","slide":5,"name":"Rounded Rectangle 61","bbox":[704.64,588.48,168,32.64]}
+{"kind":"textbox","id":"sh/65cnahc7","slide":5,"name":"TextBox 56","text":"Heltec WiFi LoRa 32 V3","textPreview":"Heltec WiFi LoRa 32 V3","textChars":22,"textLines":1,"bbox":[709.44,590.4,158.4,28.8]}
+{"kind":"shape","id":"sh/5436hcv2","slide":5,"name":"Rounded Rectangle 63","bbox":[931.2,588.48,134.4,32.64]}
+{"kind":"textbox","id":"sh/43u587uh","slide":5,"name":"TextBox 58","text":"Android Phone","textPreview":"Android Phone","textChars":13,"textLines":1,"bbox":[936,590.4,124.8,28.8]}
+{"kind":"shape","id":"sh/j2lofmdw","slide":5,"name":"Connector 59","bbox":[228.48,604.8,61.44,0]}
+{"kind":"shape","id":"sh/i1cn6hcb","slide":5,"name":"Connector 60","bbox":[457.92,604.8,57.6,0]}
+{"kind":"shape","id":"sh/p076tgv6","slide":5,"name":"Connector 61","bbox":[649.92,604.8,54.72,0]}
+{"kind":"shape","id":"sh/ozepkbul","slide":5,"name":"Connector 62","bbox":[872.64,604.8,58.56,0]}
+{"kind":"shape","id":"sh/m583eds3","slide":5,"name":"Rounded Rectangle 69","bbox":[1059.84,588.48,115.2,32.64]}
+{"kind":"textbox","id":"sh/76hk7ito","slide":5,"name":"TextBox 64","text":"FUTURE / OPTIONAL","textPreview":"FUTURE / OPTIONAL","textChars":17,"textLines":1,"bbox":[1064.64,590.4,105.6,28.8]}
+{"kind":"textbox","id":"sh/yho3atsr","slide":5,"name":"TextBox 67","text":"5/6","textPreview":"5/6","textChars":3,"textLines":1,"bbox":[1152,688.32,67.2,18.24]}
+{"kind":"textbox","id":"sh/w32dkbuh","slide":5,"name":"Oval 9","text":"Git Bit","textPreview":"Git Bit","textChars":7,"textLines":1,"bbox":[34.62,26.48,131.43,84.76]}
+{"kind":"image","id":"im/8nql432x","slide":5,"name":"Picture 10","bbox":[1082.67,4.37,188.32,88.92]}
+{"kind":"slide","id":"sl/x8f69ofe","slide":6,"title":"SMART INDIA HACKATHON 2026","textShapes":4}
+{"kind":"textbox","id":"sh/1kj2p0ve","slide":6,"name":"Title 1","placeholder":"title","text":"SMART INDIA HACKATHON 2026","textPreview":"SMART INDIA HACKATHON 2026","textChars":26,"textLines":1,"bbox":[0,1.92,960,69.12]}
+{"kind":"textbox","id":"sh/h4bupgn6","slide":6,"name":"Oval 9","text":"Git Bit","textPreview":"Git Bit","textChars":7,"textLines":1,"bbox":[34.62,26.48,131.43,84.76]}
+{"kind":"textbox","id":"sh/vq5cve1s","slide":6,"name":"TextBox 17409","text":"• SIH26173 – iTantra: https://sih.gov.in/sih2026PS\n• ISRO: https://www.isro.gov.in/\n• Android Developers: Kotlin & Android APIs\n• Oracle Java: Java & JVM documentation\n• Gradle: Build automation & dependency management\n• Python: AI & speech-processing components\n• Research Focus: Multilingual STT + TTS + low-bandwidth communication\n• Project Repository: https://github.com/avira-l07/workfix","textPreview":"• SIH26173 – iTantra: https://sih.gov.in/sih2026PS | • ISRO: https://www.isro.gov.in/ | • Android Developers: Kotlin & Android APIs | • O...","textChars":392,"textLines":8,"bbox":[148.8,129.6,984,513.6]}
+{"kind":"textbox","id":"sh/apwv2tk7","slide":6,"name":"TextBox 17410","text":"REFERENCES & PROJECT","textPreview":"REFERENCES & PROJECT","textChars":20,"textLines":1,"bbox":[148.8,103.68,480,33.6]}
+{"kind":"image","id":"im/of21oje5","slide":6,"name":"Picture 11","bbox":[1026.78,0.16,236.2,111.53]}

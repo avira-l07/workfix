@@ -1,0 +1,22 @@
+{
+  "source_zip_sha256": "6cec8c0b7b93312e1f958519431dcca3161c12c417d81696481caab7bdfc0e7a",
+  "failure": "Baseline PCM-only duration reader rejects format 3 (IEEE float32)",
+  "received_runtime": "Python 3.11.13; Torch 2.2.2+cu121; pinned NeMo; one Tesla T4 used",
+  "actual_original_wav_checks": {
+    "clips": 30,
+    "subtypes": {
+      "FLOAT": 30
+    },
+    "sha256_matched": 30,
+    "duration_seconds_total": 306.36,
+    "input_audio_modified": false
+  },
+  "local_checks": [
+    "python tools/test_kathbath_tamil_pilot.py passed",
+    "python tools/test_kathbath_gate_b_data.py passed"
+  ],
+  "new_kaggle_baseline": "Not run",
+  "training": "Not run",
+  "improved_wer": "Not measured",
+  "phone_accuracy": "Not verified"
+}

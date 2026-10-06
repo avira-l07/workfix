@@ -100,6 +100,7 @@ fun TransceiverHubScreen(
     operatorName: String = "",
 ) {
     val liveMessages by coordinator.messages.collectAsState()
+    val activePeer by coordinator.activePeerProfile.collectAsState()
     val sessionState by coordinator.secureSessionManager.state.collectAsState()
     val activeLanguage by sessionManager.activeSttLanguage.collectAsState()
     val micAutoDetect by sessionManager.isSttAutoDetect.collectAsState()
@@ -108,6 +109,7 @@ fun TransceiverHubScreen(
     val activeTransport by AppGraph.transportEngine.activeTransportFlow.collectAsState()
     val liveMetrics by AppGraph.metricsRecorder.latest.collectAsState()
     val continuousListenState by coordinator.continuousListenEngine.state.collectAsState()
+    val continuousModeError by coordinator.continuousModeError.collectAsState()
 
     var isPttMode by remember { mutableStateOf(true) }
     var isTransmitting by remember { mutableStateOf(false) }
@@ -308,8 +310,8 @@ fun TransceiverHubScreen(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFFEE2E2))
-                            .border(1.dp, Color(0xFFFCA5A5), RoundedCornerShape(10.dp))
+                            .background(ITantraColors.ErrorContainer)
+                            .border(1.dp, ITantraColors.StatusDanger, RoundedCornerShape(10.dp))
                     ) {
                         Icon(
                             Icons.Filled.Sos,
@@ -466,7 +468,7 @@ fun TransceiverHubScreen(
                                 modifier = Modifier
                                     .size(24.dp)
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(Color(0xFFECFDF5)),
+                                    .background(ITantraColors.SuccessContainer),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -525,9 +527,9 @@ fun TransceiverHubScreen(
                         else -> "OFFLINE"
                     }
                     val peerBadgeBg = when (transportConnectionState) {
-                        ConnectionState.CONNECTED -> Color(0xFFD1FAE5)
-                        ConnectionState.CONNECTING, ConnectionState.LISTENING -> Color(0xFFFEF9C3)
-                        else -> Color(0xFFF1F5F9)
+                        ConnectionState.CONNECTED -> ITantraColors.SuccessContainer
+                        ConnectionState.CONNECTING, ConnectionState.LISTENING -> ITantraColors.WarningContainer
+                        else -> ITantraColors.SurfaceVariant
                     }
                     val peerBadgeColor = when (transportConnectionState) {
                         ConnectionState.CONNECTED -> ITantraColors.StatusSuccess
@@ -644,7 +646,7 @@ fun TransceiverHubScreen(
                         modifier = Modifier
                             .weight(1f)
                             .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
                             .padding(8.dp)
                     ) {
                         Column {
@@ -666,7 +668,7 @@ fun TransceiverHubScreen(
                         modifier = Modifier
                             .weight(1f)
                             .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
                             .padding(8.dp)
                     ) {
                         Column {
@@ -689,7 +691,7 @@ fun TransceiverHubScreen(
                         modifier = Modifier
                             .weight(1f)
                             .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+                            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
                             .padding(8.dp)
                     ) {
                         Column {
@@ -709,6 +711,10 @@ fun TransceiverHubScreen(
             }
 
             // 4. Operational Tactical Channel Banner
+            if (continuousModeError != null) item {
+                Text(continuousModeError.orEmpty(), color = ITantraColors.OnErrorContainer,
+                    modifier = Modifier.fillMaxWidth().background(ITantraColors.ErrorContainer, RoundedCornerShape(12.dp)).padding(12.dp))
+            }
             item {
                 Row(
                     modifier = Modifier
@@ -730,7 +736,9 @@ fun TransceiverHubScreen(
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    "CHANNEL: TAC-RELIEF-04",
+                                    if (sessionState == SecureSessionState.SECURE_VERIFIED)
+                                        activePeer?.displayName?.takeIf { it.isNotBlank() } ?: "Peer profile pending"
+                                    else "No verified peer",
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp
@@ -738,7 +746,7 @@ fun TransceiverHubScreen(
                                 Spacer(Modifier.width(6.dp))
                                 Box(
                                     modifier = Modifier
-                                        .background(Color(0xFFF1F5F9), RoundedCornerShape(3.dp))
+                                        .background(ITantraColors.SurfaceVariant, RoundedCornerShape(3.dp))
                                         .padding(horizontal = 4.dp, vertical = 1.dp)
                                 ) {
                                     Text(
@@ -751,7 +759,7 @@ fun TransceiverHubScreen(
                                 }
                             }
                             Text(
-                                "DISASTER RELIEF COMMAND COHORTS",
+                                "DIRECT DEVICE-TO-DEVICE CONNECTION",
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 8.5.sp,
                                 color = ITantraColors.TextMuted,
@@ -808,7 +816,7 @@ fun TransceiverHubScreen(
                         val isHindi = !micAutoDetect && activeLanguage == LanguageCode.HINDI
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (isHindi) ITantraColors.Primary else Color(0xFFF1F5F9),
+                            color = if (isHindi) ITantraColors.Primary else ITantraColors.SurfaceVariant,
                             modifier = Modifier.clickable {
                                 android.util.Log.d("ITANTRA_MIC_FLOW", "TransceiverHubScreen: Hindi chip CLICKED. Current activeLanguage=$activeLanguage")
                                 AppGraph.setMicLanguage(LanguageCode.HINDI)
@@ -818,7 +826,7 @@ fun TransceiverHubScreen(
                                 "\u0939\u093F\u0928\u094D\u0926\u0940 (HI)",
                                 fontSize = 11.sp,
                                 fontWeight = if (isHindi) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isHindi) Color.White else ITantraColors.TextHeadline,
+                                color = if (isHindi) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
@@ -827,7 +835,7 @@ fun TransceiverHubScreen(
                         val isEnglish = !micAutoDetect && activeLanguage == LanguageCode.ENGLISH
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (isEnglish) ITantraColors.Primary else Color(0xFFF1F5F9),
+                            color = if (isEnglish) ITantraColors.Primary else ITantraColors.SurfaceVariant,
                             modifier = Modifier.clickable {
                                 android.util.Log.d("ITANTRA_MIC_FLOW", "TransceiverHubScreen: English chip CLICKED. Current activeLanguage=$activeLanguage")
                                 AppGraph.setMicLanguage(LanguageCode.ENGLISH)
@@ -837,7 +845,7 @@ fun TransceiverHubScreen(
                                 "English (EN)",
                                 fontSize = 11.sp,
                                 fontWeight = if (isEnglish) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isEnglish) Color.White else ITantraColors.TextHeadline,
+                                color = if (isEnglish) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
@@ -845,7 +853,7 @@ fun TransceiverHubScreen(
                         // More / All Languages button
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFF1F5F9),
+                            color = ITantraColors.SurfaceVariant,
                             modifier = Modifier.clickable { onNavigateToLanguagePacks() }
                         ) {
                             Text(
@@ -896,7 +904,7 @@ fun TransceiverHubScreen(
                         val isAuto = (targetLanguage == null)
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (isAuto) ITantraColors.Primary else Color(0xFFF1F5F9),
+                            color = if (isAuto) ITantraColors.Primary else ITantraColors.SurfaceVariant,
                             modifier = Modifier.clickable {
                                 AppGraph.setTargetLanguage(null)
                             }
@@ -905,7 +913,7 @@ fun TransceiverHubScreen(
                                 "Auto",
                                 fontSize = 11.sp,
                                 fontWeight = if (isAuto) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isAuto) Color.White else ITantraColors.TextHeadline,
+                                color = if (isAuto) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
@@ -914,7 +922,7 @@ fun TransceiverHubScreen(
                         val isTargetHindi = (targetLanguage == LanguageCode.HINDI)
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (isTargetHindi) ITantraColors.Primary else Color(0xFFF1F5F9),
+                            color = if (isTargetHindi) ITantraColors.Primary else ITantraColors.SurfaceVariant,
                             modifier = Modifier.clickable {
                                 AppGraph.setTargetLanguage(LanguageCode.HINDI)
                             }
@@ -923,7 +931,7 @@ fun TransceiverHubScreen(
                                 "हिन्दी (HI)",
                                 fontSize = 11.sp,
                                 fontWeight = if (isTargetHindi) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isTargetHindi) Color.White else ITantraColors.TextHeadline,
+                                color = if (isTargetHindi) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
@@ -932,7 +940,7 @@ fun TransceiverHubScreen(
                         val isTargetEnglish = (targetLanguage == LanguageCode.ENGLISH)
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (isTargetEnglish) ITantraColors.Primary else Color(0xFFF1F5F9),
+                            color = if (isTargetEnglish) ITantraColors.Primary else ITantraColors.SurfaceVariant,
                             modifier = Modifier.clickable {
                                 AppGraph.setTargetLanguage(LanguageCode.ENGLISH)
                             }
@@ -941,7 +949,7 @@ fun TransceiverHubScreen(
                                 "English (EN)",
                                 fontSize = 11.sp,
                                 fontWeight = if (isTargetEnglish) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isTargetEnglish) Color.White else ITantraColors.TextHeadline,
+                                color = if (isTargetEnglish) ITantraColors.OnPrimary else ITantraColors.TextHeadline,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
@@ -949,7 +957,7 @@ fun TransceiverHubScreen(
                         // More / All Languages button
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFF1F5F9),
+                            color = ITantraColors.SurfaceVariant,
                             modifier = Modifier.clickable { onNavigateToLanguagePacks() }
                         ) {
                             Text(
@@ -972,14 +980,14 @@ fun TransceiverHubScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
+                        .background(ITantraColors.BorderSubtle, RoundedCornerShape(10.dp))
                         .padding(3.dp),
                 ) {
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isPttMode) Color.White else Color.Transparent)
+                            .background(if (isPttMode) ITantraColors.SurfaceWhite else Color.Transparent)
                             .clickable {
                                 if (!isPttMode) {
                                     isPttMode = true
@@ -1010,7 +1018,7 @@ fun TransceiverHubScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (!isPttMode) Color.White else Color.Transparent)
+                            .background(if (!isPttMode) ITantraColors.SurfaceWhite else Color.Transparent)
                             .clickable {
                                 if (isPttMode) {
                                     isPttMode = false
@@ -1043,7 +1051,7 @@ fun TransceiverHubScreen(
                             Box(
                                 modifier = Modifier
                                     .background(
-                                        if (!isPttMode) Color(0xFFDCFCE7) else Color(0xFFCBD5E1),
+                                        if (!isPttMode) Color(0xFFDCFCE7) else ITantraColors.BorderStrong,
                                         RoundedCornerShape(3.dp)
                                     )
                                     .padding(horizontal = 4.dp, vertical = 1.dp)
@@ -1081,13 +1089,13 @@ fun TransceiverHubScreen(
                                 .size(192.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (isRecordingActive) Color(0xFFFEE2E2).copy(alpha = 0.6f)
+                                    if (isRecordingActive) ITantraColors.ErrorContainer.copy(alpha = 0.6f)
                                     else if (!isPttMode) Color(0xFFF0FDF4).copy(alpha = 0.7f)
-                                    else Color(0xFFEFF6FF).copy(alpha = 0.4f)
+                                    else ITantraColors.AccentSubtle.copy(alpha = 0.4f)
                                 )
                                 .border(
                                     1.dp,
-                                    if (isRecordingActive) Color(0xFFFECACA) else if (!isPttMode) Color(0xFF86EFAC) else Color(0x99BFDBFE),
+                                    if (isRecordingActive) ITantraColors.ErrorContainer else if (!isPttMode) Color(0xFF86EFAC) else Color(0x99BFDBFE),
                                     CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -1097,12 +1105,14 @@ fun TransceiverHubScreen(
                                 modifier = Modifier
                                     .size(160.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.7f)),
+                                    .background(ITantraColors.SurfaceWhite.copy(alpha = 0.7f)),
                                 contentAlignment = Alignment.Center
                             ) {
+                                val trackColor = if (isRecordingActive) ITantraColors.StatusDanger
+                                    else if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.BorderStrong
                                 Canvas(modifier = Modifier.fillMaxSize()) {
                                     drawCircle(
-                                        color = if (isRecordingActive) Color(0xFFF87171) else if (!isPttMode) Color(0xFF4ADE80) else Color(0xFFCBD5E1),
+                                        color = trackColor,
                                         radius = size.minDimension / 2 - 2.dp.toPx(),
                                         style = Stroke(
                                             width = 1.dp.toPx(),
@@ -1116,10 +1126,10 @@ fun TransceiverHubScreen(
                                     modifier = Modifier
                                         .size(124.dp)
                                         .clip(CircleShape)
-                                        .background(Color.White)
+                                        .background(ITantraColors.SurfaceWhite)
                                         .border(
                                             1.5.dp,
-                                            if (isRecordingActive) ITantraColors.StatusDanger else if (!isPttMode) ITantraColors.StatusSuccess else Color(0xFFCBD5E1),
+                                            if (isRecordingActive) ITantraColors.StatusDanger else if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.BorderStrong,
                                             CircleShape
                                         )
                                         .pointerInput(coordinator, isPttMode) {
@@ -1180,15 +1190,15 @@ fun TransceiverHubScreen(
                                                 .size(44.dp)
                                                 .clip(CircleShape)
                                                 .background(
-                                                    if (isRecordingActive) Color(0xFFFEE2E2)
+                                                    if (isRecordingActive) ITantraColors.ErrorContainer
                                                     else if (!isPttMode) Color(0xFFDCFCE7)
                                                     else ITantraColors.AccentSubtle
                                                 )
                                                 .border(
                                                     1.dp,
-                                                    if (isRecordingActive) Color(0xFFFECACA)
+                                                    if (isRecordingActive) ITantraColors.ErrorContainer
                                                     else if (!isPttMode) Color(0xFFBBF7D0)
-                                                    else Color(0xFFDBEAFE),
+                                                    else ITantraColors.AccentSubtle,
                                                     CircleShape
                                                 ),
                                             contentAlignment = Alignment.Center
@@ -1270,7 +1280,7 @@ fun TransceiverHubScreen(
                                 isTransmitting = false
                                 coordinator.stopActiveRecording()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger),
+                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger, contentColor = ITantraColors.OnError),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.padding(horizontal = 24.dp)
                         ) {
@@ -1288,7 +1298,7 @@ fun TransceiverHubScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
                     shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECACA)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.ErrorContainer),
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Row(
@@ -1319,7 +1329,7 @@ fun TransceiverHubScreen(
                             Box(
                                 modifier = Modifier
                                     .background(Color(0xFFFEF2F2), RoundedCornerShape(4.dp))
-                                    .border(1.dp, Color(0xFFFECACA), RoundedCornerShape(4.dp))
+                                    .border(1.dp, ITantraColors.ErrorContainer, RoundedCornerShape(4.dp))
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
@@ -1397,10 +1407,10 @@ fun TransceiverHubScreen(
                                 showEmergencyConfirm = true
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger),
+                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger, contentColor = ITantraColors.OnError),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Icon(Icons.Filled.Campaign, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Filled.Campaign, contentDescription = null, tint = ITantraColors.OnError, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 "TRIGGER CRITICAL PTT BROADCAST",
@@ -1502,8 +1512,8 @@ fun TransceiverHubScreen(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .background(Color(0xFFF8FAFC), RoundedCornerShape(8.dp))
-                                        .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+                                        .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
+                                        .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
                                         .padding(20.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -1522,7 +1532,7 @@ fun TransceiverHubScreen(
                                             .background(ITantraColors.CanvasBg, RoundedCornerShape(8.dp))
                                             .border(
                                                 1.dp,
-                                                if (msg.isEmergency) Color(0xFFFECACA)
+                                                if (msg.isEmergency) ITantraColors.ErrorContainer
                                                 else if (msg.isFailed) Color(0xFFFED7AA)
                                                 else ITantraColors.BorderSubtle,
                                                 RoundedCornerShape(8.dp)
@@ -1549,15 +1559,15 @@ fun TransceiverHubScreen(
                                                 Box(
                                                     modifier = Modifier
                                                         .background(
-                                                            if (msg.isEmergency) Color(0xFFFEE2E2)
-                                                            else if (msg.isFailed) Color(0xFFFEF3C7)
-                                                            else Color(0xFFEFF6FF),
+                                                            if (msg.isEmergency) ITantraColors.ErrorContainer
+                                                            else if (msg.isFailed) ITantraColors.WarningContainer
+                                                            else ITantraColors.AccentSubtle,
                                                             RoundedCornerShape(3.dp)
                                                         )
                                                         .border(
                                                             1.dp,
-                                                            if (msg.isEmergency) Color(0xFFFECACA)
-                                                            else if (msg.isFailed) Color(0xFFFDE68A)
+                                                            if (msg.isEmergency) ITantraColors.ErrorContainer
+                                                            else if (msg.isFailed) ITantraColors.WarningContainer
                                                             else Color(0xFFBFDBFE),
                                                             RoundedCornerShape(3.dp)
                                                         )
@@ -1594,8 +1604,8 @@ fun TransceiverHubScreen(
                                             Spacer(Modifier.height(4.dp))
                                             Box(
                                                 modifier = Modifier
-                                                    .background(Color(0xFFF1F5F9), RoundedCornerShape(3.dp))
-                                                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(3.dp))
+                                                    .background(ITantraColors.SurfaceVariant, RoundedCornerShape(3.dp))
+                                                    .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(3.dp))
                                                     .padding(horizontal = 5.dp, vertical = 2.dp)
                                             ) {
                                                 Text(
@@ -1611,8 +1621,8 @@ fun TransceiverHubScreen(
                                             Spacer(Modifier.height(4.dp))
                                             Box(
                                                 modifier = Modifier
-                                                    .background(Color(0xFFFEE2E2), RoundedCornerShape(3.dp))
-                                                    .border(1.dp, Color(0xFFFECACA), RoundedCornerShape(3.dp))
+                                                    .background(ITantraColors.ErrorContainer, RoundedCornerShape(3.dp))
+                                                    .border(1.dp, ITantraColors.ErrorContainer, RoundedCornerShape(3.dp))
                                                     .padding(horizontal = 5.dp, vertical = 2.dp)
                                             ) {
                                                 Text(
@@ -1763,10 +1773,10 @@ fun TransceiverHubScreen(
                 Button(
                     onClick = { pendingEmergencyCode = "CRITICAL PRIORITY BROADCAST"; showEmergencySheet = false; showEmergencyConfirm = true },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger),
+                    colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger, contentColor = ITantraColors.OnError),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Icon(Icons.Filled.Campaign, contentDescription = null, tint = Color.White)
+                    Icon(Icons.Filled.Campaign, contentDescription = null, tint = ITantraColors.OnError)
                     Spacer(Modifier.width(8.dp))
                     Text("TRIGGER CRITICAL BROADCAST", fontWeight = FontWeight.Bold)
                 }
@@ -1779,7 +1789,7 @@ fun TransceiverHubScreen(
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = ITantraColors.SurfaceWhite),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.StatusDanger),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -1796,7 +1806,7 @@ fun TransceiverHubScreen(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFFEE2E2)),
+                                .background(ITantraColors.ErrorContainer),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -1833,15 +1843,15 @@ fun TransceiverHubScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFFFFBEB), RoundedCornerShape(6.dp))
-                            .border(1.dp, Color(0xFFFDE68A), RoundedCornerShape(6.dp))
+                            .background(ITantraColors.WarningContainer, RoundedCornerShape(6.dp))
+                            .border(1.dp, ITantraColors.WarningContainer, RoundedCornerShape(6.dp))
                             .padding(8.dp)
                     ) {
                         Row(verticalAlignment = Alignment.Top) {
                             Icon(
                                 Icons.Filled.Info,
                                 contentDescription = null,
-                                tint = Color(0xFFB45309),
+                                tint = ITantraColors.OnWarningContainer,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(Modifier.width(6.dp))
@@ -1861,7 +1871,7 @@ fun TransceiverHubScreen(
                         Button(
                             onClick = { showEmergencyConfirm = false },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9)),
+                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.SurfaceVariant),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text("Cancel", color = ITantraColors.TextHeadline, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
@@ -1879,10 +1889,10 @@ fun TransceiverHubScreen(
                                 showEmergencyConfirm = false
                             },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger),
+                            colors = ButtonDefaults.buttonColors(containerColor = ITantraColors.StatusDanger, contentColor = ITantraColors.OnError),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Authorize & Send", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Authorize & Send", color = ITantraColors.OnError, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -1989,12 +1999,12 @@ private fun HubBottomControls(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().background(Color(0xFFE2E8F0), RoundedCornerShape(10.dp)).padding(3.dp),
+                modifier = Modifier.fillMaxWidth().background(ITantraColors.BorderSubtle, RoundedCornerShape(10.dp)).padding(3.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
-                        .background(if (isPttMode) Color.White else Color.Transparent)
+                        .background(if (isPttMode) ITantraColors.SurfaceWhite else Color.Transparent)
                         .clickable { onPttModeChange(true) }.padding(vertical = 7.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -2006,7 +2016,7 @@ private fun HubBottomControls(
                 }
                 Box(
                     modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
-                        .background(if (!isPttMode) Color.White else Color.Transparent)
+                        .background(if (!isPttMode) ITantraColors.SurfaceWhite else Color.Transparent)
                         .clickable { onPttModeChange(false) }.padding(vertical = 7.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -2021,14 +2031,14 @@ private fun HubBottomControls(
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onEmergency,
-                    modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFFEE2E2)).border(1.dp, Color(0xFFFCA5A5), RoundedCornerShape(12.dp))
+                    modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(ITantraColors.ErrorContainer).border(1.dp, ITantraColors.StatusDanger, RoundedCornerShape(12.dp))
                 ) {
                     Icon(Icons.Filled.Sos, contentDescription = "Open emergency actions", tint = ITantraColors.StatusDanger, modifier = Modifier.size(25.dp))
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
                     modifier = Modifier.size(124.dp).clip(CircleShape)
-                        .background(if (isRecordingActive) Color(0xFFFEE2E2) else if (!isPttMode) Color(0xFFF0FDF4) else Color(0xFFEFF6FF))
+                        .background(if (isRecordingActive) ITantraColors.ErrorContainer else if (!isPttMode) Color(0xFFF0FDF4) else ITantraColors.AccentSubtle)
                         .border(2.dp, if (isRecordingActive) ITantraColors.StatusDanger else if (!isPttMode) ITantraColors.StatusSuccess else ITantraColors.Primary, CircleShape)
                         .pointerInput(coordinator, isPttMode, isPttLocked, continuousListenState) {
                             if (!isPttMode) {
@@ -2082,7 +2092,7 @@ private fun HubBottomControls(
                 Spacer(Modifier.weight(1f))
                 if (isPttLocked) {
                     IconButton(onClick = onStop, modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(ITantraColors.StatusDanger)) {
-                        Icon(Icons.Filled.Stop, contentDescription = "Send recording", tint = Color.White)
+                        Icon(Icons.Filled.Stop, contentDescription = "Send recording", tint = ITantraColors.OnError)
                     }
                 } else {
                     Spacer(Modifier.size(52.dp))
@@ -2109,8 +2119,8 @@ private fun TacticalEmergencyPresetButton(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFF8FAFC))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+            .background(ITantraColors.CanvasBg)
+            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
             .clickable { onClick() }
             .padding(horizontal = 8.dp, vertical = 7.dp)
     ) {

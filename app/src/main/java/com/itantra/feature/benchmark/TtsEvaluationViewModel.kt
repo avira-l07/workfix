@@ -281,7 +281,8 @@ class TtsEvaluationViewModel(
                 timestampMs = System.currentTimeMillis(),
                 language = _state.value.selectedLanguage,
                 evaluatorId = _state.value.evaluatorId,
-                modelIdentity = "Meta MMS TTS VITS ONNX",
+                modelIdentity = if (_state.value.selectedLanguage == LanguageCode.MARATHI.wireCode)
+                    "Piper mr_IN-google-medium; offline eSpeak; speaker 0" else "Meta MMS TTS VITS ONNX",
                 sentencesTested = total,
                 intelligibleCount = intelligibleCount,
                 intelligibilityPercent = rate,

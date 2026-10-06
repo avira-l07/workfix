@@ -44,7 +44,8 @@ data class MessageEntity(
     val remoteAudioStartConfMillis: Long = 0,
     val rawPcmEquivalentBytes: Int = 0,
     val speechDurationMillis: Long = 0,
-    val statusDetail: String? = null
+    val statusDetail: String? = null,
+    @androidx.room.ColumnInfo(defaultValue = "NULL") val deletedAtMillis: Long? = null
 ) {
     fun toDomain(): TransceiverMessage {
         val lang = languageWireCode?.let { LanguageCode.fromWireCode(it) }
@@ -88,7 +89,8 @@ data class MessageEntity(
             remoteAudioStartConfMillis = remoteAudioStartConfMillis,
             rawPcmEquivalentBytes = rawPcmEquivalentBytes,
             speechDurationMillis = speechDurationMillis,
-            statusDetail = statusDetail
+            statusDetail = statusDetail,
+            deletedAtMillis = deletedAtMillis
         )
     }
 
@@ -128,7 +130,8 @@ data class MessageEntity(
                 remoteAudioStartConfMillis = msg.remoteAudioStartConfMillis,
                 rawPcmEquivalentBytes = msg.rawPcmEquivalentBytes,
                 speechDurationMillis = msg.speechDurationMillis,
-                statusDetail = if (msg.isTimeUnverified) "TIME_UNVERIFIED" else msg.statusDetail
+                statusDetail = if (msg.isTimeUnverified) "TIME_UNVERIFIED" else msg.statusDetail,
+                deletedAtMillis = msg.deletedAtMillis
             )
         }
     }

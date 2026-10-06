@@ -11,6 +11,8 @@ import hashlib
 import json
 import math
 import statistics
+import subprocess
+import sys
 import time
 import unicodedata
 from pathlib import Path
@@ -43,6 +45,11 @@ def main():
     parser.add_argument("--language", required=True, choices=PHRASES)
     args = parser.parse_args()
     lang = args.language
+    if lang == "mr":
+        # Marathi now uses phonemes and a downloadable frontend, not MMS graphemes.
+        subprocess.run([sys.executable, str(ROOT / "tools/evaluate_marathi_piper.py"),
+                        "benchmark", "--voice", "piper"], check=True)
+        return
     model = ROOT / f"models/bundled/{lang}/tts/model.onnx"
     tokens = ROOT / f"app/src/main/assets/language_packs/{lang}/tts/tokens.txt"
     manifest = json.loads((ROOT / f"app/src/main/assets/language_packs/{lang}_dev_manifest.json")

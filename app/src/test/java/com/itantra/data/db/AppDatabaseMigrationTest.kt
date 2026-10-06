@@ -23,6 +23,60 @@ import java.sql.DriverManager
  */
 class AppDatabaseMigrationTest {
 
+    @Test fun migration5To6PreservesHistoryAndVoiceNoteQueriesEnforceSevenDayRestore() {
+        val old = JSONObject(File("schemas/com.itantra.data.db.AppDatabase/5.json").readText())
+            .getJSONObject("database").getJSONArray("entities")
+        val fresh = JSONObject(File("schemas/com.itantra.data.db.AppDatabase/6.json").readText())
+            .getJSONObject("database").getJSONArray("entities")
+        createSqliteMemoryConnection().use { conn ->
+            for (i in 0 until old.length()) {
+                val entity = old.getJSONObject(i)
+                val table = entity.getString("tableName")
+                conn.createStatement().use { it.execute(entity.getString("createSql").replace("\${TABLE_NAME}", table)) }
+                val fields = entity.getJSONArray("fields")
+                val required = (0 until fields.length()).map { fields.getJSONObject(it) }.filter { it.getBoolean("notNull") }
+                val columns = required.joinToString { "`${it.getString("columnName")}`" }
+                val values = required.joinToString { if (it.getString("affinity") == "TEXT") "'preserved'" else "42" }
+                conn.createStatement().use { it.execute("INSERT INTO `$table` ($columns) VALUES ($values)") }
+            }
+            AppDatabase.MIGRATION_5_6.migrate(createSupportDatabaseWrapper(conn))
+            for (i in 0 until fresh.length()) {
+                val entity = fresh.getJSONObject(i)
+                val table = entity.getString("tableName")
+                conn.createStatement().use { stmt ->
+                    stmt.executeQuery("SELECT COUNT(*) FROM `$table`").use { rows -> rows.next(); assertEquals(1, rows.getInt(1)) }
+                    stmt.executeQuery("PRAGMA table_info(`$table`)").use { columns ->
+                        val actual = mutableListOf<String>()
+                        while (columns.next()) actual += columns.getString("name")
+                        val fields = entity.getJSONArray("fields")
+                        assertEquals((0 until fields.length()).map { fields.getJSONObject(it).getString("columnName") }, actual)
+                    }
+                }
+            }
+            conn.createStatement().use { stmt ->
+                stmt.executeQuery("SELECT deletedAtMillis FROM messages").use { rows -> rows.next(); assertNull(rows.getObject(1)) }
+                stmt.executeQuery("SELECT transcribedText, createdAtMillis, deletedAtMillis FROM voice_notes").use { rows ->
+                    rows.next(); assertEquals("preserved", rows.getString(1)); assertEquals(42L, rows.getLong(2)); assertNull(rows.getObject(3))
+                }
+                // Room's Query annotation has binary retention. Execute the actual DAO SQL from source.
+                val daoSource = File("src/main/java/com/itantra/data/db/VoiceNoteDao.kt").readText()
+                fun query(method: String) = Regex("""@Query\("([^"]+)"\)\s*fun $method\(""")
+                    .find(daoSource)!!.groupValues[1]
+                val deleted = 1_800_000_000_000L
+                assertEquals(1, stmt.executeUpdate(query("moveToTrash").replace(":now", "$deleted").replace(":id", "42")))
+                stmt.executeQuery(query("observeAll")).use { assertFalse(it.next()) }
+                stmt.executeQuery(query("observeTrash")).use { assertTrue(it.next()) }
+                val restore = query("restore").replace(":id", "42")
+                assertEquals(1, stmt.executeUpdate(restore.replace(":cutoff", "${deleted - 1}")))
+                stmt.executeQuery(query("observeAll")).use { rows -> rows.next(); assertEquals(42L, rows.getLong("createdAtMillis")) }
+                assertEquals(0, stmt.executeUpdate(query("deleteTrashed").replace(":id", "42")))
+                stmt.executeUpdate(query("moveToTrash").replace(":now", "$deleted").replace(":id", "42"))
+                assertEquals(0, stmt.executeUpdate(restore.replace(":cutoff", "$deleted")))
+                assertEquals(1, stmt.executeUpdate(query("purgeExpired").replace(":cutoff", "$deleted")))
+            }
+        }
+    }
+
     private fun createSqliteMemoryConnection(): Connection {
         return DriverManager.getConnection("jdbc:sqlite::memory:")
     }

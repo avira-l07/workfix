@@ -1,0 +1,50 @@
+# Paste ALL of this into ONE new Code cell in the CURRENT Kaggle pilot.
+# Run this cell once. Keep the session open; do not rerun setup or baseline.
+import os, json, shutil
+from pathlib import Path
+
+assert all(name in globals() for name in ('work', 'train_python', 'summary', 'command', 'stage', 'pack_reports')), 'Setup variables missing; stop and share this output'
+work = Path(work)
+logs = work / 'logs'
+assert Path(train_python).is_file(), 'Installed Python missing; stop and share this output'
+old_log = logs / 'pilot-freeze-lower-17.log'
+assert old_log.is_file(), 'Original failed training log missing'
+failure = old_log.read_text(encoding='utf-8', errors='replace')
+assert 'Segmentation fault' in failure and 'numba/cuda/cudadrv/driver.py' in failure and 'as_cuda_array' in failure, 'This cell is only for the reviewed Numba CUDA crash'
+assert not (logs / 'pilot-freeze-lower-17-nvidia-binding.log').exists(), 'Binding retry already ran; download and share its ZIP'
+baseline = json.loads((work / 'baseline-report.json').read_text(encoding='utf-8'))
+assert baseline.get('ctc_baseline_gate_passed') is True, 'A passing baseline is required'
+run = work / 'pilot-freeze-lower-17'
+assert not (run / 'report.json').exists(), 'A pilot report exists; preserve it and share the ZIP'
+assert not list(run.rglob('*.ckpt')) and not list(run.rglob('metrics.csv')), 'Training evidence exists; preserve it and share the ZIP'
+config = run / 'effective-model-config.yaml'
+backup = run / 'before-nvidia-binding-config.yaml'
+if config.is_file() and not backup.exists():
+    shutil.copyfile(config, backup)
+
+# The subprocess reads this before importing Numba. No kernel restart needed.
+os.environ['NUMBA_CUDA_USE_NVIDIA_BINDING'] = '1'
+os.environ['ITANTRA_NEMO_SOURCE'] = str(work / 'NeMo')
+os.environ['PYTHONPATH'] = str(work)
+os.environ['PYTHONNOUSERSITE'] = '1'
+os.chdir(work)
+
+(work / 'kathbath_rnnt_cuda_check.py').write_text('from kathbath_tamil_pilot import runtime, write_json, verify_plan\ndef rnnt_cuda_preflight():\n    """Exercise the exact CUDA interop/loss path before loading a large model."""\n    import importlib.metadata as metadata\n    import torch\n    from numba import cuda\n    from numba.cuda.cudadrv import driver\n    from nemo.collections.asr.losses.rnnt import RNNTLoss\n    if not driver.USE_NV_BINDING or metadata.version("cuda-python") != "12.4.0":\n        raise RuntimeError("Install cuda-python==12.4.0 and set NUMBA_CUDA_USE_NVIDIA_BINDING=1 before importing Numba")\n    checked = runtime()\n    checked.update(numba=metadata.version("numba"), cuda_python=metadata.version("cuda-python"),\n                   numba_cuda_use_nvidia_binding=bool(driver.USE_NV_BINDING))\n    torch.manual_seed(17)\n    values = torch.randn(1, 4, 3, 5, device="cuda:0")\n    targets = torch.tensor([[1, 2]], device="cuda:0", dtype=torch.long)\n    input_lengths = torch.tensor([4], device="cuda:0", dtype=torch.long)\n    target_lengths = torch.tensor([2], device="cuda:0", dtype=torch.long)\n    results = []\n    for dtype in (torch.float32, torch.float16):\n        logits = values.to(dtype).detach().requires_grad_(True)\n        cuda.as_cuda_array(logits.detach())\n        criterion = RNNTLoss(num_classes=4, reduction="mean_batch", loss_name="warprnnt_numba")\n        loss = criterion(log_probs=logits, targets=targets, input_lengths=input_lengths,\n                         target_lengths=target_lengths)\n        loss.backward()\n        torch.cuda.synchronize()\n        if (not torch.isfinite(loss).all() or logits.grad is None\n                or not torch.isfinite(logits.grad).all() or not torch.count_nonzero(logits.grad)):\n            raise RuntimeError("RNNT CUDA smoke test produced invalid loss or gradients")\n        results.append({"dtype": str(dtype), "loss": float(loss.detach()),\n                        "gradient_norm": float(logits.grad.float().norm())})\n    return dict(checked, status="Tiny RNNT CUDA forward/backward passed; pilot not run", checks=results)\n\nverify_plan(\'.\')\nwrite_json(\'rnnt-cuda-check-report.json\', rnnt_cuda_preflight())\nprint(\'Tiny RNNT CUDA forward/backward passed.\')\n', encoding='utf-8')
+
+def retry_with_nvidia_binding():
+    command([train_python, '-m', 'pip', 'install', '--no-cache-dir', '-c', work / 'constraints.txt',
+             'cuda-python==12.4.0'], 'cuda-binding-install')
+    command([train_python, '-m', 'pip', 'check'], 'cuda-binding-pip-check')
+    command([train_python, work / 'kathbath_rnnt_cuda_check.py'], 'rnnt-cuda-check')
+    summary['rnnt_cuda_check'] = json.loads((work / 'rnnt-cuda-check-report.json').read_text())
+    command([train_python, '-m', 'pip', 'freeze'], 'installed-versions-after-cuda-binding')
+    if shutil.disk_usage(work).free < 3 * 1024**3:
+        raise RuntimeError('Too little free disk for the pilot checkpoint; preserve reports')
+    if sum(p.stat().st_size for p in work.rglob('*') if p.is_file()) > 16 * 1024**3:
+        raise RuntimeError('Pilot workspace exceeds 16 GiB; preserve reports')
+    command([train_python, work / 'kathbath_tamil_pilot.py', 'pilot', '--repo', work,
+             '--mode', 'freeze-lower', '--seed', '17'], 'pilot-freeze-lower-17-nvidia-binding')
+    summary['status'] = 'First pilot completed with NVIDIA CUDA binding; remaining modes/seeds not completed'
+
+stage('nvidia-cuda-binding-recovery', retry_with_nvidia_binding)
+print('Download the NEW itantra_tamil_pilot_reports.zip and share it. Keep this session open.')

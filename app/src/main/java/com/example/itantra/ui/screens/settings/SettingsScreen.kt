@@ -1,32 +1,38 @@
 package com.example.itantra.ui.screens.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.itantra.data.settings.AppSettings
-import com.example.itantra.data.settings.ThemeMode
 import com.example.itantra.data.settings.ColorPalette
-import com.example.itantra.ui.components.rememberBatteryState
+import com.example.itantra.data.settings.ThemeMode
 import com.example.itantra.ui.theme.ITantraColors
+import com.example.itantra.ui.theme.itantraColorScheme
 
-/**
- * Direct port of 01_settings/code.html.
- */
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
@@ -34,170 +40,165 @@ fun SettingsScreen(
     pairingSectionContent: (@Composable () -> Unit)? = null,
     isBackendWired: Boolean = true,
     onWipe: () -> Unit = {},
+    onLanguagePacks: () -> Unit = {},
+    onDiagnostics: () -> Unit = {},
+    onRecycleBin: () -> Unit = {},
 ) {
     val settings by viewModel.settings.collectAsState()
     val uriHandler = LocalUriHandler.current
     var showResetConfirm by remember { mutableStateOf(false) }
 
-    Scaffold(
-        containerColor = ITantraColors.CanvasBg,
-        topBar = { SettingsTopBar(onBack = onBack) },
-    ) { padding ->
-        if (!isBackendWired) {
-            NotYetAvailableGate(modifier = Modifier.padding(padding))
-            return@Scaffold
-        }
+    if (!isBackendWired) {
+        NotYetAvailableGate()
+        return
+    }
 
+    Box(
+        modifier = Modifier.fillMaxSize().background(ITantraColors.CanvasBg),
+        contentAlignment = Alignment.TopCenter,
+    ) {
         LazyColumn(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxHeight().widthIn(max = 880.dp).fillMaxWidth(),
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            item { DeviceIdentityBanner() }
             item {
-                SettingsSection(icon = "🎨", title = "Appearance", tag = "DISPLAY") {
-                    Text("Theme", style = MaterialTheme.typography.labelLarge)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(ThemeMode.entries) { mode ->
-                            FilterChip(selected = settings.themeMode == mode,
-                                onClick = { viewModel.setThemeMode(mode) },
-                                label = { Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }) })
-                        }
-                    }
-                    Text("Color palette", style = MaterialTheme.typography.labelLarge)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(ColorPalette.entries) { palette ->
-                            FilterChip(selected = settings.colorPalette == palette,
-                                onClick = { viewModel.setColorPalette(palette) },
-                                label = { Text(palette.name.lowercase().replaceFirstChar { it.uppercase() }) })
-                        }
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Make it yours.",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = (-0.8).sp,
+                    )
+                    Text(
+                        "Simple controls for your voice, connection, and local data.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ITantraColors.TextMuted,
+                    )
                 }
             }
-            item { WipeDataAction(onWipe) }
+
+            item { DeviceIdentityBanner() }
             item {
                 OperatorIdentitySection(
                     operatorName = settings.operatorName,
-                    onNameChange = viewModel::setOperatorName
+                    onNameChange = viewModel::setOperatorName,
                 )
             }
 
             item {
-                SettingsSection(icon = "📶", title = "Transport", tag = "SEC-01") {
-                    TransportInfo()
-                }
-            }
-
-            item {
-                SettingsSection(icon = "🎙", title = "Voice-Activity Sensitivity (VAD)", tag = "SEC-02") {
+                val targetLang by com.itantra.app.AppGraph.languagePackRepository.observeTargetLanguage()
+                    .collectAsState(initial = null)
+                SettingsSection(title = "Voice & connection") {
+                    Text("Outgoing translation", style = MaterialTheme.typography.titleSmall)
                     Text(
-                        "Voice-Activity Detection & Sensitivity",
-                        style = MaterialTheme.typography.labelLarge
+                        "Choose the target language for outgoing voice and typed messages. Auto follows the connected peer's advertised language.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ITantraColors.TextMuted,
                     )
-                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Offline translation uses downloaded models. Check MT READY for both languages in Language packs.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ITantraColors.Primary,
+                    )
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item {
+                            FilterChip(
+                                selected = targetLang == null,
+                                onClick = { com.itantra.app.AppGraph.setTargetLanguage(null) },
+                                label = { Text("Auto / peer default") },
+                            )
+                        }
+                        items(com.itantra.domain.model.LanguageCatalog.all) { language ->
+                            FilterChip(
+                                selected = targetLang == language.code,
+                                onClick = { com.itantra.app.AppGraph.setTargetLanguage(language.code) },
+                                label = { Text(language.nativeDisplayName) },
+                            )
+                        }
+                    }
+                    HorizontalDivider(color = ITantraColors.BorderSubtle)
+                    Text("Connection & verification", style = MaterialTheme.typography.titleSmall)
+                    TransportInfo()
+                    if (pairingSectionContent != null) {
+                        pairingSectionContent()
+                    }
+                    HorizontalDivider(color = ITantraColors.BorderSubtle)
+                    Text("Voice activity sensitivity", style = MaterialTheme.typography.titleSmall)
                     Text(
                         "Fixed sensitivity in this build. Field calibration has not yet been verified on low- and mid-range phones.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = ITantraColors.TextMuted
+                        color = ITantraColors.TextMuted,
                     )
-                    Spacer(Modifier.height(8.dp))
                     Text(
-                        "Dynamic noise suppression level: Not available in this build",
+                        "Dynamic noise suppression level: Not available in this build.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = ITantraColors.TextMuted
+                        color = ITantraColors.TextMuted,
                     )
                 }
             }
 
             item {
-                val targetLang by com.itantra.app.AppGraph.languagePackRepository.observeTargetLanguage().collectAsState(initial = null)
-                SettingsSection(icon = "🌐", title = "Outgoing Translation & Target Language", tag = "SEC-03") {
+                SettingsSection(title = "Language & diagnostics") {
                     Text(
-                        "Configure the target language for outgoing voice and typed messages. Set to Auto to automatically adapt to the connected peer's advertised language.",
+                        "Manage offline models, spoken playback, and device checks.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = ITantraColors.TextMuted
+                        color = ITantraColors.TextMuted,
                     )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "Offline translation uses downloaded language models. Check MT READY for both languages in Language Packs.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ITantraColors.Primary,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val isAuto = (targetLang == null)
-                        FilterChip(
-                            selected = isAuto,
-                            onClick = { com.itantra.app.AppGraph.setTargetLanguage(null) },
-                            label = { Text("Auto / Peer Default") }
-                        )
-                        val isHindi = (targetLang == com.itantra.domain.model.LanguageCode.HINDI)
-                        FilterChip(
-                            selected = isHindi,
-                            onClick = { com.itantra.app.AppGraph.setTargetLanguage(com.itantra.domain.model.LanguageCode.HINDI) },
-                            label = { Text("हिन्दी (HI)") }
-                        )
-                        val isEnglish = (targetLang == com.itantra.domain.model.LanguageCode.ENGLISH)
-                        FilterChip(
-                            selected = isEnglish,
-                            onClick = { com.itantra.app.AppGraph.setTargetLanguage(com.itantra.domain.model.LanguageCode.ENGLISH) },
-                            label = { Text("English (EN)") }
-                        )
+                    OutlinedButton(onClick = onLanguagePacks, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Filled.Language, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Language packs")
+                    }
+                    OutlinedButton(onClick = onDiagnostics, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Filled.Insights, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Diagnostics & field tests")
+                    }
+                    OutlinedButton(onClick = onRecycleBin, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Filled.Restore, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Recycle bin · restore within 7 days")
                     }
                 }
             }
 
             item {
-                SettingsSection(
-                    icon = "🚨",
-                    title = "Emergency Playback & Behavior",
-                    tag = "CRITICAL",
-                    tagColor = ITantraColors.StatusDanger,
-                ) {
+                SettingsSection(title = "Emergency & local data") {
+                    Text("Emergency playback", style = MaterialTheme.typography.titleSmall)
                     EmergencyBehaviorControls()
-                }
-            }
-
-            if (pairingSectionContent != null) {
-                item {
-                    SettingsSection(icon = "🔒", title = "Device Pairing & Verification", tag = "SEC-04") {
-                        pairingSectionContent()
+                    HorizontalDivider(color = ITantraColors.BorderSubtle)
+                    Text("Restore default settings", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        "Reset your preferences. Messages and downloaded language packs stay.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ITantraColors.TextMuted,
+                    )
+                    OutlinedButton(
+                        onClick = { showResetConfirm = true },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(Icons.Filled.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Restore defaults")
                     }
                 }
             }
 
             item {
-                OutlinedButton(
-                    onClick = { showResetConfirm = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ITantraColors.StatusDanger),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, ITantraColors.StatusDanger.copy(alpha = 0.3f)),
-                ) {
-                    Icon(Icons.Filled.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Reset Settings to Field Default")
+                SettingsSection(title = "Look & feel") {
+                    AppearanceControls(
+                        settings = settings,
+                        onThemeModeChange = viewModel::setThemeMode,
+                        onPaletteChange = viewModel::setColorPalette,
+                    )
                 }
             }
 
             item {
-                Text(
-                    "Translation works offline after the required MT models are installed.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = ITantraColors.TextMuted,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            item {
-                SettingsSection(icon = "ℹ", title = "Speech model credits", tag = "SOURCES") {
+                SettingsSection(title = "Speech model credits") {
                     Text(
-                        "Indian-language recognition: AI4Bharat IndicConformer exports. English recognition: NVIDIA NeMo FastConformer export. Voice output: Meta MMS TTS ONNX exports (CC BY-NC 4.0). Translation: Google ML Kit on-device translation.",
+                        "Indian-language recognition: AI4Bharat IndicConformer exports. English recognition: NVIDIA NeMo FastConformer export. Marathi voice: Piper mr_IN-google-medium, based on OpenSLR 64. Other voices: Meta MMS TTS ONNX exports (CC BY-NC 4.0). Translation: Google ML Kit on-device translation.",
                         style = MaterialTheme.typography.bodySmall,
                         color = ITantraColors.TextMuted,
                     )
@@ -205,7 +206,10 @@ fun SettingsScreen(
                         Text("STT model sources and licences")
                     }
                     TextButton(onClick = { uriHandler.openUri("https://huggingface.co/willwade/mms-tts-multilingual-models-onnx") }) {
-                        Text("TTS model and licence")
+                        Text("MMS voices and licence")
+                    }
+                    TextButton(onClick = { uriHandler.openUri("https://huggingface.co/rhasspy/piper-voices/blob/c10ece1aade47bb51c153c893d14e5bf8e5b7117/mr/mr_IN/google/medium/MODEL_CARD") }) {
+                        Text("Marathi Piper voice and credits")
                     }
                     TextButton(onClick = { uriHandler.openUri("https://developers.google.com/ml-kit/language/translation/translation-terms") }) {
                         Text("Translation terms")
@@ -214,8 +218,26 @@ fun SettingsScreen(
             }
 
             item {
+                Surface(
+                    shape = RoundedCornerShape(22.dp),
+                    color = ITantraColors.ErrorContainer,
+                    border = BorderStroke(1.dp, ITantraColors.StatusDanger.copy(alpha = 0.25f)),
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Wipe local data", style = MaterialTheme.typography.titleMedium, color = ITantraColors.StatusDanger)
+                        Text(
+                            "Remove private messages, emergency records, identity, settings and diagnostics. Downloaded models stay.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ITantraColors.TextMuted,
+                        )
+                        WipeDataAction(onWipe)
+                    }
+                }
+            }
+
+            item {
                 Text(
-                    "iTantra ${com.example.itantra.BuildConfig.VERSION_NAME}\nSpeech and translation need their selected offline models installed.",
+                    "iTantra ${com.example.itantra.BuildConfig.VERSION_NAME}\nSpeech and translation work offline after their selected models are installed.",
                     style = MaterialTheme.typography.bodySmall,
                     color = ITantraColors.TextMuted,
                     modifier = Modifier.fillMaxWidth(),
@@ -227,12 +249,13 @@ fun SettingsScreen(
     if (showResetConfirm) {
         AlertDialog(
             onDismissRequest = { showResetConfirm = false },
-            title = { Text("Reset all VAD calibration and transport settings to field default?") },
+            title = { Text("Restore default settings?") },
+            text = { Text("Restore the operator name, appearance and stored voice settings. Messages and downloaded language packs stay.") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.resetToDefault()
                     showResetConfirm = false
-                }) { Text("Reset", color = ITantraColors.StatusDanger) }
+                }) { Text("Restore defaults") }
             },
             dismissButton = {
                 TextButton(onClick = { showResetConfirm = false }) { Text("Cancel") }
@@ -241,52 +264,17 @@ fun SettingsScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SettingsTopBar(onBack: () -> Unit) {
-    TopAppBar(
-        title = {
-            Column {
-                Text("Settings", style = MaterialTheme.typography.titleMedium, maxLines = 1)
-                Text(
-                    "Transport, voice & security",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = ITantraColors.TextMuted,
-                )
-            }
-        },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-        },
-        actions = {
-            val battery = rememberBatteryState()
-            val chargingTag = if (battery.isCharging) " ⚡" else ""
-            Text(
-                "AES-256-GCM · ${if (battery.levelPercent >= 0) "${battery.levelPercent}%" else "--%"}$chargingTag",
-                style = MaterialTheme.typography.labelSmall,
-                color = ITantraColors.TextMuted,
-                modifier = Modifier.padding(end = 16.dp),
-            )
-        },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = ITantraColors.SurfaceWhite),
-    )
-}
-
 @Composable
 private fun NotYetAvailableGate(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier = modifier.fillMaxSize().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Text("Settings isn't wired to the backend yet", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Per DESIGN_SPEC.md Rule 0, controls stay disabled until they actually change app behavior.",
+            "Controls are unavailable until they can change app behavior.",
             style = MaterialTheme.typography.bodyMedium,
             color = ITantraColors.TextMuted,
         )
@@ -297,192 +285,238 @@ private fun NotYetAvailableGate(modifier: Modifier = Modifier) {
 private fun DeviceIdentityBanner() {
     val profile by com.itantra.app.AppGraph.deviceProfileManager.profile.collectAsState()
     val deviceId = profile.deviceId.takeIf { it.isNotBlank() }
+    val clipboard = LocalClipboardManager.current
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(ITantraColors.SurfaceWhite, RoundedCornerShape(8.dp))
-            .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(8.dp))
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = ITantraColors.SurfaceWhite,
+        border = BorderStroke(1.dp, ITantraColors.BorderSubtle),
     ) {
-        Box(
-            Modifier
-                .size(8.dp)
-                .background(if (deviceId != null) ITantraColors.StatusSuccess else ITantraColors.StatusWarning, RoundedCornerShape(50)),
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            if (deviceId != null) "DEVICE ID: $deviceId" else "Device identity unavailable",
-            style = MaterialTheme.typography.labelSmall,
-            color = ITantraColors.TextHeadline,
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(Icons.Filled.Smartphone, contentDescription = null, tint = ITantraColors.Primary, modifier = Modifier.size(22.dp))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text("Device ID", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    deviceId ?: "Device identity unavailable",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = ITantraColors.TextMuted,
+                )
+            }
+            TextButton(
+                enabled = deviceId != null,
+                onClick = { deviceId?.let { clipboard.setText(AnnotatedString(it)) } },
+            ) {
+                Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(5.dp))
+                Text("Copy")
+            }
+        }
+    }
+}
+
+@Composable
+private fun OperatorIdentitySection(operatorName: String, onNameChange: (String) -> Unit) {
+    SettingsSection(title = "Your profile") {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(
+                modifier = Modifier.size(44.dp).background(ITantraColors.PrimaryContainer, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (operatorName.isBlank()) {
+                    Icon(Icons.Filled.Person, contentDescription = null, tint = ITantraColors.Primary)
+                } else {
+                    Text(operatorName.trim().take(2).uppercase(), color = ITantraColors.Primary, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text("Operator name", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    "Local station identifier for this device. Not transmitted over Bluetooth RFCOMM.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ITantraColors.TextMuted,
+                )
+            }
+        }
+        OutlinedTextField(
+            value = operatorName,
+            onValueChange = onNameChange,
+            label = { Text("Local operator name") },
+            placeholder = { Text("Enter a name or callsign") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = ITantraColors.Primary,
+                unfocusedBorderColor = ITantraColors.BorderSubtle,
+                focusedContainerColor = ITantraColors.SurfaceWhite,
+                unfocusedContainerColor = ITantraColors.SurfaceWhite,
+            ),
         )
     }
 }
 
 @Composable
-private fun OperatorIdentitySection(
-    operatorName: String,
-    onNameChange: (String) -> Unit
+private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        Surface(
+            shape = RoundedCornerShape(22.dp),
+            color = ITantraColors.SurfaceWhite,
+            border = BorderStroke(1.dp, ITantraColors.BorderSubtle),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                content = content,
+            )
+        }
+    }
+}
+
+@Composable
+private fun AppearanceControls(
+    settings: AppSettings,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    onPaletteChange: (ColorPalette) -> Unit,
 ) {
-    SettingsSection(icon = "👤", title = "Operator Callsign & Identity", tag = "IDENT") {
-        Column {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(
+            modifier = Modifier.size(44.dp).background(ITantraColors.PrimaryContainer, RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.Palette, contentDescription = null, tint = ITantraColors.Primary)
+        }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("A space that feels like you.", style = MaterialTheme.typography.titleSmall)
+            Text("Choose your colors. Settle into light or dark.", style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
+        }
+    }
+    Spacer(Modifier.height(4.dp))
+    Text("Brightness", style = MaterialTheme.typography.labelLarge, color = ITantraColors.TextMuted)
+    Row(modifier = Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM).forEach { mode ->
+            val selected = settings.themeMode == mode
+            Surface(
+                modifier = Modifier.weight(1f).selectable(selected = selected, role = Role.RadioButton, onClick = { onThemeModeChange(mode) }),
+                shape = RoundedCornerShape(14.dp),
+                color = if (selected) ITantraColors.PrimaryContainer else ITantraColors.SurfaceVariant,
+                border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) ITantraColors.Primary else ITantraColors.BorderSubtle),
+                contentColor = if (selected) ITantraColors.Primary else ITantraColors.TextMuted,
+            ) {
+                Column(
+                    modifier = Modifier.defaultMinSize(minHeight = 82.dp).padding(horizontal = 7.dp, vertical = 14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                ) {
+                    Icon(
+                        when (mode) {
+                            ThemeMode.LIGHT -> Icons.Filled.LightMode
+                            ThemeMode.DARK -> Icons.Filled.DarkMode
+                            ThemeMode.SYSTEM -> Icons.Filled.DesktopWindows
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                    )
+                    Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(4.dp))
+    Text("Your color story", style = MaterialTheme.typography.labelLarge, color = ITantraColors.TextMuted)
+    Column(modifier = Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ColorPalette.entries.chunked(2).forEach { palettes ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                palettes.forEach { palette ->
+                    PaletteCard(
+                        palette = palette,
+                        selected = settings.colorPalette == palette,
+                        onClick = { onPaletteChange(palette) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = ITantraColors.TextMuted, modifier = Modifier.size(16.dp))
+        Text("Saved on this device. Every screen follows your choice.", style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
+    }
+}
+
+@Composable
+private fun PaletteCard(palette: ColorPalette, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val swatch = itantraColorScheme(dark = MaterialTheme.colorScheme.background.luminance() < 0.5f, palette = palette)
+    Surface(
+        modifier = modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        color = ITantraColors.SurfaceWhite,
+        border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) ITantraColors.Primary else ITantraColors.BorderSubtle),
+    ) {
+        Column(modifier = Modifier.padding(8.dp)) {
+            Box(modifier = Modifier.fillMaxWidth().height(68.dp).clip(RoundedCornerShape(10.dp)).background(swatch.primaryContainer)) {
+                Box(Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-12).dp).size(54.dp).background(swatch.secondary.copy(alpha = 0.5f), CircleShape))
+                Box(Modifier.align(Alignment.BottomEnd).offset(x = (-20).dp, y = 28.dp).size(74.dp).border(1.dp, swatch.primary.copy(alpha = 0.35f), CircleShape))
+                Row(modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)) {
+                    Box(Modifier.size(24.dp).background(swatch.primary, CircleShape).border(2.dp, swatch.primaryContainer, CircleShape))
+                    Box(Modifier.offset(x = (-7).dp).size(24.dp).background(swatch.secondary, CircleShape).border(2.dp, swatch.primaryContainer, CircleShape))
+                }
+                if (selected) {
+                    Box(
+                        modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).size(24.dp).background(ITantraColors.Primary, CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Filled.Check, contentDescription = null, tint = ITantraColors.OnPrimary, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
             Text(
-                "Local station identifier for this device. Not transmitted over Bluetooth RFCOMM.",
+                palette.name.lowercase().replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(start = 3.dp, top = 8.dp),
+            )
+            Text(
+                when (palette) {
+                    ColorPalette.OCEAN -> "Blue & seafoam"
+                    ColorPalette.FOREST -> "Pine & soft gold"
+                    ColorPalette.IRIS -> "Violet & rose"
+                    ColorPalette.EMBER -> "Clay & warm sage"
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = ITantraColors.TextMuted,
-            )
-            Spacer(Modifier.height(10.dp))
-            OutlinedTextField(
-                value = operatorName,
-                onValueChange = onNameChange,
-                placeholder = { Text("e.g. ALPHA-1, Capt. Sharma") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ITantraColors.Primary,
-                    unfocusedBorderColor = ITantraColors.BorderSubtle,
-                    focusedContainerColor = ITantraColors.SurfaceWhite,
-                    unfocusedContainerColor = ITantraColors.SurfaceWhite,
-                ),
-                textStyle = androidx.compose.ui.text.TextStyle(
-                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = ITantraColors.TextHeadline
-                )
+                modifier = Modifier.padding(start = 3.dp, top = 2.dp, bottom = 3.dp),
             )
         }
     }
 }
 
-@Composable
-private fun SettingsSection(
-    icon: String,
-    title: String,
-    tag: String,
-    tagColor: Color = ITantraColors.Primary,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
-            Text(icon)
-            Spacer(Modifier.width(8.dp))
-            Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-            Text(
-                tag,
-                style = MaterialTheme.typography.labelSmall,
-                color = tagColor,
-                modifier = Modifier
-                    .background(tagColor.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-            )
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(ITantraColors.SurfaceWhite, RoundedCornerShape(12.dp))
-                .border(1.dp, ITantraColors.BorderSubtle, RoundedCornerShape(12.dp))
-                .padding(16.dp),
-            content = content,
-        )
-    }
-}
-
-/**
- * Bluetooth RFCOMM is the only transport in this build. Wi-Fi Direct and automatic transport switching
- * were cut from scope; the stored transportPreference setting is no longer read or shown.
- */
 @Composable
 private fun TransportInfo() {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("Encrypted Bluetooth RFCOMM and Wi-Fi Direct TCP are available.", style = MaterialTheme.typography.labelLarge)
-        Text(
-            "Encrypted Bluetooth RFCOMM and Wi-Fi Direct TCP are available. " +
-                "Messages are end-to-end encrypted once you confirm the verification code on both devices.",
-            style = MaterialTheme.typography.bodySmall,
-            color = ITantraColors.TextMuted,
-        )
-    }
-}
-
-@Composable
-private fun VadSensitivitySlider(value: Int, onValueChange: (Int) -> Unit) {
-    Column {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("VAD Sensitivity (Continuous Mode)", style = MaterialTheme.typography.labelLarge)
-            Text(
-                vadLabel(value),
-                style = MaterialTheme.typography.labelSmall,
-                color = ITantraColors.Primary,
-            )
-        }
-        Slider(
-            value = value.toFloat(),
-            onValueChange = { onValueChange(it.toInt()) },
-            valueRange = 1f..3f,
-            steps = 1,
-        )
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Low\n(Noisy areas)", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted)
-            Text("High\n(Quiet speech)", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted)
-        }
-    }
-}
-
-private fun vadLabel(value: Int) = when (value) { 1 -> "LOW THRESHOLD"; 3 -> "HIGH THRESHOLD"; else -> "STANDARD THRESHOLD" }
-
-@Composable
-private fun NoiseSuppressionSlider(value: Int, onValueChange: (Int) -> Unit) {
-    Column {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Dynamic Noise Suppression Level", style = MaterialTheme.typography.labelLarge)
-            Text(
-                "-${value} dB THRESHOLD (${noiseSuppressionLabel(value)})",
-                style = MaterialTheme.typography.labelSmall,
-                color = ITantraColors.Primary,
-            )
-        }
-        Slider(
-            value = value.toFloat(),
-            onValueChange = { onValueChange(it.toInt()) },
-            valueRange = 6f..36f,
-            steps = 14,
-        )
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("-6 dB\n(Gentle)", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted)
-            Text("-36 dB\n(Aggressive)", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted)
-        }
-    }
-}
-
-private fun noiseSuppressionLabel(db: Int) = when {
-    db <= 12 -> "GENTLE"
-    db >= 30 -> "AGGRESSIVE"
-    else -> "MODERATE"
+    Text("Bluetooth RFCOMM and Wi-Fi Direct TCP are available.", style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
+    Text(
+        "Messages are end-to-end encrypted once you confirm the verification code on both devices.",
+        style = MaterialTheme.typography.bodySmall,
+        color = ITantraColors.TextMuted,
+    )
 }
 
 @Composable
 private fun EmergencyBehaviorControls() {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Critical Evacuation & SOS Confirmation", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-            Text(
-                "ALWAYS ACTIVE",
-                style = MaterialTheme.typography.labelSmall,
-                color = ITantraColors.StatusSuccess,
-                modifier = Modifier
-                    .background(ITantraColors.StatusSuccess.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-            )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Filled.VerifiedUser, contentDescription = null, tint = ITantraColors.StatusSuccess, modifier = Modifier.size(18.dp))
+            Text("Evacuation & SOS confirmation is always active", style = MaterialTheme.typography.labelLarge)
         }
         Text(
             "Demands dual-tap safety confirmation before transmitting emergency distress codes.",
             style = MaterialTheme.typography.bodySmall,
             color = ITantraColors.TextMuted,
         )
-        HorizontalDivider(color = ITantraColors.BorderSubtle)
         Text(
             "Emergency audio override & volume slider: Not available in this build (plays at system emergency level).",
             style = MaterialTheme.typography.bodySmall,
@@ -493,35 +527,5 @@ private fun EmergencyBehaviorControls() {
             style = MaterialTheme.typography.bodySmall,
             color = ITantraColors.TextMuted,
         )
-    }
-}
-
-@Composable
-private fun SettingsToggleRow(
-    title: String,
-    description: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    badge: String? = null,
-) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, style = MaterialTheme.typography.labelLarge)
-                if (badge != null) {
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        badge,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ITantraColors.StatusSuccess,
-                        modifier = Modifier
-                            .background(ITantraColors.StatusSuccess.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 4.dp),
-                    )
-                }
-            }
-            Text(description, style = MaterialTheme.typography.bodySmall, color = ITantraColors.TextMuted)
-        }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

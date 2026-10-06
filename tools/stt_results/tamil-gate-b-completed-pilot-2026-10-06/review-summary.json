@@ -1,0 +1,71 @@
+{
+  "status": "All four bounded FP32 pilots passed report/log/CSV checks; accuracy improvement not established",
+  "archive_sha256": "60aa7cd8764b304b91f7e850d8ebac4a90c57260aa74d2d633cb2e0daed8bd87",
+  "plan_sha256": "0013520354a4a37bace2e9eeca77ad7286e0852d3bf5af87f1a33b3f32662b55",
+  "baseline_report_sha256": "a5f7c15651c1547a1158fd2dfb3995d17ce63a12eefbd9eb5bc0ff9f96a9d9b6",
+  "counts": {
+    "train": 128,
+    "dev": 64
+  },
+  "runs": [
+    {
+      "mode": "freeze-lower",
+      "seed": 17,
+      "steps": 20,
+      "training_precision": "32-true",
+      "loss_batches": 80,
+      "step_10_dev_wer": 0.32758620381355286,
+      "step_20_dev_wer": 0.352664589881897,
+      "elapsed_seconds": 138.859620575,
+      "peak_gpu_allocated_gib": 2.0509538650512695,
+      "peak_process_ram_gib": 4.322063446044922
+    },
+    {
+      "mode": "freeze-lower",
+      "seed": 29,
+      "steps": 20,
+      "training_precision": "32-true",
+      "loss_batches": 80,
+      "step_10_dev_wer": 0.3228840231895447,
+      "step_20_dev_wer": 0.36206895112991333,
+      "elapsed_seconds": 136.6405068060003,
+      "peak_gpu_allocated_gib": 2.074497699737549,
+      "peak_process_ram_gib": 4.327949523925781
+    },
+    {
+      "mode": "full",
+      "seed": 17,
+      "steps": 20,
+      "training_precision": "32-true",
+      "loss_batches": 80,
+      "step_10_dev_wer": 0.3401253819465637,
+      "step_20_dev_wer": 0.3636363744735718,
+      "elapsed_seconds": 140.0387010129998,
+      "peak_gpu_allocated_gib": 2.6680803298950195,
+      "peak_process_ram_gib": 5.056396484375
+    },
+    {
+      "mode": "full",
+      "seed": 29,
+      "steps": 20,
+      "training_precision": "32-true",
+      "loss_batches": 80,
+      "step_10_dev_wer": 0.3322884142398834,
+      "step_20_dev_wer": 0.35736677050590515,
+      "elapsed_seconds": 139.58784115300023,
+      "peak_gpu_allocated_gib": 2.7025232315063477,
+      "peak_process_ram_gib": 5.0611572265625
+    }
+  ],
+  "mode_mean_last_dev_wer": {
+    "freeze-lower": 0.35736677050590515,
+    "full": 0.36050157248973846
+  },
+  "all_step_20_dev_wer_higher_than_step_10": true,
+  "same_dev_untrained_baseline": "Not measured in this archive",
+  "checkpoint_files": "Not included in report ZIP; preserve full Kaggle output",
+  "heldout_after_training": "Not run",
+  "export": "Not run",
+  "phone_accuracy": "Not verified",
+  "app_promotion": "Not done"
+}

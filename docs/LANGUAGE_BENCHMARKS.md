@@ -1,5 +1,33 @@
 # Speech model evidence — 2–4 October 2026
 
+## Marathi TTS replacement — 4 October 2026
+
+This supersedes the MMS Marathi TTS decision below. The default Marathi TTS
+download is now `Piper mr_IN-google-medium` with offline eSpeak data, speaker 0.
+Other languages and all STT models were unchanged in this repair.
+
+| Fresh paired desktop test, five phrases repeated six times | Legacy MMS | Piper replacement |
+|---|---:|---:|
+| Mean / p95 synthesis | 808 / 1,047 ms | 181 / 252 ms |
+| Synthesis RTF | 0.722 | 0.162 |
+| Model, tokens and required frontend disk bytes | 114,044,398 | 94,761,087 (full downloaded frontend) |
+| Peak process working set | 259,977,216 bytes | 226,062,336 bytes |
+| Output rate | 16,000 Hz | 22,050 Hz |
+| Native-listener intelligibility / Android playback | Not verified | Not verified |
+
+The raw legacy comparison bypasses the app's coverage guard and skips `ॉ`
+in the doctor phrase; its non-silent waveform is not a successful pronunciation
+test. Piper produced valid waveforms in all 30 synthesis trials plus 12 probes.
+Separate eSpeak phoneme checks retained `ɔ` for `डॉक्टरांना` and distinguished
+it from `डक्टरांना`. These are frontend/signal checks, not a TTS accuracy score.
+The six required files used by offline import were also tested in a fresh
+desktop process on all 17 texts. Installed full TTS is 94.8 MB; first download
+is 85.8 MB. No speech weights were added to the APK.
+
+Commands and raw JSON/WAV results are recorded in
+[the repair report](MARATHI_TTS_REPAIR.md). Phone latency, playback, memory and
+human quality remain **Not verified**; Marathi STT WER remains **15.70%**.
+
 ## Authorized audit fixes — 4 October 2026
 
 This section supersedes the older Kannada Tiny runtime decision below.
@@ -25,12 +53,13 @@ before decoding. Decode timings exclude model load and are desktop measurements;
 the build and other work were running concurrently, so they are not isolated
 phone latency estimates. Kannada remains above the 15% accuracy target.
 
-Marathi's existing MMS voice lacks `ॉ` (U+0949). The published upstream
+At that earlier audit, Marathi's MMS voice lacked `ॉ` (U+0949). The published upstream
 vocabulary was fetched and checked and also lacks it. The synthesis path now
 rejects unsupported Marathi letters/marks before native generation, preserves
 the original message, and reports a voice error. Its startup phrase is now
 Marathi. **This is an explicit failure fix, not a pronunciation/model-quality
-fix. A replacement voice and native-speaker ratings remain Not verified.**
+fix.** The replacement above supersedes this model choice; native-speaker
+ratings remain **Not verified**.
 
 Diagnostics self-test now includes ten languages. No language is promoted to
 live two-phone validation. Hindi/English model files and decoding were unchanged.
@@ -385,11 +414,14 @@ accuracy are all **Not run or Not verified**. No pack promotion is justified.
 
 ## Kathbath trial handoff (4 October 2026)
 
-Tamil/Telugu Gate A scripts and a Kaggle notebook are prepared; the user will
-execute the notebook. See [run instructions and audit status](KATHBATH_GATE_A.md).
+Tamil/Telugu Gate A completed in the user's Kaggle session; its supplied report
+passed the [consistency/provenance review](KATHBATH_GATE_A_REVIEW.md).
 The trial caps speaker contributions, creates disjoint train/dev groups and
-protects full FLEURS plus Kathbath non-train/noisy rows. Real-data preparation,
-leakage output and all training measurements remain **Not run**. No new WER
+protects full FLEURS plus Kathbath non-train/noisy rows. Prepared hours and zero
+reported overlaps are in the supplied audit; actual WAVs were not independently
+scanned here. The [new Tamil baseline/pilot](KATHBATH_TAMIL_PILOT.md) has passing
+local synthetic safety checks. Actual Kaggle preflight, NeMo runtime, source
+baselines and training remain **Not run here**. No new WER
 or model improvement is claimed. The existing baseline tables remain applicable.
 
 ## Bengali/Gujarati additional candidates (4 October 2026)

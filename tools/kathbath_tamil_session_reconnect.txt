@@ -1,0 +1,90 @@
+# Paste this entire file into ONE new Kaggle Code cell and run it once.
+# It reconnects to existing files; it does not install, train, or rerun baseline.
+import os, sys, json, subprocess, shutil, zipfile, time
+from pathlib import Path
+
+work = Path('/kaggle/working/itantra-tamil-pilot')
+train_python = work / 'venv/bin/python'
+source = work / 'NeMo'
+logs = work / 'logs'
+required = [train_python, work / 'kathbath_tamil_pilot.py',
+            work / 'kathbath_gate_b_data.py', work / 'pilot-plan.json',
+            work / 'baseline-report.json', work / 'runtime-report.json',
+            work / 'handoff-report.json']
+missing = [str(path) for path in required if not path.is_file()]
+missing += [str(path) for path in (source / '.git', logs) if not path.exists()]
+if missing:
+    print('Setup files missing in this session:')
+    print('\n'.join(missing))
+    raise RuntimeError('Cannot reconnect. Reuse the saved Gate A output and run the full Tamil pilot notebook from the top. Do not rerun Gate A.')
+
+baseline = json.loads((work / 'baseline-report.json').read_text(encoding='utf-8'))
+if baseline.get('ctc_baseline_gate_passed') is not True:
+    raise RuntimeError('The saved baseline has not passed. Share its report before retrying training.')
+summary = json.loads((work / 'handoff-report.json').read_text(encoding='utf-8'))
+if not isinstance(summary, dict):
+    raise RuntimeError('Invalid handoff report; share it before retrying.')
+
+os.environ['ITANTRA_NEMO_SOURCE'] = str(source)
+os.environ['PYTHONPATH'] = str(work)
+os.environ['PYTHONNOUSERSITE'] = '1'
+if not os.environ.get('HF_TOKEN'):
+    from kaggle_secrets import UserSecretsClient
+    os.environ['HF_TOKEN'] = UserSecretsClient().get_secret('HF_TOKEN')
+if not os.environ.get('HF_TOKEN'):
+    raise RuntimeError('Enable the existing HF_TOKEN secret for this notebook.')
+os.chdir(work)
+
+def pack_reports():
+    (work/'handoff-report.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
+    archive = Path('/kaggle/working/itantra_tamil_pilot_reports.zip')
+    files = [*work.glob('*report.json'), work/'pilot-plan.json', work/'constraints.txt',
+             *work.glob('kathbath_*.py'), *logs.glob('*.log'),
+             *work.glob('pilot-*/report.json'), *work.glob('pilot-*/*config.yaml'),
+             *work.glob('pilot-*/metrics/version_*/*.csv')]
+    with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as z:
+        for path in sorted(set(files)):
+            if path.is_file():
+                z.write(path, path.relative_to(work).as_posix())
+    print('Download this report ZIP from Output:', archive)
+
+def command(args, name):
+    token = os.environ.get('HF_TOKEN') or '<no-token>'
+    path = logs / (name + '.log')
+    with path.open('w', encoding='utf-8') as log:
+        process = subprocess.Popen(list(map(str, args)), stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT, text=True, bufsize=1,
+                                   env=dict(os.environ, PYTHONUNBUFFERED='1', PYTHONFAULTHANDLER='1'))
+        for line in process.stdout:
+            clean = line.replace(token, '[REDACTED]')
+            log.write(clean)
+            log.flush()
+            print(clean, end='', flush=True)
+        returncode = process.wait()
+        summary.setdefault('process_exit_codes', {})[name] = returncode
+        footer = f'\n[process_exit] {name}: returncode={returncode}\n'
+        log.write(footer)
+        print(footer, end='', flush=True)
+        if returncode:
+            raise RuntimeError(f'{name} failed (returncode={returncode}); see {path.name} and the report ZIP')
+
+def stage(name, action):
+    summary['current_stage'] = name
+    try:
+        action()
+        summary[name] = 'Completed'
+    except Exception as error:
+        summary[name] = 'Failed'
+        summary['status'] = 'Stopped; review failure report'
+        token = os.environ.get('HF_TOKEN') or '<no-token>'
+        summary['error'] = {'type': type(error).__name__, 'message': str(error).replace(token, '[REDACTED]')[:2000]}
+        raise RuntimeError(summary['error']['message']) from None
+    finally:
+        pack_reports()
+
+# Validate the pinned runtime and unchanged data using the installed Python.
+# The unique log preserves previous runtime and training logs.
+probe = "import json; import kathbath_tamil_pilot as p; print(json.dumps(p.runtime())); p.verify_plan('.'); print('Existing runtime and sealed pilot data verified.')"
+command([train_python, '-c', probe], 'session-reconnect-' + str(time.time_ns()))
+print('RECONNECTED: work, train_python, command, stage and pack_reports are restored.')
+print('Now run the training diagnostic cell once. Do not run setup or baseline again.')

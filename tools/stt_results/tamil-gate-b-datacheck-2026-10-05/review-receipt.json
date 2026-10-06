@@ -1,0 +1,9 @@
+{
+  "source": "User supplied Kaggle CPU data-check outputs; reviewed locally 2026-10-05",
+  "zip_sha256": "8bcfb99b3d33ae30f0b4550113825e3be47a67c8a1ac7b8dc7fc18c6acc6889d",
+  "saved_data_verified": true,
+  "gpu_runtime": "Not checked",
+  "baseline": "Not run",
+  "training": "Not run",
+  "phone_accuracy": "Not verified"
+}

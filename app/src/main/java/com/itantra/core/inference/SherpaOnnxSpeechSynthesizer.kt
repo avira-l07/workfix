@@ -116,6 +116,10 @@ class SherpaOnnxSpeechSynthesizer(
         val dataDirPath = if (dataDir.exists() && dataDir.isDirectory) dataDir.absolutePath else ""
         val dictDir = File(ttsDir, "dict")
         val dictDirPath = if (dictDir.exists() && dictDir.isDirectory) dictDir.absolutePath else ""
+        if (languageCode == LanguageCode.MARATHI &&
+            !MarathiPiperVoice.requiredDataFiles.all { File(ttsDir, it).let { f -> f.isFile && f.length() > 0 } }) {
+            throw TtsLoadException("TTS_PHONEMES_MISSING: Marathi voice needs its offline phoneme data. Download Marathi TTS again.")
+        }
 
         // 5. Initialize native OfflineTts with error isolation
         try {
@@ -149,7 +153,7 @@ class SherpaOnnxSpeechSynthesizer(
         // produce nonempty PCM for a simple test phrase.
         val smokeText = ttsSmokeText(languageCode)
         try {
-            requireTtsTextCoverage(languageCode, smokeText, vocabulary)
+            requireTtsTextCoverage(languageCode, smokeText, vocabulary, languageCode == LanguageCode.MARATHI)
             val smokeResult = tts?.generate(smokeText)
             if (smokeResult == null || smokeResult.samples.isEmpty() || smokeResult.sampleRate <= 0) {
                 try { tts?.release() } catch (_: Throwable) {}
@@ -180,7 +184,7 @@ class SherpaOnnxSpeechSynthesizer(
         }
 
         synthMutex.withLock {
-            requireTtsTextCoverage(languageCode, request.text, vocabulary)
+            requireTtsTextCoverage(languageCode, request.text, vocabulary, languageCode == LanguageCode.MARATHI)
             val t0 = SystemClock.elapsedRealtimeNanos()
             Log.i("SherpaOnnxTTS", "TTS synth start lang=${languageCode.wireCode} chars=${request.text.length} correlationId=${request.correlationId}")
 

@@ -1,0 +1,61 @@
+# Paste this entire file into a NEW code cell just BEFORE the failed baseline cell.
+# Run it once, then rerun the original source-baseline cell. Do not Run All.
+import importlib
+import json
+import shutil
+from pathlib import Path
+
+assert 'work' in globals() and 'train_python' in globals(), 'Keep the existing pilot session open; setup must already be completed'
+runner_path = Path(work) / 'kathbath_tamil_pilot.py'
+source = runner_path.read_text(encoding='utf-8')
+failed_path = Path(work) / 'baseline-report.json'
+if failed_path.exists():
+    failed = json.loads(failed_path.read_text(encoding='utf-8'))
+    assert failed.get('status') == 'Failed; stop and review report' and failed.get('error', {}).get('message') == 'unknown format: 3', 'Preserve this different baseline result; send its report for review'
+
+FUNCTION = 'def evaluation_wav_duration(path):\n    """Read protected PCM16/float32 evaluation WAVs without converting them."""\n    import numpy as np\n    import soundfile as sf\n    with sf.SoundFile(str(path)) as audio:\n        if (audio.samplerate != 16000 or audio.channels != 1 or audio.format != "WAV"\n                or audio.subtype not in ("PCM_16", "FLOAT") or audio.frames <= 0):\n            raise RuntimeError(f"Expected nonempty 16-kHz mono PCM16/float32 evaluation WAV: {path}")\n        frames, rate = audio.frames, audio.samplerate\n        samples = audio.read(dtype="float32")\n        if len(samples) != frames or not np.isfinite(samples).all():\n            raise RuntimeError(f"Truncated or non-finite evaluation WAV: {path}")\n        return frames / rate\n\n\n'
+if 'def evaluation_wav_duration(path):' not in source:
+    assert source.count('def score(model, records, decoder, repo):') == 1
+    assert source.count('duration = wav_duration(row["file"])') == 1
+    fixed = source.replace('def score(model, records, decoder, repo):', FUNCTION + 'def score(model, records, decoder, repo):')
+    fixed = fixed.replace('duration = wav_duration(row["file"])', 'duration = evaluation_wav_duration(row["file"])')
+    fixed = fixed.replace('from kathbath_gate_b_data import digest, wav_duration', 'from kathbath_gate_b_data import digest')
+    compile(fixed, str(runner_path), 'exec')
+    backup = runner_path.with_name('kathbath_tamil_pilot_before_float32_fix.py')
+    assert not backup.exists(), 'A previous backup exists; preserve it and send the report before another patch'
+    shutil.copyfile(runner_path, backup)
+    runner_path.write_text(fixed, encoding='utf-8')
+else:
+    assert 'duration = evaluation_wav_duration(row["file"])' in source
+
+# Check all 30 protected original WAVs in the installed environment.
+# No WAV or manifest is rewritten, resampled or normalized.
+probe = """import json
+from pathlib import Path
+from kathbath_tamil_pilot import evaluation_wav_duration
+from kathbath_gate_b_data import digest
+rows = json.loads(Path('tools/stt_models/five-language-validation/manifest-ta-30.json').read_text())
+assert len(rows) == 30
+for row in rows:
+    assert digest(row['file']) == row['sha256'], 'Evaluation checksum changed'
+    assert evaluation_wav_duration(row['file']) > 0
+print('Protected evaluation audio: 30/30 readable; original SHA-256 checks passed. Baseline WER not yet measured.')
+"""
+command([train_python, '-c', probe], 'wav-reader-recovery')
+
+# Preserve the failed report/log, allowing the original baseline CLI to retry.
+# Successful reports are never overwritten by this recovery cell.
+if failed_path.exists():
+    backup = Path(work) / 'baseline-before-float32-fix-report.json'
+    assert not backup.exists(), 'Previous failure backup already exists; preserve both reports'
+    failed_path.rename(backup)
+log = Path(work) / 'logs/source-baseline.log'
+backup_log = Path(work) / 'logs/source-baseline-before-float32-fix.log'
+if log.exists() and not backup_log.exists():
+    shutil.copyfile(log, backup_log)
+pilot = importlib.reload(pilot)
+summary['wav-reader-recovery'] = 'Completed; protected audio readable, baseline retry pending'
+summary['status'] = 'Audio reader repaired; baseline retry and training not run'
+summary.pop('error', None)
+pack_reports()
+print('Now rerun ONLY the source-baseline cell. If it passes, continue to the bounded-pilot and final report cells.')

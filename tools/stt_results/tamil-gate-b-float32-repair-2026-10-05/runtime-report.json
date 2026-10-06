@@ -1,0 +1,12 @@
+{
+  "python": "3.11.13",
+  "torch": "2.2.2+cu121",
+  "lightning": "2.2.5",
+  "nemo_revision": "8dce88cf8e94963e2033c3137f7b9993b51db88a",
+  "gpu": "Tesla T4",
+  "gpu_total_bytes": 15636037632,
+  "cuda": "12.1",
+  "gpu_count": 2,
+  "devices_used": 1,
+  "precision": "16-mixed"
+}

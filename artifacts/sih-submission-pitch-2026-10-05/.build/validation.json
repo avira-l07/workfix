@@ -1,0 +1,227 @@
+{
+  "schemaVersion": "presentation-finalization.v1",
+  "finalSha256": "311fef4bb5202620085de9bcd91c784e35122fabfe5db310e35914205a1d7be4",
+  "byteCount": 4470999,
+  "packageIntegrity": {
+    "chart_count": 0,
+    "claim_boundary": "Structural package checks only; no slide text, notes, formulas, chart values, or native PowerPoint execution were inspected.",
+    "finding_count": 0,
+    "findings": [],
+    "notes_parts_skipped": 6,
+    "relationship_part_count": 27,
+    "slide_count": 6,
+    "status": "pass",
+    "exitCode": 0,
+    "findingCount": 0,
+    "warnings": []
+  },
+  "presentationLayout": {
+    "finding_count": 0,
+    "findings": [],
+    "font_policy": {
+      "checked_text_script_count": 184,
+      "native_font_rendering_verified": false,
+      "observed_font_families": [
+        "Aptos",
+        "Arial",
+        "Calibri",
+        "Garamond",
+        "Inter",
+        "Times New Roman",
+        "TradeGothic"
+      ],
+      "observed_font_use_counts": {
+        "Aptos": 56,
+        "Arial": 8,
+        "Calibri": 8,
+        "Garamond": 6,
+        "Inter": 103,
+        "Times New Roman": 1,
+        "TradeGothic": 2
+      },
+      "passed": true,
+      "performed": true
+    },
+    "slide_count": 6,
+    "slide_size_in": [
+      13.3333,
+      7.5
+    ],
+    "warning_count": 6,
+    "warnings": [
+      {
+        "kind": "object_outside_slide_boundary",
+        "object_id": "15362",
+        "object_kind": "sp",
+        "slide": 2
+      },
+      {
+        "kind": "substantial_text_frame_overlap",
+        "left_object_id": "52",
+        "overlap_height_in": 0.2,
+        "overlap_width_in": 1.3,
+        "right_object_id": "53",
+        "slide": 3
+      },
+      {
+        "kind": "substantial_text_frame_overlap",
+        "left_object_id": "55",
+        "overlap_height_in": 0.2,
+        "overlap_width_in": 1.3,
+        "right_object_id": "56",
+        "slide": 3
+      },
+      {
+        "kind": "object_outside_slide_boundary",
+        "object_id": "93",
+        "object_kind": "pic",
+        "slide": 3
+      },
+      {
+        "kind": "object_outside_slide_boundary",
+        "object_id": "17409",
+        "object_kind": "sp",
+        "slide": 4
+      },
+      {
+        "kind": "object_outside_slide_boundary",
+        "object_id": "17415",
+        "object_kind": "pic",
+        "slide": 4
+      }
+    ],
+    "exitCode": 0,
+    "findingCount": 0,
+    "fontPolicy": {
+      "checked_text_script_count": 184,
+      "native_font_rendering_verified": false,
+      "observed_font_families": [
+        "Aptos",
+        "Arial",
+        "Calibri",
+        "Garamond",
+        "Inter",
+        "Times New Roman",
+        "TradeGothic"
+      ],
+      "observed_font_use_counts": {
+        "Aptos": 56,
+        "Arial": 8,
+        "Calibri": 8,
+        "Garamond": 6,
+        "Inter": 103,
+        "Times New Roman": 1,
+        "TradeGothic": 2
+      },
+      "passed": true,
+      "performed": true
+    }
+  },
+  "fontSelection": {
+    "basis": "reference",
+    "approvedFamilies": [
+      "Aptos",
+      "Arial",
+      "Garamond",
+      "Inter",
+      "Calibri",
+      "Times New Roman",
+      "TradeGothic"
+    ],
+    "scriptFonts": {},
+    "referenceSha256": "16674ce7bcf637141c2ec2f3eccde4ed8527f4089e3573914f511e378950874b",
+    "referenceFontsVerifiedInEncodedText": true,
+    "checked_text_script_count": 184,
+    "native_font_rendering_verified": false,
+    "observed_font_families": [
+      "Aptos",
+      "Arial",
+      "Calibri",
+      "Garamond",
+      "Inter",
+      "Times New Roman",
+      "TradeGothic"
+    ],
+    "observed_font_use_counts": {
+      "Aptos": 56,
+      "Arial": 8,
+      "Calibri": 8,
+      "Garamond": 6,
+      "Inter": 103,
+      "Times New Roman": 1,
+      "TradeGothic": 2
+    },
+    "passed": true,
+    "performed": true
+  },
+  "firstPartyImport": {
+    "performed": true,
+    "passed": true,
+    "slideCount": 6,
+    "sha256": "311fef4bb5202620085de9bcd91c784e35122fabfe5db310e35914205a1d7be4",
+    "runtimeNodeModules": "C:/Users/avira/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules",
+    "nodeExecutable": "C:\\Users\\avira\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe"
+  },
+  "nativeTableArithmetic": {
+    "performed": true,
+    "checked_column_count": 0,
+    "checks": [],
+    "claim_boundary": "Displayed-value arithmetic with rounding tolerance; not source-data verification.",
+    "eligible_table_count": 0,
+    "finding_count": 0,
+    "findings": [],
+    "native_table_count": 0,
+    "passed": true,
+    "schema_version": "presentation-native-table-arithmetic.v1",
+    "skipped_tables": [],
+    "slide_count": 6,
+    "warning_count": 0,
+    "warnings": []
+  },
+  "nativeChartTitles": {
+    "performed": true,
+    "checks": [],
+    "finding_count": 0,
+    "findings": [],
+    "native_chart_count": 0,
+    "native_powerpoint_verified": false,
+    "passed": true,
+    "presentation_sha256": "311fef4bb5202620085de9bcd91c784e35122fabfe5db310e35914205a1d7be4",
+    "schema_version": "presentation-native-chart-titles.v1",
+    "slide_count": 6,
+    "source_text_emitted": false,
+    "unresolved_linked_title_count": 0
+  },
+  "sourceDerivedPolicyFlags": [
+    "--expected-slide-size-emu",
+    "12192000,6858000",
+    "--validate-bullet-geometry",
+    "--validate-heading-fit",
+    "--cover-role",
+    "none",
+    "--expected-slide-count",
+    "6",
+    "--approved-font-family",
+    "Aptos",
+    "--approved-font-family",
+    "Arial",
+    "--approved-font-family",
+    "Garamond",
+    "--approved-font-family",
+    "Inter",
+    "--approved-font-family",
+    "Calibri",
+    "--approved-font-family",
+    "Times New Roman",
+    "--approved-font-family",
+    "TradeGothic"
+  ],
+  "nativeChartValidation": {
+    "detectedOwnerSlides": [],
+    "detectedChartCount": 0,
+    "targetApplication": "portable",
+    "sourceChartOwnersExplicitlyDeclared": true,
+    "validatorRan": false,
+    "passed": true
+  }
+}

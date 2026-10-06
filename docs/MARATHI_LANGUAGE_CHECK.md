@@ -1,5 +1,14 @@
 # Marathi language check — 4 October 2026
 
+**Latest TTS status:** the MMS voice described below has been replaced in the
+on-demand manifest by Piper with offline eSpeak phonemes. Mean / p95 synthesis
+was **181 / 252 ms on desktop**, with 30 valid synthesis trials and 12 character
+probes. `ॉ` is retained in the tested doctor phoneme output. Download the new
+Marathi TTS pack after installing the new APK. The
+[TTS repair report](MARATHI_TTS_REPAIR.md) contains the fresh paired comparison,
+memory/disk measurements and integration checks. Phone and listener validation
+remain **Not verified**. Historical MMS results below describe the former voice.
+
 Result: the old Marathi Whisper Tiny path failed the desktop native-script
 and accuracy check. Manual Marathi now uses the measured IndicConformer INT8
 model through an on-demand download. Its desktop WER is 15.70% with 30/30

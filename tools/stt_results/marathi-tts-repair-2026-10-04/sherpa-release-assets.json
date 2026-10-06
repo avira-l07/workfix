@@ -1,0 +1,50 @@
+[
+  {
+    "name": "espeak-ng-data.tar.bz2",
+    "size": 7252012,
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2",
+    "digest": null
+  },
+  {
+    "name": "kokoro-multi-lang-v1_1.tar.bz2",
+    "size": 364816464,
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_1.tar.bz2",
+    "digest": "sha256:a3f4c73d043860e3fd2e5b06f36795eb81de0fc8e8de6df703245edddd87dbad"
+  },
+  {
+    "name": "kokoro-int8-multi-lang-v1_1.tar.bz2",
+    "size": 147031220,
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-multi-lang-v1_1.tar.bz2",
+    "digest": "sha256:a1e94694776049035c4f2c6529f003aaece993c76aae9a78995831c3c4dcafc6"
+  },
+  {
+    "name": "kokoro-int8-en-v0_19.tar.bz2",
+    "size": 103248205,
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-en-v0_19.tar.bz2",
+    "digest": "sha256:c9f0dd393615805b0bab050c340834d5e684e732aec91c0e860cd30e982c08bd"
+  },
+  {
+    "name": "kokoro-en-v0_19.tar.bz2",
+    "size": 319625534,
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2",
+    "digest": "sha256:912804855a04745fa77a30be545b3f9a5d15c4d66db00b88cbcd4921df605ac7"
+  },
+  {
+    "name": "espeak-ng-data.zip",
+    "size": 9037020,
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.zip",
+    "digest": "sha256:bc4525eafe31b4e3f5e43aea495f3169e97dd2544f1bbfe95514ce8a61baee39"
+  },
+  {
+    "name": "kokoro-multi-lang-v1_0.tar.bz2",
+    "size": 349906910,
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2",
+    "digest": "sha256:c5f7e2d2caf082bc1d20fb70334a61d99d20b484500aad32e7cf84c128ea3298"
+  },
+  {
+    "name": "kokoro-int8-multi-lang-v1_0.tar.bz2",
+    "size": 132303094,
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-multi-lang-v1_0.tar.bz2",
+    "digest": "sha256:4c3052abaa60943a341f193888cf6abd68787dae6ab8ae5c925a706caa247e4e"
+  }
+]

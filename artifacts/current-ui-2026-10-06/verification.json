@@ -1,0 +1,27 @@
+{
+  "app_version": "1.7-connected-ui",
+  "version_code": 8,
+  "application_id": "com.example.itantra",
+  "apk": "D:\\new itantra\\artifacts\\current-ui-2026-10-06\\iTantra-1.7-connected-ui.apk",
+  "apk_bytes": 85616833,
+  "apk_sha256": "7bb095ab0d1177922a97174f8d1748c03537bae69a8c7093153906655d374b62",
+  "conventional_apk_matches": true,
+  "apk_crc_check": "PASS",
+  "apk_v2_signature": "PASS",
+  "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+  "signing_certificate_matches_previous": true,
+  "current_ui_labels_present_in_dex": true,
+  "canonical_hub_and_shared_header_in_dex": true,
+  "host_tests": {
+    "tests": 467,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "original_ui_files_preserved": 21,
+  "preceding_current_ui_files_preserved": 25,
+  "backup_hash_mismatches": 0,
+  "native_phone_rendering": "Not verified",
+  "device_install": "Not retried; previous USB installation was refused by the test phone",
+  "other_phone_install": "Install the new APK as an update"
+}
