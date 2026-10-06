@@ -1,0 +1,31 @@
+Collecting sacremoses==0.1.1
+  Downloading sacremoses-0.1.1-py3-none-any.whl.metadata (8.3 kB)
+Collecting regex (from sacremoses==0.1.1)
+  Downloading regex-2026.9.29-cp313-cp313-win_amd64.whl.metadata (41 kB)
+Collecting click (from sacremoses==0.1.1)
+  Using cached click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting joblib (from sacremoses==0.1.1)
+  Using cached joblib-1.6.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting tqdm (from sacremoses==0.1.1)
+  Using cached tqdm-4.70.1-py3-none-any.whl.metadata (57 kB)
+Collecting cloudpickle>=3.0 (from joblib->sacremoses==0.1.1)
+  Using cached cloudpickle-3.1.2-py3-none-any.whl.metadata (7.1 kB)
+Collecting colorama (from tqdm->sacremoses==0.1.1)
+  Using cached colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+Downloading sacremoses-0.1.1-py3-none-any.whl (897 kB)
+   ---------------------------------------- 897.5/897.5 kB 2.8 MB/s  0:00:00
+Using cached click-8.5.0-py3-none-any.whl (125 kB)
+Using cached joblib-1.6.0-py3-none-any.whl (306 kB)
+Using cached cloudpickle-3.1.2-py3-none-any.whl (22 kB)
+Downloading regex-2026.9.29-cp313-cp313-win_amd64.whl (280 kB)
+Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+Using cached colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Installing collected packages: regex, colorama, cloudpickle, click, tqdm, joblib, sacremoses
+
+Successfully installed click-8.5.0 cloudpickle-3.1.2 colorama-0.4.6 joblib-1.6.0 regex-2026.9.29 sacremoses-0.1.1 tqdm-4.70.1
+WARNING: Target directory D:\new itantra\artifacts\translation-2026-10-06\python\colorama already exists. Specify --upgrade to force replacement.
+WARNING: Target directory D:\new itantra\artifacts\translation-2026-10-06\python\colorama-0.4.6.dist-info already exists. Specify --upgrade to force replacement.
+WARNING: Target directory D:\new itantra\artifacts\translation-2026-10-06\python\bin already exists. Specify --upgrade to force replacement.
+
+[notice] A new release of pip is available: 26.0.1 -> 26.2.1
+[notice] To update, run: C:\Users\avira\AppData\Local\Programs\Python\Python313\python.exe -m pip install --upgrade pip

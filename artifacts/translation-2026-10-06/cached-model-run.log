@@ -1,0 +1,11 @@
+Failed to find real location of C:\Users\avira\AppData\Local\Programs\Python\Python313\python.exe
+{"source": "gu", "target": "hi", "text": "કેમ છો મજામાં", "output": "तुम इतनी मस्ती क्यों कर रहे हो?", "pivot_english": "Why are you having so much fun", "latency_seconds": 0.415}
+{"source": "gu", "target": "hi", "text": "કેમ છો મજા", "output": "तुम इतनी मस्ती क्यों कर रहे हो?", "pivot_english": "Why are you having so much fun", "latency_seconds": 0.279}
+{"source": "hi", "target": "gu", "text": "मेरा नाम अविरल है मैं कैसे आऊँ उधर", "output": "મારું નામ અવિરલ છે હું ત્યાં કેવી રીતે પહોંચી શકું?", "pivot_english": "My name is Aviral how do I get there", "latency_seconds": 0.45}
+{"source": "hi", "target": "gu", "text": "मेरा नाम रोहन है। मैं वहाँ कैसे पहुँचूँ?", "output": "મારું નામ રોહન છે. હું ત્યાં કેવી રીતે પહોંચી શકું?", "pivot_english": "My name is Rohan. How do I get there?", "latency_seconds": 0.458}
+{"source": "hi", "target": "gu", "text": "मेरा नाम ज्योति शाह है। मुझे रास्ता बताइए।", "output": "મારું નામ જ્યોતિ શાહ છે. મને રસ્તો કહો.", "pivot_english": "My name is Jyoti Shah. Tell me the way.", "latency_seconds": 0.49}
+{"source": "gu", "target": "hi", "text": "મારું નામ અવિરલ છે. હું ત્યાં કેવી રીતે આવું?", "output": "मेरा नाम अविरल है। मैं वहाँ कैसे पहुँचूँ?", "pivot_english": "My name is Aviral. How do I get there?", "latency_seconds": 0.59}
+{"source": "hi", "target": "gu", "text": "बाएँ मत मुड़ना। दो किलोमीटर आगे जाकर दाएँ मुड़ना।", "output": "ડાબી તરફ વળશો નહીં. બે કિલોમીટર આગળ વધો અને જમણી તરફ વળો.", "pivot_english": "Don't turn left. Go two kilometers ahead and turn right.", "latency_seconds": 0.705}
+{"source": "gu", "target": "hi", "text": "બપોરે ત્રણ વાગ્યે મળીએ. મારો ફોન નંબર 9876543210 છે.", "output": "दोपहर तीन बजे मिलते हैं। मेरा फ़ोन नंबर 9876543210 है।", "pivot_english": "See you at three in the afternoon. My phone number is 9876543210.", "latency_seconds": 0.732}
+{"source": "en", "target": "hi", "text": "My name is Aviral. How do I get there?", "output": "मेरा नाम अविरल है। मैं वहाँ कैसे पहुँचूँ?", "pivot_english": null, "latency_seconds": 0.287}
+{"source": "en", "target": "gu", "text": "Do not turn left. Turn right after two kilometres.", "output": "ડાબી તરફ વળશો નહીં. બે કિલોમીટર પછી જમણી તરફ વળો.", "pivot_english": null, "latency_seconds": 0.372}

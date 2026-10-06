@@ -27,4 +27,5 @@ app/src/main/assets/language_packs/**/*.onnx
 /tools/*.onnx
 /tools/stt-*-run.log
 /tools/__pycache__/
+/artifacts/translation-2026-10-06/python/
 

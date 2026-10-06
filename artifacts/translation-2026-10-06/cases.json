@@ -1,0 +1,12 @@
+[
+  {"source": "gu", "target": "hi", "text": "કેમ છો મજામાં"},
+  {"source": "gu", "target": "hi", "text": "કેમ છો મજા"},
+  {"source": "hi", "target": "gu", "text": "मेरा नाम अविरल है मैं कैसे आऊँ उधर"},
+  {"source": "hi", "target": "gu", "text": "मेरा नाम रोहन है। मैं वहाँ कैसे पहुँचूँ?"},
+  {"source": "hi", "target": "gu", "text": "मेरा नाम ज्योति शाह है। मुझे रास्ता बताइए।"},
+  {"source": "gu", "target": "hi", "text": "મારું નામ અવિરલ છે. હું ત્યાં કેવી રીતે આવું?"},
+  {"source": "hi", "target": "gu", "text": "बाएँ मत मुड़ना। दो किलोमीटर आगे जाकर दाएँ मुड़ना।"},
+  {"source": "gu", "target": "hi", "text": "બપોરે ત્રણ વાગ્યે મળીએ. મારો ફોન નંબર 9876543210 છે."},
+  {"source": "en", "target": "hi", "text": "My name is Aviral. How do I get there?"},
+  {"source": "en", "target": "gu", "text": "Do not turn left. Turn right after two kilometres."}
+]
