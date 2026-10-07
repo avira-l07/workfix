@@ -78,4 +78,13 @@ class TranslationRouterTest {
         assertEquals("UNSUPPORTED_ROUTE", result.error)
         assertEquals(0, engine.invocationCount)
     }
+
+    @Test
+    fun `even a known emergency sentence goes through the neural engine`() = runBlocking {
+        val engine = MockTranslationEngine()
+        val result = TranslationRouter(engine).routeAndTranslate(
+            "सहायता की आवश्यकता है।", LanguageCode.HINDI, LanguageCode.ENGLISH)
+        assertEquals(1, engine.invocationCount)
+        assertEquals("[TRANSLATED] सहायता की आवश्यकता है।", result.translatedText)
+    }
 }

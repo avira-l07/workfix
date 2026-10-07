@@ -1,0 +1,23 @@
+{
+  "app_version": "1.8-translation-routing",
+  "version_code": 9,
+  "apk": "D:\\new itantra\\artifacts\\translation-2026-10-06\\iTantra-1.8-translation-routing.apk",
+  "apk_bytes": 85616833,
+  "apk_sha256": "dcffa7603fc1679ef2ba85188810f1720ee3f2c5420f4ecd844ac06bdccf77fc",
+  "host_tests": {
+    "tests": 471,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "apk_crc": "PASS",
+  "apk_v2_signature": "PASS",
+  "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+  "signing_matches_previous": true,
+  "ordinary_phrasebook_fallback_removed": true,
+  "active_engine": "ML Kit on-device translation; unchanged model weights",
+  "replacement_candidates_promoted": 0,
+  "translation_quality_errors": "Unresolved",
+  "phone_install": "Not run: no connected phone",
+  "phone_quality_evaluation": "Not run"
+}

@@ -35,6 +35,15 @@ fun messageStateLabel(state: MessageState): String = when (state) {
     MessageState.ERROR -> "Not delivered"
 }
 
+fun messageLanguageLabel(message: TransceiverMessage): String {
+    val output = message.displayedTextLanguage ?: return "Message"
+    val source = message.language
+    return if (message.source == MessageSource.LOCAL && message.translationStatus == TranslationStatus.SUCCESS &&
+        source != null && source != output) {
+        "${LanguageCatalog.byCode(source).displayName} → ${LanguageCatalog.byCode(output).displayName}"
+    } else LanguageCatalog.byCode(output).displayName
+}
+
 @Composable
 fun HistoryMessageCard(message: TransceiverMessage, onDelete: () -> Unit, onRetry: () -> Unit, onAcknowledge: () -> Unit, compact: Boolean = false) {
     val clipboard = LocalClipboardManager.current
@@ -42,7 +51,7 @@ fun HistoryMessageCard(message: TransceiverMessage, onDelete: () -> Unit, onRetr
     Card(shape = RoundedCornerShape(if (compact) 12.dp else 20.dp), colors = CardDefaults.cardColors(containerColor = if (critical) MaterialTheme.colorScheme.errorContainer else if (compact) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxWidth().padding(if (compact) 10.dp else 16.dp), verticalArrangement = Arrangement.spacedBy(if (compact) 3.dp else 8.dp)) {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Text("${if (message.source == MessageSource.LOCAL) "You" else "Peer"} · ${message.displayedTextLanguage?.name?.lowercase()?.replaceFirstChar { it.uppercase() } ?: "Message"}",
+                Text("${if (message.source == MessageSource.LOCAL) "You" else "Peer"} · ${messageLanguageLabel(message)}",
                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (compact) Text(DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(message.createdAtLocal)),
@@ -50,9 +59,12 @@ fun HistoryMessageCard(message: TransceiverMessage, onDelete: () -> Unit, onRetr
             }
             if (critical) Text("Emergency · critical priority", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onErrorContainer)
             if (!compact && message.originalText != null && message.originalText != message.text) {
-                Text("Original", style = MaterialTheme.typography.labelSmall)
+                Text(if (message.source == MessageSource.LOCAL && message.language != null)
+                    "Original · ${LanguageCatalog.byCode(message.language).displayName}" else "Original",
+                    style = MaterialTheme.typography.labelSmall)
                 Text(message.originalText, style = MaterialTheme.typography.bodyLarge)
-                Text("Translated", style = MaterialTheme.typography.labelSmall)
+                Text("Translated · ${message.displayedTextLanguage?.let { LanguageCatalog.byCode(it).displayName } ?: "Message"}",
+                    style = MaterialTheme.typography.labelSmall)
             }
             Text(message.text, style = if (compact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
                 maxLines = if (compact) 2 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis)

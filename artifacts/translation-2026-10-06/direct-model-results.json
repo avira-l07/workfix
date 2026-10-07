@@ -1,0 +1,139 @@
+{
+  "model": "IndicTrans2 Indic-Indic 320M, ONNX INT8",
+  "model_files": {
+    "repository": "hari31416/indictrans2-indic-indic-dist-320M-ONNX-int8",
+    "revision": "b04956dee2f2a3e06e44bf09f8d654a6b81af99a",
+    "files": [
+      {
+        "name": "config.json",
+        "bytes": 1382,
+        "sha256": "26b4ea9e28ec600085f3b872506c31e61edac3b0523158806cf61c41332d6323"
+      },
+      {
+        "name": "decoder_model.onnx",
+        "bytes": 2037642,
+        "sha256": "33f6dd13aff20d67cb659cc534b918f947c75691c7ee54a5494406f757923092"
+      },
+      {
+        "name": "decoder_shared.onnx.data",
+        "bytes": 203048944,
+        "sha256": "5b35423deb71577d1bb95d7abb702042bdf5724846e8b21a8cb9f6757c54dfd7"
+      },
+      {
+        "name": "decoder_with_past_model.onnx",
+        "bytes": 1850619,
+        "sha256": "0f1f620993308f01f23460a60d534e3bd92e73d8d6e74141bcdb7ecbaaf86abb"
+      },
+      {
+        "name": "dict.SRC.json",
+        "bytes": 3391208,
+        "sha256": "3d3b180702520742dec423a5a7f7b4e3dad399d69e40ca7df294a1567884bed5"
+      },
+      {
+        "name": "dict.TGT.json",
+        "bytes": 3390440,
+        "sha256": "f7817850c9e4b99c59fad57d0611c7720f1921f215e6f247cf25d52eff7f1146"
+      },
+      {
+        "name": "encoder_model.onnx",
+        "bytes": 831435,
+        "sha256": "0b965dfef8d5ba16603a9fbcc9d326acf6438e2768c52f6816004d9956e15810"
+      },
+      {
+        "name": "encoder_model.onnx.data",
+        "bytes": 120068096,
+        "sha256": "914b82d0a08240d8cc133034a0958733ffc4d98b13a69111029ed8a85a9c159b"
+      },
+      {
+        "name": "generation_config.json",
+        "bytes": 168,
+        "sha256": "8eed3ca41af1a8bcfc433db9444d8967d3fdf500239ad70adda780b701d2f3b2"
+      },
+      {
+        "name": "model.SRC",
+        "bytes": 3256903,
+        "sha256": "ac9257c8e76b8b607705b959cc3d075656ea33032f7a974e467b8941df6e98d4"
+      },
+      {
+        "name": "model.TGT",
+        "bytes": 3256903,
+        "sha256": "ac9257c8e76b8b607705b959cc3d075656ea33032f7a974e467b8941df6e98d4"
+      },
+      {
+        "name": "tokenizer_meta.json",
+        "bytes": 71,
+        "sha256": "6835ed2487318967fcc5669e153e5fcf138e3b73026130c8921fe59b7e3597c1"
+      },
+      {
+        "name": "tokenizer_src.json",
+        "bytes": 23876630,
+        "sha256": "d15ba1265a61b3b66122aab74e888442093a2c711f51b0f9896108661e1d346c"
+      },
+      {
+        "name": "tokenizer_tgt.json",
+        "bytes": 23869629,
+        "sha256": "51b05cd37636765e158146534d54452be558df32c6ab06ba4caeecdd0266a580"
+      }
+    ]
+  },
+  "canned_answers": false,
+  "human_quality_review": "Required",
+  "results": [
+    {
+      "source": "gu",
+      "target": "hi",
+      "text": "કેમ છો મજામાં",
+      "output": "क्यों मज़े में",
+      "latency_seconds": 0.157
+    },
+    {
+      "source": "gu",
+      "target": "hi",
+      "text": "કેમ છો મજા",
+      "output": "क्यों मज़ा आता है",
+      "latency_seconds": 0.116
+    },
+    {
+      "source": "hi",
+      "target": "gu",
+      "text": "मेरा नाम अविरल है मैं कैसे आऊँ उधर",
+      "output": "મારું નામ અવિરત છે હું ત્યાં કેવી રીતે આવી શકું.",
+      "latency_seconds": 0.199
+    },
+    {
+      "source": "hi",
+      "target": "gu",
+      "text": "मेरा नाम रोहन है। मैं वहाँ कैसे पहुँचूँ?",
+      "output": "મારું નામ રોહન છે. હું ત્યાં કેવી રીતે પહોંચી શકું?",
+      "latency_seconds": 0.208
+    },
+    {
+      "source": "hi",
+      "target": "gu",
+      "text": "मेरा नाम ज्योति शाह है। मुझे रास्ता बताइए।",
+      "output": "મારું નામ જ્યોતિ શાહ છે. મને રસ્તો બતાવો.",
+      "latency_seconds": 0.173
+    },
+    {
+      "source": "gu",
+      "target": "hi",
+      "text": "મારું નામ અવિરલ છે. હું ત્યાં કેવી રીતે આવું?",
+      "output": "मेरा नाम अविरल है। मैं वहाँ कैसे पहुँच सकता हूँ?",
+      "latency_seconds": 0.203
+    },
+    {
+      "source": "hi",
+      "target": "gu",
+      "text": "बाएँ मत मुड़ना। दो किलोमीटर आगे जाकर दाएँ मुड़ना।",
+      "output": "ડાબી બાજુએ ન વળો. બે કિલોમીટર આગળ અને જમણી બાજુએ વળો.",
+      "latency_seconds": 0.293
+    },
+    {
+      "source": "gu",
+      "target": "hi",
+      "text": "બપોરે ત્રણ વાગ્યે મળીએ. મારો ફોન નંબર 9876543210 છે.",
+      "output": "दोपहर तीन बजे मिलते हैं। मेरा फोन नंबर 9876543210 है।",
+      "latency_seconds": 0.299
+    }
+  ]
+}

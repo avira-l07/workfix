@@ -568,11 +568,11 @@ class PipelineGeneralizationTest {
     }
 
     // =========================================================================
-    // TASK 3 & 4: Emergency Phrase Resolution for Malayalam and Odia
+    // Free-form translations must not be substituted from the SOS phrasebook.
     // =========================================================================
 
     @Test
-    fun `test Malayalam and Odia emergency phrases resolve correctly without neural MT`() = runBlocking {
+    fun `unsupported free-form messages do not masquerade as neural translations`() = runBlocking {
         val mtEngine = ConfigurableTranslationEngine() // ml and or are unsupported
         val router = TranslationRouter(mtEngine)
 
@@ -580,30 +580,30 @@ class PipelineGeneralizationTest {
         val mlHelp = EmergencyPhraseResolver.resolve(EmergencyCode.HELP_REQUIRED, LanguageCode.MALAYALAM)
         assertNotNull("Malayalam HELP_REQUIRED must exist", mlHelp)
         val mlRes = router.routeAndTranslate(mlHelp, LanguageCode.MALAYALAM, LanguageCode.ENGLISH)
-        assertTrue("Malayalam emergency phrase must resolve successfully", mlRes.isSuccessful)
-        assertEquals("Help required.", mlRes.translatedText)
-        assertEquals("Neural MT engine must NOT be called for emergency phrases", 0, mtEngine.callCount)
+        assertFalse(mlRes.isSuccessful)
+        assertEquals("UNSUPPORTED_ROUTE", mlRes.error)
+        assertEquals("", mlRes.translatedText)
 
         // Malayalam Medical Emergency -> Hindi
         val mlMed = EmergencyPhraseResolver.resolve(EmergencyCode.MEDICAL_EMERGENCY, LanguageCode.MALAYALAM)
         val mlMedRes = router.routeAndTranslate(mlMed, LanguageCode.MALAYALAM, LanguageCode.HINDI)
-        assertTrue(mlMedRes.isSuccessful)
-        assertEquals("तुरंत चिकित्सा सहायता की आवश्यकता है।", mlMedRes.translatedText)
+        assertFalse(mlMedRes.isSuccessful)
+        assertEquals("UNSUPPORTED_ROUTE", mlMedRes.error)
 
         // Odia Help Required -> English
         val orHelp = EmergencyPhraseResolver.resolve(EmergencyCode.HELP_REQUIRED, LanguageCode.ODIA)
         assertNotNull("Odia HELP_REQUIRED must exist", orHelp)
         val orRes = router.routeAndTranslate(orHelp, LanguageCode.ODIA, LanguageCode.ENGLISH)
-        assertTrue("Odia emergency phrase must resolve successfully", orRes.isSuccessful)
-        assertEquals("Help required.", orRes.translatedText)
+        assertFalse(orRes.isSuccessful)
+        assertEquals("UNSUPPORTED_ROUTE", orRes.error)
 
         // Odia Fire -> Hindi
         val orFire = EmergencyPhraseResolver.resolve(EmergencyCode.FIRE, LanguageCode.ODIA)
         val orFireRes = router.routeAndTranslate(orFire, LanguageCode.ODIA, LanguageCode.HINDI)
-        assertTrue(orFireRes.isSuccessful)
-        assertEquals("आग लगी है।", orFireRes.translatedText)
+        assertFalse(orFireRes.isSuccessful)
+        assertEquals("UNSUPPORTED_ROUTE", orFireRes.error)
 
-        // Underlying engine was never called because phrasebook resolved offline
+        // Explicit EMERGENCY_CODE packets still use the separate SOS resolver.
         assertEquals(0, mtEngine.callCount)
     }
 

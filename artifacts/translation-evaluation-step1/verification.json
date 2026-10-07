@@ -1,0 +1,13 @@
+{
+  "workbook": "D:\\new itantra\\artifacts\\translation-evaluation-step1\\outputs\\01a0e889-e467-7eb0-83ff-c46d04dccb56\\iTantra-Hindi-Gujarati-reference-review.xlsx",
+  "sha256": "01156c1e5f1e0aaddc799b2ca7046600b1004c564abb8853731c616b9435ae4c",
+  "directional_cases": 240,
+  "development_per_direction": 20,
+  "evaluation_per_direction": 100,
+  "categories": 10,
+  "duplicate_source_cases": 0,
+  "group_split_overlap": 0,
+  "human_approved_cases": 0,
+  "engine_comparison": "Not run",
+  "app_code_changed_in_step1": false
+}

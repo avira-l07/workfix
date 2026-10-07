@@ -1,0 +1,120 @@
+{
+  "model": "jncraton/m2m100_418M-ct2-int8",
+  "revision": "7c1b2620a4e58dacecbd8bf89cfd6da7eb9eb7b0",
+  "files": [
+    {
+      "name": "config.json",
+      "bytes": 189,
+      "sha256": "4244772990e30069563e3ddfb4ad6dc95bdfd2ac3de667ea8858c9b0a8433fa8"
+    },
+    {
+      "name": "generation_config.json",
+      "bytes": 233,
+      "sha256": "aed76366507333ddbb8bd49960f23c82fe6446b3319a46a54befdb45324ccf61"
+    },
+    {
+      "name": "model.bin",
+      "bytes": 490667713,
+      "sha256": "d6703dd9f920ff896e45c3d97b490761bed5944937b90bbe6a7245f5652542d4"
+    },
+    {
+      "name": "sentencepiece.bpe.model",
+      "bytes": 2423393,
+      "sha256": "d8f7c76ed2a5e0822be39f0a4f95a55eb19c78f4593ce609e2edbc2aea4d380a"
+    },
+    {
+      "name": "shared_vocabulary.json",
+      "bytes": 2796509,
+      "sha256": "7eb5d0ff184c6095c7c10f9911c0aea492250abd12854f9c3d787c64b1c6397e"
+    },
+    {
+      "name": "special_tokens_map.json",
+      "bytes": 1140,
+      "sha256": "c1a4f86c3874d279ae1b2a05162858db5dd6c61665d84223ed886cbcff08fda6"
+    },
+    {
+      "name": "tokenizer_config.json",
+      "bytes": 272,
+      "sha256": "ae54f15f0649bb05041cdadad8485ba1faf40bc33e6b4c2a74ae2d1ae5710fa2"
+    },
+    {
+      "name": "vocab.json",
+      "bytes": 3708092,
+      "sha256": "b6e77e474aeea8f441363aca7614317c06381f3eacfe10fb9856d5081d1074cc"
+    }
+  ],
+  "canned_answers": false,
+  "device": "Windows desktop CPU; not a phone benchmark",
+  "results": [
+    {
+      "source": "gu",
+      "target": "hi",
+      "text": "કેમ છો મજામાં",
+      "output": "कौन सी चीज है",
+      "latency_seconds": 0.373
+    },
+    {
+      "source": "gu",
+      "target": "hi",
+      "text": "કેમ છો મજા",
+      "output": "कौन सी चीज है",
+      "latency_seconds": 0.267
+    },
+    {
+      "source": "hi",
+      "target": "gu",
+      "text": "मेरा नाम अविरल है मैं कैसे आऊँ उधर",
+      "output": "“હું શું કહેવું છે, હું શું કરું છું, હું શું કરું છું, હું શું કરું છું, હું શું કરું છું.",
+      "latency_seconds": 1.419
+    },
+    {
+      "source": "hi",
+      "target": "gu",
+      "text": "मेरा नाम रोहन है। मैं वहाँ कैसे पहुँचूँ?",
+      "output": "“હું Rihanna છું, હું શું કરું?",
+      "latency_seconds": 0.649
+    },
+    {
+      "source": "hi",
+      "target": "gu",
+      "text": "मेरा नाम ज्योति शाह है। मुझे रास्ता बताइए।",
+      "output": "“હું મોહમ્મદ છું, હું મોહમ્મદ છું, હું મોહમ્મદ છું.",
+      "latency_seconds": 1.109
+    },
+    {
+      "source": "gu",
+      "target": "hi",
+      "text": "મારું નામ અવિરલ છે. હું ત્યાં કેવી રીતે આવું?",
+      "output": "क्या आप जानते हैं कि कौन-कौन सी चीजें हैं और कौन सी चीजें हैं?",
+      "latency_seconds": 1.119
+    },
+    {
+      "source": "hi",
+      "target": "gu",
+      "text": "बाएँ मत मुड़ना। दो किलोमीटर आगे जाकर दाएँ मुड़ना।",
+      "output": "સિંગાપોરેટ: સિંગાપોરેટ: સિંગાપોરેટ: સિંગાપોરેટ: સિંગાપોરેટ: સિંગાપોરેટ: સિંગાપોરેટ: સિંગાપોરેટ: સિંગાપોરેટ: સિંગાપોરેટ",
+      "latency_seconds": 3.176
+    },
+    {
+      "source": "gu",
+      "target": "hi",
+      "text": "બપોરે ત્રણ વાગ્યે મળીએ. મારો ફોન નંબર 9876543210 છે.",
+      "output": "फोन नंबर 9876543210 है।",
+      "latency_seconds": 0.457
+    },
+    {
+      "source": "en",
+      "target": "hi",
+      "text": "My name is Aviral. How do I get there?",
+      "output": "मेरा नाम एविराला है. मैं वहां कैसे पहुंच सकता हूं?",
+      "latency_seconds": 0.731
+    },
+    {
+      "source": "en",
+      "target": "gu",
+      "text": "Do not turn left. Turn right after two kilometres.",
+      "output": "નરેન્દ્ર મોદીએ જણાવ્યું હતું કે, 2 મિનિટમાં જ નરેન્દ્ર મોદીને ધ્યાનમાં રાખીને ધ્યાનમાં રાખો.",
+      "latency_seconds": 1.317
+    }
+  ]
+}

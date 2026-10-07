@@ -1,6 +1,7 @@
 package com.itantra.core.translation
 
 import com.itantra.domain.model.LanguageCode
+import kotlinx.coroutines.CancellationException
 
 /**
  * Phase 24: Updated from the stale "translation not included in this build" to reflect
@@ -36,20 +37,9 @@ class TranslationRouter(
             return TranslationResult(text, text, true, source, target)
         }
 
-        // Section 22: Deterministic emergency phrasebook fallback — works 100% offline without neural MT
-        val emergencyPhrase = com.itantra.domain.model.EmergencyPhraseResolver.translateEmergencyPhrase(text, source, target)
-        if (emergencyPhrase != null) {
-            if (com.example.itantra.BuildConfig.DEBUG) {
-                android.util.Log.i("ITANTRA_MT_CALL", "TranslationRouter: Resolved via deterministic emergency phrasebook -> '$emergencyPhrase'")
-            }
-            return TranslationResult(
-                originalText = text,
-                translatedText = emergencyPhrase,
-                isSuccessful = true,
-                sourceLanguage = source,
-                targetLanguage = target
-            )
-        }
+        // Free-form speech/text is always translated by a neural model. Explicit SOS
+        // codes are resolved separately by the receiver; never substitute a canned
+        // phrase here and present it as machine translation.
 
         if (!engine.supportedSourceLanguages.contains(source) || !engine.supportedTargetLanguages.contains(target)) {
             android.util.Log.w("ITANTRA_MT_CALL", "TranslationRouter: UNSUPPORTED_ROUTE between $source and $target")
@@ -62,6 +52,8 @@ class TranslationRouter(
                 android.util.Log.i("ITANTRA_MT_CALL", "TranslationRouter: success=${res.isSuccessful}, error=${res.error}")
             }
             res
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             android.util.Log.e("ITANTRA_MT_CALL", "TranslationRouter: Exception in engine.translate", e)
             TranslationResult(text, "", false, source, target, error = "INFERENCE_FAILED")

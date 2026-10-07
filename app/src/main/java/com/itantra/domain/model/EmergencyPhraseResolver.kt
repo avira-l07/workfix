@@ -150,35 +150,4 @@ object EmergencyPhraseResolver {
         EmergencyCode.ALL_CLEAR -> "ସବୁ ଠିକ୍ ଅଛି। ଅଞ୍ଚଳ ସୁରକ୍ଷିତ ଅଛି।"
     }
 
-    private val TRAILING_PUNCTUATION = Regex("[.,!?;:।\\n\\r]+$")
-
-    private fun normalize(phrase: String): String =
-        phrase.trim().lowercase().replace(TRAILING_PUNCTUATION, "").trim()
-
-    private val PHRASE_TO_CODE: Map<String, EmergencyCode> by lazy {
-        val map = HashMap<String, EmergencyCode>()
-        for (lang in LanguageCode.entries) {
-            for (code in EmergencyCode.entries) {
-                map.putIfAbsent(normalize(resolve(code, lang)), code)
-            }
-        }
-        map
-    }
-
-    fun findCodeByPhrase(text: String, sourceLanguage: LanguageCode? = null): EmergencyCode? {
-        val norm = normalize(text)
-        if (norm.isEmpty()) return null
-
-        if (sourceLanguage != null) {
-            for (code in EmergencyCode.entries) {
-                if (normalize(resolve(code, sourceLanguage)) == norm) return code
-            }
-        }
-        return PHRASE_TO_CODE[norm]
-    }
-
-    fun translateEmergencyPhrase(text: String, source: LanguageCode, target: LanguageCode): String? {
-        val code = findCodeByPhrase(text, source) ?: return null
-        return resolve(code, target)
-    }
 }

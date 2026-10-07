@@ -691,7 +691,7 @@ fun MessageBubble(message: TransceiverMessage) {
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = "VOICE TRANSCRIPT (${message.language?.wireCode?.uppercase() ?: "EN"})",
+                            text = "VOICE · ${com.example.itantra.ui.components.messageLanguageLabel(message)}",
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 9.sp,
                             color = ITantraColors.Primary,
@@ -700,6 +700,12 @@ fun MessageBubble(message: TransceiverMessage) {
                     }
                 }
 
+                if (message.originalText != null && message.originalText != message.text) {
+                    Text("Original", style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted)
+                    Text(message.originalText, style = MaterialTheme.typography.bodyMedium, color = ITantraColors.TextHeadline)
+                    Text("Translated · ${com.example.itantra.ui.components.messageLanguageLabel(message)}",
+                        style = MaterialTheme.typography.labelSmall, color = ITantraColors.TextMuted)
+                }
                 // Message Text
                 Text(
                     text = message.text,

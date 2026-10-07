@@ -30,4 +30,6 @@ app/src/main/assets/language_packs/**/*.onnx
 /artifacts/translation-2026-10-06/python/
 /artifacts/translation-2026-10-06/direct-int8/
 /artifacts/translation-2026-10-06/*.log
+**/__pycache__/
+**/node_modules/
 

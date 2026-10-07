@@ -1,6 +1,7 @@
 """Fetch and verify one pinned public neural-model snapshot, without executing its code."""
 import hashlib
 import json
+import time
 import urllib.request
 from pathlib import Path
 
@@ -24,12 +25,21 @@ for row in info["siblings"]:
     temporary = directory / (name + ".download")
     if not path.exists():
         url = f"https://huggingface.co/{info['id']}/resolve/{revision}/{name}"
-        with urllib.request.urlopen(url, timeout=90) as source, temporary.open("wb") as destination:
-            while chunk := source.read(1024 * 1024):
-                destination.write(chunk)
-        temporary.replace(path)
+        if not temporary.exists() or temporary.stat().st_size != row["size"]:
+            with urllib.request.urlopen(url, timeout=90) as source, temporary.open("wb") as destination:
+                while chunk := source.read(1024 * 1024):
+                    destination.write(chunk)
+        for attempt in range(8):
+            try:
+                temporary.replace(path)
+                break
+            except PermissionError:
+                if attempt == 7:
+                    raise
+                time.sleep(0.25 * (attempt + 1))
     assert path.stat().st_size == row["size"], name
-    digest = hashlib.file_digest(path.open("rb"), "sha256").hexdigest()
+    with path.open("rb") as stream:
+        digest = hashlib.file_digest(stream, "sha256").hexdigest()
     if row.get("lfs"):
         assert digest == row["lfs"]["sha256"], name
     else:

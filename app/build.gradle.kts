@@ -23,8 +23,8 @@ android {
         applicationId = "com.example.itantra"
         minSdk = 26
         targetSdk = 37
-        versionCode = 8
-        versionName = "1.7-connected-ui"
+        versionCode = 9
+        versionName = "1.8-translation-routing"
 
         ndk {
             // Restricting to arm64-v8a only will crash on launch (UnsatisfiedLinkError) on any
