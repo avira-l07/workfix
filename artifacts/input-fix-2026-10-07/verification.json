@@ -1,0 +1,19 @@
+{
+  "app_version": "1.9-input-fix",
+  "version_code": 10,
+  "apk": "D:\\new itantra\\artifacts\\input-fix-2026-10-07\\iTantra-1.9-input-fix.apk",
+  "apk_bytes": 85616833,
+  "apk_sha256": "db3258842c229faf2ec342f641a84535a2fe16e65fca08f80893757b8a5db414",
+  "host_tests": {
+    "tests": 473,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "operator_input_regressions": "2 passed",
+  "apk_crc": "PASS",
+  "apk_v2_signature": "PASS",
+  "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+  "signing_matches_previous": true,
+  "phone_keyboard_check": "Not run: no connected phone"
+}

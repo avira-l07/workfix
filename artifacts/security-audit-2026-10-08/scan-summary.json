@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-08",
+  "app_version": "1.14-functions-audit",
+  "version_code": "15",
+  "apk_sha256": "aae3896c34175ca55807da49c35ddca110b8b93b10c06ca9f9850210cf5ccdf7",
+  "tools": {
+    "semgrep": "1.179.0",
+    "mobsf": "v4.5.3"
+  },
+  "semgrep_source": {
+    "findings": 0,
+    "errors": 0,
+    "files": 145,
+    "applicable_rules": 48
+  },
+  "semgrep_apk_java": {
+    "findings": 4,
+    "parse_warnings": 16,
+    "files": 485,
+    "applicable_rules": 124
+  },
+  "mobsf_code": {
+    "high": 1,
+    "warning": 3,
+    "info": 1,
+    "secure": 0,
+    "suppressed": 0
+  },
+  "mobsf_manifest": {
+    "high": 1,
+    "warning": 4,
+    "info": 0,
+    "suppressed": 0
+  },
+  "mobsf_certificate": {
+    "high": 1,
+    "warning": 0,
+    "info": 1
+  },
+  "mobsf_native_findings": [
+    {
+      "library": "lib/arm64-v8a/libandroidx.graphics.path.so",
+      "check": "fortify",
+      "is_fortified": false,
+      "severity": "warning",
+      "description": "The binary does not have any fortified functions. Fortified functions provides buffer overflow checks against glibc's commons insecure functions like strcpy, gets etc. Use the compiler option -D_FORTIFY_SOURCE=2 to fortify functions. This check is not applicable for Dart/Flutter libraries."
+    },
+    {
+      "library": "lib/arm64-v8a/libdatastore_shared_counter.so",
+      "check": "fortify",
+      "is_fortified": false,
+      "severity": "warning",
+      "description": "The binary does not have any fortified functions. Fortified functions provides buffer overflow checks against glibc's commons insecure functions like strcpy, gets etc. Use the compiler option -D_FORTIFY_SOURCE=2 to fortify functions. This check is not applicable for Dart/Flutter libraries."
+    },
+    {
+      "library": "lib/arm64-v8a/libonnxruntime.so",
+      "check": "runpath",
+      "runpath": "$ORIGIN",
+      "severity": "high",
+      "description": "The binary has RUNPATH set. In certain cases, an attacker can abuse this feature and or modify environment variables to run arbitrary libraries for code execution and privilege escalation. The only time a library should set RUNPATH is when it is linked to private libraries in the same package. Remove the compiler option --enable-new-dtags,-rpath to remove RUNPATH."
+    },
+    {
+      "library": "lib/arm64-v8a/libtranslate_jni.so",
+      "check": "fortify",
+      "is_fortified": false,
+      "severity": "warning",
+      "description": "The binary does not have any fortified functions. Fortified functions provides buffer overflow checks against glibc's commons insecure functions like strcpy, gets etc. Use the compiler option -D_FORTIFY_SOURCE=2 to fortify functions. This check is not applicable for Dart/Flutter libraries."
+    }
+  ],
+  "heuristic_secret_candidates": 1146,
+  "known_secret_formats": {},
+  "first_party_candidate_locations": 60,
+  "first_party_candidate_values": 23,
+  "detected_trackers": 0,
+  "tracker_signature_count": 432,
+  "mobsf_raw_security_score": 43,
+  "prior_security_test_evidence": {
+    "tests": 83,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "dynamic_analysis": "Not run: no attached phone"
+}

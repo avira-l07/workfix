@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-08",
+  "source_inputs_verified": 194,
+  "source_input_changes": [],
+  "apk_sha256": "aae3896c34175ca55807da49c35ddca110b8b93b10c06ca9f9850210cf5ccdf7",
+  "apk_size_bytes": 85682417,
+  "existing_test_suites_verified": 16,
+  "existing_security_test_cases": 83,
+  "tests_run_in_this_security_task": true,
+  "earlier_full_unit_suite_rerun": false,
+  "follow_up_probes": {
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "purpose": "Reproduce existing faults, not demonstrate fixes",
+    "wrong_peer_ack_and_human_ack_reproduced": true,
+    "unlimited_pending_queue_reproduced": true,
+    "unverified_text_rejection_control_passed": true
+  },
+  "report_equals_complete_scan_api_response": true,
+  "semgrep_source_findings": 0,
+  "semgrep_apk_java_findings": 4,
+  "remaining_non_native_secret_candidates_located_and_reviewed": 8,
+  "external_network_blocked_during_mobsf_analysis": true,
+  "dynamic_analysis_run": false,
+  "report_local_links_verified": 37,
+  "artifact_sha256": {
+    "semgrep.json": "2289e29c28e4d70681fd0fee7d571827f692205716ae525ce746dff1d35e14fd",
+    "semgrep.sarif": "b0d55ccad5b3b2cc2a91cfda99c35ecba3517c213a36182723b2959e93724c6a",
+    "semgrep-apk-java.json": "cc23cc801f8811912d476acf497f081aaaebebabe47dbec0fed23691e28e98e8",
+    "mobsf-report.json": "2fa54af925680d848c2912488913d8f8ad72bf81b64ad64b9392667a2f3efd99",
+    "mobsf-scan.json": "2fa54af925680d848c2912488913d8f8ad72bf81b64ad64b9392667a2f3efd99",
+    "mobsf-scan-logs.json": "ecbe39e3c77aa3140b3c78fddb487d0c1b7923762c07d656494792147ba5d046",
+    "mobsf-secret-remaining-review.json": "86582d0c35720a83c9f46bacaaa50bd55786b78f08d12c6bef11d56f8c23a9ec",
+    "SECURITY-AUDIT.md": "2820e216017aceca3cccb53a61dc9bddb0c28ddd53f2b20036cd3074c3a264e8",
+    "SECURITY-FAULTS.md": "53f04b67777c3b9c3419fa0a262071d51aa11b8e514f92299e9d69c422605969",
+    "probe-results.xml": "42e3c53fee7db213b519c3db172f6cddd32956aef1c0fdbcc7ea8b890903cae7",
+    "probe-run.log": "1d17fc082947e1597524747d148314f228996b8bb6d45e908abd45eac4c3e1d0",
+    "probes/com/itantra/regression/SecurityFaultProbe.kt": "22d92f94e7f5617174aa913a7e5892bef70d905ae108295d3b337dbead9b2f47",
+    "probe.init.gradle": "7976d62779f0721ab5673bb3d6b6bd13abbb56338226e5e5a3a2c5dfcb6d2736"
+  }
+}

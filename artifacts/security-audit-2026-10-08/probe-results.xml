@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.itantra.regression.SecurityFaultProbe" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-08T04:07:24.987Z" hostname="AVII" time="0.92">
+  <properties/>
+  <testcase name="unverified text does not enter playback queue" classname="com.itantra.regression.SecurityFaultProbe" time="0.387"/>
+  <testcase name="verified peer can grow pending queue while translation is blocked" classname="com.itantra.regression.SecurityFaultProbe" time="0.479"/>
+  <testcase name="verified peer acknowledgement can change a different peers message" classname="com.itantra.regression.SecurityFaultProbe" time="0.042"/>
+  <system-out><![CDATA[UNVERIFIED_CONTROL: 64 plaintext messages rejected; queue=0
+AUTHENTICATED_FLOOD: pending=512 payloadBytes=4194304; one additional message in translation
+WRONG_PEER_ACK: verifiedPeer=IT-BBBB-0002 originalRecipient=IT-AAAA-0001 type=ACK resultingState=DELIVERED
+WRONG_PEER_ACK: verifiedPeer=IT-BBBB-0002 originalRecipient=IT-AAAA-0001 type=HUMAN_ACK resultingState=ACKNOWLEDGED
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

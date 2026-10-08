@@ -1,0 +1,57 @@
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 485 files with 311 Code rules:
+                                                                                                                        
+  Language      Rules   Files          Origin      Rules                                                                
+ ─────────────────────────────        ───────────────────                                                               
+  java             86     485          Community     311                                                                
+  <multilang>      38     485                                                                                           
+                                                                                                                        
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 4 (4 blocking)
+ • Rules run: 124
+ • Targets scanned: 485
+ • Parsed lines: ~99.9%
+ • No ignore information available
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 124 rules on 485 files: 4 findings.
+                   
+                   
+┌─────────────────┐
+│ 4 Code Findings │
+└─────────────────┘
+                                                                                                                        
+    C:\Users\avira\AppData\Local\iTantraTools\MobSF\data\uploads\97776519fb619e5cdd558d5f0b0b5f77\java_source\com\itantr
+  a\core\transport\peer\WifiDirectPeerTransport$connectToHost$2$1.java                                                  
+    ❯❱ java.lang.security.audit.crypto.unencrypted-socket.unencrypted-socket
+          ❰❰ Blocking ❱❱
+          Detected use of a Java socket that is not encrypted. As a result, the traffic could be read by an
+          attacker intercepting the network traffic. Use an SSLSocket created by 'SSLSocketFactory' or     
+          'SSLServerSocketFactory' instead.                                                                
+          Details: https://sg.run/W8zA                                                                     
+                                                                                                           
+          183┆ Socket socket = new Socket();
+            ⋮┆----------------------------------------
+          252┆ Socket socket2 = new Socket();
+            ⋮┆----------------------------------------
+          282┆ Socket socket22 = new Socket();
+                                                                                                                        
+    C:\Users\avira\AppData\Local\iTantraTools\MobSF\data\uploads\97776519fb619e5cdd558d5f0b0b5f77\java_source\com\itantr
+  a\core\transport\peer\WifiDirectPeerTransport$startServer$2$1.java                                                    
+    ❯❱ java.lang.security.audit.crypto.unencrypted-socket.unencrypted-socket
+          ❰❰ Blocking ❱❱
+          Detected use of a Java socket that is not encrypted. As a result, the traffic could be read by an
+          attacker intercepting the network traffic. Use an SSLSocket created by 'SSLSocketFactory' or     
+          'SSLServerSocketFactory' instead.                                                                
+          Details: https://sg.run/W8zA                                                                     
+                                                                                                           
+           68┆ srv = new ServerSocket();
+

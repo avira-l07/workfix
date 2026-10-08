@@ -17,7 +17,9 @@ data class ItantraPacket(
     val messageId: Long,
     val securityVersion: Byte = 0,
     val counter: Long = 0,
-    val payload: ByteArray = ByteArray(0)
+    val payload: ByteArray = ByteArray(0),
+    // Local receive metadata. PacketEncoder deliberately never serializes it.
+    val receivedOn: com.itantra.core.transport.ConnectionToken? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

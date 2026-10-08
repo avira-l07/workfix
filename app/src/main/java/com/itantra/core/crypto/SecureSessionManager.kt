@@ -71,9 +71,10 @@ class SecureSessionManager {
     private val replayWindow = ReplayWindow(windowSize = 64)
 
     // Two-Party SAS Verification Tracking
-    var localSasConfirmed: Boolean = false
-        private set
-    var peerSasConfirmed: Boolean = false
+    private val _localSasConfirmation = MutableStateFlow(false)
+    val localSasConfirmation: StateFlow<Boolean> = _localSasConfirmation.asStateFlow()
+    val localSasConfirmed: Boolean get() = _localSasConfirmation.value
+    @Volatile var peerSasConfirmed: Boolean = false
         private set
 
     // Metrics
@@ -92,6 +93,7 @@ class SecureSessionManager {
      * Starts an initiator handshake (generates a fresh ephemeral keypair).
      * Caches the resulting HELLO packet so it can be retransmitted via [getStoredHello].
      */
+    @Synchronized
     fun startHandshake(isInitiator: Boolean): ItantraPacket {
         this.isInitiator = isInitiator
         resetSession()
@@ -122,6 +124,7 @@ class SecureSessionManager {
      * Returns the stored local HELLO packet without regenerating keypair.
      * Null if no handshake has been started this session.
      */
+    @Synchronized
     fun getStoredHello(): ItantraPacket? = localHelloPacket
 
     /**
@@ -132,6 +135,7 @@ class SecureSessionManager {
      * - Initiator (HANDSHAKING): derives session material, transitions to WAITING_USER_VERIFICATION, returns null.
      * - Any other state: returns null (idempotent/drop).
      */
+    @Synchronized
     fun processSecureHello(packet: ItantraPacket): ItantraPacket? {
         // Safe retransmission: if responder already processed HELLO and is waiting for SAS verification,
         // re-send the cached response without corrupting session state.
@@ -258,11 +262,12 @@ class SecureSessionManager {
      * Confirms local SAS match and returns authenticated SECURE_VERIFY packet.
      * Guarded per FIX 003: state must be WAITING_USER_VERIFICATION and sasCode non-blank.
      */
+    @Synchronized
     fun confirmSasMatch(): ItantraPacket {
         if (_state.value != SecureSessionState.WAITING_USER_VERIFICATION || _sasCode.value.isNullOrBlank()) {
             throw IllegalStateException("Cannot confirm SAS: state is ${_state.value} and sasCode is ${_sasCode.value}")
         }
-        localSasConfirmed = true
+        _localSasConfirmation.value = true
         checkVerificationState()
         val verifyToken = computeVerificationToken(isForLocalRole = true)
         return ItantraPacket(
@@ -272,6 +277,7 @@ class SecureSessionManager {
         )
     }
 
+    @Synchronized
     fun rejectSas() {
         resetSession()
         _state.value = SecureSessionState.FAILED
@@ -280,6 +286,7 @@ class SecureSessionManager {
     /**
      * Resets session and marks state as HANDSHAKE_TIMEOUT per FIX 012.
      */
+    @Synchronized
     fun setHandshakeTimeout() {
         resetSession()
         _state.value = SecureSessionState.HANDSHAKE_TIMEOUT
@@ -289,6 +296,7 @@ class SecureSessionManager {
      * Processes incoming SECURE_VERIFY packet.
      * Guarded per FIX 014: verifies that payload matches expected token bound to current ECDH transcript.
      */
+    @Synchronized
     fun processSecureVerify(packet: ItantraPacket) {
         if (_state.value != SecureSessionState.WAITING_USER_VERIFICATION &&
             _state.value != SecureSessionState.SECURE_VERIFIED) {
@@ -324,7 +332,7 @@ class SecureSessionManager {
      * Serialized encryption through [encryptMutex].
      * Atomic critical section: counter check/increment -> nonce construction -> AES-GCM encryption.
      */
-    suspend fun encrypt(packet: ItantraPacket): ItantraPacket = encryptMutex.withLock {
+    suspend fun encrypt(packet: ItantraPacket): ItantraPacket = encryptMutex.withLock { synchronized(this) {
         PacketEncoder.requireEncryptablePayload(packet.payload)
         if (_state.value != SecureSessionState.SECURE_VERIFIED) {
             throw IllegalStateException("Cannot encrypt: session is not secure (State: ${_state.value})")
@@ -344,7 +352,7 @@ class SecureSessionManager {
         encryptDurationUs = (System.nanoTime() - t0) / 1000
 
         securePacket.copy(payload = ciphertext)
-    }
+    } }
 
     /**
      * Authenticated decryption with sliding-window replay protection.
@@ -352,6 +360,7 @@ class SecureSessionManager {
      * 2. AEAD decryption authenticates ciphertext and AAD.
      * 3. Counter commits to ReplayWindow ONLY after successful authentication.
      */
+    @Synchronized
     fun decrypt(packet: ItantraPacket): ItantraPacket {
         if (packet.securityVersion != 1.toByte()) {
             throw IllegalArgumentException("Packet is not encrypted")
@@ -392,6 +401,7 @@ class SecureSessionManager {
         return packet.copy(securityVersion = 0, payload = plaintext)
     }
 
+    @Synchronized
     fun resetSession() {
         _state.value = SecureSessionState.NO_SESSION
         _sasCode.value = null
@@ -407,7 +417,7 @@ class SecureSessionManager {
         currentSharedSecret = null
         txCounter = 0
         replayWindow.reset()
-        localSasConfirmed = false
+        _localSasConfirmation.value = false
         peerSasConfirmed = false
     }
 }

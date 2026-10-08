@@ -23,6 +23,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 import android.bluetooth.BluetoothManager
 import com.itantra.core.crypto.SecureSessionManager
@@ -34,6 +36,7 @@ import com.example.itantra.data.settings.SettingsRepository
 import com.example.itantra.data.settings.settingsDataStore
 
 object AppGraph {
+    private val connectionSwitchMutex = Mutex()
     private var appContext: Context? = null
 
     fun init(context: Context) {
@@ -220,20 +223,29 @@ object AppGraph {
             peerTransport = wifiDirectPeerTransport,
             onTcpConnected = {
                 CoroutineScope(Dispatchers.IO).launch {
+                  connectionSwitchMutex.withLock {
+                    if (!wifiDirectPeerTransport.isConnected ||
+                        transportEngine.activeTransportFlow.value === wifiDirectPeerTransport) return@withLock
+                    if (bluetoothPeerTransport.isConnected) {
+                        kotlinx.coroutines.withContext(Dispatchers.Main) { wifiDirectConnectionManager.disconnect() }
+                        return@withLock
+                    }
                     android.util.Log.i("AppGraph", "Wi-Fi Direct TCP connected — resetting session and switching transport")
                     bluetoothPeerTransport.listenerDesired = false
                     bluetoothPeerTransport.stopServer()
-                    secureSessionManager.resetSession()
                     transportEngine.switchTransport(wifiDirectPeerTransport)
+                  }
                 }
             },
             onTcpDisconnected = {
                 CoroutineScope(Dispatchers.IO).launch {
+                  connectionSwitchMutex.withLock {
                     android.util.Log.i("AppGraph", "Wi-Fi Direct TCP disconnected — resetting session and restoring Bluetooth transport")
-                    secureSessionManager.resetSession()
-                    if (transportEngine.activeTransportFlow.value == wifiDirectPeerTransport) {
+                    if (!wifiDirectPeerTransport.isConnected &&
+                        transportEngine.activeTransportFlow.value === wifiDirectPeerTransport) {
                         transportEngine.switchTransport(bluetoothPeerTransport)
                     }
+                  }
                 }
             }
         )

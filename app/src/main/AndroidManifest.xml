@@ -7,6 +7,7 @@
 
     <!-- Peer-to-Peer & Nearby Connections (Bluetooth Classic + Wi-Fi Direct) -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -36,6 +37,7 @@
     <!-- Operational Hardening: Foreground Service & WakeLock -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
@@ -71,7 +73,7 @@
             android:exported="false" android:process=":wipe" android:launchMode="singleTask" />
         <service
             android:name="com.itantra.core.service.OperationalForegroundService"
-            android:foregroundServiceType="microphone"
+            android:foregroundServiceType="microphone|connectedDevice"
             android:exported="false" />
     </application>
 

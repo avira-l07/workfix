@@ -24,6 +24,7 @@ import com.itantra.core.transport.packet.LocationPayload
 import com.itantra.core.transport.packet.PacketDecoder
 import com.itantra.core.transport.packet.PacketEncoder
 import com.itantra.core.transport.packet.PacketType
+import com.itantra.core.transport.packet.ProfilePayload
 import com.itantra.data.db.toEntity
 import com.itantra.data.languagepack.MockLanguagePackRepository
 import com.itantra.domain.model.*
@@ -53,6 +54,17 @@ import java.nio.ByteOrder
  * 5. DefaultGpsLocationProvider lifecycle leak-free cleanup across all exit paths (success, timeout, external cancellation, mid-flight revocation).
  */
 class LocationSharingTest {
+
+    private suspend fun acceptPeerProfile(coordinator: TransceiverCoordinator, remote: SecureSessionManager) {
+        // A targeted send requires the authenticated profile of the actual connected peer.
+        delay(100)
+        coordinator.handleIncomingPacket(remote.encrypt(ItantraPacket(
+            type = PacketType.PROFILE_HANDSHAKE,
+            messageId = 42L,
+            payload = ProfilePayload(deviceId = "IT-BBBB-0002", displayName = "Bob",
+                supportedLanguages = listOf(LanguageCode.ENGLISH)).toBytes()
+        )))
+    }
 
     @Rule
     @JvmField
@@ -362,7 +374,7 @@ class LocationSharingTest {
 
     @Test
     fun testSendLocationMessageSuccess() = runBlocking {
-        val (aliceSession, _) = setupVerifiedSessionPair()
+        val (aliceSession, bobSession) = setupVerifiedSessionPair()
         val transportEngine = FakeTransportEngine()
         val locationProvider = FakeLocationProvider(
             LocationResult.Success(
@@ -374,7 +386,8 @@ class LocationSharingTest {
         )
 
         val coordinator = createCoordinator(locationProvider, transportEngine, aliceSession)
-        coordinator.sendLocationMessage(targetPeerId = "peer-bob")
+        acceptPeerProfile(coordinator, bobSession)
+        coordinator.sendLocationMessage(targetPeerId = "IT-BBBB-0002")
 
         // Allow coroutine to complete
         kotlinx.coroutines.delay(200)
@@ -394,7 +407,7 @@ class LocationSharingTest {
         assertTrue(msg.text.contains("12.97160"))
         assertTrue(msg.text.contains("77.59460"))
         assertTrue(msg.text.contains("5.0m"))
-        assertEquals("peer-bob", msg.peerId)
+        assertEquals("IT-BBBB-0002", msg.peerId)
     }
 
     @Test
@@ -864,7 +877,8 @@ class LocationSharingTest {
         val bobCoordinator = createCoordinator(bobLocationProvider, bobTransport, bobSession)
 
         // 1. Alice sends location message targeted to Bob
-        aliceCoordinator.sendLocationMessage(targetPeerId = "BOB_PEER")
+        acceptPeerProfile(aliceCoordinator, bobSession)
+        aliceCoordinator.sendLocationMessage(targetPeerId = "IT-BBBB-0002")
 
         var attempts = 0
         while (aliceTransport.sentPackets.none { it.type == PacketType.LOCATION } && attempts < 50) {

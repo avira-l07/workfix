@@ -1,0 +1,1 @@
+allprojects { project -> layout.buildDirectory.set(new File(rootProject.projectDir, "artifacts/message-languages-2026-10-07/build/${project.name}")) }

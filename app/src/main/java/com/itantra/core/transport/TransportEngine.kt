@@ -17,6 +17,7 @@ interface TransportEngine {
 
     val isConnected: Boolean
     val isServer: Boolean
+    val connectionToken: ConnectionToken get() = ConnectionToken(this, 0L)
 
     fun observeConnectionState(): Flow<ConnectionState>
 
@@ -32,10 +33,17 @@ interface TransportEngine {
 
     /** Sends a complete packet and returns transmission metrics. */
     suspend fun send(packet: ItantraPacket): TransmissionMetrics
+    suspend fun send(packet: ItantraPacket, expectedConnection: ConnectionToken): TransmissionMetrics {
+        check(connectionToken == expectedConnection) { "Connection changed before send" }
+        return send(packet)
+    }
 
     /** Stream of packets received from a connected peer. */
     fun receive(): Flow<ItantraPacket>
 }
+
+/** Local routing guard; never serialized or sent to the peer. */
+data class ConnectionToken(val transport: Any, val generation: Long)
 
 enum class ConnectionState {
     DISCONNECTED,

@@ -68,7 +68,9 @@ fun ConnectScreenContent(
     wifiDirectInfo: android.net.wifi.p2p.WifiP2pInfo? = null,
     sasRemainingSeconds: Int? = null,
     secureSessionState: com.itantra.core.crypto.SecureSessionState = com.itantra.core.crypto.SecureSessionState.NO_SESSION,
+    isLocallyConfirmed: Boolean = false,
     connectedDeviceAddress: String? = null,
+    bluetoothConnectionState: com.itantra.core.transport.ConnectionState = com.itantra.core.transport.ConnectionState.DISCONNECTED,
     selectedWifiPeerAddress: String? = null,
     onBack: () -> Unit,
     onBroadcastPing: () -> Unit,
@@ -76,6 +78,7 @@ fun ConnectScreenContent(
     onSasConfirmed: (PeerDevice) -> Unit = {},
     onSasRejected: () -> Unit = {},
     onOpenChat: (PeerDevice) -> Unit = {},
+    onDisconnectBluetooth: () -> Unit = {},
     onDiscoverWifiDirectPeers: () -> Unit = {},
     onConnectWifiDirect: (com.itantra.core.transport.peer.WifiDirectPeer) -> Unit = {},
     onDisconnectWifiDirect: () -> Unit = {},
@@ -83,15 +86,11 @@ fun ConnectScreenContent(
     onTransportModeChanged: (TransportMode) -> Unit = {},
 ) {
     var currentMode by remember(selectedTransportMode) { mutableStateOf(selectedTransportMode) }
-    var isLocallyConfirmed by remember(sasCode, connectedDeviceAddress, selectedWifiPeerAddress) { mutableStateOf(false) }
-
-    LaunchedEffect(sasCode, secureSessionState) {
-        if (sasCode.isNullOrBlank() || secureSessionState != com.itantra.core.crypto.SecureSessionState.WAITING_USER_VERIFICATION) {
-            isLocallyConfirmed = false
-        }
-    }
 
     val isWifi = currentMode == TransportMode.WIFI_DIRECT
+    val hasBluetoothSession = bluetoothConnectionState in setOf(
+        com.itantra.core.transport.ConnectionState.CONNECTING,
+        com.itantra.core.transport.ConnectionState.CONNECTED)
     val hasWifiSession = wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTED ||
             wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTING ||
             wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.GROUP_FORMED ||
@@ -171,9 +170,15 @@ fun ConnectScreenContent(
                                     device = device,
                                     onConnect = { onConnect(device) },
                                     onOpenChat = { onOpenChat(device) },
-                                    canConnect = !hasWifiSession,
+                                    canConnect = !hasWifiSession && !hasBluetoothSession,
                                 )
                             }
+                        }
+                    }
+                    if (hasBluetoothSession) {
+                        OutlinedButton(onClick = onDisconnectBluetooth, modifier = Modifier.fillMaxWidth()) {
+                            Text(if (bluetoothConnectionState == com.itantra.core.transport.ConnectionState.CONNECTING)
+                                "Cancel Bluetooth connection" else "Disconnect Bluetooth")
                         }
                     }
                     OutlinedButton(
@@ -187,6 +192,10 @@ fun ConnectScreenContent(
                         Text("Discover Bluetooth devices")
                     }
                 } else {
+                    if (hasBluetoothSession) {
+                        Text("Disconnect Bluetooth before connecting Wi-Fi Direct.", style = MaterialTheme.typography.bodySmall)
+                        OutlinedButton(onClick = onDisconnectBluetooth, modifier = Modifier.fillMaxWidth()) { Text("Disconnect Bluetooth") }
+                    }
                     if (!wifiDirectError.isNullOrBlank()) {
                         WifiDirectErrorCard(error = wifiDirectError)
                     }
@@ -202,12 +211,22 @@ fun ConnectScreenContent(
                                     secureState = secureSessionState,
                                     isTcpConnected = isSelectedPeer && wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTED,
                                     isConnecting = isSelectedPeer && hasWifiSession && wifiDirectState != com.itantra.core.transport.peer.WifiDirectState.CONNECTED,
-                                    canConnect = !hasWifiSession,
+                                    canConnect = !hasWifiSession && !hasBluetoothSession,
                                     onConnect = { onConnectWifiDirect(peer) },
                                     onOpenChat = { onOpenChatWifiDirect(peer) },
                                 )
                             }
                         }
+                    }
+                    // Incoming P2P connections may never appear in this phone's discovery list.
+                    if (wifiDirectState == com.itantra.core.transport.peer.WifiDirectState.CONNECTED &&
+                        secureSessionState == com.itantra.core.crypto.SecureSessionState.SECURE_VERIFIED &&
+                        wifiDirectPeers.none { it.deviceAddress == selectedWifiPeerAddress }) {
+                        Button(onClick = {
+                            onOpenChatWifiDirect(com.itantra.core.transport.peer.WifiDirectPeer(
+                                deviceAddress = selectedWifiPeerAddress ?: "wifi-peer",
+                                deviceName = channelName, status = 0, isGroupOwner = false))
+                        }, modifier = Modifier.fillMaxWidth()) { Text("Open connected chat") }
                     }
                     OutlinedButton(
                         onClick = onDiscoverWifiDirectPeers,
@@ -270,7 +289,6 @@ fun ConnectScreenContent(
             remainingSeconds = sasRemainingSeconds,
             isLocallyConfirmed = isLocallyConfirmed,
             onConfirm = {
-                isLocallyConfirmed = true
                 onSasConfirmed(targetPeerDevice)
             },
             onDismiss = {
@@ -352,7 +370,7 @@ private fun ConnectionGuide() {
         Text("Names can look alike. Check the device ID and compare the security code face to face.", style = MaterialTheme.typography.bodyMedium, color = ITantraColors.TextMuted)
         listOf(
             "Discover nearby devices" to "Open Connect on both phones and choose the same connection type.",
-            "Choose one peer" to "Each nearby device appears separately. Pick the phone you want to talk to.",
+            "Choose one peer" to "Tap Connect on one phone. Keep the other phone on Connect while it waits for the request.",
             "Compare the same six digits" to "Both people must confirm the code before the secure session is marked verified.",
         ).forEachIndexed { index, (title, description) ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

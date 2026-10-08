@@ -102,7 +102,7 @@ class HeartbeatAndLivenessTest {
         assertFalse(coordinator.isAuthenticatedLivenessEnabled())
 
         // Simulate elapsed time > 180s by setting lastRx far in the past
-        coordinator.setLastRxAtMs(System.currentTimeMillis() - 200_000L)
+        coordinator.setLastRxAtMs((System.nanoTime() / 1_000_000) - 200_000L)
 
         // Wait a short moment to ensure watchdog does not disconnect when disabled
         delay(200)
@@ -118,9 +118,9 @@ class HeartbeatAndLivenessTest {
         coordinator.setLastRxAtMs(1000L)
         assertFalse(coordinator.isAuthenticatedLivenessEnabled())
 
-        val before = System.currentTimeMillis()
+        val before = (System.nanoTime() / 1_000_000)
         coordinator.setAuthenticatedLivenessEnabled(true)
-        val after = System.currentTimeMillis()
+        val after = (System.nanoTime() / 1_000_000)
 
         assertTrue("HB-4: authenticated liveness must be enabled", coordinator.isAuthenticatedLivenessEnabled())
         assertTrue("HB-4: lastRxAtMs must be reset to current time", coordinator.getLastRxAtMs() in before..after)
@@ -132,7 +132,7 @@ class HeartbeatAndLivenessTest {
         val coordinator = TransportCoordinator(transport)
 
         coordinator.setAuthenticatedLivenessEnabled(true)
-        val now = System.currentTimeMillis()
+        val now = (System.nanoTime() / 1_000_000)
         coordinator.setLastRxAtMs(now - 60_000L) // 60s silent (< 180s)
 
         // Refresh liveness via authenticated packet receipt
@@ -150,10 +150,10 @@ class HeartbeatAndLivenessTest {
 
         coordinator.setAuthenticatedLivenessEnabled(true)
         // Simulate >180s silence
-        coordinator.setLastRxAtMs(System.currentTimeMillis() - 181_000L)
+        coordinator.setLastRxAtMs((System.nanoTime() / 1_000_000) - 181_000L)
 
         // Check condition directly matching watchdog:
-        val silentMs = System.currentTimeMillis() - coordinator.getLastRxAtMs()
+        val silentMs = (System.nanoTime() / 1_000_000) - coordinator.getLastRxAtMs()
         assertTrue("Silence duration exceeds 180s", silentMs >= 180_000L)
         if (coordinator.isAuthenticatedLivenessEnabled() && silentMs >= 180_000L) {
             coordinator.setAuthenticatedLivenessEnabled(false)
@@ -175,9 +175,9 @@ class HeartbeatAndLivenessTest {
         )
 
         // Must return immediately without timing out for ACK (ACK timeout is 5s)
-        val start = System.currentTimeMillis()
+        val start = (System.nanoTime() / 1_000_000)
         coordinator.send(heartbeat)
-        val elapsed = System.currentTimeMillis() - start
+        val elapsed = (System.nanoTime() / 1_000_000) - start
 
         assertTrue("HB-8: HEARTBEAT send must not wait for ACK (elapsed: ${elapsed}ms)", elapsed < 2000L)
         assertEquals(1, transport.sentBytes.size)

@@ -1,0 +1,134 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+w: file:///D:/new%20itantra/app/build.gradle.kts:85:35: 'fun setSrcDirs(srcDirs: Iterable<*>): Any' is deprecated. Use `directories` mutable set instead.
+w: file:///D:/new%20itantra/app/build.gradle.kts:86:34: 'fun srcDirs(vararg srcDirs: Any): Any' is deprecated. Use `directories` mutable set instead.
+w: file:///D:/new%20itantra/app/build.gradle.kts:87:41: 'fun srcDirs(vararg srcDirs: Any): Any' is deprecated. Use `directories` mutable set instead.
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:javaPreCompileDebug
+> Task :app:parseDebugLocalResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:checkDebugAarMetadata
+> Task :app:compileDebugNavigationResources
+> Task :app:generateDebugRFile
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+
+> Task :app:kspDebugKotlin
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:mergeDebugResources
+> Task :app:mergeDebugAssets
+> Task :app:mergeDebugUnitTestManifest
+> Task :app:processDebugUnitTestManifest
+> Task :app:verifySpeechDataLeakage SKIPPED
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+> Task :app:packageDebugUnitTestForUnitTest
+> Task :app:generateDebugUnitTestConfig
+> Task :app:compileDebugKotlin
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:294:82 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:305:48 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:341:55 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:752:38 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/MainActivity.kt:817:78 'val Icons.Filled.Notes: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Notes.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/components/HistoryMessageCard.kt:49:21 'val LocalClipboardManager: ProvidableCompositionLocal<ClipboardManager>' is deprecated. Use LocalClipboard instead which supports suspend functions.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/chat/DedicatedChatScreen.kt:802:28 'val LocalClipboardManager: ProvidableCompositionLocal<ClipboardManager>' is deprecated. Use LocalClipboard instead which supports suspend functions.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:144:39 'val Icons.Filled.ArrowForward: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowForward.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:159:174 'val Icons.Filled.ArrowForward: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowForward.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/hub/TransceiverHubScreen.kt:251:95 'val Icons.Filled.Notes: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Notes.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/settings/SettingsScreen.kt:290:21 'val LocalClipboardManager: ProvidableCompositionLocal<ClipboardManager>' is deprecated. Use LocalClipboard instead which supports suspend functions.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/voicenotes/VoiceNotesScreen.kt:59:39 'val Icons.Filled.Notes: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Notes.
+w: file:///D:/new%20itantra/app/src/main/java/com/example/itantra/ui/screens/voicenotes/VoiceNotesScreen.kt:96:47 'val Icons.Filled.Notes: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Notes.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/app/AppGraph.kt:69:52 Unchecked cast of 'Any?' to 'List<LanguagePackSummary>'.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:55:52 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:114:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:167:25 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:168:25 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:201:30 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:216:13 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:255:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:262:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:270:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:282:30 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:297:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:302:31 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:358:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:392:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:399:21 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:420:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:421:17 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ActiveLanguageSessionManager.kt:437:13 'val _activeLanguage: MutableStateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/FiveLanguageSelfTest.kt:61:13 'when' is exhaustive so 'else' is redundant here.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/inference/ModelFileSpec.kt:54:13 'when' is exhaustive so 'else' is redundant here.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:138:41 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:550:28 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:928:51 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:2070:44 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:2562:102 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transceiver/TransceiverCoordinator.kt:2565:43 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:10:8 'class NetworkInfo : Any, Parcelable' is deprecated. Deprecated in Java.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:251:42 'class NetworkInfo : Any, Parcelable' is deprecated. Deprecated in Java.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:252:90 'class NetworkInfo : Any, Parcelable' is deprecated. Deprecated in Java.
+w: file:///D:/new%20itantra/app/src/main/java/com/itantra/core/transport/peer/WifiDirectConnectionManager.kt:265:56 'val isConnected: Boolean' is deprecated. Deprecated in Java.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:processDebugJavaRes
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+
+> Task :app:kspDebugUnitTestKotlin
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+
+> Task :app:compileDebugUnitTestKotlin
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:77:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:91:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:122:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:137:29 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:166:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:193:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:209:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:224:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:259:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/ActiveLanguageSessionManagerTest.kt:262:36 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/HindiSttModelTest.kt:40:9 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'File?'.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/LifecycleOverlapTest.kt:72:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/LifecycleOverlapTest.kt:120:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/TtsLifecycleAndStorageTest.kt:214:54 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/TtsLifecycleAndStorageTest.kt:220:52 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/TtsLifecycleAndStorageTest.kt:250:54 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/inference/TtsLifecycleAndStorageTest.kt:269:52 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/transceiver/ReceiverTtsTest.kt:110:48 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/transceiver/ReceiverTtsTest.kt:248:57 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/transceiver/ReceiverTtsTest.kt:341:57 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/core/transceiver/ReceiverTtsTest.kt:360:94 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:153:50 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:159:52 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:164:28 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:190:28 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/diagnostics/PerformanceEfficiencyTest.kt:211:28 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+w: file:///D:/new%20itantra/app/src/test/java/com/itantra/feature/languages/LanguagePacksViewModelTest.kt:113:35 'val activeLanguage: StateFlow<LanguageCode?>' is deprecated. Use activeSttLanguage for STT or activeTtsLanguage for TTS; receive and TTS languages are now independent.
+
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:testDebugUnitTest
+
+BUILD SUCCESSFUL in 3m 4s
+33 actionable tasks: 33 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.0/userguide/configuration_cache_enabling.html

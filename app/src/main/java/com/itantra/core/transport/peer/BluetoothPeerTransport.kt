@@ -45,6 +45,7 @@ enum class BluetoothError {
     SOCKET_DISCONNECTED,
     HANDSHAKE_FAILED,    // Set by upper layer
     DISCOVERABILITY_DENIED,
+    DISCOVERY_FAILED,
 }
 
 /**
@@ -58,6 +59,7 @@ enum class BluetoothError {
  * - Socket timeout path closes the socket before throwing, preventing resource leaks.
  * - Server/client roles are set before any IO operation and never flipped mid-session.
  */
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class BluetoothPeerTransport(
     private val context: Context,
     private val bluetoothAdapter: BluetoothAdapter?
@@ -77,14 +79,17 @@ class BluetoothPeerTransport(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var connectionJob: Job? = null
     private var readJob: Job? = null
+    private var timeoutJob: Job? = null
+    private val connectionGeneration = java.util.concurrent.atomic.AtomicLong()
 
     private var serverSocket: BluetoothServerSocket? = null
     private var activeSocket: BluetoothSocket? = null
     private var inputStream: InputStream? = null
     private var outputStream: OutputStream? = null
 
-    private val stateFlow = MutableStateFlow(ConnectionState.DISCONNECTED)
-    private val incomingFlow = MutableSharedFlow<ByteArray>(extraBufferCapacity = 64)
+    private val stateFlow = SocketState { connectionId }
+    private val incomingFlow = MutableSharedFlow<ByteArray>(replay = 16, extraBufferCapacity = 64)
+    private var closeConnectedSocket: (() -> Unit)? = null
 
     private val _connectedDeviceAddress = MutableStateFlow<String?>(null)
     val connectedDeviceAddress: StateFlow<String?> = _connectedDeviceAddress
@@ -101,10 +106,11 @@ class BluetoothPeerTransport(
 
     override val isConnected: Boolean
         get() = stateFlow.value == ConnectionState.CONNECTED
+    override val connectionId: Long get() = connectionGeneration.get()
 
-    override fun observeConnectionState(): Flow<ConnectionState> = stateFlow
+    override fun observeConnectionState(): Flow<ConnectionState> = stateFlow.observe()
 
-    private var pendingBondDevice: BluetoothDevice? = null
+    @Volatile private var pendingBondDevice: BluetoothDevice? = null
 
     /**
      * Explicit lifecycle flag indicating whether the passive RFCOMM server listener
@@ -139,6 +145,16 @@ class BluetoothPeerTransport(
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(c: Context?, intent: Intent?) {
                 val action = intent?.action ?: return
+                val generation = connectionGeneration.get()
+                if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                    when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF)) {
+                        BluetoothAdapter.STATE_TURNING_OFF, BluetoothAdapter.STATE_OFF -> {
+                            failConnection(connectionGeneration.get(), BluetoothError.BLUETOOTH_DISABLED)
+                        }
+                        BluetoothAdapter.STATE_ON -> scope.launch { ensureBluetoothListener() }
+                    }
+                    return
+                }
                 val device: BluetoothDevice? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
                 } else {
@@ -168,17 +184,21 @@ class BluetoothPeerTransport(
                             when (bondState) {
                                 BluetoothDevice.BOND_BONDED -> {
                                     debugLog("Pending target bonded: $devAddr. Establishing RFCOMM connection.")
-                                    pendingBondDevice = null
+                                    val generation = connectionGeneration.get()
                                     scope.launch {
-                                        connectToBondedDevice(device)
+                                        connectionMutex.withLock {
+                                            if (connectionGeneration.get() == generation && pendingBondDevice === pending) {
+                                                pendingBondDevice = null
+                                                timeoutJob?.cancel()
+                                                launchClient(device, generation)
+                                            }
+                                        }
                                     }
                                 }
                                 BluetoothDevice.BOND_NONE -> {
                                     if (prevBondState == BluetoothDevice.BOND_BONDING) {
                                         debugLog("Pending target bonding failed or cancelled: $devAddr")
-                                        pendingBondDevice = null
-                                        _lastError.value = BluetoothError.PAIRING_FAILED
-                                        stateFlow.value = ConnectionState.ERROR
+                                        failConnection(generation, BluetoothError.PAIRING_FAILED)
                                     }
                                 }
                                 BluetoothDevice.BOND_BONDING -> {
@@ -193,8 +213,7 @@ class BluetoothPeerTransport(
                             prevBondState == BluetoothDevice.BOND_BONDED
                         ) {
                             debugLog("Active peer bond lost (BOND_NONE after BOND_BONDED) — disconnecting")
-                            _lastError.value = BluetoothError.BOND_LOST
-                            scope.launch { disconnectOnError() }
+                            scope.launch { failConnection(generation, BluetoothError.BOND_LOST) }
                         }
                     }
 
@@ -203,8 +222,7 @@ class BluetoothPeerTransport(
                         // locally, but the RFCOMM session is no longer authenticated.
                         if (isActivePeer) {
                             debugLog("ACTION_KEY_MISSING for active peer — bond lost, session invalid")
-                            _lastError.value = BluetoothError.BOND_LOST
-                            scope.launch { disconnectOnError() }
+                            scope.launch { failConnection(generation, BluetoothError.BOND_LOST) }
                         }
                     }
                 }
@@ -215,9 +233,27 @@ class BluetoothPeerTransport(
             addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
             addAction(ACTION_KEY_MISSING)
         }
-        ctx.registerReceiver(receiver, filter)
+        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
+        ContextCompat.registerReceiver(ctx, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
         bondReceiver = receiver
         debugLog("Bond/key-missing receiver registered (API ${Build.VERSION.SDK_INT})")
+        // Pairing may complete while the Activity is being recreated and no receiver is attached.
+        val pending = pendingBondDevice
+        val generation = connectionGeneration.get()
+        if (pending != null) scope.launch {
+            connectionMutex.withLock {
+                if (connectionGeneration.get() == generation && pendingBondDevice === pending && hasConnectPermission()) {
+                    try {
+                        @SuppressLint("MissingPermission")
+                        if (pending.bondState == BluetoothDevice.BOND_BONDED) {
+                            pendingBondDevice = null
+                            timeoutJob?.cancel()
+                            launchClient(pending, generation)
+                        }
+                    } catch (_: SecurityException) { failConnection(generation, BluetoothError.PERMISSION_DENIED) }
+                }
+            }
+        }
     }
 
     fun unregisterBondReceiver(ctx: Context) {
@@ -266,6 +302,7 @@ class BluetoothPeerTransport(
      * - Bluetooth adapter disabled
      */
     suspend fun ensureBluetoothListener() {
+        val adapter = bluetoothAdapter ?: return
         if (!listenerDesired) {
             debugLog("ensureBluetoothListener: listenerDesired is false, skipping")
             return
@@ -274,64 +311,58 @@ class BluetoothPeerTransport(
             debugLog("ensureBluetoothListener: BLUETOOTH_CONNECT not granted")
             return
         }
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+        if (!adapterEnabled()) {
             debugLog("ensureBluetoothListener: Bluetooth adapter disabled")
             return
         }
 
         connectionMutex.withLock {
             if (!listenerDesired) return@withLock
-            if (stateFlow.value == ConnectionState.CONNECTED) {
+            if (stateFlow.value == ConnectionState.CONNECTED || stateFlow.value == ConnectionState.CONNECTING) {
                 debugLog("ensureBluetoothListener: already connected, skipping listener start")
                 return@withLock
             }
-            if (stateFlow.value == ConnectionState.LISTENING && serverSocket != null && connectionJob?.isActive == true) {
+            if (stateFlow.value == ConnectionState.LISTENING && connectionJob?.isActive == true) {
                 debugLog("ensureBluetoothListener: already listening, idempotent skip")
                 return@withLock
             }
 
-            try { serverSocket?.close() } catch (_: Exception) {}
-            serverSocket = null
-            connectionJob?.cancel()
-            connectionJob = null
-
+            disconnectInternal()
             _isServer = true
-            _lastError.value = BluetoothError.NONE
+            val generation = connectionGeneration.get()
+            stateFlow.value = ConnectionState.LISTENING
 
             connectionJob = scope.launch {
-                stateFlow.value = ConnectionState.LISTENING
                 debugLog("SERVER listening on UUID: $ITANTRA_UUID")
                 try {
                     @SuppressLint("MissingPermission")
-                    val srv = bluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME, ITANTRA_UUID)
-                    serverSocket = srv
+                    val srv = adapter.listenUsingRfcommWithServiceRecord(NAME, ITANTRA_UUID)
+                    synchronized(this@BluetoothPeerTransport) {
+                        if (connectionGeneration.get() != generation || !listenerDesired) {
+                            srv.close()
+                            return@launch
+                        }
+                        serverSocket = srv
+                    }
                     val socket = withContext(Dispatchers.IO) { srv.accept() }
                     if (socket != null) {
-                        debugLog("SERVER accepted connection from ${socket.remoteDevice?.address?.take(8)}***")
+                        debugLog("SERVER accepted RFCOMM connection")
                         if (hasScanPermission()) {
                             try {
                                 @SuppressLint("MissingPermission")
-                                if (bluetoothAdapter.isDiscovering) {
-                                    bluetoothAdapter.cancelDiscovery()
+                                if (adapter.isDiscovering) {
+                                    adapter.cancelDiscovery()
                                     debugLog("SERVER cancelled active discovery on RFCOMM accept")
                                 }
                             } catch (_: Exception) {}
                         }
-                        manageConnectedSocket(socket)
+                        manageConnectedSocket(socket, generation)
                     }
                 } catch (e: Exception) {
                     if (e !is CancellationException) {
                         debugLog("SERVER accept error: ${e.javaClass.simpleName}: ${e.message}")
-                        _lastError.value = BluetoothError.RFCOMM_CONNECT_FAILED
-                        if (stateFlow.value != ConnectionState.CONNECTED) {
-                            stateFlow.value = ConnectionState.DISCONNECTED
-                            if (listenerDesired) {
-                                scope.launch {
-                                    delay(500)
-                                    ensureBluetoothListener()
-                                }
-                            }
-                        }
+                        failConnection(generation, if (e is SecurityException) BluetoothError.PERMISSION_DENIED
+                            else BluetoothError.RFCOMM_CONNECT_FAILED)
                     }
                 }
             }
@@ -349,15 +380,16 @@ class BluetoothPeerTransport(
     suspend fun stopServer() {
         listenerDesired = false
         connectionMutex.withLock {
-            if (_isServer && stateFlow.value == ConnectionState.LISTENING) {
+            if (_isServer && !isConnected) {
                 debugLog("stopServer: stopping RFCOMM listening server socket")
-                try { serverSocket?.close() } catch (_: Exception) {}
-                serverSocket = null
-                connectionJob?.cancel()
-                connectionJob = null
-                stateFlow.value = ConnectionState.DISCONNECTED
+                disconnectInternal()
             }
         }
+    }
+
+    fun stopListening() {
+        listenerDesired = false
+        scope.launch { stopServer() }
     }
 
     // -------------------------------------------------------------------------
@@ -370,150 +402,80 @@ class BluetoothPeerTransport(
      * If bonding: waits for BOND_BONDED broadcast.
      * If not bonded: calls createBond() and awaits BOND_BONDED before RFCOMM setup.
      */
-    suspend fun connectToDevice(device: BluetoothDevice) {
+    suspend fun connectToDevice(device: BluetoothDevice) = connectionMutex.withLock {
+        // A second tap cannot replace a pending or verified link. Disconnect explicitly first.
+        if (isConnected || stateFlow.value == ConnectionState.CONNECTING) return@withLock
+        disconnectInternal()
+        val generation = connectionGeneration.get()
+        _isServer = false
+        _lastError.value = BluetoothError.NONE
         if (!hasConnectPermission()) {
-            debugLog("connectToDevice: BLUETOOTH_CONNECT not granted")
-            _lastError.value = BluetoothError.PERMISSION_DENIED
-            stateFlow.value = ConnectionState.ERROR
-            return
+            failConnection(generation, BluetoothError.PERMISSION_DENIED)
+            return@withLock
         }
-
-        val bondState = try {
+        try {
+            if (bluetoothAdapter?.isEnabled != true) {
+                failConnection(generation, BluetoothError.BLUETOOTH_DISABLED)
+                return@withLock
+            }
+            stateFlow.value = ConnectionState.CONNECTING
             @SuppressLint("MissingPermission")
-            device.bondState
+            val bondState = device.bondState
+            if (bondState == BluetoothDevice.BOND_BONDED) {
+                launchClient(device, generation)
+            } else {
+                pendingBondDevice = device
+                timeoutJob = scope.launch {
+                    delay(60_000L)
+                    failConnection(generation, BluetoothError.PAIRING_FAILED)
+                }
+                @SuppressLint("MissingPermission")
+                val started = bondState == BluetoothDevice.BOND_BONDING || device.createBond()
+                if (!started) failConnection(generation, BluetoothError.PAIRING_FAILED)
+            }
         } catch (_: SecurityException) {
-            _lastError.value = BluetoothError.PERMISSION_DENIED
-            stateFlow.value = ConnectionState.ERROR
-            return
-        }
-
-        val deviceAddr = safeGetAddress(device)
-        debugLog("connectToDevice called for ${deviceAddr?.take(8)}*** with bondState=${bondStateName(bondState)}")
-
-        when (bondState) {
-            BluetoothDevice.BOND_BONDED -> {
-                pendingBondDevice = null
-                connectToBondedDevice(device)
-            }
-            BluetoothDevice.BOND_BONDING -> {
-                pendingBondDevice = device
-                _lastError.value = BluetoothError.NONE
-                stateFlow.value = ConnectionState.CONNECTING
-                debugLog("Target device is currently bonding. Stored as pending target, awaiting BOND_BONDED.")
-            }
-            BluetoothDevice.BOND_NONE -> {
-                pendingBondDevice = device
-                _lastError.value = BluetoothError.NONE
-                stateFlow.value = ConnectionState.CONNECTING
-                val initiated = try {
-                    @SuppressLint("MissingPermission")
-                    device.createBond()
-                } catch (e: SecurityException) {
-                    false
-                }
-                if (!initiated) {
-                    debugLog("createBond() failed immediately for ${deviceAddr?.take(8)}***")
-                    pendingBondDevice = null
-                    _lastError.value = BluetoothError.PAIRING_FAILED
-                    stateFlow.value = ConnectionState.ERROR
-                } else {
-                    debugLog("createBond() initiated for ${deviceAddr?.take(8)}***. Awaiting BOND_BONDED broadcast.")
-                }
-            }
-            else -> {
-                pendingBondDevice = null
-                connectToBondedDevice(device)
-            }
+            failConnection(generation, BluetoothError.PERMISSION_DENIED)
         }
     }
 
-    private suspend fun connectToBondedDevice(device: BluetoothDevice) {
-        connectionMutex.withLock {
-            disconnectInternal()
-            _isServer = false
-            _lastError.value = BluetoothError.NONE
-
-            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
-                debugLog("connectToDevice: Bluetooth adapter disabled")
-                _lastError.value = BluetoothError.BLUETOOTH_DISABLED
-                stateFlow.value = ConnectionState.ERROR
-                return
-            }
-
-            connectionJob = scope.launch {
-                stateFlow.value = ConnectionState.CONNECTING
-                val deviceAddr = safeGetAddress(device)
-                debugLog("CLIENT connecting to ${deviceAddr?.take(8)}*** (API ${Build.VERSION.SDK_INT})")
-
-                // Cancel discovery before connecting — critical for RFCOMM stability.
-                // BLUETOOTH_SCAN permission check before calling cancelDiscovery.
+    private fun launchClient(device: BluetoothDevice, generation: Long) {
+        stateFlow.value = ConnectionState.CONNECTING
+        connectionJob = scope.launch {
+            var socket: BluetoothSocket? = null
+            try {
                 if (hasScanPermission()) {
-                    try {
-                        @SuppressLint("MissingPermission")
-                        val cancelling = bluetoothAdapter.isDiscovering
-                        if (cancelling) {
-                            @SuppressLint("MissingPermission")
-                            val cancelled = bluetoothAdapter.cancelDiscovery()
-                            debugLog("CLIENT cancelled active discovery before connect: $cancelled")
-                        }
-                    } catch (e: SecurityException) {
-                        debugLog("CLIENT cancelDiscovery SecurityException: ${e.message}")
-                    }
-                }
-
-                // Android 14/15/16: BOND_BONDED alone does NOT prove authentication is valid.
-                // We check it for informational logging only.
-                val bondState = try {
                     @SuppressLint("MissingPermission")
-                    device.bondState
-                } catch (_: SecurityException) { -1 }
-                debugLog("CLIENT bond state before connect: ${bondStateName(bondState)}")
-
-                var connectedSocket: BluetoothSocket? = null
-
-                // Secure RFCOMM only. Insecure fallback removed: server always uses
-                // listenUsingRfcommWithServiceRecord (secure), so insecure clients fail.
-                try {
-                    // Create socket THEN connect. If connect() throws/times out,
-                    // close socket here to prevent resource leak.
-                    @SuppressLint("MissingPermission") // BLUETOOTH_CONNECT checked above
-                    val socket = device.createRfcommSocketToServiceRecord(ITANTRA_UUID)
-                    debugLog("CLIENT secure RFCOMM socket created, attempting connect...")
-                    try {
-                        withTimeout(CONNECT_TIMEOUT_MS) {
-                            withContext(Dispatchers.IO) { socket.connect() }
-                        }
-                        connectedSocket = socket
-                    } catch (e: Exception) {
-                        // CRITICAL: close the locally created socket before giving up —
-                        // otherwise it leaks even after the coroutine ends.
-                        try { socket.close() } catch (_: IOException) {}
-                        debugLog("CLIENT RFCOMM connect failed: ${e.javaClass.simpleName}: ${e.message}")
-                        _lastError.value = if (e is TimeoutCancellationException) {
-                            BluetoothError.CONNECT_TIMEOUT
-                        } else {
-                            BluetoothError.RFCOMM_CONNECT_FAILED
-                        }
-                    }
-                } catch (e: SecurityException) {
-                    debugLog("CLIENT createRfcommSocket SecurityException: ${e.message}")
-                    _lastError.value = BluetoothError.PERMISSION_DENIED
+                    bluetoothAdapter?.cancelDiscovery()
                 }
-
-                if (connectedSocket != null && isActive) {
-                    debugLog("CLIENT RFCOMM connected to ${deviceAddr?.take(8)}***")
-                    manageConnectedSocket(connectedSocket)
-                } else {
-                    debugLog("CLIENT failed — setting ERROR state")
-                    stateFlow.value = ConnectionState.ERROR
-                    disconnectInternal()
-                    if (listenerDesired) {
-                        scope.launch {
-                            delay(500)
-                            ensureBluetoothListener()
-                        }
+                @SuppressLint("MissingPermission")
+                val pending = device.createRfcommSocketToServiceRecord(ITANTRA_UUID)
+                socket = pending
+                synchronized(this@BluetoothPeerTransport) {
+                    if (connectionGeneration.get() != generation) {
+                        pending.close()
+                        return@launch
                     }
+                    activeSocket = pending
                 }
+                // Coroutine timeout alone cannot interrupt BluetoothSocket.connect(). Closing
+                // the registered socket from another coroutine actually unblocks Android IO.
+                timeoutJob = scope.launch {
+                    delay(CONNECT_TIMEOUT_MS)
+                    failConnection(generation, BluetoothError.CONNECT_TIMEOUT)
+                }
+                @SuppressLint("MissingPermission")
+                pending.connect()
+                synchronized(this@BluetoothPeerTransport) {
+                    if (connectionGeneration.get() == generation) timeoutJob?.cancel()
+                }
+                manageConnectedSocket(pending, generation)
+            } catch (e: CancellationException) {
+                try { socket?.close() } catch (_: Exception) {}
+                throw e
+            } catch (e: Exception) {
+                try { socket?.close() } catch (_: Exception) {}
+                failConnection(generation, if (e is SecurityException) BluetoothError.PERMISSION_DENIED
+                    else BluetoothError.RFCOMM_CONNECT_FAILED)
             }
         }
     }
@@ -522,69 +484,69 @@ class BluetoothPeerTransport(
     // Connected socket lifecycle
     // -------------------------------------------------------------------------
 
-    private fun manageConnectedSocket(socket: BluetoothSocket) {
+    @Synchronized
+    private fun manageConnectedSocket(socket: BluetoothSocket, generation: Long) {
+        if (connectionGeneration.get() != generation) {
+            socket.close()
+            return
+        }
         activeSocket = socket
-        inputStream = socket.inputStream
-        outputStream = socket.outputStream
-        // Safe read of address — may require BLUETOOTH_CONNECT on API 31+.
-        _connectedDeviceAddress.value = if (hasConnectPermission()) {
-            try {
-                @SuppressLint("MissingPermission")
-                socket.remoteDevice?.address
-            } catch (_: SecurityException) { null }
-        } else null
-        stateFlow.value = ConnectionState.CONNECTED
-
-        try { serverSocket?.close() } catch (_: Exception) {}
-        serverSocket = null
-
-        startReaderLoop()
+        attachStreams(socket.inputStream, socket.outputStream,
+            safeGetAddress(socket.remoteDevice), generation) { socket.close() }
     }
 
-    private fun startReaderLoop() {
+    // The same stream path is used for Android RFCOMM and blocking-stream regression tests.
+    @Synchronized
+    internal fun attachStreams(input: InputStream, output: OutputStream, address: String?,
+                               generation: Long, closeSocket: () -> Unit) {
+        if (connectionGeneration.get() != generation) {
+            closeSocket()
+            return
+        }
+        inputStream = input
+        outputStream = output
+        closeConnectedSocket = closeSocket
+        _lastError.value = BluetoothError.NONE
+        _connectedDeviceAddress.value = address
+        try { serverSocket?.close() } catch (_: Exception) {}
+        serverSocket = null
+        stateFlow.value = ConnectionState.CONNECTED
+        startReaderLoop(input, generation)
+    }
+
+    private fun startReaderLoop(inStream: InputStream, generation: Long) {
         readJob?.cancel()
-        readJob = scope.launch(Dispatchers.IO) {
+        readJob = scope.launch {
             try {
-                val inStream = inputStream ?: return@launch
                 while (isActive) {
                     val lengthBuffer = ByteArray(4)
-                    var bytesRead = 0
-                    while (bytesRead < 4) {
-                        val read = inStream.read(lengthBuffer, bytesRead, 4 - bytesRead)
-                        if (read == -1) throw IOException("Remote closed RFCOMM socket")
-                        bytesRead += read
-                    }
-                    val frameLength = ByteBuffer.wrap(lengthBuffer).order(ByteOrder.BIG_ENDIAN).getInt()
-
+                    readExactly(inStream, lengthBuffer)
+                    val frameLength = ByteBuffer.wrap(lengthBuffer).order(ByteOrder.BIG_ENDIAN).int
                     if (frameLength <= 0 || frameLength > PacketDecoder.MAX_FRAME_BODY_SIZE) {
                         throw IOException("Invalid frame length: $frameLength")
                     }
-
                     val frameData = ByteArray(frameLength)
-                    bytesRead = 0
-                    while (bytesRead < frameLength) {
-                        val read = inStream.read(frameData, bytesRead, frameLength - bytesRead)
-                        if (read == -1) throw IOException("Remote closed RFCOMM socket mid-frame")
-                        bytesRead += read
-                    }
-                    incomingFlow.emit(frameData)
-                }
-            } catch (e: Exception) {
-                if (e !is CancellationException) {
-                    debugLog("Reader loop terminated: ${e.javaClass.simpleName}: ${e.message}")
-                    if (stateFlow.value == ConnectionState.CONNECTED) {
-                        _lastError.value = BluetoothError.SOCKET_DISCONNECTED
-                        stateFlow.value = ConnectionState.DISCONNECTED
+                    readExactly(inStream, frameData)
+                    synchronized(this@BluetoothPeerTransport) {
+                        if (connectionGeneration.get() != generation) return@launch
+                        // Bounded replay retains HELLO if the upper collector attaches late.
+                        if (!incomingFlow.tryEmit(frameData)) throw IOException("Receive queue full")
                     }
                 }
-                disconnectInternal()
-                if (listenerDesired) {
-                    scope.launch {
-                        delay(200)
-                        ensureBluetoothListener()
-                    }
-                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                failConnection(generation, BluetoothError.SOCKET_DISCONNECTED)
             }
+        }
+    }
+
+    private fun readExactly(input: InputStream, bytes: ByteArray) {
+        var offset = 0
+        while (offset < bytes.size) {
+            val count = input.read(bytes, offset, bytes.size - offset)
+            if (count <= 0) throw IOException("Remote closed RFCOMM socket mid-frame")
+            offset += count
         }
     }
 
@@ -592,28 +554,37 @@ class BluetoothPeerTransport(
     // Send
     // -------------------------------------------------------------------------
 
-    override suspend fun send(bytes: ByteArray) {
+    override suspend fun send(bytes: ByteArray) = send(bytes, connectionId)
+
+    override suspend fun send(bytes: ByteArray, expectedConnectionId: Long) {
         // Throw on disconnect so callers cannot falsely mark a message as SENT.
         if (!isConnected) throw IOException("Cannot send: transport is not connected")
 
+        val generation = expectedConnectionId
         withContext(Dispatchers.IO) {
             writeMutex.withLock {
+                val timeout = scope.launch {
+                    delay(CONNECT_TIMEOUT_MS)
+                    failConnection(generation, BluetoothError.SOCKET_DISCONNECTED)
+                }
                 try {
-                    val out = outputStream ?: run {
-                        stateFlow.value = ConnectionState.ERROR
-                        disconnectInternal()
-                        throw IOException("Cannot send: output stream is null")
+                    val out = synchronized(this@BluetoothPeerTransport) {
+                        if (connectionGeneration.get() != generation || !isConnected) {
+                            throw IOException("Cannot send: Bluetooth connection changed")
+                        }
+                        outputStream ?: throw IOException("Cannot send: output stream is null")
                     }
                     out.write(bytes)
                     out.flush()
+                    if (connectionGeneration.get() != generation) throw IOException("Connection ended during write")
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: IOException) {
                     debugLog("send() IOException: ${e.message}")
-                    _lastError.value = BluetoothError.SOCKET_DISCONNECTED
-                    stateFlow.value = ConnectionState.ERROR
-                    disconnectInternal()
+                    failConnection(generation, BluetoothError.SOCKET_DISCONNECTED)
                     throw e // Propagate so callers set message state to ERROR, not SENT
+                } finally {
+                    timeout.cancel()
                 }
             }
         }
@@ -630,29 +601,41 @@ class BluetoothPeerTransport(
         }
     }
 
-    private suspend fun disconnectOnError() {
-        connectionMutex.withLock {
-            stateFlow.value = ConnectionState.ERROR
-            disconnectInternal()
+    @Synchronized
+    private fun failConnection(generation: Long, error: BluetoothError) {
+        if (connectionGeneration.get() != generation) return
+        _lastError.value = error
+        disconnectInternal()
+        stateFlow.value = ConnectionState.ERROR
+        if (listenerDesired && error != BluetoothError.PERMISSION_DENIED && error != BluetoothError.BLUETOOTH_DISABLED) {
+            val retryGeneration = connectionGeneration.get()
+            scope.launch {
+                delay(500)
+                if (connectionGeneration.get() == retryGeneration) ensureBluetoothListener()
+            }
         }
     }
 
+    @Synchronized
     private fun disconnectInternal() {
+        connectionGeneration.incrementAndGet()
         pendingBondDevice = null
         stateFlow.value = ConnectionState.DISCONNECTED
         _connectedDeviceAddress.value = null
-        connectionJob?.cancel()
-        connectionJob = null
-        readJob?.cancel()
-        readJob = null
-        try { inputStream?.close() } catch (_: Exception) {}
-        try { outputStream?.close() } catch (_: Exception) {}
+        timeoutJob?.cancel(); timeoutJob = null
+        connectionJob?.cancel(); connectionJob = null
+        readJob?.cancel(); readJob = null
+        // Close the socket first: unlike coroutine cancellation this aborts blocking IO.
+        try { closeConnectedSocket?.invoke() } catch (_: Exception) {}
+        closeConnectedSocket = null
         try { activeSocket?.close() } catch (_: Exception) {}
         try { serverSocket?.close() } catch (_: Exception) {}
-        inputStream = null
-        outputStream = null
-        activeSocket = null
-        serverSocket = null
+        try { inputStream?.close() } catch (_: Exception) {}
+        try { outputStream?.close() } catch (_: Exception) {}
+        inputStream = null; outputStream = null
+        activeSocket = null; serverSocket = null
+        incomingFlow.resetReplayCache()
+        _isServer = false
     }
 
     override fun receive(): Flow<ByteArray> = incomingFlow
@@ -669,6 +652,10 @@ class BluetoothPeerTransport(
             } catch (_: SecurityException) { null }
         } else null
     }
+
+    private fun adapterEnabled(): Boolean = try {
+        hasConnectPermission() && bluetoothAdapter?.isEnabled == true
+    } catch (_: SecurityException) { false }
 
     private fun bondStateName(state: Int) = when (state) {
         BluetoothDevice.BOND_NONE -> "BOND_NONE"

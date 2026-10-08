@@ -34,9 +34,11 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,7 +103,10 @@ fun DedicatedChatScreen(
         }
     }
 
-    var inputText by remember { mutableStateOf("") }
+    var inputValue by rememberSaveable(peerId, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue())
+    }
+    val inputText = inputValue.text
     val inputTooLong = inputText.toByteArray(Charsets.UTF_8).size > com.itantra.core.transport.packet.PacketEncoder.MAX_PLAINTEXT_BYTES
     val isRecording = chatMessages.any { it.source == MessageSource.LOCAL && it.state == MessageState.RECORDING }
     val listState = rememberLazyListState()
@@ -335,8 +340,8 @@ fun DedicatedChatScreen(
 
                         // Message Text Field
                         TextField(
-                            value = inputText,
-                            onValueChange = { inputText = it },
+                            value = inputValue,
+                            onValueChange = { inputValue = it },
                             isError = inputTooLong,
                             supportingText = if (inputTooLong) ({ Text("Message is too long. Shorten it before sending.") }) else null,
                             placeholder = {
@@ -367,7 +372,7 @@ fun DedicatedChatScreen(
                                 val text = inputText.trim()
                                 if (text.isNotBlank() && isConnected && !inputTooLong) {
                                     coordinator.sendTextMessage(text, targetPeerId = peerId)
-                                    inputText = ""
+                                    inputValue = TextFieldValue()
                                 }
                             },
                             enabled = inputText.isNotBlank() && isConnected && !inputTooLong,
@@ -409,7 +414,7 @@ fun DedicatedChatScreen(
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        if (isConnected) "Type a text message or hold the mic icon to transmit voice." else "Reconnect this device to send a message.",
+                        if (isConnected) "Type a message, hold the mic to speak, or tap the pin to share GPS." else "Reconnect this device to send a message.",
                         style = MaterialTheme.typography.labelSmall,
                         color = ITantraColors.TextMuted
                     )
@@ -436,7 +441,7 @@ fun DedicatedChatScreen(
                     }
 
                     item(key = "msg_${message.messageId}") {
-                        MessageBubble(message = message)
+                        MessageBubble(message = message, coordinator = coordinator)
                     }
                 }
             }
@@ -652,9 +657,9 @@ fun DateSeparatorHeader(label: String) {
  * Incoming or Outgoing Message Bubble with 12-hour timestamp and delivery status.
  */
 @Composable
-fun MessageBubble(message: TransceiverMessage) {
+fun MessageBubble(message: TransceiverMessage, coordinator: TransceiverCoordinator = AppGraph.transceiverCoordinator) {
     if (message.isLocationMessage) {
-        LocationMessageBubble(message = message, isOutgoing = message.source == MessageSource.LOCAL)
+        LocationMessageBubble(message = message, isOutgoing = message.source == MessageSource.LOCAL, coordinator = coordinator)
         return
     }
 
@@ -712,10 +717,13 @@ fun MessageBubble(message: TransceiverMessage) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = ITantraColors.TextHeadline
                 )
-                com.example.itantra.ui.components.SavedSpeechButton("message-${message.messageId}",
-                    { com.itantra.app.AppGraph.transceiverCoordinator.replayMessage(message.messageId) },
-                    enabled = message.text.isNotBlank() && message.displayedTextLanguage != null &&
-                        message.state !in listOf(MessageState.RECORDING, MessageState.STT_PROCESSING))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.weight(1f)) {
+                        com.example.itantra.ui.components.SavedSpeechButton("message-${message.messageId}",
+                            { coordinator.replayMessage(message.messageId) }, enabled = message.translationInput != null)
+                    }
+                    com.example.itantra.ui.components.MessageActionsButton(message, coordinator)
+                }
 
                 Spacer(Modifier.height(4.dp))
 
@@ -792,7 +800,7 @@ fun DeliveryStatusIcon(state: MessageState) {
  * plus a direct copy action. Fully offline.
  */
 @Composable
-fun LocationMessageBubble(message: TransceiverMessage, isOutgoing: Boolean) {
+fun LocationMessageBubble(message: TransceiverMessage, isOutgoing: Boolean, coordinator: TransceiverCoordinator = AppGraph.transceiverCoordinator) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val alignment = if (isOutgoing) Alignment.End else Alignment.Start
@@ -952,7 +960,7 @@ fun LocationMessageBubble(message: TransceiverMessage, isOutgoing: Boolean) {
 
                 Spacer(Modifier.height(6.dp))
 
-                // Footer: Message Timestamp & Delivery Status
+                // GPS keeps its map/copy actions and the shared message menu.
                 Row(
                     modifier = Modifier.align(Alignment.End),
                     verticalAlignment = Alignment.CenterVertically
@@ -968,6 +976,7 @@ fun LocationMessageBubble(message: TransceiverMessage, isOutgoing: Boolean) {
                         Spacer(Modifier.width(4.dp))
                         DeliveryStatusIcon(state = message.state)
                     }
+                    com.example.itantra.ui.components.MessageActionsButton(message, coordinator)
                 }
             }
         }

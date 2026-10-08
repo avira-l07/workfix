@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,12 +40,13 @@ fun SettingsScreen(
     onBack: () -> Unit,
     pairingSectionContent: (@Composable () -> Unit)? = null,
     isBackendWired: Boolean = true,
-    onWipe: () -> Unit = {},
+    onWipe: (Set<com.itantra.core.storage.DataRemovalChoice>) -> Unit = {},
     onLanguagePacks: () -> Unit = {},
     onDiagnostics: () -> Unit = {},
     onRecycleBin: () -> Unit = {},
 ) {
     val settings by viewModel.settings.collectAsState()
+    val operatorNameInput by viewModel.operatorNameInput.collectAsState()
     val uriHandler = LocalUriHandler.current
     var showResetConfirm by remember { mutableStateOf(false) }
 
@@ -81,7 +83,7 @@ fun SettingsScreen(
             item { DeviceIdentityBanner() }
             item {
                 OperatorIdentitySection(
-                    operatorName = settings.operatorName,
+                    operatorName = operatorNameInput,
                     onNameChange = viewModel::setOperatorName,
                 )
             }
@@ -224,9 +226,9 @@ fun SettingsScreen(
                     border = BorderStroke(1.dp, ITantraColors.StatusDanger.copy(alpha = 0.25f)),
                 ) {
                     Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Wipe local data", style = MaterialTheme.typography.titleMedium, color = ITantraColors.StatusDanger)
+                        Text("Manage private data", style = MaterialTheme.typography.titleMedium, color = ITantraColors.StatusDanger)
                         Text(
-                            "Remove private messages, emergency records, identity, settings and diagnostics. Downloaded models stay.",
+                            "Choose which local data to permanently delete. Individual items can also be removed through the recycle bin. Downloaded models stay.",
                             style = MaterialTheme.typography.bodySmall,
                             color = ITantraColors.TextMuted,
                         )
@@ -320,17 +322,18 @@ private fun DeviceIdentityBanner() {
 }
 
 @Composable
-private fun OperatorIdentitySection(operatorName: String, onNameChange: (String) -> Unit) {
+private fun OperatorIdentitySection(operatorName: TextFieldValue?, onNameChange: (TextFieldValue) -> Unit) {
+    val name = operatorName?.text.orEmpty()
     SettingsSection(title = "Your profile") {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(
                 modifier = Modifier.size(44.dp).background(ITantraColors.PrimaryContainer, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                if (operatorName.isBlank()) {
+                if (name.isBlank()) {
                     Icon(Icons.Filled.Person, contentDescription = null, tint = ITantraColors.Primary)
                 } else {
-                    Text(operatorName.trim().take(2).uppercase(), color = ITantraColors.Primary, fontWeight = FontWeight.SemiBold)
+                    Text(name.trim().take(2).uppercase(), color = ITantraColors.Primary, fontWeight = FontWeight.SemiBold)
                 }
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -343,8 +346,9 @@ private fun OperatorIdentitySection(operatorName: String, onNameChange: (String)
             }
         }
         OutlinedTextField(
-            value = operatorName,
+            value = operatorName ?: TextFieldValue(),
             onValueChange = onNameChange,
+            enabled = operatorName != null,
             label = { Text("Local operator name") },
             placeholder = { Text("Enter a name or callsign") },
             singleLine = true,

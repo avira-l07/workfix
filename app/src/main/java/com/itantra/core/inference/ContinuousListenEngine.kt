@@ -79,14 +79,17 @@ class ContinuousListenEngine(
     private var useEnergyFallback = false
     private var fallbackSilenceFrames = 0
 
-    fun updateConfig(config: SentenceBoundaryConfig) {
+    @Synchronized fun updateConfig(config: SentenceBoundaryConfig) {
         sentenceBoundaryConfig = config
         if (_state.value == ContinuousListenState.LISTENING || _state.value == ContinuousListenState.PAUSED) {
+            val paused = isPaused
+            stop()
             start()
+            if (paused) pauseListening()
         }
     }
 
-    fun start() {
+    @Synchronized fun start() {
         if (_state.value != ContinuousListenState.OFF &&
             _state.value != ContinuousListenState.ERROR &&
             _state.value != ContinuousListenState.SEGMENT_READY &&
@@ -145,7 +148,7 @@ class ContinuousListenEngine(
         }
     }
 
-    fun stop() {
+    @Synchronized fun stop() {
         _state.value = ContinuousListenState.OFF
         isPaused = false
         vad?.release()
@@ -160,7 +163,7 @@ class ContinuousListenEngine(
      * Pauses listening without tearing down native resources.
      * Used when an utterance is handed to STT or while local audio is playing.
      */
-    fun pauseListening() {
+    @Synchronized fun pauseListening() {
         isPaused = true
         vad?.reset()
         vad?.clear()
@@ -175,7 +178,7 @@ class ContinuousListenEngine(
     /**
      * Resumes listening after STT or playback completes.
      */
-    fun resumeListening() {
+    @Synchronized fun resumeListening() {
         isPaused = false
         vad?.reset()
         vad?.clear()
@@ -193,7 +196,8 @@ class ContinuousListenEngine(
         resumeListening()
     }
 
-    fun feedAudio(samples: FloatArray) {
+    @Synchronized fun feedAudio(samples: FloatArray) {
+        if (samples.isEmpty()) return
         if (isPaused || _state.value == ContinuousListenState.OFF || _state.value == ContinuousListenState.ERROR || _state.value == ContinuousListenState.PAUSED) {
             return
         }
@@ -218,6 +222,9 @@ class ContinuousListenEngine(
             } else if (isSpeechActive) {
                 fallbackSilenceFrames++
                 activeUtterance.add(samples.clone())
+            }
+            // The maximum applies even to uninterrupted speech, not only after silence.
+            if (isSpeechActive) {
                 val totalSamples = activeUtterance.sumOf { it.size }
                 if (fallbackSilenceFrames >= minSilenceFrames || totalSamples >= maxSpeechSamples) {
                     if (totalSamples >= minSpeechSamples) {

@@ -40,6 +40,9 @@ class DeviceProfileManager(context: Context, keys: com.itantra.core.storage.KeyP
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    private val defaultName = android.os.Build.MODEL?.takeIf { it.isNotBlank() }?.let { "$it's iTantra" }
+        ?: "iTantra Operator"
+
     private val _profile: MutableStateFlow<DeviceProfile>
     val profile: StateFlow<DeviceProfile>
 
@@ -50,8 +53,6 @@ class DeviceProfileManager(context: Context, keys: com.itantra.core.storage.KeyP
             prefs.edit().putString(KEY_DEVICE_ID, privateContent.encode(devId)).apply()
         }
 
-        val defaultName = android.os.Build.MODEL?.takeIf { it.isNotBlank() }?.let { "$it's iTantra" }
-            ?: "iTantra Operator"
         val savedName = prefs.getString(KEY_DISPLAY_NAME, null)?.let(privateContent::decode) ?: defaultName
         val savedLangCode = prefs.getString(KEY_ACTIVE_LANG, LanguageCode.ENGLISH.wireCode) ?: LanguageCode.ENGLISH.wireCode
         val lang = LanguageCode.fromWireCode(savedLangCode) ?: LanguageCode.ENGLISH
@@ -72,12 +73,12 @@ class DeviceProfileManager(context: Context, keys: com.itantra.core.storage.KeyP
     val currentDisplayName: String
         get() = _profile.value.displayName
 
-    fun updateDisplayName(name: String) {
-        val trimmed = name.trim().take(32)
-        if (trimmed.isNotBlank()) {
-            prefs.edit().putString(KEY_DISPLAY_NAME, privateContent.encode(trimmed)).apply()
-            _profile.value = _profile.value.copy(displayName = trimmed)
-        }
+    fun updateDisplayName(name: String): Boolean {
+        val displayName = name.filterNot { it.isISOControl() }.trim().take(32).ifBlank { defaultName }
+        if (_profile.value.displayName == displayName) return false
+        prefs.edit().putString(KEY_DISPLAY_NAME, privateContent.encode(displayName)).apply()
+        _profile.value = _profile.value.copy(displayName = displayName)
+        return true
     }
 
     fun updateActiveLanguage(languageCode: LanguageCode) {

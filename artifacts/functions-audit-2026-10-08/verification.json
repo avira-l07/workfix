@@ -1,0 +1,25 @@
+{
+  "app_version": "1.14-functions-audit",
+  "version_code": 15,
+  "application_id": "com.example.itantra",
+  "apk": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\iTantra-1.14-functions-audit.apk",
+  "apk_bytes": 85682417,
+  "apk_sha256": "aae3896c34175ca55807da49c35ddca110b8b93b10c06ca9f9850210cf5ccdf7",
+  "host_tests": {
+    "tests": 549,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "new_function_regressions": 14,
+  "apk_crc": "PASS",
+  "apk_v2_signature": "PASS",
+  "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+  "signing_matches_previous": true,
+  "earlier_connectivity_message_and_speech_fixes_included": true,
+  "phone_gps_permissions_and_ui": "Not run: no attached Android phones",
+  "private_data_wipe": "Not performed on a phone; storage host tests and code reviewed",
+  "stt_accuracy": "Not measured",
+  "tts_intelligibility": "Not measured",
+  "translation_quality": "Not measured; existing neural translation engine retained"
+}

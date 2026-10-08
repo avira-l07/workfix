@@ -1,0 +1,16 @@
+{
+  "path": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\build\\app\\outputs\\apk\\release\\app-release-unsigned.apk",
+  "sha256": "0b6058af69410a06a685fca23f5e0cdb8d815cc8fa81b2c541706f3523b7f115",
+  "bytes": 65109058,
+  "debuggable": false,
+  "allow_backup": false,
+  "exported_activities": [
+    "com.example.itantra.MainActivity"
+  ],
+  "logging_method_reference_count": 3,
+  "sensitive_sdk_logging_markers": [
+    "HTTP Response Body:\n"
+  ],
+  "sherpa_jni_class_count": 123,
+  "test_preview_classes_absent": true
+}

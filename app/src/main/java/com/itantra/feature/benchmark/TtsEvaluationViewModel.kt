@@ -14,6 +14,9 @@ import com.itantra.domain.model.SpeechSynthesisRequest
 import com.itantra.domain.model.TtsEvaluationSession
 import com.itantra.domain.model.TtsSentenceEvaluation
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -67,6 +70,15 @@ class TtsEvaluationViewModel(
 
     private var audioSink: SpeakerAudioSink? = null
     private var lastGeneratedSamples: FloatArray? = null
+    private var playbackJob: Job? = null
+    private var playbackGeneration = 0L
+
+    private fun stopPlayback() {
+        playbackGeneration++
+        playbackJob?.cancel()
+        audioSink?.stopImmediate()
+        lastGeneratedSamples = null
+    }
 
     init {
         loadSentences(_state.value.selectedLanguage)
@@ -74,6 +86,7 @@ class TtsEvaluationViewModel(
 
     fun selectLanguage(lang: String) {
         if (lang == _state.value.selectedLanguage && _state.value.sentences.isNotEmpty()) return
+        stopPlayback()
         _state.update {
             it.copy(
                 selectedLanguage = lang,
@@ -81,6 +94,8 @@ class TtsEvaluationViewModel(
                 recordedEvaluations = emptyList(),
                 sessionFinished = false,
                 hasSynthesizedCurrent = false,
+                isSynthesizing = false,
+                isPlaying = false,
                 statusMessage = "",
                 savedSession = null
             )
@@ -134,27 +149,29 @@ class TtsEvaluationViewModel(
     }
 
     fun synthesizeAndPlay() {
+        if (_state.value.isPlaying || _state.value.isSynthesizing || _state.value.sessionFinished) return
         val currentSentences = _state.value.sentences
         if (currentSentences.isEmpty()) return
         val currentSentence = currentSentences[_state.value.currentIndex]
 
-        val ttsEngine = activeLanguageSessionManager.currentTtsEngine
-        if (ttsEngine == null || !ttsEngine.isLoaded) {
-            _state.update { it.copy(statusMessage = "TTS engine not loaded for ${_state.value.selectedLanguage.uppercase()}. DEVICE_REQUIRED or pack not installed.") }
-            return
-        }
-
-        viewModelScope.launch {
-            _state.update { it.copy(isSynthesizing = true, statusMessage = "Synthesizing...") }
+        val language = _state.value.selectedLanguage
+        val previous = playbackJob
+        val run = ++playbackGeneration
+        _state.update { it.copy(isSynthesizing = true, hasSynthesizedCurrent = false, statusMessage = "Synthesizing...") }
+        playbackJob = viewModelScope.launch {
+            var sink: SpeakerAudioSink? = null
             try {
+                previous?.join()
                 val t0 = SystemClock.elapsedRealtimeNanos()
-                val langCode = LanguageCode.entries.firstOrNull { it.wireCode == _state.value.selectedLanguage } ?: LanguageCode.HINDI
+                val langCode = LanguageCode.fromWireCode(language) ?: error("Unknown TTS language")
                 val req = SpeechSynthesisRequest(
                     correlationId = currentSentence.id,
                     text = currentSentence.text,
                     languageCode = langCode
                 )
-                val result = ttsEngine.synthesize(req)
+                val result = activeLanguageSessionManager.synthesizeTts(req)
+                ensureActive()
+                com.itantra.core.inference.requireSpeechAudio(result)
                 val t1 = SystemClock.elapsedRealtimeNanos()
                 val computeTimeMs = (t1 - t0) / 1_000_000
 
@@ -169,7 +186,6 @@ class TtsEvaluationViewModel(
                     it.copy(
                         isSynthesizing = false,
                         isPlaying = true,
-                        hasSynthesizedCurrent = true,
                         lastComputeTimeMs = computeTimeMs,
                         lastAudioDurationMs = audioDurationMs,
                         lastSampleRate = sampleRate,
@@ -181,44 +197,56 @@ class TtsEvaluationViewModel(
 
                 // Play PCM audio
                 withContext(Dispatchers.IO) {
-                    if (audioSink == null) {
-                        audioSink = SpeakerAudioSink(context)
-                    }
-                    audioSink?.init(sampleRate)
-                    audioSink?.play(samples)
-                    audioSink?.flushAndStop()
+                    ensureActive()
+                    sink = SpeakerAudioSink(context)
+                    audioSink = sink
+                    sink!!.init(sampleRate)
+                    sink!!.play(samples)
+                    sink!!.flushAndStop()
                 }
-
-                _state.update { it.copy(isPlaying = false, statusMessage = "Playback completed. Please rate intelligibility.") }
-
+                ensureActive()
+                if (run == playbackGeneration) _state.update { it.copy(isPlaying = false, hasSynthesizedCurrent = true, statusMessage = "Playback completed. Please rate intelligibility.") }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 e.printStackTrace()
-                _state.update { it.copy(isSynthesizing = false, isPlaying = false, statusMessage = "Error: ${e.message}") }
+                if (run == playbackGeneration) _state.update { it.copy(isSynthesizing = false, isPlaying = false, hasSynthesizedCurrent = false, statusMessage = "Error: ${e.message}") }
+            } finally {
+                sink?.release()
+                if (audioSink === sink) audioSink = null
             }
         }
     }
 
     fun playAgain() {
+        if (!_state.value.hasSynthesizedCurrent || _state.value.isPlaying || _state.value.isSynthesizing) return
         val samples = lastGeneratedSamples ?: return
         val rate = _state.value.lastSampleRate
         if (rate <= 0) return
 
-        viewModelScope.launch(Dispatchers.IO) {
-            _state.update { it.copy(isPlaying = true, statusMessage = "Playing audio again...") }
+        val run = ++playbackGeneration
+        _state.update { it.copy(isPlaying = true, statusMessage = "Playing audio again...") }
+        playbackJob = viewModelScope.launch(Dispatchers.IO) {
+            val sink = SpeakerAudioSink(context)
+            audioSink = sink
             try {
-                if (audioSink == null) {
-                    audioSink = SpeakerAudioSink(context)
-                }
-                audioSink?.init(rate)
-                audioSink?.play(samples)
-                audioSink?.flushAndStop()
+                sink.init(rate)
+                sink.play(samples)
+                sink.flushAndStop()
+                ensureActive()
+                if (run == playbackGeneration) _state.update { it.copy(isPlaying = false, statusMessage = "Playback completed.") }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) {
+                if (run == playbackGeneration) _state.update { it.copy(isPlaying = false, statusMessage = "Playback failed: ${error.message}") }
             } finally {
-                _state.update { it.copy(isPlaying = false, statusMessage = "Playback completed.") }
+                sink.release()
+                if (audioSink === sink) audioSink = null
             }
         }
     }
 
     fun recordAndNext() {
+        if (!_state.value.hasSynthesizedCurrent || _state.value.isPlaying || _state.value.isSynthesizing || _state.value.sessionFinished) return
         val currentSentences = _state.value.sentences
         if (currentSentences.isEmpty()) return
         val currentSentence = currentSentences[_state.value.currentIndex]
@@ -239,6 +267,7 @@ class TtsEvaluationViewModel(
 
         val newEvaluations = _state.value.recordedEvaluations + evaluation
         val nextIdx = _state.value.currentIndex + 1
+        lastGeneratedSamples = null
 
         if (nextIdx < currentSentences.size) {
             _state.update {
@@ -301,12 +330,15 @@ class TtsEvaluationViewModel(
     }
 
     fun resetEvaluation() {
+        stopPlayback()
         _state.update {
             it.copy(
                 currentIndex = 0,
                 recordedEvaluations = emptyList(),
                 sessionFinished = false,
                 hasSynthesizedCurrent = false,
+                isPlaying = false,
+                isSynthesizing = false,
                 statusMessage = "",
                 savedSession = null
             )
@@ -314,8 +346,7 @@ class TtsEvaluationViewModel(
     }
 
     override fun onCleared() {
+        stopPlayback()
         super.onCleared()
-        audioSink?.release()
-        audioSink = null
     }
 }

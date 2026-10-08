@@ -155,7 +155,8 @@ class SherpaOnnxSpeechSynthesizer(
         try {
             requireTtsTextCoverage(languageCode, smokeText, vocabulary, languageCode == LanguageCode.MARATHI)
             val smokeResult = tts?.generate(smokeText)
-            if (smokeResult == null || smokeResult.samples.isEmpty() || smokeResult.sampleRate <= 0) {
+            if (smokeResult == null || smokeResult.samples.isEmpty() || smokeResult.sampleRate <= 0 ||
+                smokeResult.samples.any { !it.isFinite() } || smokeResult.samples.none { kotlin.math.abs(it) > 0.001f }) {
                 try { tts?.release() } catch (_: Throwable) {}
                 tts = null
                 isLoaded = false
@@ -175,8 +176,6 @@ class SherpaOnnxSpeechSynthesizer(
     }
 
     override suspend fun synthesize(request: SpeechSynthesisRequest): SpeechSynthesisResult = withContext(Dispatchers.Default) {
-        val engine = tts ?: throw IllegalStateException("TTS_ENGINE_NOT_LOADED")
-
         // Reject empty or whitespace text truthfully before native inference
         if (request.text.isBlank()) {
             Log.w("SherpaOnnxTTS", "Rejecting blank/empty text for synthesis: correlationId=${request.correlationId}")
@@ -184,6 +183,8 @@ class SherpaOnnxSpeechSynthesizer(
         }
 
         synthMutex.withLock {
+            val engine = tts ?: throw IllegalStateException("TTS_ENGINE_NOT_LOADED")
+            require(request.languageCode == languageCode) { "TTS_LANGUAGE_MISMATCH" }
             requireTtsTextCoverage(languageCode, request.text, vocabulary, languageCode == LanguageCode.MARATHI)
             val t0 = SystemClock.elapsedRealtimeNanos()
             Log.i("SherpaOnnxTTS", "TTS synth start lang=${languageCode.wireCode} chars=${request.text.length} correlationId=${request.correlationId}")
@@ -219,7 +220,7 @@ class SherpaOnnxSpeechSynthesizer(
                 sampleRateHz = sampleRate,
                 channelCount = 1,
                 durationMillis = audioDurationMs
-            )
+            ).also(::requireSpeechAudio)
         }
     }
 

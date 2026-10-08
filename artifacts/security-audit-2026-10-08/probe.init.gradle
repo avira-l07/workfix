@@ -1,0 +1,10 @@
+allprojects { project ->
+    layout.buildDirectory.set(new File(rootProject.projectDir, "artifacts/functions-audit-2026-10-08/build/${project.name}"))
+    pluginManager.withPlugin('com.android.application') {
+        android.sourceSets.getByName('test').kotlin.srcDir(
+            new File(rootProject.projectDir, 'artifacts/security-audit-2026-10-08/probes'))
+        tasks.withType(Test).configureEach {
+            testLogging.showStandardStreams = true
+        }
+    }
+}

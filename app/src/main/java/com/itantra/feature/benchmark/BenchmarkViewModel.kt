@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.itantra.core.inference.ActiveLanguageSessionManager
 import com.itantra.core.inference.MicrophoneAudioSource
+import com.itantra.core.inference.SpeechRecognizerEngine
 import com.itantra.core.metrics.TextNormalizer
 import com.itantra.core.metrics.WerResult
 import com.itantra.core.metrics.WordErrorRateCalculator
@@ -17,6 +18,8 @@ import com.itantra.domain.model.BenchmarkSession
 import com.itantra.domain.model.EvidenceLevel
 import com.itantra.domain.model.NoiseCondition
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -63,6 +66,17 @@ class BenchmarkViewModel(
     private var startTimeMs = 0L
     private val audioSource = MicrophoneAudioSource(viewModelScope)
     private var recordingJob: Job? = null
+    private var processingJob: Job? = null
+    private var captureEngine: SpeechRecognizerEngine? = null
+    private var captureChunks = mutableListOf<FloatArray>()
+
+    private fun cancelCapture() {
+        recordingJob?.cancel()
+        processingJob?.cancel()
+        recordingJob = null
+        captureEngine = null
+        captureChunks.clear()
+    }
 
     init {
         loadBenchmarkSentences(_state.value.selectedLanguage)
@@ -70,6 +84,7 @@ class BenchmarkViewModel(
 
     fun selectLanguage(lang: String) {
         if (lang == _state.value.selectedLanguage && _state.value.sentences.isNotEmpty()) return
+        cancelCapture()
         _state.update {
             it.copy(
                 selectedLanguage = lang,
@@ -90,6 +105,7 @@ class BenchmarkViewModel(
     }
 
     fun resetBenchmark() {
+        cancelCapture()
         val sentences = _state.value.sentences
         _state.update {
             it.copy(
@@ -148,16 +164,23 @@ class BenchmarkViewModel(
     }
 
     fun startRecording() {
-        if (_state.value.sessionFinished || _state.value.isRecording) return
+        if (_state.value.sessionFinished || _state.value.isRecording || processingJob?.isActive == true) return
 
         val engine = activeLanguageSessionManager.currentSttEngine
         if (engine == null || !engine.isLoaded) return
+        if (activeLanguageSessionManager.activeSttLanguage.value?.wireCode != _state.value.selectedLanguage) {
+            _state.update { it.copy(currentTranscription = "Select the matching mic language in Language Packs first") }
+            return
+        }
+        val chunks = mutableListOf<FloatArray>()
+        captureChunks = chunks
+        captureEngine = engine
 
         _state.update { it.copy(isRecording = true, currentTranscription = "Listening...") }
         startTimeMs = SystemClock.elapsedRealtime()
 
         recordingJob = viewModelScope.launch {
-            launch {
+            val limitJob = launch {
                 delay(60_000L)
                 if (_state.value.isRecording) {
                     stopRecording()
@@ -165,10 +188,13 @@ class BenchmarkViewModel(
             }
             try {
                 audioSource.stream.collect { samples ->
-                    engine.feed(samples)
+                    chunks.add(samples.clone())
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (e: Exception) {
+                _state.update { it.copy(isRecording = false, currentTranscription = "Microphone unavailable: ${e.message}") }
+            } finally {
+                limitJob.cancel()
             }
         }
     }
@@ -179,24 +205,24 @@ class BenchmarkViewModel(
         recordingJob?.cancel()
         recordingJob = null
 
-        val engine = activeLanguageSessionManager.currentSttEngine ?: return
+        val engine = captureEngine ?: return
+        captureEngine = null
+        val chunks = captureChunks.toList()
+        captureChunks.clear()
         val t0 = SystemClock.elapsedRealtimeNanos()
         val durationMillis = SystemClock.elapsedRealtime() - startTimeMs
 
         if (durationMillis < 300) {
-            viewModelScope.launch {
-                _state.update { it.copy(currentTranscription = "Recording too short") }
-                delay(2000)
-                _state.update { it.copy(currentTranscription = "") }
-                engine.reset()
-            }
+            _state.update { it.copy(currentTranscription = "Recording too short") }
             return
         }
 
-        viewModelScope.launch {
+        processingJob = viewModelScope.launch {
             _state.update { it.copy(currentTranscription = "Finalizing...") }
             try {
-                val result = engine.finalizeUtterance()
+                val result = activeLanguageSessionManager.recognizeCapture(engine, chunks)
+                ensureActive()
+                check(result.diagnostic == null) { result.diagnostic ?: "Speech language mismatch" }
                 val t1 = SystemClock.elapsedRealtimeNanos()
                 val latencyMillis = (t1 - t0) / 1_000_000
 
@@ -254,11 +280,17 @@ class BenchmarkViewModel(
                     }
                     saveSession(newResults)
                 }
-            } catch (e: Exception) {
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (e: Exception) {
                 e.printStackTrace()
                 _state.update { it.copy(currentTranscription = "Error: ${e.message}") }
             }
         }
+    }
+
+    override fun onCleared() {
+        cancelCapture()
+        super.onCleared()
     }
 
     private fun saveSession(results: List<BenchmarkResult>) {

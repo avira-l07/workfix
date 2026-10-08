@@ -11,7 +11,11 @@ import com.itantra.domain.model.TransmissionMetrics
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
@@ -38,7 +42,8 @@ class TransportCoordinator(
     }
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val incomingFlow = MutableSharedFlow<ItantraPacket>(extraBufferCapacity = 64)
+    private val switchMutex = Mutex()
+    private val incomingFlow = MutableSharedFlow<ItantraPacket>(replay = 16, extraBufferCapacity = 64)
 
     // Fix: previously ACK waits were done via `ackFlow.first { it == messageId }` started
     // *after* activeTransport.send() was already in flight. Because the underlying flow has
@@ -67,31 +72,36 @@ class TransportCoordinator(
     /**
      * Switches the active transport dynamically.
      */
-    suspend fun switchTransport(newTransport: PeerTransport) {
+    suspend fun switchTransport(newTransport: PeerTransport) = switchMutex.withLock {
         val oldTransport = _activeTransport.value
-        if (oldTransport === newTransport) return
+        if (oldTransport === newTransport) return@withLock
 
         authenticatedLivenessEnabled = false
+        ackWaiters.values.forEach { it.cancel() }
+        ackWaiters.clear()
         oldTransport.disconnect()
         _activeTransport.value = newTransport
         startObservingTransport()
     }
 
     private fun startObservingTransport() {
+        val observedTransport = activeTransport
         readJob?.cancel()
         heartbeatJob?.cancel()
         watchdogJob?.cancel()
         connectionStateJob?.cancel()
         authenticatedLivenessEnabled = false
-        lastRxAtMs.set(System.currentTimeMillis())
+        lastRxAtMs.set(monotonicMillis())
 
         connectionStateJob = scope.launch {
-            activeTransport.observeConnectionState().collect { state ->
+            observedTransport.observeConnectionState().collect { state ->
+                if (activeTransport !== observedTransport) return@collect
                 if (state == ConnectionState.CONNECTED) {
-                    lastRxAtMs.set(System.currentTimeMillis())
+                    lastRxAtMs.set(monotonicMillis())
                     android.util.Log.i("TransportCoordinator", "Link CONNECTED: reset lastRxAtMs to " + lastRxAtMs.get())
                 } else if (state == ConnectionState.DISCONNECTED || state == ConnectionState.ERROR) {
                     authenticatedLivenessEnabled = false
+                    clearPendingReceipts()
                 }
             }
         }
@@ -99,17 +109,23 @@ class TransportCoordinator(
         readJob = scope.launch {
             while (isActive) {
                 try {
-                    activeTransport.receive().collect { frameData ->
+                    observedTransport.receive().collect { frameData ->
+                        if (activeTransport !== observedTransport) return@collect
                         try {
-                            val packet = PacketDecoder.decode(frameData)
+                            val packet = PacketDecoder.decode(frameData).copy(
+                                receivedOn = ConnectionToken(observedTransport, observedTransport.connectionId))
                             if (packet.type == PacketType.HEARTBEAT && packet.securityVersion == 0.toByte()) {
                                 return@collect
                             }
                             incomingFlow.emit(packet)
+                        } catch (e: CancellationException) {
+                            throw e
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                     }
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     if (isActive) delay(25)
                 }
@@ -121,18 +137,21 @@ class TransportCoordinator(
             while (isActive) {
                 delay(WATCHDOG_CHECK_INTERVAL_MS)
                 if (!authenticatedLivenessEnabled) continue
-                if (!activeTransport.isConnected) {
+                if (activeTransport !== observedTransport) break
+                if (!observedTransport.isConnected) {
                     authenticatedLivenessEnabled = false
                     continue
                 }
-                val silentMs = System.currentTimeMillis() - lastRxAtMs.get()
+                val silentMs = monotonicMillis() - lastRxAtMs.get()
                 if (silentMs >= PEER_SILENCE_TIMEOUT_MS) {
                     android.util.Log.w(
                         "TransportCoordinator",
                         "Authenticated silence timeout: no authenticated traffic for ${silentMs}ms, disconnecting"
                     )
                     authenticatedLivenessEnabled = false
-                    activeTransport.disconnect()
+                    switchMutex.withLock {
+                        if (activeTransport === observedTransport) observedTransport.disconnect()
+                    }
                 }
             }
         }
@@ -143,20 +162,25 @@ class TransportCoordinator(
 
     override val isServer: Boolean
         get() = activeTransport.isServer
+    override val connectionToken: ConnectionToken
+        get() = ConnectionToken(activeTransport, activeTransport.connectionId)
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun observeConnectionState(): Flow<ConnectionState> {
         return _activeTransport.flatMapLatest { transport ->
-            transport.observeConnectionState()
+            flow {
+                // A connected-to-connected transport switch still requires a fresh session.
+                emit(ConnectionState.DISCONNECTED)
+                emitAll(transport.observeConnectionState())
+            }
         }
     }
 
-    override suspend fun disconnect() {
+    override suspend fun disconnect() = switchMutex.withLock {
         authenticatedLivenessEnabled = false
+        clearPendingReceipts()
         activeTransport.disconnect()
         // Fail any in-flight ACK waiters instead of leaving them to time out naturally.
-        ackWaiters.values.forEach { it.cancel() }
-        ackWaiters.clear()
         // Observers (readJob, connectionStateJob, watchdogJob) remain active for subsequent reconnections.
     }
 
@@ -165,8 +189,9 @@ class TransportCoordinator(
      */
     fun shutdown() {
         authenticatedLivenessEnabled = false
-        scope.launch {
-            try { activeTransport.disconnect() } catch (_: Exception) {}
+        // Cancelling this scope immediately used to cancel its own socket cleanup.
+        CoroutineScope(Dispatchers.IO).launch {
+            try { disconnect() } finally { scope.cancel() }
         }
         readJob?.cancel()
         heartbeatJob?.cancel()
@@ -174,7 +199,6 @@ class TransportCoordinator(
         connectionStateJob?.cancel()
         ackWaiters.values.forEach { it.cancel() }
         ackWaiters.clear()
-        scope.cancel()
     }
 
     override fun notifyAckReceived(messageId: Long) {
@@ -182,22 +206,26 @@ class TransportCoordinator(
     }
 
     override fun notifyLivenessReceived() {
-        lastRxAtMs.set(System.currentTimeMillis())
+        lastRxAtMs.set(monotonicMillis())
     }
 
     override fun setAuthenticatedLivenessEnabled(enabled: Boolean) {
         if (enabled) {
             authenticatedLivenessEnabled = true
-            lastRxAtMs.set(System.currentTimeMillis())
+            lastRxAtMs.set(monotonicMillis())
         } else {
             authenticatedLivenessEnabled = false
         }
     }
 
-    override suspend fun send(packet: ItantraPacket): TransmissionMetrics {
+    override suspend fun send(packet: ItantraPacket): TransmissionMetrics = send(packet, connectionToken)
+
+    override suspend fun send(packet: ItantraPacket, expectedConnection: ConnectionToken): TransmissionMetrics {
         // Throw on disconnect — returning empty metrics here would cause callers to
         // mark the message as SENT even though nothing was written to the socket.
-        if (!isConnected) throw java.io.IOException("Cannot send: transport is not connected")
+        val sendingTransport = activeTransport
+        check(connectionToken == expectedConnection) { "Connection changed before send" }
+        if (!sendingTransport.isConnected) throw java.io.IOException("Cannot send: transport is not connected")
 
         return withContext(Dispatchers.IO) {
             val t0 = System.nanoTime()
@@ -210,16 +238,19 @@ class TransportCoordinator(
             if (ackDeferred != null) {
                 // Register the waiter BEFORE sending, so an ACK that comes back before we'd
                 // otherwise have started listening can never be missed.
-                ackWaiters[packet.messageId] = ackDeferred
+                check(ackWaiters.putIfAbsent(packet.messageId, ackDeferred) == null) {
+                    "A send for this message is already awaiting acknowledgement"
+                }
             }
 
             // FIX 001: Separate transport write failure from ACK timeout.
             // If activeTransport.send throws, cancel waiter and re-throw immediately.
             try {
-                activeTransport.send(encoded)
+                check(connectionToken == expectedConnection) { "Connection changed before write" }
+                sendingTransport.send(encoded, expectedConnection.generation)
             } catch (e: Exception) {
                 if (ackDeferred != null) {
-                    ackWaiters.remove(packet.messageId)
+                    ackWaiters.remove(packet.messageId, ackDeferred)
                     ackDeferred.cancel()
                 }
                 throw e
@@ -233,7 +264,7 @@ class TransportCoordinator(
                     // No ACK received in time after successful physical transmission
                     println("ACK timeout for message: ${packet.messageId}")
                 } finally {
-                    ackWaiters.remove(packet.messageId)
+                    ackWaiters.remove(packet.messageId, ackDeferred)
                 }
             }
 
@@ -257,4 +288,13 @@ class TransportCoordinator(
     }
 
     override fun receive(): Flow<ItantraPacket> = incomingFlow
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private fun clearPendingReceipts() {
+        ackWaiters.values.forEach { it.cancel() }
+        ackWaiters.clear()
+        incomingFlow.resetReplayCache()
+    }
+
+    private fun monotonicMillis(): Long = System.nanoTime() / 1_000_000
 }

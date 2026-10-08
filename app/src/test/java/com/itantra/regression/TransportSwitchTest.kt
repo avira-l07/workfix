@@ -8,10 +8,40 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeout
+import java.util.concurrent.CopyOnWriteArrayList
 import org.junit.Assert.*
 import org.junit.Test
 
 class TransportSwitchTest {
+
+    @Test
+    fun `switching between connected transports emits a session reset before the new connection`() = runBlocking {
+        val first = FakeTransport()
+        val second = FakeTransport(isServer = true)
+        first.state.value = ConnectionState.CONNECTED
+        second.state.value = ConnectionState.CONNECTED
+        val coordinator = TransportCoordinator(first)
+        val states = CopyOnWriteArrayList<ConnectionState>()
+        val reader = launch(start = CoroutineStart.UNDISPATCHED) {
+            coordinator.observeConnectionState().collect { states.add(it) }
+        }
+        try {
+            withTimeout(3000) { while (states.lastOrNull() != ConnectionState.CONNECTED) delay(5) }
+            states.clear()
+            coordinator.switchTransport(second)
+            withTimeout(3000) { while (states.lastOrNull() != ConnectionState.CONNECTED) delay(5) }
+            val observed = states.toList()
+            assertEquals(ConnectionState.DISCONNECTED, observed.first())
+            assertEquals(ConnectionState.CONNECTED, observed.last())
+            assertTrue(observed.dropLast(1).all { it == ConnectionState.DISCONNECTED })
+        } finally {
+            reader.cancel()
+            coordinator.shutdown()
+        }
+    }
 
     private class FakeTransport(
         override val isServer: Boolean = false

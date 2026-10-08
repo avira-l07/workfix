@@ -2,14 +2,9 @@ package com.example.itantra.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.itantra.domain.model.*
@@ -46,7 +41,6 @@ fun messageLanguageLabel(message: TransceiverMessage): String {
 
 @Composable
 fun HistoryMessageCard(message: TransceiverMessage, onDelete: () -> Unit, onRetry: () -> Unit, onAcknowledge: () -> Unit, compact: Boolean = false) {
-    val clipboard = LocalClipboardManager.current
     val critical = message.priority == MessagePriority.CRITICAL
     Card(shape = RoundedCornerShape(if (compact) 12.dp else 20.dp), colors = CardDefaults.cardColors(containerColor = if (critical) MaterialTheme.colorScheme.errorContainer else if (compact) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxWidth().padding(if (compact) 10.dp else 16.dp), verticalArrangement = Arrangement.spacedBy(if (compact) 3.dp else 8.dp)) {
@@ -87,14 +81,10 @@ fun HistoryMessageCard(message: TransceiverMessage, onDelete: () -> Unit, onRetr
                     if (message.text.isNotBlank() && message.displayedTextLanguage != null && (!message.isVoiceGenerated || message.speechDurationMillis > 0))
                         SavedSpeechButton("message-${message.messageId}", { com.itantra.app.AppGraph.transceiverCoordinator.replayMessage(message.messageId) }, compact = true)
                 }
-                IconButton(onClick = { clipboard.setText(AnnotatedString(message.text)) }) { Icon(Icons.Filled.ContentCopy, "Copy transcript") }
-                if (message.state == MessageState.ERROR && message.source == MessageSource.LOCAL && message.priority != MessagePriority.CRITICAL &&
-                    (!message.isVoiceGenerated || (message.payloadBytes > 0 && message.rawPcmEquivalentBytes > 0)))
-                    TextButton(onClick = onRetry) { Text("Retry") }
                 if (message.source == MessageSource.REMOTE && message.priority == MessagePriority.CRITICAL && message.state != MessageState.ACKNOWLEDGED)
                     TextButton(onClick = onAcknowledge) { Text("Acknowledge") }
                 if (!compact) Spacer(Modifier.weight(1f))
-                if (RecycleBinPolicy.canTrash(message)) IconButton(onClick = onDelete) { Icon(Icons.Filled.DeleteOutline, "Move message to recycle bin") }
+                MessageActionsButton(message, onDelete = onDelete, onRetry = onRetry)
             }
         }
     }

@@ -42,8 +42,7 @@ class SavedSpeechPlayer(
                 previous?.cancelAndJoin()
                 val audio = session.synthesizeTts(SpeechSynthesisRequest(language, text, "local-replay-$key"))
                 ensureActive()
-                check(audio.sampleRateHz > 0 && audio.pcmAudio.isNotEmpty() &&
-                    audio.pcmAudio.all { it.isFinite() } && audio.pcmAudio.any { kotlin.math.abs(it) > 0.001f }) { "TTS produced silent or invalid audio" }
+                requireSpeechAudio(audio)
                 publish(run, SavedSpeechPlayback(key, busy = true))
                 playAudio(audio)
                 ensureActive()

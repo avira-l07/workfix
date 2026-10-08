@@ -1,0 +1,27 @@
+{
+  "app_version": "1.10-connection-fix",
+  "version_code": 11,
+  "apk": "D:\\new itantra\\artifacts\\connection-fix-2026-10-07\\iTantra-1.10-connection-fix.apk",
+  "apk_bytes": 85616837,
+  "apk_sha256": "74b120b8895f935d948bb3c6d9a594625fb60b89ceff1abeacea564867e45bb7",
+  "host_tests": {
+    "tests": 477,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "apk_crc": "PASS",
+  "apk_v2_signature": "PASS",
+  "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+  "signing_matches_previous": true,
+  "checks_passed": [
+    "Suspended confirmation is not cancelled by local verification",
+    "Failed final confirmation retries until authenticated peer traffic",
+    "Unauthenticated packets cannot stop confirmation retries",
+    "Real localhost TCP, both acceptance orders, peer profiles and bidirectional messages",
+    "Reconnect rejects an old confirmation and old socket error",
+    "Connected transport switch emits a session reset"
+  ],
+  "previous_input_fixes_included": true,
+  "two_phone_wifi_direct_test": "Not run: no connected phones"
+}

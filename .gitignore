@@ -33,3 +33,13 @@ app/src/main/assets/language_packs/**/*.onnx
 **/__pycache__/
 **/node_modules/
 
+# Transient audit runs, test result dumps, and bulky security scanner raw logs
+/audit/2026-10-08/
+*.idsig
+**/test-results/
+**/*-results/
+**/*mobsf*
+artifacts/**/rules/
+
+
+

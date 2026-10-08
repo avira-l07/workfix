@@ -1,0 +1,24 @@
+{
+  "app_version": "1.13-speech-workflow",
+  "version_code": 14,
+  "application_id": "com.example.itantra",
+  "apk": "D:\\new itantra\\artifacts\\speech-workflow-2026-10-07\\iTantra-1.13-speech-workflow.apk",
+  "apk_bytes": 85986169,
+  "apk_sha256": "e2d168ce19391578515557df84cda53fa759314f8c1a4b3d6e86e0df612e75bc",
+  "host_tests": {
+    "tests": 535,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "new_speech_workflow_tests": 22,
+  "apk_crc": "PASS",
+  "apk_v2_signature": "PASS",
+  "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+  "signing_matches_previous": true,
+  "previous_connectivity_and_message_language_fixes_included": true,
+  "phone_microphone_speaker_and_ui": "Not run: no attached Android phones",
+  "stt_accuracy": "Not measured",
+  "tts_intelligibility": "Not measured",
+  "translation_quality": "Not measured; existing neural translation engine retained"
+}

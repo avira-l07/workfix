@@ -1,0 +1,38 @@
+{
+  "app_version": "1.11-connectivity-audit",
+  "version_code": 12,
+  "application_id": "com.example.itantra",
+  "apk": "D:\\new itantra\\artifacts\\connectivity-audit-2026-10-07\\iTantra-1.11-connectivity-audit.apk",
+  "apk_bytes": 85935247,
+  "apk_sha256": "b5ab8b07ba81ee536637db9150380d63a77ef1370ce29921bc14ed126687538f",
+  "host_tests": {
+    "tests": 505,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "audited_suites": {
+    "com.itantra.core.transport.peer.BluetoothSocketLifecycleTest": 6,
+    "com.itantra.core.transport.peer.WifiSocketAuditTest": 4,
+    "com.itantra.core.transport.peer.WifiManagerLifecycleTest": 3,
+    "com.itantra.core.transport.ConnectionReceiptAuditTest": 5,
+    "com.itantra.core.transport.ConnectionServiceTypeTest": 2,
+    "com.itantra.regression.MessageRoutingAuditTest": 7,
+    "com.itantra.regression.InitialHandshakeTimeoutTest": 1,
+    "com.itantra.regression.VerificationDeliveryTest": 2,
+    "com.itantra.regression.WifiVerificationIntegrationTest": 1,
+    "com.itantra.regression.TransportSwitchTest": 2
+  },
+  "new_audit_test_count": 28,
+  "apk_crc": "PASS",
+  "apk_v2_signature": "PASS",
+  "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+  "signing_matches_previous": true,
+  "previous_input_and_confirmation_fixes_included": true,
+  "actual_localhost_tcp_tested": true,
+  "bluetooth_production_stream_logic_tested": true,
+  "wifi_direct_native_group_negotiation": "Not run: no attached Android devices",
+  "bluetooth_native_pairing_and_radio": "Not run: no attached Android devices",
+  "two_phone_ui_and_background_tests": "Not run: see CONNECTIVITY-AUDIT.md checklist",
+  "audit_report": "D:\\new itantra\\artifacts\\connectivity-audit-2026-10-07\\CONNECTIVITY-AUDIT.md"
+}

@@ -6,179 +6,60 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AudioEffect
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
-enum class AecStatus {
-    AEC_SUPPORTED,
-    AEC_ENABLED,
-    AEC_DISABLED,
-    AEC_UNAVAILABLE
-}
+enum class AecStatus { AEC_SUPPORTED, AEC_ENABLED, AEC_DISABLED, AEC_UNAVAILABLE }
+
+/** SharedFlow cannot deliver upstream exceptions. Deliver them as values before sharing. */
+internal fun shareMicrophoneFrames(source: Flow<FloatArray>, scope: CoroutineScope): Flow<FloatArray> =
+    source.map { Result.success(it) }
+        .catch { emit(Result.failure(it)) }
+        .buffer(64)
+        .shareIn(scope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 0), replay = 0)
+        .map { it.getOrThrow() }
 
 class MicrophoneAudioSource(
     scope: CoroutineScope,
-    private val enableAecIfAvailable: Boolean = false
+    private val enableAecIfAvailable: Boolean = false,
 ) {
-
     var currentAecStatus: AecStatus = AecStatus.AEC_UNAVAILABLE
         private set
 
     @SuppressLint("MissingPermission")
-    val stream: SharedFlow<FloatArray> = callbackFlow {
+    val stream: Flow<FloatArray> = shareMicrophoneFrames(flow {
         val sampleRate = 16000
-        val minBufferSize = AudioRecord.getMinBufferSize(
-            sampleRate,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT
-        )
-
-        if (minBufferSize <= 0) {
-            close(IllegalStateException("Invalid AudioRecord minBufferSize: $minBufferSize"))
-            return@callbackFlow
-        }
-
+        val minBufferSize = AudioRecord.getMinBufferSize(sampleRate,
+            AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        check(minBufferSize > 0) { "Invalid AudioRecord minBufferSize: $minBufferSize" }
         val bufferSize = minBufferSize * 2
-
-        val audioRecord = try {
-            AudioRecord(
-                MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize
-            )
-        } catch (e: SecurityException) {
-            close(SecurityException("Permission denied for RECORD_AUDIO", e))
-            return@callbackFlow
-        } catch (e: IllegalArgumentException) {
-            close(IllegalArgumentException("Unsupported audio parameters: ${e.message}", e))
-            return@callbackFlow
-        }
-
-        if (audioRecord.state != AudioRecord.STATE_INITIALIZED) {
-            try { audioRecord.release() } catch (_: Exception) {}
-            close(IllegalStateException("AudioRecord initialization failed (state uninitialized)"))
-            return@callbackFlow
-        }
-
+        val recorder = AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRate,
+            AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize)
         var echoCanceler: AcousticEchoCanceler? = null
         try {
-            if (enableAecIfAvailable && AcousticEchoCanceler.isAvailable()) {
-                currentAecStatus = AecStatus.AEC_SUPPORTED
-                echoCanceler = AcousticEchoCanceler.create(audioRecord.audioSessionId)
-                if (echoCanceler != null) {
-                    val res = echoCanceler.setEnabled(true)
-                    currentAecStatus = if (res == AudioEffect.SUCCESS && echoCanceler.enabled) {
-                        AecStatus.AEC_ENABLED
-                    } else {
-                        AecStatus.AEC_DISABLED
-                    }
-                } else {
-                    currentAecStatus = AecStatus.AEC_UNAVAILABLE
-                }
-            } else {
-                currentAecStatus = AecStatus.AEC_UNAVAILABLE
-            }
-        } catch (t: Throwable) {
-            // Devices with buggy HAL or missing effects fallback gracefully
+            check(recorder.state == AudioRecord.STATE_INITIALIZED) { "Microphone initialization failed" }
             currentAecStatus = AecStatus.AEC_UNAVAILABLE
-            t.printStackTrace()
-        }
-
-        try {
-            audioRecord.startRecording()
-        } catch (e: SecurityException) {
-            try { echoCanceler?.release() } catch (_: Throwable) {}
-            try { audioRecord.release() } catch (_: Throwable) {}
-            close(SecurityException("AudioRecord.startRecording SecurityException: ${e.message}", e))
-            return@callbackFlow
-        } catch (e: IllegalStateException) {
-            try { echoCanceler?.release() } catch (_: Throwable) {}
-            try { audioRecord.release() } catch (_: Throwable) {}
-            close(IllegalStateException("AudioRecord.startRecording IllegalStateException: ${e.message}", e))
-            return@callbackFlow
-        }
-
-        val buffer = ShortArray(bufferSize / 2)
-        var zeroReadCount = 0
-
-        try {
-            while (isActive) {
-                val readResult = audioRecord.read(buffer, 0, buffer.size)
-                when {
-                    readResult > 0 -> {
-                        zeroReadCount = 0
-                        val floatArray = FloatArray(readResult)
-                        for (i in 0 until readResult) {
-                            floatArray[i] = buffer[i] / 32768.0f
-                        }
-                        val sendResult = trySend(floatArray)
-                        if (sendResult.isFailure) {
-                            android.util.Log.w("MicrophoneAudioSource", "Audio buffer dropped! trySend failed: $sendResult")
-                        }
-                    }
-                    readResult == 0 -> {
-                        zeroReadCount++
-                        if (zeroReadCount > 10) {
-                            kotlinx.coroutines.delay(10)
-                        } else {
-                            kotlinx.coroutines.yield()
-                        }
-                    }
-                    readResult == AudioRecord.ERROR_DEAD_OBJECT -> {
-                        android.util.Log.e("MicrophoneAudioSource", "AudioRecord read error: ERROR_DEAD_OBJECT")
-                        close(IllegalStateException("AudioRecord dead object"))
-                        break
-                    }
-                    readResult == AudioRecord.ERROR_INVALID_OPERATION -> {
-                        android.util.Log.e("MicrophoneAudioSource", "AudioRecord read error: ERROR_INVALID_OPERATION")
-                        close(IllegalStateException("AudioRecord invalid operation"))
-                        break
-                    }
-                    readResult == AudioRecord.ERROR_BAD_VALUE -> {
-                        android.util.Log.e("MicrophoneAudioSource", "AudioRecord read error: ERROR_BAD_VALUE")
-                        close(IllegalArgumentException("AudioRecord bad value"))
-                        break
-                    }
-                    else -> {
-                        // Any other negative readResult is a terminal error
-                        android.util.Log.e("MicrophoneAudioSource", "AudioRecord read terminal error: $readResult")
-                        close(IllegalStateException("AudioRecord read error: $readResult"))
-                        break
-                    }
+            try {
+                if (enableAecIfAvailable && AcousticEchoCanceler.isAvailable()) {
+                    currentAecStatus = AecStatus.AEC_SUPPORTED
+                    echoCanceler = AcousticEchoCanceler.create(recorder.audioSessionId)
+                    currentAecStatus = if (echoCanceler?.setEnabled(true) == AudioEffect.SUCCESS && echoCanceler?.enabled == true)
+                        AecStatus.AEC_ENABLED else AecStatus.AEC_DISABLED
                 }
+            } catch (_: Exception) { currentAecStatus = AecStatus.AEC_UNAVAILABLE }
+            recorder.startRecording()
+            check(recorder.recordingState == AudioRecord.RECORDSTATE_RECORDING) { "Microphone did not start" }
+            val buffer = ShortArray(bufferSize / 2)
+            while (currentCoroutineContext().isActive) {
+                // Blocking HAL reads can otherwise prevent cancellation and microphone release.
+                val read = recorder.read(buffer, 0, buffer.size, AudioRecord.READ_NON_BLOCKING)
+                check(read >= 0) { "Microphone read failed ($read). Check microphone access and retry." }
+                if (read > 0) emit(FloatArray(read) { buffer[it] / 32768f }) else delay(10)
             }
         } finally {
-            try {
-                echoCanceler?.release()
-            } catch (t: Throwable) {
-                t.printStackTrace()
-            }
-            try {
-                audioRecord.stop()
-            } catch (_: Throwable) {}
-            try {
-                audioRecord.release()
-            } catch (_: Throwable) {}
+            try { echoCanceler?.release() } catch (_: Exception) {}
+            try { recorder.stop() } catch (_: Exception) {}
+            recorder.release()
         }
-
-        awaitClose {
-            // Releasing is handled in finally block
-        }
-    }.buffer(64)
-     .flowOn(Dispatchers.IO)
-     .shareIn(
-         scope = scope,
-         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 1000),
-         replay = 0
-     )
+    }.flowOn(Dispatchers.IO), scope)
 }

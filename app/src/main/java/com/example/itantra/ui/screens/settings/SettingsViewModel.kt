@@ -3,16 +3,34 @@ package com.example.itantra.ui.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.example.itantra.data.settings.AppSettings
 import com.example.itantra.data.settings.SettingsRepository
 import com.example.itantra.data.settings.ThemeMode
 import com.example.itantra.data.settings.ColorPalette
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(private val repository: SettingsRepository) : ViewModel() {
+
+    private val _operatorNameInput = MutableStateFlow<TextFieldValue?>(null)
+    val operatorNameInput: StateFlow<TextFieldValue?> = _operatorNameInput.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val name = repository.settings.first().operatorName
+            // Load once: asynchronous disk echoes must not replace an active edit.
+            if (_operatorNameInput.value == null) {
+                _operatorNameInput.value = TextFieldValue(name, selection = TextRange(name.length))
+            }
+        }
+    }
 
     val settings: StateFlow<AppSettings> = repository.settings.stateIn(
         scope = viewModelScope,
@@ -26,11 +44,16 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     fun setEmergencyPlaybackVolume(value: Int) = update { it.copy(emergencyPlaybackVolume = value.coerceIn(80, 100)) }
     fun setEmergencyTtsAnnounce(enabled: Boolean) = update { it.copy(emergencyTtsAnnounce = enabled) }
     fun setEmergencyRequireConfirmation(enabled: Boolean) = update { it.copy(emergencyRequireConfirmation = enabled) }
-    fun setOperatorName(name: String) = update { it.copy(operatorName = name) }
+    fun setOperatorName(value: TextFieldValue) {
+        val previousText = _operatorNameInput.value?.text
+        _operatorNameInput.value = value
+        if (value.text != previousText) update { it.copy(operatorName = value.text) }
+    }
     fun setThemeMode(mode: ThemeMode) = update { it.copy(themeMode = mode) }
     fun setColorPalette(palette: ColorPalette) = update { it.copy(colorPalette = palette) }
 
     fun resetToDefault() {
+        _operatorNameInput.value = TextFieldValue()
         viewModelScope.launch { repository.resetToDefault() }
     }
 

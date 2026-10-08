@@ -13,6 +13,22 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
+/** A stalled, stopped or cancelled track must never be reported as completed speech. */
+internal suspend fun awaitPlaybackDrain(
+    frames: Long, sampleRate: Int, playbackHead: () -> Long, isPlaying: () -> Boolean,
+    nowMillis: () -> Long = { System.nanoTime() / 1_000_000L },
+) {
+    require(sampleRate > 0)
+    val deadline = nowMillis() + (frames * 1000L / sampleRate) + 250L
+    while (true) {
+        currentCoroutineContext().ensureActive()
+        if (playbackHead() >= frames) return
+        check(isPlaying()) { "PLAYBACK_INTERRUPTED" }
+        check(nowMillis() < deadline) { "PLAYBACK_DRAIN_TIMEOUT" }
+        delay(20)
+    }
+}
+
 /**
  * Handles playing synthesized raw PCM float arrays directly to the device speaker.
  * Used for Text-to-Speech output and safety-critical emergency audio alerts.
@@ -149,7 +165,13 @@ class SpeakerAudioSink(
 
                 val req = AudioFocusRequest.Builder(focusGain)
                     .setAudioAttributes(attributes)
-                    .setOnAudioFocusChangeListener { /* handle ducking */ }
+                    .setOnAudioFocusChangeListener { change ->
+                        when (change) {
+                            AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> stopImmediate()
+                            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> audioTrack?.setVolume(0.2f)
+                            AudioManager.AUDIOFOCUS_GAIN -> audioTrack?.setVolume(1f)
+                        }
+                    }
                     .build()
 
                 audioFocusRequest = req
@@ -168,8 +190,11 @@ class SpeakerAudioSink(
                 AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> android.util.Log.i("SpeakerAudioSink", "AUDIO_FOCUS_DELAYED")
                 else -> android.util.Log.w("SpeakerAudioSink", "AUDIO_FOCUS_FAILED ($focusResult)")
             }
+            check(focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) { "AUDIO_FOCUS_NOT_GRANTED" }
         } catch (e: Exception) {
             android.util.Log.w("SpeakerAudioSink", "Audio focus request failed with exception", e)
+            release()
+            throw IllegalStateException("Audio focus unavailable; try playing again", e)
         }
     }
 
@@ -190,11 +215,10 @@ class SpeakerAudioSink(
      * Completes write across multiple chunks if needed and validates frame counts.
      */
     suspend fun play(samples: FloatArray) = withContext(Dispatchers.IO) {
+        currentCoroutineContext().ensureActive()
         if (samples.isEmpty()) return@withContext
         val track = audioTrack ?: throw IllegalStateException("AudioSink not initialized")
-        if (track.playState != AudioTrack.PLAYSTATE_PLAYING) {
-            track.play()
-        }
+        check(track.playState == AudioTrack.PLAYSTATE_PLAYING) { "PLAYBACK_INTERRUPTED" }
         var offset = 0
         while (offset < samples.size) {
             currentCoroutineContext().ensureActive()
@@ -216,19 +240,11 @@ class SpeakerAudioSink(
     suspend fun flushAndStop() = withContext(Dispatchers.IO) {
         val track = audioTrack ?: return@withContext
         try {
-            if (track.playState == AudioTrack.PLAYSTATE_PLAYING && sampleRate > 0) {
-                val maxWaitMillis = ((totalFramesWritten * 1000L) / sampleRate) + 250L
-                val startTime = System.currentTimeMillis()
-
-                // Wait until playback head reaches queued frames or timeout expires
-                while (track.playbackHeadPosition < totalFramesWritten && (System.currentTimeMillis() - startTime) < maxWaitMillis) {
-                    delay(20)
-                }
-            }
-            track.stop()
-        } catch (e: Exception) {
-            e.printStackTrace()
+            awaitPlaybackDrain(totalFramesWritten, sampleRate,
+                { track.playbackHeadPosition.toLong() and 0xffffffffL },
+                { track.playState == AudioTrack.PLAYSTATE_PLAYING })
         } finally {
+            try { track.stop() } catch (_: Exception) {}
             audioManager?.let { clearSpeakerRouting(it) }
         }
     }

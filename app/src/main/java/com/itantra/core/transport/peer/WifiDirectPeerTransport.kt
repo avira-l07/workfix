@@ -56,7 +56,7 @@ class WifiDirectPeerTransport : PeerTransport {
     private var inputStream: InputStream? = null
     private var outputStream: OutputStream? = null
 
-    private val stateFlow = MutableStateFlow(ConnectionState.DISCONNECTED)
+    private val stateFlow = SocketState { connectionId }
     // FIX 019: replay = 16 so initial SECURE_HELLO is never dropped before TransportCoordinator subscribes
     private val incomingFlow = MutableSharedFlow<ByteArray>(replay = 16, extraBufferCapacity = 64)
 
@@ -68,14 +68,16 @@ class WifiDirectPeerTransport : PeerTransport {
 
     private val connectionMutex = Mutex()
     private val writeMutex = Mutex()
+    private val connectionGeneration = java.util.concurrent.atomic.AtomicLong()
 
     private var _isServer = false
     override val isServer: Boolean get() = _isServer
 
     override val isConnected: Boolean
         get() = stateFlow.value == ConnectionState.CONNECTED
+    override val connectionId: Long get() = connectionGeneration.get()
 
-    override fun observeConnectionState(): Flow<ConnectionState> = stateFlow
+    override fun observeConnectionState(): Flow<ConnectionState> = stateFlow.observe()
 
     override fun receive(): Flow<ByteArray> = incomingFlow
 
@@ -88,34 +90,37 @@ class WifiDirectPeerTransport : PeerTransport {
             disconnectInternal()
             _isServer = true
             _lastError.value = WifiDirectError.NONE
+            val generation = connectionGeneration.get()
+            stateFlow.value = ConnectionState.LISTENING
 
             connectionJob = scope.launch(Dispatchers.IO) {
-                stateFlow.value = ConnectionState.LISTENING
                 debugLog("TCP Server starting on port $port (Group Owner role)")
                 try {
                     val srv = ServerSocket()
                     srv.reuseAddress = true
                     srv.soTimeout = 30_000  // Don't block accept() forever; allows clean coroutine cancellation
+                    synchronized(this@WifiDirectPeerTransport) {
+                        if (connectionGeneration.get() != generation) {
+                            srv.close()
+                            return@launch
+                        }
+                        serverSocket = srv
+                    }
                     srv.bind(InetSocketAddress(port))
-                    serverSocket = srv
                     debugLog("TCP Server bound and listening on port $port")
 
                     val socket = srv.accept()
                     debugLog("TCP Server accepted socket from ${socket.inetAddress?.hostAddress?.take(8)}***")
-                    manageConnectedSocket(socket)
+                    manageConnectedSocket(socket, generation)
                 } catch (e: CancellationException) {
                     debugLog("Server accept job cancelled")
                     throw e
                 } catch (e: java.net.SocketTimeoutException) {
                     debugLog("Server accept timed out after 30s — no client arrived")
-                    _lastError.value = WifiDirectError.TCP_SERVER_FAILED
-                    stateFlow.value = ConnectionState.ERROR
-                    disconnectInternal()
+                    failConnection(generation, WifiDirectError.TCP_SERVER_FAILED)
                 } catch (e: Exception) {
                     debugLog("Server error: ${e.javaClass.simpleName} - ${e.message}")
-                    _lastError.value = WifiDirectError.TCP_SERVER_FAILED
-                    stateFlow.value = ConnectionState.ERROR
-                    disconnectInternal()
+                    failConnection(generation, WifiDirectError.TCP_SERVER_FAILED)
                 }
             }
         }
@@ -130,9 +135,10 @@ class WifiDirectPeerTransport : PeerTransport {
             disconnectInternal()
             _isServer = false
             _lastError.value = WifiDirectError.NONE
+            val generation = connectionGeneration.get()
+            stateFlow.value = ConnectionState.CONNECTING
 
             connectionJob = scope.launch(Dispatchers.IO) {
-                stateFlow.value = ConnectionState.CONNECTING
                 debugLog("TCP Client connecting to ${hostAddress.hostAddress?.take(8)}***:$port")
 
                 // Retry up to 3 times with 1.5s backoff: the Group Owner's ServerSocket may not be
@@ -151,12 +157,19 @@ class WifiDirectPeerTransport : PeerTransport {
                     try {
                         val socket = Socket()
                         pendingSocket = socket
+                        synchronized(this@WifiDirectPeerTransport) {
+                            if (connectionGeneration.get() != generation) {
+                                socket.close()
+                                return@launch
+                            }
+                            activeSocket = socket
+                        }
                         socket.tcpNoDelay = true
                         socket.keepAlive = true
                         socket.connect(InetSocketAddress(hostAddress, port), CONNECT_TIMEOUT_MS)
                         debugLog("TCP Client connected successfully to group owner (attempt $attempt)")
                         pendingSocket = null
-                        manageConnectedSocket(socket)
+                        manageConnectedSocket(socket, generation)
                         return@launch  // Success — exit retry loop
                     } catch (e: CancellationException) {
                         try { pendingSocket?.close() } catch (_: Exception) {}
@@ -167,18 +180,14 @@ class WifiDirectPeerTransport : PeerTransport {
                         debugLog("TCP connect timeout on attempt $attempt")
                         lastException = e
                         if (attempt == maxAttempts) {
-                            _lastError.value = WifiDirectError.TCP_CONNECT_TIMEOUT
-                            stateFlow.value = ConnectionState.ERROR
-                            disconnectInternal()
+                            failConnection(generation, WifiDirectError.TCP_CONNECT_TIMEOUT)
                         }
                     } catch (e: Exception) {
                         try { pendingSocket?.close() } catch (_: Exception) {}
                         debugLog("TCP Client connect error attempt $attempt: ${e.javaClass.simpleName} - ${e.message}")
                         lastException = e
                         if (attempt == maxAttempts) {
-                            _lastError.value = WifiDirectError.TCP_CONNECT_FAILED
-                            stateFlow.value = ConnectionState.ERROR
-                            disconnectInternal()
+                            failConnection(generation, WifiDirectError.TCP_CONNECT_FAILED)
                         }
                     }
                 }
@@ -190,7 +199,14 @@ class WifiDirectPeerTransport : PeerTransport {
     // Connected Socket Management
     // -------------------------------------------------------------------------
 
-    private fun manageConnectedSocket(socket: Socket) {
+    @Synchronized
+    private fun manageConnectedSocket(socket: Socket, generation: Long) {
+        if (connectionGeneration.get() != generation) {
+            socket.close()
+            return
+        }
+        socket.tcpNoDelay = true
+        socket.keepAlive = true
         activeSocket = socket
         inputStream = socket.getInputStream()
         outputStream = socket.getOutputStream()
@@ -202,18 +218,18 @@ class WifiDirectPeerTransport : PeerTransport {
 
         stateFlow.value = ConnectionState.CONNECTED
         debugLog("TCP transport CONNECTED: role=${if (_isServer) "SERVER" else "CLIENT"}")
-        startReaderLoop()
+        startReaderLoop(socket, generation)
     }
 
     // -------------------------------------------------------------------------
     // TCP Reader Loop
     // -------------------------------------------------------------------------
 
-    private fun startReaderLoop() {
+    private fun startReaderLoop(socket: Socket, generation: Long) {
         readJob?.cancel()
+        val inStream = inputStream ?: return
         readJob = scope.launch(Dispatchers.IO) {
             try {
-                val inStream = inputStream ?: return@launch
                 while (isActive) {
                     // 1. Read 4-byte big-endian frame length prefix
                     val lengthBuffer = ByteArray(4)
@@ -240,17 +256,19 @@ class WifiDirectPeerTransport : PeerTransport {
                     }
 
                     // 4. Emit framed payload upward
-                    incomingFlow.emit(frameData)
-                }
-            } catch (e: Exception) {
-                if (e !is CancellationException) {
-                    debugLog("Reader loop terminated: ${e.javaClass.simpleName}: ${e.message}")
-                    if (stateFlow.value == ConnectionState.CONNECTED) {
-                        _lastError.value = WifiDirectError.SOCKET_CLOSED
-                        stateFlow.value = ConnectionState.DISCONNECTED
+                    if (connectionGeneration.get() != generation) return@launch
+                    synchronized(this@WifiDirectPeerTransport) {
+                        if (connectionGeneration.get() != generation) return@launch
+                        if (!incomingFlow.tryEmit(frameData)) throw IOException("Receive queue full")
                     }
                 }
-                disconnectInternal()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                synchronized(this@WifiDirectPeerTransport) {
+                    if (connectionGeneration.get() != generation || activeSocket !== socket) return@launch
+                    debugLog("Reader loop terminated: ${e.javaClass.simpleName}: ${e.message}")
+                    failConnection(generation, WifiDirectError.SOCKET_CLOSED)
+                }
             }
         }
     }
@@ -259,29 +277,37 @@ class WifiDirectPeerTransport : PeerTransport {
     // Send
     // -------------------------------------------------------------------------
 
-    override suspend fun send(bytes: ByteArray) {
+    override suspend fun send(bytes: ByteArray) = send(bytes, connectionId)
+
+    override suspend fun send(bytes: ByteArray, expectedConnectionId: Long) {
         // Throw on disconnect so callers cannot falsely mark a message as SENT
         if (!isConnected) throw IOException("Cannot send: Wi-Fi Direct transport is not connected")
+        val generation = expectedConnectionId
 
         withContext(Dispatchers.IO) {
             writeMutex.withLock {
+                val timeout = scope.launch {
+                    delay(CONNECT_TIMEOUT_MS.toLong())
+                    failConnection(generation, WifiDirectError.SEND_FAILED)
+                }
                 try {
-                    val out = outputStream ?: run {
-                        stateFlow.value = ConnectionState.ERROR
-                        _lastError.value = WifiDirectError.SEND_FAILED
-                        disconnectInternal()
-                        throw IOException("Cannot send: output stream is null")
+                    val out = synchronized(this@WifiDirectPeerTransport) {
+                        if (connectionGeneration.get() != generation || !isConnected) {
+                            throw IOException("Cannot send: Wi-Fi Direct connection changed")
+                        }
+                        outputStream ?: throw IOException("Cannot send: output stream is null")
                     }
                     out.write(bytes)
                     out.flush()
+                    if (connectionGeneration.get() != generation) throw IOException("Connection ended during write")
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: IOException) {
                     debugLog("send() IOException: ${e.message}")
-                    _lastError.value = WifiDirectError.SEND_FAILED
-                    stateFlow.value = ConnectionState.ERROR
-                    disconnectInternal()
+                    failConnection(generation, WifiDirectError.SEND_FAILED)
                     throw e
+                } finally {
+                    timeout.cancel()
                 }
             }
         }
@@ -298,7 +324,17 @@ class WifiDirectPeerTransport : PeerTransport {
         }
     }
 
+    @Synchronized
+    private fun failConnection(generation: Long, error: WifiDirectError) {
+        if (connectionGeneration.get() != generation) return
+        _lastError.value = error
+        disconnectInternal()
+        stateFlow.value = ConnectionState.ERROR
+    }
+
+    @Synchronized
     private fun disconnectInternal() {
+        connectionGeneration.incrementAndGet()
         stateFlow.value = ConnectionState.DISCONNECTED
         _connectedHostAddress.value = null
         connectionJob?.cancel()
@@ -306,10 +342,10 @@ class WifiDirectPeerTransport : PeerTransport {
         readJob?.cancel()
         readJob = null
 
-        try { inputStream?.close() } catch (_: Exception) {}
-        try { outputStream?.close() } catch (_: Exception) {}
         try { activeSocket?.close() } catch (_: Exception) {}
         try { serverSocket?.close() } catch (_: Exception) {}
+        try { inputStream?.close() } catch (_: Exception) {}
+        try { outputStream?.close() } catch (_: Exception) {}
 
         // FIX 019: Reset replay cache on terminal disconnect so old frames are not replayed on reconnect
         incomingFlow.resetReplayCache()

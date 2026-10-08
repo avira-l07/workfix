@@ -21,13 +21,16 @@ import com.example.itantra.MainActivity
 internal fun microphoneForegroundServiceType(sdk: Int): Int =
     if (sdk >= 30) ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else 0
 
+internal fun operationalForegroundServiceType(sdk: Int, microphone: Boolean, peer: Boolean): Int =
+    (if (microphone) microphoneForegroundServiceType(sdk) else 0) or
+        (if (peer && sdk >= 29) ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE else 0)
+
 /**
  * Operational Foreground Service for:
  * 1. Continuous mode background listening with explicit microphone type.
  * 2. Active safety-critical emergency alert persistence when activity is in background or screen is off.
  *
- * Adheres to strict least-privilege: service is never run unless an active continuous mode
- * or an unresolved emergency alert is running.
+ * Runs only for an active voice operation, emergency, or verified peer connection.
  */
 class OperationalForegroundService : Service() {
 
@@ -38,6 +41,8 @@ class OperationalForegroundService : Service() {
         const val EMERGENCY_NOTIFICATION_ID = 1002
 
         const val ACTION_START_CONTINUOUS = "com.itantra.action.START_CONTINUOUS"
+        const val ACTION_START_PEER = "com.itantra.action.START_PEER"
+        const val ACTION_STOP_PEER = "com.itantra.action.STOP_PEER"
         const val ACTION_STOP_CONTINUOUS = "com.itantra.action.STOP_CONTINUOUS"
         const val ACTION_TRIGGER_EMERGENCY = "com.itantra.action.TRIGGER_EMERGENCY"
         const val ACTION_RESOLVE_EMERGENCY = "com.itantra.action.RESOLVE_EMERGENCY"
@@ -69,6 +74,22 @@ class OperationalForegroundService : Service() {
             }
         }
 
+        fun startPeerConnection(context: Context): Boolean = try {
+            context.startForegroundService(Intent(context, OperationalForegroundService::class.java).apply {
+                action = ACTION_START_PEER
+            })
+            true
+        } catch (e: RuntimeException) {
+            android.util.Log.w("iTantraConnection", "Background connection service unavailable: ${e.message}")
+            false
+        }
+
+        fun stopPeerConnection(context: Context) {
+            try { context.startService(Intent(context, OperationalForegroundService::class.java).apply {
+                action = ACTION_STOP_PEER
+            }) } catch (_: RuntimeException) {}
+        }
+
         fun stopContinuous(context: Context) {
             val intent = Intent(context, OperationalForegroundService::class.java).apply {
                 action = ACTION_STOP_CONTINUOUS
@@ -82,7 +103,7 @@ class OperationalForegroundService : Service() {
 
                 val continuousChannel = NotificationChannel(
                     CHANNEL_ID,
-                    "iTantra Continuous Mode",
+                    "iTantra connection and voice",
                     NotificationManager.IMPORTANCE_LOW
                 ).apply {
                     description = "Notification for active continuous speech transceiver"
@@ -152,11 +173,12 @@ class OperationalForegroundService : Service() {
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var isContinuousRunning = false
+    private var hasPeerConnection = false
     private var hasActiveEmergency = false
     private val wakeLockHandler = Handler(Looper.getMainLooper())
     private val renewWakeLock = object : Runnable {
         override fun run() {
-            if (isContinuousRunning || hasActiveEmergency) {
+            if (isContinuousRunning || hasActiveEmergency || hasPeerConnection) {
                 wakeLock?.acquire(WAKE_LOCK_TIMEOUT_MS)
                 wakeLockHandler.postDelayed(this, WAKE_LOCK_TIMEOUT_MS / 2)
             }
@@ -170,26 +192,32 @@ class OperationalForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
+            ACTION_START_PEER -> {
+                hasPeerConnection = true
+                try { refreshForeground(); acquireWakeLock() }
+                catch (e: RuntimeException) {
+                    hasPeerConnection = false
+                    android.util.Log.w("iTantraConnection", "Foreground connection service failed", e)
+                    if (!isContinuousRunning && !hasActiveEmergency) { releaseWakeLock(); stopSelf(startId) }
+                }
+            }
+            ACTION_STOP_PEER -> {
+                hasPeerConnection = false
+                if (!isContinuousRunning && !hasActiveEmergency) {
+                    releaseWakeLock(); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
+                } else if (isContinuousRunning) refreshForeground()
+            }
             ACTION_START_CONTINUOUS -> {
                 isContinuousRunning = true
                 try {
-                    val notification = buildContinuousNotification()
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        startForeground(
-                            NOTIFICATION_ID,
-                            notification,
-                            microphoneForegroundServiceType(Build.VERSION.SDK_INT)
-                        )
-                    } else {
-                        startForeground(NOTIFICATION_ID, notification)
-                    }
+                    refreshForeground()
                     acquireWakeLock()
                     _continuousReady.value = true
                 } catch (e: Exception) {
                     isContinuousRunning = false
                     _continuousReady.value = false
                     _lastStartupError.value = "Continuous listening stopped: microphone service is unavailable. Check permissions and retry while iTantra is open."
-                    if (!hasActiveEmergency) {
+                    if (!hasActiveEmergency && !hasPeerConnection) {
                         releaseWakeLock()
                         stopSelf(startId)
                     }
@@ -198,13 +226,13 @@ class OperationalForegroundService : Service() {
             ACTION_STOP_CONTINUOUS -> {
                 isContinuousRunning = false
                 _continuousReady.value = false
-                if (!hasActiveEmergency) {
+                if (!hasActiveEmergency && !hasPeerConnection) {
                     releaseWakeLock()
                     try {
                         stopForeground(STOP_FOREGROUND_REMOVE)
                     } catch (_: Exception) {}
                     stopSelf()
-                }
+                } else if (hasPeerConnection) refreshForeground()
             }
             ACTION_TRIGGER_EMERGENCY -> {
                 hasActiveEmergency = true
@@ -218,7 +246,7 @@ class OperationalForegroundService : Service() {
                 hasActiveEmergency = false
                 val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 manager.cancel(EMERGENCY_NOTIFICATION_ID)
-                if (!isContinuousRunning) {
+                if (!isContinuousRunning && !hasPeerConnection) {
                     releaseWakeLock()
                     try {
                         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -264,8 +292,9 @@ class OperationalForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("iTantra Continuous Mode Active")
-            .setContentText("Microphone active for automated half-duplex voice transceiver")
+            .setContentTitle(if (isContinuousRunning) "iTantra Continuous Mode Active" else "iTantra peer connected")
+            .setContentText(if (isContinuousRunning) "Microphone active for automated half-duplex voice transceiver"
+                else "Secure nearby messages are active. Open iTantra to disconnect.")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -302,6 +331,13 @@ class OperationalForegroundService : Service() {
 
     private fun createNotificationChannels() {
         ensureNotificationChannels(this)
+    }
+
+    private fun refreshForeground() {
+        val notification = buildContinuousNotification()
+        if (Build.VERSION.SDK_INT >= 29) startForeground(NOTIFICATION_ID, notification,
+            operationalForegroundServiceType(Build.VERSION.SDK_INT, isContinuousRunning, hasPeerConnection))
+        else startForeground(NOTIFICATION_ID, notification)
     }
 
     override fun onDestroy() {

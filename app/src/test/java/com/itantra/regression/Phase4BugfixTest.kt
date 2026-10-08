@@ -18,7 +18,7 @@ class Phase4BugfixTest {
             Locale.setDefault(Locale.GERMANY)
             BugfixFixture().use { f ->
                 f.verify()
-                f.coordinator.sendLocationMessage("peer")
+                f.coordinator.sendLocationMessage()
                 f.awaitCondition { f.coordinator.messages.value.any { it.state == MessageState.DELIVERED } }
                 val message = f.coordinator.messages.value.single()
                 assertTrue(message.isLocation)
@@ -62,7 +62,7 @@ class Phase4BugfixTest {
                 }
                 TransmissionMetrics(packetBytes = Measurement.Measured(99))
             }
-            f.coordinator.sendLocationMessage("peer")
+            f.coordinator.sendLocationMessage()
             withTimeout(5000) { sendReturned.await() }
             f.awaitCondition { f.coordinator.messages.value.singleOrNull()?.packetBytes == 99 }
             assertEquals(MessageState.DELIVERED, f.coordinator.messages.value.single().state)

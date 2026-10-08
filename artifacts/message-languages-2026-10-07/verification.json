@@ -1,0 +1,22 @@
+{
+  "app_version": "1.12-message-languages",
+  "version_code": 13,
+  "application_id": "com.example.itantra",
+  "apk": "D:\\new itantra\\artifacts\\message-languages-2026-10-07\\iTantra-1.12-message-languages.apk",
+  "apk_bytes": 85833111,
+  "apk_sha256": "ff63a575c4a552e5d519862b9d6b36353e0d082aec6a8a487325c937e7e08242",
+  "host_tests": {
+    "tests": 513,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "new_message_language_tests": 8,
+  "apk_crc": "PASS",
+  "apk_v2_signature": "PASS",
+  "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+  "signing_matches_previous": true,
+  "previous_connectivity_and_input_fixes_included": true,
+  "phone_ui_gps_and_audio": "Not run: no attached Android phones",
+  "translation_quality": "Not measured; uses the existing neural translation engine"
+}

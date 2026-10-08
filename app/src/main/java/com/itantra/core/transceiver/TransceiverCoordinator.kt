@@ -5,6 +5,7 @@ import android.provider.Settings
 import com.itantra.core.audio.SpeakerAudioSink
 import com.itantra.core.crypto.SecureSessionManager
 import com.itantra.core.translation.TRANSLATION_SCOPE_NOTE
+import com.itantra.core.translation.TranslationResult
 import com.itantra.core.crypto.SecureSessionState
 import android.content.Context
 import com.itantra.core.inference.ActiveLanguageSessionManager
@@ -29,8 +30,10 @@ import com.itantra.domain.model.MessageState
 import com.itantra.domain.model.SpeechSynthesisRequest
 import com.itantra.domain.model.TransceiverMessage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -65,7 +68,8 @@ class TransceiverCoordinator(
     private val ttsCapabilityProvider: TtsCapabilityProvider? = null,
     private val locationProvider: LocationProvider = DefaultGpsLocationProvider(context),
     private val voiceNoteDao: com.itantra.data.db.VoiceNoteDao? = null,
-    private val peerDao: com.itantra.data.db.PeerDao? = null
+    private val peerDao: com.itantra.data.db.PeerDao? = null,
+    private val microphoneFrames: kotlinx.coroutines.flow.Flow<FloatArray>? = null,
 ) {
     companion object {
         private const val ENCRYPTED_HEARTBEAT_INTERVAL_MS = 15_000L
@@ -73,11 +77,11 @@ class TransceiverCoordinator(
         private const val HANDSHAKE_TIMEOUT_MS = 60_000L
         private const val SAS_TIMEOUT_MS = 60_000L
         private const val VERIFY_RETRY_INTERVAL_MS = 2_000L
-        private val FIVE_VOICE_LANGUAGES = setOf(
-            LanguageCode.HINDI, LanguageCode.ENGLISH, LanguageCode.TAMIL,
-            LanguageCode.TELUGU, LanguageCode.ODIA,
-            LanguageCode.MARATHI, LanguageCode.KANNADA,
-        )
+        private const val MAX_PENDING_MESSAGES = 64
+        private const val MAX_PENDING_BYTES = 512 * 1024
+        private const val RESERVED_EMERGENCY_MESSAGES = 4
+        private const val RESERVED_EMERGENCY_BYTES = 64 * 1024
+        private const val MAX_RECEIPT_BINDINGS = 512
     }
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -104,8 +108,9 @@ class TransceiverCoordinator(
     // Order state mutations and snapshot enqueueing together. The IO consumer never
     // takes this lock, and persistence/alert side effects stay outside update lambdas.
     private val messageMutationLock = Any()
-    private data class HistoryWrite(val id: Long, val snapshot: TransceiverMessage?)
-    private val persistenceQueue = Channel<HistoryWrite>(Channel.UNLIMITED)
+    // Conflate notifications, not history: a slow database cannot accumulate copies
+    // of every intermediate state. The IO worker reconciles the latest full history.
+    private val historyChanges = MutableStateFlow(0L)
 
     private val _activePeerProfile = MutableStateFlow<com.itantra.domain.model.PeerProfile?>(null)
     val activePeerProfile: StateFlow<com.itantra.domain.model.PeerProfile?> = _activePeerProfile.asStateFlow()
@@ -130,11 +135,12 @@ class TransceiverCoordinator(
     private var hasSentHandshake = false
 
     suspend fun sendProfileHandshake() {
+        val generation = connectionGeneration.get()
         if (secureSessionManager.state.value != SecureSessionState.SECURE_VERIFIED) return
         val profile = deviceProfileManager?.profile?.value
         val devId = profile?.deviceId ?: "IT-0000-0000"
         val name = profile?.displayName ?: "iTantra Operator"
-        val activeLang = sessionManager.activeLanguage.value ?: LanguageCode.ENGLISH
+        val activeLang = languagePackRepository.observeActiveLanguage().first() ?: LanguageCode.ENGLISH
 
         val payload = com.itantra.core.transport.packet.ProfilePayload(
             protocolVersion = com.itantra.core.transport.packet.ProfilePayload.CURRENT_PROTOCOL_VERSION,
@@ -149,8 +155,8 @@ class TransceiverCoordinator(
             payload = payload
         )
         try {
-            val securePacket = secureSessionManager.encrypt(packet)
-            transportEngine.send(securePacket)
+            val securePacket = encryptForConnection(generation, packet)
+            sendForConnection(generation, securePacket)
             android.util.Log.i("TransceiverCoordinator", "Sent verified peer profile")
         } catch (e: Exception) {
             android.util.Log.e("TransceiverCoordinator", "Error sending PROFILE_HANDSHAKE", e)
@@ -160,8 +166,10 @@ class TransceiverCoordinator(
     init {
         if (messageDao != null) {
             scope.launch(Dispatchers.IO) {
+                val persistedById = mutableMapOf<Long, TransceiverMessage>()
                 try {
                     val persistedRows = messageDao.getAllIncludingTrash().map { it.toDomain() }
+                    persistedRows.associateByTo(persistedById) { it.messageId }
                     val now = System.currentTimeMillis()
                     val trashed = persistedRows.filter { it.deletedAtMillis != null }
                     synchronized(messageMutationLock) {
@@ -169,8 +177,6 @@ class TransceiverCoordinator(
                         _trashedMessages.value = trashed.filter {
                             it.messageId !in currentIds && com.itantra.domain.model.RecycleBinPolicy.canRestore(it.deletedAtMillis!!, now)
                         } + _trashedMessages.value
-                        trashed.filter { it.messageId !in currentIds && !com.itantra.domain.model.RecycleBinPolicy.canRestore(it.deletedAtMillis!!, now) }
-                            .forEach { persistenceQueue.trySend(HistoryWrite(it.messageId, null)) }
                     }
                     val persisted = persistedRows.filter { it.deletedAtMillis == null }
                     if (persisted.isNotEmpty()) {
@@ -181,6 +187,7 @@ class TransceiverCoordinator(
                                     MessageState.RECORDING,
                                     MessageState.STT_PROCESSING,
                                     MessageState.STT_COMPLETE,
+                                    MessageState.PACKET_ENCODING,
                                     MessageState.TRANSMITTING,
                                     MessageState.WAITING_USER_CONFIRMATION
                                 ) -> m.copy(
@@ -208,12 +215,29 @@ class TransceiverCoordinator(
                 } catch (e: Throwable) {
                     android.util.Log.e("TransceiverCoord", "Error loading persisted messages", e)
                 }
-                for (write in persistenceQueue) {
-                    try {
-                        if (write.snapshot == null) messageDao.delete(write.id)
-                        else messageDao.insert(com.itantra.data.db.MessageEntity.fromDomain(write.snapshot))
-                    } catch (e: Exception) {
-                        android.util.Log.e("TransceiverCoord", "Error persisting message", e)
+                synchronized(messageMutationLock) { requestHistoryWrite() }
+                historyChanges.collect {
+                    val latest = synchronized(messageMutationLock) {
+                        (_messages.value + _trashedMessages.value).associateBy { it.messageId }
+                    }
+                    for ((id, message) in latest) {
+                        if (persistedById[id] == message) continue
+                        try {
+                            messageDao.insert(com.itantra.data.db.MessageEntity.fromDomain(message))
+                            persistedById[id] = message
+                        } catch (e: Exception) {
+                            if (e is CancellationException) throw e
+                            android.util.Log.e("TransceiverCoord", "Error persisting message", e)
+                        }
+                    }
+                    for (id in persistedById.keys - latest.keys) {
+                        try {
+                            messageDao.delete(id)
+                            persistedById.remove(id)
+                        } catch (e: Exception) {
+                            if (e is CancellationException) throw e
+                            android.util.Log.e("TransceiverCoord", "Error deleting message", e)
+                        }
                     }
                 }
             }
@@ -234,16 +258,27 @@ class TransceiverCoordinator(
     private val _peerCapabilities = MutableStateFlow(PeerCapabilities())
     val peerCapabilities: StateFlow<PeerCapabilities> = _peerCapabilities.asStateFlow()
 
-    private val messageQueue = mutableListOf<ItantraPacket>()
-    private val queueMutex = Mutex()
+    private data class IncomingMessage(val packet: ItantraPacket, val generation: Long, val peerId: String, val emergencyEpoch: Long)
+    @Volatile private var sessionConnection = transportEngine.connectionToken
+    private val messageQueue = mutableListOf<IncomingMessage>()
+    private val queueLock = Any()
+    private var pendingPayloadBytes = 0
+    private val emergencyEpoch = java.util.concurrent.atomic.AtomicLong()
     private val queueWakeup = Channel<Unit>(Channel.CONFLATED)
+    private data class PendingAck(val messageId: Long, val generation: Long)
+    private val ackQueue = Channel<PendingAck>(MAX_PENDING_MESSAGES)
+    private val incomingPacketLock = Any()
+    private val receiptBindings = java.util.Collections.synchronizedMap(linkedMapOf<Long, Long>())
 
     private val sttMutex = Mutex()
+    private val sttProcessingCount = java.util.concurrent.atomic.AtomicInteger()
 
     private var cooldownJob: Job? = null
-    private var currentTtsJob: Job? = null
-    private var currentAudioSink: SpeakerAudioSink? = null
+    private val playbackGeneration = java.util.concurrent.atomic.AtomicLong()
+    @Volatile private var currentTtsJob: Job? = null
+    @Volatile private var currentAudioSink: SpeakerAudioSink? = null
     private var alertJob: Job? = null
+    @Volatile private var alertAudioSink: SpeakerAudioSink? = null
 
     // Connection generation token to protect against stale callbacks/timeouts
     private val connectionGeneration = java.util.concurrent.atomic.AtomicLong(0L)
@@ -255,14 +290,17 @@ class TransceiverCoordinator(
     private var handshakeRetryJob: Job? = null
     private var verifyRetryJob: Job? = null
     private var sasTimerJob: Job? = null
-    private var cachedVerifyPacket: ItantraPacket? = null
+    @Volatile private var cachedVerifyPacket: ItantraPacket? = null
     private var encryptedHeartbeatJob: Job? = null
 
     private var isConnected = false
-    private var recordingJob: Job? = null
+    @Volatile private var recordingJob: Job? = null
     private val audioSource = MicrophoneAudioSource(scope)
     private var recordingStartTime = 0L
-    private var activeRecordingMessageId = 0L
+    @Volatile private var activeRecordingMessageId = 0L
+    private var activeRecordingEngine: com.itantra.core.inference.SpeechRecognizerEngine? = null
+    private var recordingTarget: LanguageCode? = null
+    private var recordingPeerVoices: List<LanguageCode> = emptyList()
     private val activeRecordingChunks = java.util.Collections.synchronizedList(mutableListOf<FloatArray>())
 
     val continuousListenEngine = ContinuousListenEngine(context)
@@ -279,7 +317,7 @@ class TransceiverCoordinator(
             }
         }
     }
-    private var isTtsPlaying = false
+    @Volatile private var isTtsPlaying = false
     @Volatile private var savedAudioSink: SpeakerAudioSink? = null
     private val savedSpeechPlayer = com.itantra.core.inference.SavedSpeechPlayer(
         scope, sessionManager, { ttsCapabilityProvider?.isTtsInstalled(it) == true },
@@ -294,9 +332,68 @@ class TransceiverCoordinator(
     val savedSpeechPlayback = savedSpeechPlayer.state
     fun stopSavedSpeech() = savedSpeechPlayer.stop()
 
+    private fun resumeContinuousIfIdle() {
+        if (recordingJob == null && sttProcessingCount.get() == 0 && !isTtsPlaying && currentTtsJob?.isActive != true &&
+            !savedSpeechPlayback.value.busy && continuousModeJob?.isActive == true) {
+            continuousListenEngine.resetAndResume()
+        }
+    }
+
+    private fun beginTtsPlayback(): Long {
+        val generation = playbackGeneration.incrementAndGet()
+        cooldownJob?.cancel()
+        isTtsPlaying = true
+        continuousListenEngine.pauseListening()
+        return generation
+    }
+
+    private fun endTtsPlayback(generation: Long) {
+        if (generation != playbackGeneration.get()) return
+        cooldownJob?.cancel()
+        cooldownJob = scope.launch {
+            delay(300)
+            if (generation == playbackGeneration.get()) {
+                isTtsPlaying = false
+                resumeContinuousIfIdle()
+            }
+        }
+    }
+
     fun replayMessage(messageId: Long) {
         val message = _messages.value.firstOrNull { it.messageId == messageId } ?: return
         replaySavedText("message-$messageId", message.text, message.displayedTextLanguage)
+    }
+
+    /** Local per-message view. Does not send, overwrite history, or change receive/STT preferences. */
+    suspend fun translateMessage(messageId: Long, target: LanguageCode): TranslationResult {
+        val input = _messages.value.firstOrNull { it.messageId == messageId }?.translationInput
+            ?: throw IllegalStateException("This message has no readable text with a known language")
+        val result = translationRouter.routeAndTranslate(input.first, input.second, target)
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+        check(_messages.value.firstOrNull { it.messageId == messageId }?.translationInput == input) {
+            "Message changed or was moved to the recycle bin"
+        }
+        return result
+    }
+
+    fun isMessageVoiceInstalled(language: LanguageCode): Boolean = ttsCapabilityProvider?.isTtsInstalled(language) == true
+
+    fun replayMessageTranslation(messageId: Long, translation: TranslationResult) {
+        synchronized(messageMutationLock) {
+            val input = _messages.value.firstOrNull { it.messageId == messageId }?.translationInput ?: return
+            val key = "message-$messageId-${translation.targetLanguage.wireCode}"
+            if (!translation.isSuccessful || translation.translatedText.isBlank() ||
+                input != (translation.originalText to translation.sourceLanguage)) {
+                savedSpeechPlayer.unavailable(key, "Translate this message again before playing")
+                return
+            }
+            replaySavedText(key, translation.translatedText, translation.targetLanguage)
+        }
+    }
+
+    fun stopMessageSpeech(messageId: Long) {
+        val key = savedSpeechPlayback.value.itemKey ?: return
+        if (key == "message-$messageId" || key.startsWith("message-$messageId-")) stopSavedSpeech()
     }
 
     fun replayVoiceNote(note: com.itantra.data.db.VoiceNoteEntity) {
@@ -327,8 +424,7 @@ class TransceiverCoordinator(
                 if (playback.busy) continuousListenEngine.pauseListening()
                 else {
                     delay(300)
-                    if (!savedSpeechPlayback.value.busy && !isTtsPlaying && currentTtsJob?.isActive != true && continuousModeJob?.isActive == true)
-                        continuousListenEngine.resetAndResume()
+                    if (currentTtsJob?.isActive != true) resumeContinuousIfIdle()
                 }
             }
         }
@@ -376,16 +472,19 @@ class TransceiverCoordinator(
      *  3. The old Hindi<->English guess, only as a last resort (e.g. before
      *     a handshake has completed).
      */
-    private fun resolveTargetLanguage(sourceLanguage: LanguageCode): LanguageCode {
-        currentTargetLanguage.value?.let { return it }
+    private fun resolveTargetLanguage(sourceLanguage: LanguageCode,
+        preference: LanguageCode? = currentTargetLanguage.value,
+        peerVoices: List<LanguageCode> = _peerCapabilities.value.supportedTts,
+    ): LanguageCode {
+        preference?.let { return it }
 
         // 1. If peer advertises support for the same language, route same-language
-        if (_peerCapabilities.value.supportedTts.contains(sourceLanguage)) {
+        if (peerVoices.contains(sourceLanguage)) {
             return sourceLanguage
         }
 
         // 2. If peer advertises a different language, route to that peer's language
-        val peerDifferent = _peerCapabilities.value.supportedTts.firstOrNull { it != sourceLanguage }
+        val peerDifferent = peerVoices.firstOrNull { it != sourceLanguage }
         if (peerDifferent != null) return peerDifferent
 
         // 3. Pass 3 default: Same-Language Routing First
@@ -409,6 +508,8 @@ class TransceiverCoordinator(
                 val connected = state == ConnectionState.CONNECTED
                 if (connected && !isConnected) {
                     val gen = connectionGeneration.incrementAndGet()
+                    sessionConnection = transportEngine.connectionToken
+                    hasSentHandshake = false
                     isConnected = true
                     handshakeRetryJob?.cancel(); handshakeRetryJob = null
                     verifyRetryJob?.cancel(); verifyRetryJob = null
@@ -419,11 +520,20 @@ class TransceiverCoordinator(
                     // Start handshake if connected. Only the client (initiator) sends the first HELLO.
                     // Responder remains in NO_SESSION, ready to process incoming SECURE_HELLO.
                     val isInitiator = !transportEngine.isServer
+                    if (!isInitiator) {
+                        handshakeRetryJob = scope.launch {
+                            delay(HANDSHAKE_TIMEOUT_MS)
+                            if (connectionGeneration.get() == gen && secureSessionManager.state.value == SecureSessionState.NO_SESSION) {
+                                secureSessionManager.setHandshakeTimeout()
+                                transportEngine.disconnect()
+                            }
+                        }
+                    }
                     if (isInitiator) {
                         handshakeRetryJob = scope.launch {
                             val hello = secureSessionManager.startHandshake(isInitiator = true)
                             try {
-                                transportEngine.send(hello)
+                                transportEngine.send(hello, sessionConnection)
                             } catch (e: Exception) {
                                 android.util.Log.w("TransceiverCoordinator", "Failed to send initial HELLO: ${e.message}")
                             }
@@ -440,7 +550,7 @@ class TransceiverCoordinator(
                                     if (stored != null) {
                                         android.util.Log.d("TransceiverCoordinator", "Retrying cached SECURE_HELLO")
                                         try {
-                                            transportEngine.send(stored)
+                                            transportEngine.send(stored, sessionConnection)
                                         } catch (e: Exception) {
                                             android.util.Log.w("TransceiverCoordinator", "HELLO retry failed: ${e.message}")
                                         }
@@ -475,6 +585,13 @@ class TransceiverCoordinator(
                     _activePeerProfile.value = null
                     secureSessionManager.resetSession()
                     seenMessageIds.clear()
+                    receiptBindings.clear()
+                    synchronized(queueLock) {
+                        messageQueue.forEach(::preserveInterruptedIncoming)
+                        messageQueue.clear()
+                        pendingPayloadBytes = 0
+                    }
+                    currentTtsJob?.cancel()
                 }
             }
         }
@@ -512,25 +629,34 @@ class TransceiverCoordinator(
                         }
                     }
                     SecureSessionState.SECURE_VERIFIED -> {
+                        com.itantra.core.service.OperationalForegroundService.startPeerConnection(context)
                         handshakeRetryJob?.cancel()
                         handshakeRetryJob = null
-                        verifyRetryJob?.cancel()
-                        verifyRetryJob = null
                         sasTimerJob?.cancel()
                         sasTimerJob = null
                         _sasRemainingSeconds.value = null
-                        cachedVerifyPacket = null
+                        // Both users have accepted, but our confirmation may still be in flight.
+                        // Keep its retries alive until authenticated peer traffic proves receipt.
                         transportEngine.setAuthenticatedLivenessEnabled(true)
                         startEncryptedHeartbeat()
-                        sendProfileHandshake()
-                        sendCapabilities()
-                        retryUnresolvedEmergencies()
+                        val generation = connectionGeneration.get()
+                        scope.launch {
+                            if (connectionGeneration.get() != generation) return@launch
+                            sendProfileHandshake()
+                            sendCapabilities()
+                            retryUnresolvedEmergencies()
+                        }
                     }
                     SecureSessionState.NO_SESSION,
                     SecureSessionState.HANDSHAKE_TIMEOUT,
                     SecureSessionState.FAILED -> {
-                        handshakeRetryJob?.cancel()
-                        handshakeRetryJob = null
+                        com.itantra.core.service.OperationalForegroundService.stopPeerConnection(context)
+                        // The initial NO_SESSION emission can race CONNECTED. Keep the
+                        // initial HELLO send/server timeout alive until the exchange starts.
+                        if (state != SecureSessionState.NO_SESSION || !isConnected) {
+                            handshakeRetryJob?.cancel()
+                            handshakeRetryJob = null
+                        }
                         verifyRetryJob?.cancel()
                         verifyRetryJob = null
                         sasTimerJob?.cancel()
@@ -543,6 +669,7 @@ class TransceiverCoordinator(
                     }
                     else -> Unit
                 }
+                if (state == SecureSessionState.FAILED) transportEngine.disconnect()
             }
         }
 
@@ -567,21 +694,40 @@ class TransceiverCoordinator(
         }
 
         scope.launch {
+            for (ack in ackQueue) {
+                try {
+                    sendForConnection(ack.generation, encryptForConnection(ack.generation,
+                        ItantraPacket(PacketType.ACK, messageId = ack.messageId)))
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    // A retry of an accepted message can request another ACK. Never
+                    // create an unbounded coroutine backlog when the link is slow.
+                    android.util.Log.w("TransceiverCoord", "Could not send acceptance ACK")
+                }
+            }
+        }
+
+        scope.launch {
             while(true) {
-                val nextPacket = queueMutex.withLock {
+                val nextPacket = synchronized(queueLock) {
                     if (messageQueue.isEmpty()) null
                     else {
                         // Priority ordering (descending), then FIFO
-                        messageQueue.sortByDescending { it.flags.toInt() }
-                        messageQueue.removeAt(0)
+                        messageQueue.sortByDescending { it.packet.flags.toInt() }
+                        messageQueue.removeAt(0).also { pendingPayloadBytes -= it.packet.payload.size }
                     }
                 }
                 if (nextPacket != null) {
-                    currentTtsJob = scope.launch {
-                        processIncomingMessagePacket(nextPacket)
+                    try {
+                        currentTtsJob = scope.launch {
+                            processIncomingMessagePacket(nextPacket.packet, nextPacket.generation, nextPacket.peerId, nextPacket.emergencyEpoch)
+                        }
+                        currentTtsJob?.join()
+                    } finally {
+                        // Also covers a disconnect after dequeue but before the child starts.
+                        preserveInterruptedIncoming(nextPacket)
+                        currentTtsJob = null
                     }
-                    currentTtsJob?.join()
-                    currentTtsJob = null
                 } else {
                     queueWakeup.receive() // wait for signal
                 }
@@ -591,8 +737,15 @@ class TransceiverCoordinator(
 
     private fun addMessage(msg: TransceiverMessage) {
         synchronized(messageMutationLock) {
-            _messages.update { it + msg }
-            if (messageDao != null) persistenceQueue.trySend(HistoryWrite(msg.messageId, msg))
+            // Preserve one row if disconnect and processing complete concurrently.
+            if (_trashedMessages.value.any { it.messageId == msg.messageId }) return
+            val existing = _messages.value.find { it.messageId == msg.messageId }
+            if (existing != null && (existing.source != msg.source || existing.peerId != msg.peerId)) return
+            _messages.update { messages ->
+                if (existing == null) messages + msg
+                else messages.map { if (it.messageId == msg.messageId) transitionMessage(it, msg) else it }
+            }
+            requestHistoryWrite()
         }
         updateAlertJob()
     }
@@ -602,10 +755,14 @@ class TransceiverCoordinator(
             _messages.update { messages ->
                 messages.map { if (it.messageId == id) transitionMessage(it, update(it)) else it }
             }
-            val snapshot = _messages.value.find { it.messageId == id }
-            if (messageDao != null && snapshot != null) persistenceQueue.trySend(HistoryWrite(snapshot.messageId, snapshot))
+            requestHistoryWrite()
         }
         updateAlertJob()
+    }
+
+    // Call while holding messageMutationLock, including during startup reconciliation.
+    private fun requestHistoryWrite() {
+        if (messageDao != null) historyChanges.value += 1L
     }
 
     private fun transitionMessage(current: TransceiverMessage, proposed: TransceiverMessage): TransceiverMessage =
@@ -615,18 +772,18 @@ class TransceiverCoordinator(
         )) proposed.copy(state = current.state)
         else proposed
 
-    private fun acknowledgeRemoteCriticalMessages() {
+    private fun acknowledgeRemoteCriticalMessages(peerId: String) {
         synchronized(messageMutationLock) {
             val unresolvedIds = _messages.value.filter {
                 it.source == MessageSource.REMOTE &&
+                    it.peerId == peerId &&
                     it.priority == com.itantra.domain.model.MessagePriority.CRITICAL &&
                     it.state != MessageState.ACKNOWLEDGED
             }.map { it.messageId }.toSet()
             _messages.update { messages -> messages.map {
                 if (it.messageId in unresolvedIds) it.copy(state = MessageState.ACKNOWLEDGED) else it
             } }
-            if (messageDao != null) _messages.value.filter { it.messageId in unresolvedIds }
-                .forEach { persistenceQueue.trySend(HistoryWrite(it.messageId, it)) }
+            requestHistoryWrite()
         }
     }
 
@@ -634,11 +791,11 @@ class TransceiverCoordinator(
         synchronized(messageMutationLock) {
             val message = _messages.value.find { it.messageId == id } ?: return false
             if (!com.itantra.domain.model.RecycleBinPolicy.canTrash(message)) return false
-            if (savedSpeechPlayback.value.itemKey == "message-$id") stopSavedSpeech()
+            stopMessageSpeech(id)
             val deleted = message.copy(deletedAtMillis = now)
             _messages.value = _messages.value.filterNot { it.messageId == id }
             _trashedMessages.value = _trashedMessages.value + deleted
-            if (messageDao != null) persistenceQueue.trySend(HistoryWrite(id, deleted))
+            requestHistoryWrite()
         }
         return true
     }
@@ -650,7 +807,7 @@ class TransceiverCoordinator(
             val restored = message.copy(deletedAtMillis = null)
             _trashedMessages.value = _trashedMessages.value.filterNot { it.messageId == id }
             _messages.value = (_messages.value + restored).sortedBy { it.createdAtLocal }
-            if (messageDao != null) persistenceQueue.trySend(HistoryWrite(id, restored))
+            requestHistoryWrite()
         }
         // Restoration only changes local history. It never sends a packet or restarts playback.
         return true
@@ -660,7 +817,7 @@ class TransceiverCoordinator(
         synchronized(messageMutationLock) {
             if (_trashedMessages.value.none { it.messageId == id }) return
             _trashedMessages.value = _trashedMessages.value.filterNot { it.messageId == id }
-            if (messageDao != null) persistenceQueue.trySend(HistoryWrite(id, null))
+            requestHistoryWrite()
         }
     }
 
@@ -670,23 +827,45 @@ class TransceiverCoordinator(
                 !com.itantra.domain.model.RecycleBinPolicy.canRestore(it.deletedAtMillis!!, now)
             }
             _trashedMessages.value = _trashedMessages.value - expired.toSet()
-            if (messageDao != null) expired.forEach { persistenceQueue.trySend(HistoryWrite(it.messageId, null)) }
+            if (expired.isNotEmpty()) requestHistoryWrite()
         }
     }
 
     fun retryMessage(id: Long): Boolean {
         val message = _messages.value.find { it.messageId == id } ?: return false
         val peer = _activePeerProfile.value?.deviceId ?: return false
-        if (message.source != MessageSource.LOCAL || message.state != MessageState.ERROR || message.text.isBlank() ||
+        if (message.source != MessageSource.LOCAL || message.state !in setOf(MessageState.ERROR, MessageState.SENT) || message.text.isBlank() ||
             message.priority == com.itantra.domain.model.MessagePriority.CRITICAL ||
             message.peerId.isBlank() || message.peerId != peer ||
             secureSessionManager.state.value != SecureSessionState.SECURE_VERIFIED ||
             message.translationStatus in setOf(com.itantra.domain.model.TranslationStatus.FAILED,
                 com.itantra.domain.model.TranslationStatus.MODEL_MISSING, com.itantra.domain.model.TranslationStatus.UNSUPPORTED) ||
             (message.isVoiceGenerated && (message.rawPcmEquivalentBytes <= 0 || message.payloadBytes <= 0))) return false
-        updateMessage(id) { it.copy(state = MessageState.TRANSMITTING, statusDetail = "Retrying delivery") }
-        sendVoiceMessage(id)
+        if (message.isLocation && (message.latitude == null || message.longitude == null ||
+                message.accuracyMeters == null || message.locationTimestampMillis == null)) return false
+        updateMessage(id) { it.copy(state = MessageState.TRANSMITTING, statusDetail = null) }
+        if (message.isLocation) retrySavedLocation(message) else sendVoiceMessage(id, priority = message.priority)
         return true
+    }
+
+    private fun retrySavedLocation(message: TransceiverMessage) {
+        val generation = connectionGeneration.get()
+        scope.launch {
+            try {
+                val payload = LocationPayload(checkNotNull(message.latitude), checkNotNull(message.longitude),
+                    checkNotNull(message.accuracyMeters), checkNotNull(message.locationTimestampMillis)).toBytes()
+                val packet = ItantraPacket(PacketType.LOCATION, flags = message.priority.toByte(),
+                    messageId = message.messageId, languageCode = LanguageCode.ENGLISH,
+                    sourceLanguage = LanguageCode.ENGLISH, targetLanguage = LanguageCode.ENGLISH, payload = payload)
+                val metrics = sendForConnection(generation, encryptForConnection(generation, packet))
+                updateMessage(message.messageId) { it.copy(
+                    state = if (metrics.transmissionLatencyMillis is com.itantra.domain.model.Measurement.Measured)
+                        MessageState.DELIVERED else MessageState.SENT,
+                    statusDetail = null) }
+            } catch (e: Exception) {
+                updateMessage(message.messageId) { it.copy(state = MessageState.ERROR, statusDetail = e.message ?: "Location retry failed") }
+            }
+        }
     }
 
     private fun updateAlertJob() {
@@ -698,31 +877,29 @@ class TransceiverCoordinator(
                     delay(10_000)
                     val unack = _messages.value.filter { it.source == MessageSource.REMOTE && it.priority == com.itantra.domain.model.MessagePriority.CRITICAL && it.state != MessageState.ACKNOWLEDGED }
                     if (unack.isEmpty()) break
+                    if (recordingJob != null || currentTtsJob?.isActive == true || isTtsPlaying || savedSpeechPlayback.value.busy) {
+                        count++
+                        continue
+                    }
                     val msg = unack.first()
+                    val playback = beginTtsPlayback()
                     try {
-                        cooldownJob?.cancel()
-                        isTtsPlaying = true
-                        continuousListenEngine.pauseListening()
-
-                        val text = "Attention. " + msg.text
-                        val req = SpeechSynthesisRequest(msg.language ?: LanguageCode.ENGLISH, text, "alert")
-                        val res = sessionManager.currentTtsEngine?.synthesize(req)
-                        if (res != null) {
+                        val req = SpeechSynthesisRequest(msg.displayedTextLanguage ?: LanguageCode.ENGLISH, msg.text, "alert")
+                        if (ttsCapabilityProvider?.isTtsInstalled(req.languageCode) == true) {
+                            val res = sessionManager.synthesizeTts(req)
+                            com.itantra.core.inference.requireSpeechAudio(res)
                             val sink = SpeakerAudioSink(context)
-                            sink.init(res.sampleRateHz, android.media.AudioAttributes.USAGE_ALARM, requestMaxVolume = true)
-                            sink.play(res.pcmAudio)
-                            sink.flushAndStop()
-                            sink.release()
+                            alertAudioSink = sink
+                            try {
+                                sink.init(res.sampleRateHz, android.media.AudioAttributes.USAGE_ALARM, requestMaxVolume = true)
+                                sink.play(res.pcmAudio)
+                                sink.flushAndStop()
+                            } finally { sink.release(); if (alertAudioSink === sink) alertAudioSink = null }
                         }
-                    } catch (e: Exception) {}
+                    } catch (cancelled: CancellationException) { throw cancelled }
+                    catch (e: Exception) { android.util.Log.w("TransceiverCoord", "Alert voice unavailable", e) }
                     finally {
-                        cooldownJob = scope.launch {
-                            delay(300)
-                            isTtsPlaying = false
-                            if (continuousModeJob?.isActive == true) {
-                                continuousListenEngine.resetAndResume()
-                            }
-                        }
+                        endTtsPlayback(playback)
                     }
                     count++
                 }
@@ -735,6 +912,7 @@ class TransceiverCoordinator(
     }
 
     private suspend fun sendCapabilities() {
+        val generation = connectionGeneration.get()
         if (secureSessionManager.state.value != SecureSessionState.SECURE_VERIFIED) return
 
         // FIX 028: only advertise TTS for a language when that engine is actually loaded.
@@ -772,39 +950,38 @@ class TransceiverCoordinator(
             payload = payload
         )
         try {
-            val securePacket = secureSessionManager.encrypt(packet)
-            transportEngine.send(securePacket)
+            val securePacket = encryptForConnection(generation, packet)
+            sendForConnection(generation, securePacket)
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     internal fun handleIncomingPacket(packet: ItantraPacket) {
+        synchronized(incomingPacketLock) { handleIncomingPacketLocked(packet) }
+    }
+
+    private fun handleIncomingPacketLocked(packet: ItantraPacket) {
+        if (packet.receivedOn != null && (packet.receivedOn != sessionConnection ||
+            packet.receivedOn != transportEngine.connectionToken)) return
+        val generation = connectionGeneration.get()
         if (packet.type == PacketType.SECURE_HELLO) {
             val response = secureSessionManager.processSecureHello(packet)
             if (response != null) {
-                scope.launch { transportEngine.send(response) }
+                val connection = sessionConnection
+                scope.launch {
+                    if (connectionGeneration.get() == generation) {
+                        try { transportEngine.send(response, connection) }
+                        catch (e: CancellationException) { throw e }
+                        catch (e: Exception) { android.util.Log.w("TransceiverCoordinator", "HELLO response failed: ${e.message}") }
+                    }
+                }
             }
             return
         }
 
         if (packet.type == PacketType.SECURE_VERIFY) {
             secureSessionManager.processSecureVerify(packet)
-            if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
-                // Cancel any ongoing verify retry and timer — we're done
-                verifyRetryJob?.cancel(); verifyRetryJob = null
-                handshakeRetryJob?.cancel(); handshakeRetryJob = null
-                sasTimerJob?.cancel(); sasTimerJob = null
-                _sasRemainingSeconds.value = null
-                cachedVerifyPacket = null
-                transportEngine.setAuthenticatedLivenessEnabled(true)
-                startEncryptedHeartbeat()
-                scope.launch {
-                    sendProfileHandshake()
-                    sendCapabilities()
-                    retryUnresolvedEmergencies()
-                }
-            }
             return
         }
 
@@ -824,10 +1001,28 @@ class TransceiverCoordinator(
         // Every successfully authenticated and decrypted packet refreshes link liveness
         transportEngine.notifyLivenessReceived()
 
+        if (cachedVerifyPacket != null) {
+            // Only an authenticated packet can acknowledge confirmation delivery. Re-send
+            // the introduction because an early one may have reached a still-verifying peer.
+            cachedVerifyPacket = null
+            verifyRetryJob?.cancel(); verifyRetryJob = null
+            val gen = connectionGeneration.get()
+            scope.launch {
+                if (connectionGeneration.get() == gen) {
+                    sendProfileHandshake()
+                    sendCapabilities()
+                }
+            }
+        }
+
         if (decryptedPacket.type == PacketType.HEARTBEAT) {
             // Heartbeat authenticated; do not create chat message, notification, or TTS
             return
         }
+
+        if (decryptedPacket.type in setOf(PacketType.ACK, PacketType.HUMAN_ACK,
+                PacketType.TTS_STARTED, PacketType.TTS_COMPLETED, PacketType.TTS_FAILED) &&
+            !canAcceptReceipt(decryptedPacket.messageId, generation)) return
 
         when (decryptedPacket.type) {
             PacketType.PROFILE_HANDSHAKE -> {
@@ -835,6 +1030,9 @@ class TransceiverCoordinator(
                 if (payload != null) {
                     android.util.Log.i("TransceiverCoordinator", "Received validated peer profile")
                     val currentPeer = _activePeerProfile.value
+                    // A profile rename is allowed; a new identity needs a new SAS-verified
+                    // session. Otherwise a peer could impersonate another chat mid-session.
+                    if (currentPeer != null && currentPeer.deviceId != payload.deviceId) return
                     val updated = (currentPeer ?: com.itantra.domain.model.PeerProfile(bluetoothAddress = "", displayName = payload.displayName))
                         .copy(
                             deviceId = payload.deviceId,
@@ -880,24 +1078,12 @@ class TransceiverCoordinator(
                 }
             }
             PacketType.TEXT, PacketType.EMERGENCY_CODE -> {
-                // Immediate ACK through established secure session
-                scope.launch {
-                    try {
-                        val ackPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.ACK, messageId = decryptedPacket.messageId))
-                        transportEngine.send(ackPkt)
-                    } catch (e: Exception) {
-                        android.util.Log.w("TransceiverCoord", "Could not send immediate ACK: ${e.message}")
-                    }
-                }
-
-                val isDuplicate = seenMessageIds.contains(decryptedPacket.messageId) ||
-                        _messages.value.any { it.messageId == decryptedPacket.messageId && it.source == MessageSource.REMOTE }
-
-                if (isDuplicate) {
-                    // Re-ACK has already been transmitted above. Drop duplicate without processing twice.
-                    return
-                }
-                seenMessageIds.add(decryptedPacket.messageId)
+                if (decryptedPacket.flags.toInt() !in 0..com.itantra.domain.model.MessagePriority.CRITICAL ||
+                    decryptedPacket.payload.size > 16 * 1024) return
+                if (decryptedPacket.type == PacketType.EMERGENCY_CODE &&
+                    (decryptedPacket.payload.size != 1 ||
+                        com.itantra.domain.model.EmergencyCode.fromId(decryptedPacket.payload[0]) == null)) return
+                if (rejectCollisionOrAckDuplicate(decryptedPacket, generation)) return
 
                 // Dedicated ALL_CLEAR handling:
                 // Terminal control packet that resolves emergency, stops siren immediately, and returns without creating EmergencyRecord.
@@ -905,39 +1091,66 @@ class TransceiverCoordinator(
                     decryptedPacket.payload.isNotEmpty() &&
                     decryptedPacket.payload[0] == com.itantra.domain.model.EmergencyCode.ALL_CLEAR.id) {
 
-                    alertJob?.cancel()
-                    alertJob = null
-                    isTtsPlaying = false
-                    currentTtsJob?.cancel()
-                    currentAudioSink?.stopImmediate()
-                    currentAudioSink?.release()
-                    currentAudioSink = null
-
-                    _activeEmergencyAlert.value = null
-                    com.itantra.core.service.OperationalForegroundService.resolveEmergency(context)
-                    emergencyStore.resolveAllEmergencies()
-                    // ALL_CLEAR is the existing global emergency-resolution control.
-                    // Resolve chat state too before addMessage can reevaluate reminders.
-                    acknowledgeRemoteCriticalMessages()
-
-                    if (continuousModeJob?.isActive == true) {
-                        continuousListenEngine.resetAndResume()
+                    val peerId = _activePeerProfile.value?.deviceId?.takeIf { it.isNotBlank() } ?: return
+                    emergencyEpoch.incrementAndGet()
+                    synchronized(queueLock) {
+                        messageQueue.removeAll { queued ->
+                            val remove = queued.peerId == peerId && (queued.packet.type == PacketType.EMERGENCY_CODE ||
+                                queued.packet.flags.toInt() == com.itantra.domain.model.MessagePriority.CRITICAL)
+                            if (remove) pendingPayloadBytes -= queued.packet.payload.size
+                            remove
+                        }
+                    }
+                    val resolvedIds = emergencyStore.resolveRemoteEmergencies(peerId).map { it.messageId }.toSet()
+                    acknowledgeRemoteCriticalMessages(peerId)
+                    val activeAlert = _activeEmergencyAlert.value
+                    val otherAlertsRemain = _messages.value.any {
+                        it.source == MessageSource.REMOTE && it.peerId != peerId &&
+                            it.priority == com.itantra.domain.model.MessagePriority.CRITICAL && it.state != MessageState.ACKNOWLEDGED
+                    }
+                    if ((activeAlert != null && activeAlert.messageId in resolvedIds) || (activeAlert == null && !otherAlertsRemain)) {
+                        alertJob?.cancel()
+                        alertJob = null
+                        alertAudioSink?.stopImmediate()
+                        playbackGeneration.incrementAndGet()
+                        cooldownJob?.cancel()
+                        isTtsPlaying = false
+                        currentTtsJob?.cancel()
+                        currentAudioSink?.stopImmediate()
+                        currentAudioSink?.release()
+                        currentAudioSink = null
+                        _activeEmergencyAlert.value = emergencyStore.getUnresolvedRecords().lastOrNull { it.source == "REMOTE" }
+                        val remaining = _activeEmergencyAlert.value
+                        if (remaining == null) {
+                            com.itantra.core.service.OperationalForegroundService.resolveEmergency(context)
+                            if (continuousModeJob?.isActive == true) continuousListenEngine.resetAndResume()
+                        } else {
+                            com.itantra.core.service.OperationalForegroundService.triggerEmergency(context, remaining.resolvedPhrase)
+                        }
                     }
 
                     val allClearMsg = TransceiverMessage(
                         messageId = decryptedPacket.messageId,
                         language = sessionManager.activeLanguage.value ?: LanguageCode.ENGLISH,
                         priority = com.itantra.domain.model.MessagePriority.NORMAL,
-                        text = "ALL CLEAR — Emergency Resolved",
+                        text = "ALL CLEAR — Sender's emergency resolved",
                         source = MessageSource.REMOTE,
                         createdAtLocal = System.currentTimeMillis(),
-                        state = MessageState.DELIVERED
+                        state = MessageState.DELIVERED,
+                        peerId = peerId,
+                        senderDeviceId = peerId,
+                        receiverDeviceId = deviceProfileManager?.currentDeviceId.orEmpty()
                     )
                     addMessage(allClearMsg)
+                    seenMessageIds.add(decryptedPacket.messageId)
+                    ackQueue.trySend(PendingAck(decryptedPacket.messageId, generation))
                     return // Terminal return: do not enqueue into messageQueue, do not build EmergencyRecord!
                 }
 
-                enqueueMessagePacketForPlayback(decryptedPacket)
+                // Full queues leave IDs retryable and do not report rejected work as delivered.
+                if (!enqueueMessagePacketForPlayback(decryptedPacket)) return
+                seenMessageIds.add(decryptedPacket.messageId)
+                ackQueue.trySend(PendingAck(decryptedPacket.messageId, generation))
             }
             PacketType.HUMAN_ACK -> {
                 updateMessage(decryptedPacket.messageId) {
@@ -972,10 +1185,7 @@ class TransceiverCoordinator(
             }
             PacketType.TTS_FAILED -> {
                 updateMessage(decryptedPacket.messageId) {
-                    if (it.language in FIVE_VOICE_LANGUAGES) {
-                        it.copy(state = MessageState.ERROR,
-                            statusDetail = "Peer received text but could not play speech")
-                    } else it.copy(state = MessageState.ERROR)
+                    it.copy(state = MessageState.ERROR, statusDetail = "Peer received text but could not play speech")
                 }
             }
             PacketType.LOCATION -> {
@@ -986,23 +1196,8 @@ class TransceiverCoordinator(
     }
 
     internal fun handleIncomingLocationPacket(packet: ItantraPacket) {
-        // 1. Send immediate ACK through established secure session
-        scope.launch {
-            try {
-                val ackPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.ACK, messageId = packet.messageId))
-                transportEngine.send(ackPkt)
-            } catch (e: Exception) {
-                android.util.Log.w("TransceiverCoordinator", "Could not send immediate ACK for LOCATION: ${e.message}")
-            }
-        }
-
-        // Deduplication check
-        val isDuplicate = seenMessageIds.contains(packet.messageId) ||
-                _messages.value.any { it.messageId == packet.messageId && it.source == MessageSource.REMOTE }
-        if (isDuplicate) {
-            return
-        }
-        seenMessageIds.add(packet.messageId)
+        val generation = connectionGeneration.get()
+        if (rejectCollisionOrAckDuplicate(packet, generation)) return
 
         // 2. Reject malformed payloads (wrong length, latitude outside -90..90,
         //    longitude outside -180..180, NaN/Infinity values) without crashing.
@@ -1027,18 +1222,8 @@ class TransceiverCoordinator(
         val acc = locationPayload.accuracyMeters
         val time = locationPayload.timestampMillis
 
-        if (lat.isNaN() || lat.isInfinite() || lat < -90.0 || lat > 90.0) {
-            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet: invalid latitude")
-            return
-        }
-
-        if (lon.isNaN() || lon.isInfinite() || lon < -180.0 || lon > 180.0) {
-            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet: invalid longitude")
-            return
-        }
-
-        if (acc.isNaN() || acc.isInfinite() || acc < 0f) {
-            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet ${packet.messageId}: invalid accuracy $acc")
+        if (!com.itantra.core.location.isValidGpsCoordinates(lat, lon, acc)) {
+            android.util.Log.w("TransceiverCoordinator", "Dropping malformed LOCATION packet ${packet.messageId}: invalid coordinates or accuracy")
             return
         }
 
@@ -1059,7 +1244,7 @@ class TransceiverCoordinator(
         // 4. Store the received location as a message in the existing chat/message model
         //    marked as a location message with lat, lon, accuracy, timestamp and sender peer ID.
         val remoteDeviceId = _activePeerProfile.value?.deviceId ?: ""
-        val activePeer = _activeConversationPeerId.value?.takeIf { it.isNotBlank() } ?: remoteDeviceId
+        val activePeer = remoteDeviceId
         val myDeviceId = deviceProfileManager?.currentDeviceId ?: ""
 
         val displayText = "📍 Location: ${"%.5f".format(java.util.Locale.US, lat)}, ${"%.5f".format(java.util.Locale.US, lon)} (±${"%.1f".format(java.util.Locale.US, acc)}m)"
@@ -1085,28 +1270,95 @@ class TransceiverCoordinator(
             statusDetail = if (isTimeUnverified) "TIME_UNVERIFIED" else null
         )
         addMessage(locationMsg)
+        seenMessageIds.add(packet.messageId)
+        ackQueue.trySend(PendingAck(packet.messageId, generation))
     }
 
-    internal fun enqueueMessagePacketForPlayback(packet: ItantraPacket) {
-        // Incoming speech and emergency alerts always take precedence over manual replay.
-        stopSavedSpeech()
-        scope.launch {
-            queueMutex.withLock {
-                messageQueue.add(packet)
+    private fun canAcceptReceipt(messageId: Long, generation: Long): Boolean {
+        if (receiptBindings[messageId] != generation) return false
+        val message = _messages.value.find { it.messageId == messageId && it.source == MessageSource.LOCAL }
+            ?: return false
+        val recipient = message.receiverDeviceId.ifBlank { message.peerId }
+        return recipient.isBlank() || recipient == com.itantra.domain.model.BROADCAST_PEER_ID ||
+            recipient == _activePeerProfile.value?.deviceId
+    }
+
+    /** Transport acceptance survives interrupted speech; no receipt goes to a replacement peer. */
+    private fun preserveInterruptedIncoming(incoming: IncomingMessage) {
+        if (!scope.isActive) return // Shutdown/wipe must never recreate private data.
+        val packet = incoming.packet
+        val code = if (packet.type == PacketType.EMERGENCY_CODE && packet.payload.size == 1)
+            com.itantra.domain.model.EmergencyCode.fromId(packet.payload[0]) else null
+        if ((code != null || packet.flags.toInt() == com.itantra.domain.model.MessagePriority.CRITICAL) &&
+            incoming.emergencyEpoch != emergencyEpoch.get()) return // Already cleared by its sender.
+        synchronized(messageMutationLock) {
+            if ((_messages.value + _trashedMessages.value).any { it.messageId == packet.messageId }) return
+            val language = if (code != null) currentReceiveLanguage.value ?: LanguageCode.ENGLISH
+                else packet.targetLanguage ?: packet.languageCode ?: packet.sourceLanguage ?: LanguageCode.ENGLISH
+            val text = if (code != null) com.itantra.domain.model.EmergencyPhraseResolver.resolve(code, language)
+                else packet.payload.toString(Charsets.UTF_8)
+            addMessage(TransceiverMessage(packet.messageId, language, priority = packet.flags.toInt(), text = text,
+                source = MessageSource.REMOTE, createdAtLocal = System.currentTimeMillis(), state = MessageState.DELIVERED,
+                peerId = incoming.peerId, senderDeviceId = incoming.peerId,
+                receiverDeviceId = deviceProfileManager?.currentDeviceId.orEmpty(),
+                statusDetail = "Received; speech interrupted. Use Play speech to listen again."))
+            if (code != null) {
+                val record = com.itantra.domain.model.EmergencyRecord(packet.messageId, code.name, "REMOTE", "LOCAL",
+                    System.currentTimeMillis(), resolvedPhrase = text, peerId = incoming.peerId)
+                emergencyStore.saveRecord(record)
+                _activeEmergencyAlert.value = record
+                com.itantra.core.service.OperationalForegroundService.triggerEmergency(context, text)
             }
-            if (packet.flags.toInt() == com.itantra.domain.model.MessagePriority.CRITICAL || packet.type == PacketType.EMERGENCY_CODE) {
-                currentTtsJob?.cancel()
-                currentAudioSink?.stopImmediate()
-                currentAudioSink?.release()
-                currentAudioSink = null
-            }
-            queueWakeup.trySend(Unit)
         }
     }
 
-    private suspend fun processIncomingMessagePacket(packet: ItantraPacket) {
+    /** A duplicate is ACKed only if it was accepted from this peer; IDs are global in history. */
+    private fun rejectCollisionOrAckDuplicate(packet: ItantraPacket, generation: Long): Boolean {
+        val existing = (_messages.value + _trashedMessages.value).find { it.messageId == packet.messageId }
+        if (existing != null && (existing.source != MessageSource.REMOTE ||
+                existing.peerId != _activePeerProfile.value?.deviceId.orEmpty())) return true
+        if (existing != null || seenMessageIds.contains(packet.messageId)) {
+            ackQueue.trySend(PendingAck(packet.messageId, generation))
+            return true
+        }
+        return false
+    }
+
+    internal fun enqueueMessagePacketForPlayback(packet: ItantraPacket): Boolean {
+        val critical = packet.flags.toInt() == com.itantra.domain.model.MessagePriority.CRITICAL ||
+            packet.type == PacketType.EMERGENCY_CODE
+        val generation = connectionGeneration.get()
+        val peer = _activePeerProfile.value?.deviceId.orEmpty()
+        synchronized(queueLock) {
+            val countLimit = MAX_PENDING_MESSAGES - if (critical) 0 else RESERVED_EMERGENCY_MESSAGES
+            val byteLimit = MAX_PENDING_BYTES - if (critical) 0 else RESERVED_EMERGENCY_BYTES
+            if (messageQueue.size >= countLimit || packet.payload.size > byteLimit - pendingPayloadBytes) return false
+            messageQueue.add(IncomingMessage(packet, generation, peer, emergencyEpoch.get()))
+            pendingPayloadBytes += packet.payload.size
+        }
+        // Incoming speech and emergency alerts always take precedence over manual replay.
+        stopSavedSpeech()
+        if (critical) {
+            currentTtsJob?.cancel()
+            currentAudioSink?.stopImmediate()
+            currentAudioSink?.release()
+            currentAudioSink = null
+        }
+        queueWakeup.trySend(Unit)
+        return true
+    }
+
+    private suspend fun processIncomingMessagePacket(packet: ItantraPacket, generation: Long, receivedPeerId: String, receivedEmergencyEpoch: Long) {
+        fun obsolete(): Boolean = generation != connectionGeneration.get() ||
+            ((packet.type == PacketType.EMERGENCY_CODE || packet.flags.toInt() == com.itantra.domain.model.MessagePriority.CRITICAL) &&
+                receivedEmergencyEpoch != emergencyEpoch.get())
+        if (obsolete()) return
         stopSavedSpeech()
         savedSpeechPlayer.awaitStopped()
+        alertJob?.cancel()
+        alertAudioSink?.stopImmediate()
+        alertJob?.join()
+        alertJob = null
         val isEmergencyCode = packet.type == PacketType.EMERGENCY_CODE
 
         // Extract packet language metadata first, before building text or choosing local language.
@@ -1151,6 +1403,7 @@ class TransceiverCoordinator(
                 val translationRes = try {
                     translationRouter.routeAndTranslate(text, pktLang, localLanguage)
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     android.util.Log.e("TransceiverCoord", "Receiver-side translation exception", e)
                     null
                 }
@@ -1170,8 +1423,10 @@ class TransceiverCoordinator(
             }
         }
 
-        val remoteDeviceId = _activePeerProfile.value?.deviceId ?: ""
-        val activePeer = _activeConversationPeerId.value?.takeIf { it.isNotBlank() } ?: remoteDeviceId
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+        if (obsolete()) return
+        val remoteDeviceId = receivedPeerId
+        val activePeer = remoteDeviceId
         val myDeviceId = deviceProfileManager?.currentDeviceId ?: ""
 
         val msg = TransceiverMessage(
@@ -1205,7 +1460,8 @@ class TransceiverCoordinator(
                 createdAt = System.currentTimeMillis(),
                 retryStatus = com.itantra.domain.model.EmergencyRetryStatus.PENDING,
                 humanAckStatus = false,
-                resolvedPhrase = text
+                resolvedPhrase = text,
+                peerId = receivedPeerId
             )
             emergencyStore.saveRecord(emergencyRec)
             _activeEmergencyAlert.value = emergencyRec
@@ -1238,13 +1494,10 @@ class TransceiverCoordinator(
             }
             if (!ttsInstalled) {
                 updateMessage(msg.messageId) {
-                    if (finalLanguage in FIVE_VOICE_LANGUAGES) {
-                        it.copy(state = MessageState.DELIVERED,
-                            statusDetail = "Voice unavailable: install ${finalLanguage.name.lowercase()} Receive (TTS) pack")
-                    } else it.copy(state = MessageState.DELIVERED,
-                        statusDetail = "TTS_MODEL_NOT_INSTALLED")
+                    it.copy(state = MessageState.DELIVERED,
+                        statusDetail = "Voice unavailable: install ${finalLanguage.name.lowercase()} Receive (TTS) pack")
                 }
-                if (finalLanguage in FIVE_VOICE_LANGUAGES) sendTtsFailed(packet.messageId)
+                sendTtsFailed(packet.messageId, generation)
                 return
             }
             try {
@@ -1254,7 +1507,8 @@ class TransceiverCoordinator(
                     "ensureTts complete: engine=${sessionManager.currentTtsEngine?.languageCode} " +
                     "loaded=${sessionManager.currentTtsEngine?.isLoaded}"
                 )
-            } catch (e: Exception) {
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (e: Exception) {
                 android.util.Log.w("RX_TTS", "ensureTts failed for $finalLanguage: ${e.message}")
             }
         }
@@ -1280,18 +1534,16 @@ class TransceiverCoordinator(
             android.util.Log.w("RX_TTS", "Voice unavailable for packet=${packet.messageId}: $reason")
             updateMessage(msg.messageId) {
                 it.copy(state = MessageState.DELIVERED,
-                    statusDetail = if (finalLanguage in FIVE_VOICE_LANGUAGES)
-                        "Voice unavailable: ${finalLanguage.name.lowercase()} TTS could not load ($reason)"
-                    else reason)
+                    statusDetail = "Voice unavailable: ${finalLanguage.name.lowercase()} TTS could not load ($reason)")
             }
-            sendTtsFailed(packet.messageId)
+            sendTtsFailed(packet.messageId, generation)
             return
         }
 
+        cancelActiveRecording()
+
         // Step 4: TTS Suppression — mute microphone and cancel cooldown before playback
-        cooldownJob?.cancel()
-        isTtsPlaying = true
-        continuousListenEngine.pauseListening()
+        val playback = beginTtsPlayback()
 
         try {
             val t0 = SystemClock.elapsedRealtimeNanos()
@@ -1306,18 +1558,9 @@ class TransceiverCoordinator(
                     correlationId = msg.messageId.toString()
                 )
                 android.util.Log.d("RX_TTS", "synthesisStart packet=${packet.messageId} lang=${engine.languageCode}")
-                val result = engine.synthesize(req)
-
-                // Step 6: Validate synthesis result — do not play empty PCM
-                if (result.pcmAudio.isEmpty() || result.sampleRateHz <= 0) {
-                    val detail = "TTS_EMPTY_PCM: samples=${result.pcmAudio.size} sampleRate=${result.sampleRateHz}"
-                    android.util.Log.e("RX_TTS", detail)
-                    updateMessage(msg.messageId) {
-                        it.copy(state = MessageState.ERROR, statusDetail = detail)
-                    }
-                    sendTtsFailed(packet.messageId)
-                    return
-                }
+                val result = sessionManager.synthesizeTts(req)
+                kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                com.itantra.core.inference.requireSpeechAudio(result)
 
                 pcmAudio = result.pcmAudio
                 sampleRate = result.sampleRateHz
@@ -1330,8 +1573,8 @@ class TransceiverCoordinator(
                 updateMessage(msg.messageId) { it.copy(state = MessageState.REMOTE_PLAYING) }
                 if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
                     try {
-                        val startedPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.TTS_STARTED, messageId = packet.messageId))
-                        scope.launch { transportEngine.send(startedPkt) }
+                        val startedPkt = encryptForConnection(generation, ItantraPacket(PacketType.TTS_STARTED, messageId = packet.messageId))
+                        scope.launch { sendForConnection(generation, startedPkt) }
                     } catch (e: Exception) {
                         android.util.Log.w("TransceiverCoord", "Could not send TTS_STARTED: ${e.message}")
                     }
@@ -1350,8 +1593,8 @@ class TransceiverCoordinator(
                 updateMessage(msg.messageId) { it.copy(state = MessageState.REMOTE_PLAYING) }
                 if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
                     try {
-                        val startedPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.TTS_STARTED, messageId = packet.messageId))
-                        scope.launch { transportEngine.send(startedPkt) }
+                        val startedPkt = encryptForConnection(generation, ItantraPacket(PacketType.TTS_STARTED, messageId = packet.messageId))
+                        scope.launch { sendForConnection(generation, startedPkt) }
                     } catch (e: Exception) {
                         android.util.Log.w("TransceiverCoord", "Could not send TTS_STARTED: ${e.message}")
                     }
@@ -1382,6 +1625,7 @@ class TransceiverCoordinator(
             sink.init(sampleRate, usage, requestMaxVolume = isCritical)
             sink.play(pcmAudio)
             sink.flushAndStop()
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
             android.util.Log.d("RX_TTS", "playbackCompleted=true framesTotal=${pcmAudio.size}")
 
             val usedVoice = (engine != null && canSpeak)
@@ -1398,8 +1642,8 @@ class TransceiverCoordinator(
             val payloadBytes = ByteBuffer.allocate(8).order(ByteOrder.BIG_ENDIAN).putLong(ttfaMillis).array()
             if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
                 try {
-                    val compPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.TTS_COMPLETED, messageId = packet.messageId, payload = payloadBytes))
-                    scope.launch { transportEngine.send(compPkt) }
+                    val compPkt = encryptForConnection(generation, ItantraPacket(PacketType.TTS_COMPLETED, messageId = packet.messageId, payload = payloadBytes))
+                    scope.launch { sendForConnection(generation, compPkt) }
                 } catch (e: Exception) {
                     android.util.Log.w("TransceiverCoord", "Could not send TTS_COMPLETED: ${e.message}")
                 }
@@ -1412,29 +1656,23 @@ class TransceiverCoordinator(
             val detail = "TTS_SYNTHESIS_FAILED: ${e.message}"
             android.util.Log.e("RX_TTS", detail, e)
             updateMessage(msg.messageId) { it.copy(state = MessageState.ERROR, statusDetail = detail) }
-            sendTtsFailed(packet.messageId)
+            sendTtsFailed(packet.messageId, generation)
         } finally {
             currentAudioSink?.release()
             currentAudioSink = null
 
             // Resume VAD after TTS
-            cooldownJob = scope.launch {
-                delay(300)
-                isTtsPlaying = false
-                if (continuousModeJob?.isActive == true) {
-                    continuousListenEngine.resetAndResume()
-                }
-            }
+            endTtsPlayback(playback)
         }
     }
 
     /** Sends TTS_FAILED to the sender if session is secure. */
-    private fun sendTtsFailed(messageId: Long) {
+    private fun sendTtsFailed(messageId: Long, generation: Long) {
         if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
             scope.launch {
                 try {
-                    val failPkt = secureSessionManager.encrypt(ItantraPacket(PacketType.TTS_FAILED, messageId = messageId))
-                    transportEngine.send(failPkt)
+                    val failPkt = encryptForConnection(generation, ItantraPacket(PacketType.TTS_FAILED, messageId = messageId))
+                    sendForConnection(generation, failPkt)
                 } catch (ex: Exception) {
                     android.util.Log.w("TransceiverCoord", "Could not send TTS_FAILED: ${ex.message}")
                 }
@@ -1461,13 +1699,17 @@ class TransceiverCoordinator(
                 continuousListenEngine.start()
                 launch {
                     try {
-                        audioSource.stream.collect { samples ->
-                            if (!isTtsPlaying && !savedSpeechPlayback.value.busy) {
+                        (microphoneFrames ?: audioSource.stream).collect { samples ->
+                            if (recordingJob == null && currentTtsJob?.isActive != true && !isTtsPlaying && !savedSpeechPlayback.value.busy) {
                                 continuousListenEngine.feedAudio(samples)
                             }
                         }
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        com.itantra.core.service.OperationalForegroundService.reportContinuousFailure(
+                            "Microphone unavailable: ${e.message ?: "check microphone access and retry"}")
+                        com.itantra.core.service.OperationalForegroundService.stopContinuous(context)
                     }
                 }
                 launch {
@@ -1485,6 +1727,8 @@ class TransceiverCoordinator(
     }
 
     private fun processContinuousSegment(audio: FloatArray) {
+        if (recordingJob != null || isTtsPlaying || savedSpeechPlayback.value.busy ||
+            continuousModeJob?.isActive != true || sttProcessingCount.get() != 0) return
         val durationS = audio.size / 16000.0
         metricsRecorder.recordVadSegment(durationS, audio.size)
 
@@ -1517,6 +1761,9 @@ class TransceiverCoordinator(
         val msgId = nextMessageId()
         val sttLang = sessionManager.activeSttLanguage.value ?: LanguageCode.HINDI
         val targetLang = resolveTargetLanguage(sttLang)
+        val targetPreference = currentTargetLanguage.value
+        val peerVoices = _peerCapabilities.value.supportedTts.toList()
+        val activePeer = _activeConversationPeerId.value ?: _activePeerProfile.value?.deviceId.orEmpty()
         val msg = TransceiverMessage(
             messageId = msgId,
             language = sttLang,
@@ -1525,27 +1772,26 @@ class TransceiverCoordinator(
             text = "Recognizing...",
             source = MessageSource.LOCAL,
             createdAtLocal = System.currentTimeMillis(),
-            state = MessageState.STT_PROCESSING
+            state = MessageState.STT_PROCESSING,
+            peerId = activePeer,
+            senderDeviceId = deviceProfileManager?.currentDeviceId.orEmpty(),
+            receiverDeviceId = activePeer,
+            isVoiceGenerated = true,
         )
         addMessage(msg)
 
+        sttProcessingCount.incrementAndGet()
         scope.launch {
             sttMutex.withLock {
                 try {
-                    engine.feed(audio)
                     val t0 = SystemClock.elapsedRealtimeNanos()
-                    val result = engine.finalizeUtterance()
+                    val result = sessionManager.recognizeCapture(engine, listOf(audio))
                     val latencyMillis = (SystemClock.elapsedRealtimeNanos() - t0) / 1_000_000
                     val durationMillis = (audio.size.toLong() * 1000) / 16000
 
                     metricsRecorder.recordSttInferenceTime(latencyMillis)
                     metricsRecorder.recordSttEndpointToFinalText(latencyMillis)
                     metricsRecorder.recordSttAudioDuration(durationMillis)
-
-                    if (result.text.isBlank()) {
-                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "No speech recognized \u2014 try again") }
-                        return@launch
-                    }
 
                     if (result.diagnostic != null) {
                         updateMessage(msgId) {
@@ -1558,6 +1804,12 @@ class TransceiverCoordinator(
                         return@launch
                     }
 
+                    if (result.text.isBlank()) {
+                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "No speech recognized \u2014 try again") }
+                        return@launch
+                    }
+
+
                     if (secureSessionManager.state.value != SecureSessionState.SECURE_VERIFIED) {
                         updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = result.text, statusDetail = "Secure Link Required") }
                         return@launch
@@ -1569,7 +1821,7 @@ class TransceiverCoordinator(
                     }
 
                     val srcLang = result.languageCode
-                    val targetLang = resolveTargetLanguage(srcLang)
+                    val targetLang = resolveTargetLanguage(srcLang, targetPreference, peerVoices)
                     var finalTxt = result.text
                     var origTxt: String? = null
                     var translationStatus = com.itantra.domain.model.TranslationStatus.BYPASSED
@@ -1662,17 +1914,18 @@ class TransceiverCoordinator(
                     e.printStackTrace()
                     updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = e.message ?: "Speech processing failed") }
                 } finally {
-                    if (!isTtsPlaying && !savedSpeechPlayback.value.busy && continuousModeJob?.isActive == true) {
-                        continuousListenEngine.resumeListening()
-                    }
+                    sttProcessingCount.decrementAndGet()
+                    resumeContinuousIfIdle()
                 }
             }
         }
     }
 
-    fun startRecording(isCritical: Boolean = false) {
+    @Synchronized fun startRecording(isCritical: Boolean = false) {
         stopSavedSpeech()
         if (recordingJob != null) return
+        // Half duplex: do not transcribe speech coming from this phone's speaker.
+        if (isTtsPlaying || currentTtsJob?.isActive == true || _activeEmergencyAlert.value != null) return
         val engine = sessionManager.currentSttEngine
         val sttLang = sessionManager.activeSttLanguage.value ?: LanguageCode.HINDI
         if (engine == null || !engine.isLoaded) {
@@ -1706,6 +1959,9 @@ class TransceiverCoordinator(
         recordingStartTime = SystemClock.elapsedRealtime()
         val msgId = nextMessageId()
         activeRecordingMessageId = msgId
+        activeRecordingEngine = engine
+        recordingTarget = currentTargetLanguage.value
+        recordingPeerVoices = _peerCapabilities.value.supportedTts.toList()
 
         if (continuousModeJob?.isActive == true) {
             continuousListenEngine.pauseListening()
@@ -1731,26 +1987,42 @@ class TransceiverCoordinator(
         )
         addMessage(msg)
 
-        recordingJob = scope.launch {
-            sttMutex.withLock { engine.reset() }
-            launch {
+        recordingJob = scope.launch(start = kotlinx.coroutines.CoroutineStart.LAZY) {
+            val limitJob = launch {
                 delay(60_000L) // 60s max
                 stopRecording(msgId)
             }
             try {
-                audioSource.stream.collect { samples ->
+                (microphoneFrames ?: audioSource.stream).collect { samples ->
                     if (samples.isNotEmpty()) {
-                        activeRecordingChunks.add(samples.clone())
-                        engine.feed(samples)
+                        synchronized(activeRecordingChunks) {
+                            if (activeRecordingMessageId == msgId) activeRecordingChunks.add(samples.clone())
+                        }
                     }
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
-                e.printStackTrace()
+                synchronized(activeRecordingChunks) {
+                    if (activeRecordingMessageId == msgId) {
+                        activeRecordingChunks.clear()
+                        activeRecordingMessageId = 0L
+                        activeRecordingEngine = null
+                        recordingJob = null
+                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "Microphone unavailable",
+                            statusDetail = e.message ?: "Check microphone permission and try again") }
+                    }
+                }
+                resumeContinuousIfIdle()
+            } finally {
+                limitJob.cancel()
             }
         }
+        recordingJob?.start()
     }
 
-    fun processTestAudio(samples: FloatArray) {
+    @Synchronized fun processTestAudio(samples: FloatArray) {
+        if (recordingJob != null) return
         val engine = sessionManager.currentSttEngine ?: return
         val msgId = nextMessageId()
         val targetLang = resolveTargetLanguage(engine.languageCode)
@@ -1772,13 +2044,11 @@ class TransceiverCoordinator(
         }
         recordingStartTime = SystemClock.elapsedRealtime()
         activeRecordingMessageId = msgId
-        recordingJob = scope.launch {
-            sttMutex.withLock {
-                engine.reset()
-                engine.feed(samples)
-            }
-            stopRecording(msgId)
-        }
+        activeRecordingEngine = engine
+        recordingTarget = currentTargetLanguage.value
+        recordingPeerVoices = _peerCapabilities.value.supportedTts.toList()
+        recordingJob = Job()
+        stopRecording(msgId)
     }
 
     fun stopActiveRecording() {
@@ -1787,34 +2057,41 @@ class TransceiverCoordinator(
         }
     }
 
-    fun cancelActiveRecording() {
+    @Synchronized fun cancelActiveRecording() {
         if (recordingJob == null) return
+        val id = activeRecordingMessageId
         recordingJob?.cancel()
         recordingJob = null
         synchronized(activeRecordingChunks) {
+            activeRecordingMessageId = 0L
+            activeRecordingEngine = null
             activeRecordingChunks.forEach { it.fill(0f) }
             activeRecordingChunks.clear()
         }
-        val id = activeRecordingMessageId
-        activeRecordingMessageId = 0L
         updateMessage(id) { it.copy(state = MessageState.ERROR, text = "Recording cancelled", statusDetail = "Cancelled before transcription or sending") }
-        scope.launch {
-            sttMutex.withLock { sessionManager.currentSttEngine?.reset() }
-            if (!isTtsPlaying && !savedSpeechPlayback.value.busy && continuousModeJob?.isActive == true) continuousListenEngine.resetAndResume()
-        }
+        // Capture buffers are isolated from the recognizer until finalization.
+        resumeContinuousIfIdle()
     }
 
-    fun stopRecording(msgId: Long) {
-        if (recordingJob == null) return
+    @Synchronized fun stopRecording(msgId: Long) {
+        if (recordingJob == null || activeRecordingMessageId != msgId) return
         recordingJob?.cancel()
         recordingJob = null
-
-        val engine = sessionManager.currentSttEngine ?: return
+        val engine = activeRecordingEngine
+        val targetPreference = recordingTarget
+        val peerVoices = recordingPeerVoices
 
         val chunksSnapshot = synchronized(activeRecordingChunks) {
+            activeRecordingMessageId = 0L
+            activeRecordingEngine = null
             val copy = activeRecordingChunks.toList()
             activeRecordingChunks.clear()
             copy
+        }
+        if (engine == null) {
+            updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "Mic language changed; record again") }
+            resumeContinuousIfIdle()
+            return
         }
 
         val totalSamples = chunksSnapshot.sumOf { it.size }
@@ -1822,6 +2099,26 @@ class TransceiverCoordinator(
             (totalSamples * 1000L) / 16000L
         } else {
             SystemClock.elapsedRealtime() - recordingStartTime
+        }
+
+        // Bumped from 200ms to 300ms - accidental taps/brushes on the PTT button were still
+        // occasionally clearing this bar and reaching STT with near-empty audio.
+        if (durationMillis < 300) {
+            resumeContinuousIfIdle()
+            // Cleanly discard micro-tap without leaving persistent error card in UI
+            synchronized(messageMutationLock) {
+                _messages.update { messages -> messages.filter { it.messageId != msgId } }
+            }
+            if (messageDao != null) {
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        messageDao.delete(msgId)
+                    } catch (e: Throwable) {
+                        // ignore
+                    }
+                }
+            }
+            return
         }
 
         // Microphone audio remains in memory; do not persist diagnostic WAV copies.
@@ -1840,12 +2137,7 @@ class TransceiverCoordinator(
 
         if (rms < 0.003f) {
             android.util.Log.i("TransceiverCoordinator", "Silence/low-energy detected (RMS=$rms, ${rmsDbfs} dBFS < 0.003 threshold). Short-circuiting STT.")
-            scope.launch {
-                sttMutex.withLock { engine.reset() }
-                if (continuousModeJob?.isActive == true && !isTtsPlaying && !savedSpeechPlayback.value.busy) {
-                    continuousListenEngine.resetAndResume()
-                }
-            }
+            resumeContinuousIfIdle()
             updateMessage(msgId) {
                 it.copy(
                     state = MessageState.ERROR,
@@ -1857,38 +2149,14 @@ class TransceiverCoordinator(
             return
         }
 
-        // Bumped from 200ms to 300ms - accidental taps/brushes on the PTT button were still
-        // occasionally clearing this bar and reaching STT with near-empty audio.
-        if (durationMillis < 300) {
-            scope.launch {
-                sttMutex.withLock { engine.reset() }
-                if (continuousModeJob?.isActive == true && !isTtsPlaying && !savedSpeechPlayback.value.busy) {
-                    continuousListenEngine.resetAndResume()
-                }
-            }
-            // Cleanly discard micro-tap without leaving persistent error card in UI
-            synchronized(messageMutationLock) {
-                _messages.update { messages -> messages.filter { it.messageId != msgId } }
-            }
-            if (messageDao != null) {
-                scope.launch(Dispatchers.IO) {
-                    try {
-                        messageDao.delete(msgId)
-                    } catch (e: Throwable) {
-                        // ignore
-                    }
-                }
-            }
-            return
-        }
-
         updateMessage(msgId) { it.copy(state = MessageState.STT_PROCESSING, text = "Finalizing...") }
 
+        sttProcessingCount.incrementAndGet()
         scope.launch {
             sttMutex.withLock {
                 try {
                     val t0 = SystemClock.elapsedRealtimeNanos()
-                    val result = engine.finalizeUtterance()
+                    val result = sessionManager.recognizeCapture(engine, chunksSnapshot)
                     val latencyMillis = (SystemClock.elapsedRealtimeNanos() - t0) / 1_000_000
 
                     // Preserved: full finalizeUtterance() latency (buffering + padding + decode) for end-to-end latency
@@ -1903,11 +2171,6 @@ class TransceiverCoordinator(
                         metricsRecorder.recordSttRealTimeFactor(rtf)
                     }
 
-                    if (result.text.isBlank()) {
-                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "No speech recognized \u2014 try again") }
-                        return@withLock
-                    }
-
                     if (result.diagnostic != null) {
                         updateMessage(msgId) {
                             it.copy(
@@ -1919,6 +2182,12 @@ class TransceiverCoordinator(
                         return@withLock
                     }
 
+                    if (result.text.isBlank()) {
+                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, text = "No speech recognized \u2014 try again") }
+                        return@withLock
+                    }
+
+
                     val msg = _messages.value.find { it.messageId == msgId } ?: return@withLock
 
                     val priorityInt = if (msg.priority == com.itantra.domain.model.MessagePriority.CRITICAL) {
@@ -1928,7 +2197,7 @@ class TransceiverCoordinator(
                     }
 
                     val srcLang = result.languageCode
-                    val targetLang = msg.targetLanguage ?: resolveTargetLanguage(srcLang)
+                    val targetLang = resolveTargetLanguage(srcLang, targetPreference, peerVoices)
                     var finalTxt = result.text
                     var origTxt: String? = null
                     var translationStatus = com.itantra.domain.model.TranslationStatus.BYPASSED
@@ -2056,9 +2325,8 @@ class TransceiverCoordinator(
                     e.printStackTrace()
                     updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = e.message ?: "Speech processing failed") }
                 } finally {
-                    if (continuousModeJob?.isActive == true && !isTtsPlaying && !savedSpeechPlayback.value.busy) {
-                        continuousListenEngine.resetAndResume()
-                    }
+                    sttProcessingCount.decrementAndGet()
+                    resumeContinuousIfIdle()
                 }
             }
         }
@@ -2066,14 +2334,20 @@ class TransceiverCoordinator(
 
     fun sendTextMessage(text: String, targetPeerId: String? = null, priority: Int = com.itantra.domain.model.MessagePriority.NORMAL) {
         if (text.isBlank()) return
+        val generation = connectionGeneration.get()
+        val activePeer = targetPeerId ?: _activeConversationPeerId.value ?: _activePeerProfile.value?.deviceId ?: ""
+        val targetPreference = currentTargetLanguage.value
+        val peerVoices = _peerCapabilities.value.supportedTts.toList()
         scope.launch {
             val msgId = nextMessageId()
-            val localLang = sessionManager.activeLanguage.value ?: LanguageCode.ENGLISH
+            // Typed input follows the selected source, even when its mic model is
+            // loading or only a different saved-message TTS voice is resident.
+            val localLang = sessionManager.activeSttLanguage.value
+                ?: languagePackRepository.observeActiveLanguage().first() ?: LanguageCode.ENGLISH
             // FIX 009: resolve target language with the same policy as voice — from user preference,
             // peer capability, or same-language bypass. Previously targetLanguage was always localLang
             // and translationMode=NONE, so typed text was never translated.
-            val targetLang = resolveTargetLanguage(localLang)
-            val activePeer = targetPeerId ?: _activeConversationPeerId.value ?: _activePeerProfile.value?.deviceId ?: ""
+            val targetLang = resolveTargetLanguage(localLang, targetPreference, peerVoices)
             val myDeviceId = deviceProfileManager?.currentDeviceId ?: ""
 
             val msg = TransceiverMessage(
@@ -2164,6 +2438,10 @@ class TransceiverCoordinator(
                 }
             }
 
+            if (activePeer.isNotBlank() && _activePeerProfile.value?.deviceId != activePeer) {
+                updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = "Reconnect this peer before sending") }
+                return@launch
+            }
             updateMessage(msgId) { it.copy(state = MessageState.TRANSMITTING) }
 
             val payload = finalText.toByteArray(Charsets.UTF_8)
@@ -2179,10 +2457,11 @@ class TransceiverCoordinator(
             )
 
             try {
-                val securePacket = secureSessionManager.encrypt(packet)
-                val txMetrics = transportEngine.send(securePacket)
+                val securePacket = encryptForConnection(generation, packet)
+                val txMetrics = sendForConnection(generation, securePacket)
+                val acknowledged = txMetrics.transmissionLatencyMillis is com.itantra.domain.model.Measurement.Measured
                 val rtt = txMetrics.transmissionLatencyMillis.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0L }
-                if (rtt > 0) {
+                if (acknowledged) {
                     updateMessage(msgId) {
                         it.copy(
                             state = MessageState.DELIVERED,
@@ -2211,9 +2490,10 @@ class TransceiverCoordinator(
         targetPeerId: String? = null,
         priority: Int = com.itantra.domain.model.MessagePriority.NORMAL
     ) {
+        val generation = connectionGeneration.get()
+        val activePeer = targetPeerId ?: _activeConversationPeerId.value ?: _activePeerProfile.value?.deviceId ?: ""
         scope.launch {
             val msgId = nextMessageId()
-            val activePeer = targetPeerId ?: _activeConversationPeerId.value ?: _activePeerProfile.value?.deviceId ?: ""
             val myDeviceId = deviceProfileManager?.currentDeviceId ?: ""
 
             val initialMsg = TransceiverMessage(
@@ -2232,7 +2512,12 @@ class TransceiverCoordinator(
             addMessage(initialMsg)
 
             val locationResult = try {
-                locationProvider.getCurrentLocation()
+                val fix = locationProvider.getCurrentLocation()
+                if (fix is LocationResult.Success && !com.itantra.core.location.isValidGpsCoordinates(
+                        fix.latitude, fix.longitude, fix.accuracyMeters))
+                    LocationResult.Failure.Error("GPS returned invalid coordinates") else fix
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 LocationResult.Failure.Error(e.message ?: "Failed to acquire location")
             }
@@ -2271,11 +2556,16 @@ class TransceiverCoordinator(
                         )
                     }
 
+                    if (activePeer.isNotBlank() && _activePeerProfile.value?.deviceId != activePeer) {
+                        updateMessage(msgId) { it.copy(state = MessageState.ERROR, statusDetail = "Reconnect this peer before sharing location") }
+                        return@launch
+                    }
                     try {
-                        val securePacket = secureSessionManager.encrypt(packet)
-                        val txMetrics = transportEngine.send(securePacket)
+                        val securePacket = encryptForConnection(generation, packet)
+                        val txMetrics = sendForConnection(generation, securePacket)
+                        val acknowledged = txMetrics.transmissionLatencyMillis is com.itantra.domain.model.Measurement.Measured
                         val rtt = txMetrics.transmissionLatencyMillis.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0L }
-                        if (rtt > 0) {
+                        if (acknowledged) {
                             updateMessage(msgId) {
                                 it.copy(
                                     state = MessageState.DELIVERED,
@@ -2327,6 +2617,7 @@ class TransceiverCoordinator(
     }
 
     fun sendVoiceMessage(msgId: Long, priority: Int = com.itantra.domain.model.MessagePriority.NORMAL) {
+        val generation = connectionGeneration.get()
         scope.launch {
             val msg = _messages.value.find { it.messageId == msgId } ?: return@launch
             if (msg.text.isBlank() || msg.state == MessageState.RECORDING || msg.state == MessageState.STT_PROCESSING) return@launch
@@ -2364,7 +2655,7 @@ class TransceiverCoordinator(
                 }
                 try {
                     val tCrypto0 = SystemClock.elapsedRealtimeNanos()
-                    val securePacket = secureSessionManager.encrypt(packet) // Encrypt inside loop to get a fresh nonce/counter each time
+                    val securePacket = encryptForConnection(generation, packet) // Encrypt inside loop to get a fresh nonce/counter each time
                     val cryptoLatency = (SystemClock.elapsedRealtimeNanos() - tCrypto0) / 1_000_000
 
                     metricsRecorder.recordCryptoMetrics(
@@ -2378,17 +2669,18 @@ class TransceiverCoordinator(
                         )
                     )
 
-                    val txMetrics = transportEngine.send(securePacket)
+                    val txMetrics = sendForConnection(generation, securePacket)
+                    val acknowledged = txMetrics.transmissionLatencyMillis is com.itantra.domain.model.Measurement.Measured
                     val rtt = txMetrics.transmissionLatencyMillis.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0L }
                     val pBytes = txMetrics.packetBytes.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0 }
                     val semBytes = packet.payload.size
                     val secBytes = securePacket.payload.size
                     val frameBytes = txMetrics.finalFrameBytes.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0 }
 
-                    if (rtt > 0 || sendPriority != com.itantra.domain.model.MessagePriority.CRITICAL) {
+                    if (acknowledged || sendPriority != com.itantra.domain.model.MessagePriority.CRITICAL) {
                         success = true
                         val estE2e = msg.sttLatencyMillis + msg.mtLatencyMillis + cryptoLatency + (rtt / 2)
-                        if (rtt > 0) {
+                        if (acknowledged) {
                             updateMessage(msgId) {
                                 it.copy(
                                     state = MessageState.DELIVERED,
@@ -2445,6 +2737,7 @@ class TransceiverCoordinator(
      * is cancelled on each disconnect or state reset.
      */
     private fun startEncryptedHeartbeat() {
+        val generation = connectionGeneration.get()
         encryptedHeartbeatJob?.cancel()
         encryptedHeartbeatJob = scope.launch {
             while (isActive &&
@@ -2459,8 +2752,8 @@ class TransceiverCoordinator(
                         type = PacketType.HEARTBEAT,
                         messageId = nextMessageId()
                     )
-                    val encrypted = secureSessionManager.encrypt(heartbeat)
-                    transportEngine.send(encrypted)
+                    val encrypted = encryptForConnection(generation, heartbeat)
+                    sendForConnection(generation, encrypted)
                 } catch (e: Exception) {
                     android.util.Log.w("TransceiverCoordinator", "Encrypted heartbeat failed: ${e.message}")
                 }
@@ -2470,10 +2763,11 @@ class TransceiverCoordinator(
 
     /**
      * Confirms SAS match, caches SECURE_VERIFY, and retries the same packet every 2s
-     * throughout the 60s verification window until the peer responds with its own SECURE_VERIFY
-     * and state reaches SECURE_VERIFIED.
+     * until authenticated peer traffic proves that the peer received our confirmation.
+     * Local SECURE_VERIFIED must not cancel the final outbound confirmation.
      */
     fun confirmPeerVerification() {
+        if (secureSessionManager.localSasConfirmed) return
         val gen = connectionGeneration.get()
         verifyRetryJob?.cancel()
         verifyRetryJob = scope.launch {
@@ -2487,33 +2781,26 @@ class TransceiverCoordinator(
                     return@launch
                 }
             }
-            try {
-                transportEngine.send(verifyPacket)
-            } catch (e: Exception) {
-                android.util.Log.w("TransceiverCoordinator", "Initial SECURE_VERIFY send failed: ${e.message}")
-            }
-            if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
-                verifyRetryJob = null
-                return@launch
-            }
-            // Retry sending the SAME cached verifyPacket every 2 seconds while within window
             val deadline = android.os.SystemClock.elapsedRealtime() + SAS_TIMEOUT_MS
             while (isActive &&
                 connectionGeneration.get() == gen &&
-                secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION &&
+                cachedVerifyPacket === verifyPacket &&
+                secureSessionManager.state.value in setOf(SecureSessionState.WAITING_USER_VERIFICATION, SecureSessionState.SECURE_VERIFIED) &&
                 android.os.SystemClock.elapsedRealtime() < deadline
             ) {
-                delay(VERIFY_RETRY_INTERVAL_MS)
-                if (connectionGeneration.get() != gen) break
-                if (secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) break
-                if (secureSessionManager.state.value == SecureSessionState.WAITING_USER_VERIFICATION) {
-                    android.util.Log.d("TransceiverCoordinator", "Retrying cached SECURE_VERIFY")
-                    try {
-                        transportEngine.send(verifyPacket)
-                    } catch (e: Exception) {
-                        android.util.Log.w("TransceiverCoordinator", "SECURE_VERIFY retry failed: ${e.message}")
-                    }
+                try {
+                    sendForConnection(gen, verifyPacket)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    android.util.Log.w("TransceiverCoordinator", "SECURE_VERIFY send failed: ${e.message}")
                 }
+                delay(VERIFY_RETRY_INTERVAL_MS)
+            }
+            if (connectionGeneration.get() == gen && cachedVerifyPacket === verifyPacket &&
+                secureSessionManager.state.value == SecureSessionState.SECURE_VERIFIED) {
+                secureSessionManager.setHandshakeTimeout()
+                transportEngine.disconnect()
             }
         }
     }
@@ -2555,11 +2842,16 @@ class TransceiverCoordinator(
                 emergencyTtsAnnounce = settings.emergencyTtsAnnounce
                 vadSensitivity = settings.vadSensitivity
                 noiseSuppressionDb = settings.noiseSuppressionDb
+                if (deviceProfileManager?.updateDisplayName(settings.operatorName) == true) {
+                    // A verified peer should see name edits without reconnecting.
+                    sendProfileHandshake()
+                }
             }
         }
     }
 
     fun sendEmergencyCode(code: com.itantra.domain.model.EmergencyCode) {
+        val generation = connectionGeneration.get()
         scope.launch {
             val msgId = nextMessageId()
             val peerId = _activeConversationPeerId.value?.takeIf { it.isNotBlank() }
@@ -2589,7 +2881,8 @@ class TransceiverCoordinator(
                 createdAt = System.currentTimeMillis(),
                 retryStatus = com.itantra.domain.model.EmergencyRetryStatus.PENDING,
                 retryCount = 0,
-                resolvedPhrase = text
+                resolvedPhrase = text,
+                peerId = peerId
             )
             emergencyStore.saveRecord(record)
 
@@ -2611,7 +2904,7 @@ class TransceiverCoordinator(
                 attempt++
                 try {
                     val tCrypto0 = SystemClock.elapsedRealtimeNanos()
-                    val securePacket = secureSessionManager.encrypt(packet)
+                    val securePacket = encryptForConnection(generation, packet)
                     val cryptoLatency = (SystemClock.elapsedRealtimeNanos() - tCrypto0) / 1_000_000
 
                     metricsRecorder.recordCryptoMetrics(
@@ -2625,14 +2918,15 @@ class TransceiverCoordinator(
                         )
                     )
 
-                    val txMetrics = transportEngine.send(securePacket)
+                    val txMetrics = sendForConnection(generation, securePacket)
+                    val acknowledged = txMetrics.transmissionLatencyMillis is com.itantra.domain.model.Measurement.Measured
                     val rtt = txMetrics.transmissionLatencyMillis.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0L }
                     val pBytes = txMetrics.packetBytes.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0 }
                     val semBytes = packet.payload.size
                     val secBytes = securePacket.payload.size
                     val frameBytes = txMetrics.finalFrameBytes.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0 }
 
-                    if (rtt > 0) {
+                    if (acknowledged) {
                         success = true
                         emergencyStore.recordTransportAck(msgId)
                         val estE2e = cryptoLatency + (rtt / 2)
@@ -2668,6 +2962,7 @@ class TransceiverCoordinator(
     }
 
     fun sendHumanAck(msgId: Long) {
+        val generation = connectionGeneration.get()
         scope.launch {
             updateMessage(msgId) { it.copy(state = MessageState.ACKNOWLEDGED) }
             emergencyStore.recordHumanAck(msgId)
@@ -2681,8 +2976,10 @@ class TransceiverCoordinator(
                 payload = ByteArray(0)
             )
             try {
-                val securePacket = secureSessionManager.encrypt(packet)
-                transportEngine.send(securePacket)
+                val originalPeer = _messages.value.firstOrNull { it.messageId == msgId }?.peerId
+                if (!originalPeer.isNullOrBlank() && originalPeer != _activePeerProfile.value?.deviceId) return@launch
+                val securePacket = encryptForConnection(generation, packet)
+                sendForConnection(generation, securePacket)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -2697,6 +2994,7 @@ class TransceiverCoordinator(
     }
 
     private suspend fun retryUnresolvedEmergencies() {
+        val generation = connectionGeneration.get()
         val unresolved = emergencyStore.getUnresolvedRecords().filter { it.canRetry && it.source == "LOCAL" }
         for (rec in unresolved) {
             val code = com.itantra.domain.model.EmergencyCode.values().find { it.name == rec.emergencyCode } ?: continue
@@ -2707,10 +3005,11 @@ class TransceiverCoordinator(
                     messageId = rec.messageId,
                     payload = byteArrayOf(code.id)
                 )
-                val securePacket = secureSessionManager.encrypt(packet)
-                val txMetrics = transportEngine.send(securePacket)
+                val securePacket = encryptForConnection(generation, packet)
+                val txMetrics = sendForConnection(generation, securePacket)
+                val acknowledged = txMetrics.transmissionLatencyMillis is com.itantra.domain.model.Measurement.Measured
                 val rtt = txMetrics.transmissionLatencyMillis.let { if (it is com.itantra.domain.model.Measurement.Measured) it.value else 0L }
-                val ok = rtt > 0
+                val ok = acknowledged
                 emergencyStore.recordRetryAttempt(rec.messageId, ok, System.currentTimeMillis())
                 if (ok) {
                     emergencyStore.recordTransportAck(rec.messageId)
@@ -2721,8 +3020,41 @@ class TransceiverCoordinator(
         }
     }
 
+    private suspend fun encryptForConnection(generation: Long, packet: ItantraPacket): ItantraPacket {
+        check(connectionGeneration.get() == generation && sessionConnection == transportEngine.connectionToken) {
+            "Connection changed; retry on the original peer"
+        }
+        val encrypted = secureSessionManager.encrypt(packet)
+        check(connectionGeneration.get() == generation && sessionConnection == transportEngine.connectionToken) {
+            "Connection changed while encrypting"
+        }
+        return encrypted
+    }
+
+    private suspend fun sendForConnection(generation: Long, packet: ItantraPacket): com.itantra.domain.model.TransmissionMetrics {
+        val connection = sessionConnection
+        check(connectionGeneration.get() == generation && connection == transportEngine.connectionToken) {
+            "Connection changed before sending"
+        }
+        if (packet.type in setOf(PacketType.TEXT, PacketType.EMERGENCY_CODE, PacketType.LOCATION)) {
+            val message = _messages.value.find { it.messageId == packet.messageId && it.source == MessageSource.LOCAL }
+                ?: error("Outgoing message is no longer available")
+            val recipient = message.receiverDeviceId.ifBlank { message.peerId }
+            check(recipient.isBlank() || recipient == com.itantra.domain.model.BROADCAST_PEER_ID ||
+                recipient == _activePeerProfile.value?.deviceId) { "Connect to the original recipient before sending" }
+            synchronized(receiptBindings) {
+                receiptBindings[packet.messageId] = generation
+                while (receiptBindings.size > MAX_RECEIPT_BINDINGS) receiptBindings.remove(receiptBindings.keys.first())
+            }
+        }
+        return transportEngine.send(packet, connection)
+    }
+
     fun shutdown() {
         stopSavedSpeech()
+        currentAudioSink?.stopImmediate()
+        alertAudioSink?.stopImmediate()
+        continuousListenEngine.stop()
         scope.cancel()
     }
 
@@ -2731,7 +3063,12 @@ class TransceiverCoordinator(
         val job = scope.coroutineContext[kotlinx.coroutines.Job]
         job?.cancel()
         job?.join()
-        persistenceQueue.cancel()
+        ackQueue.cancel()
+        receiptBindings.clear()
+        synchronized(queueLock) {
+            messageQueue.clear()
+            pendingPayloadBytes = 0
+        }
         continuousListenEngine.stop()
         synchronized(activeRecordingChunks) {
             activeRecordingChunks.forEach { it.fill(0f) }

@@ -167,7 +167,7 @@ class MultilingualSpeechPipelineTest {
     }
 
     @Test
-    fun `ensureStt in AUTO mode reuses loaded recognizer without reloading`() = runTest {
+    fun `ensureStt in AUTO mode reuses the same configured recognizer without reloading`() = runTest {
         var createCount = 0
         val factory = object : EngineFactory {
             override fun createRecognizer(language: LanguageCode, autoDetect: Boolean): SpeechRecognizerEngine {
@@ -185,8 +185,8 @@ class MultilingualSpeechPipelineTest {
         sessionManager.ensureStt(LanguageCode.HINDI, autoDetect = true)
         assertEquals(1, createCount)
 
-        // Second call with Telugu in AUTO mode should reuse the shared multilingual recognizer
-        sessionManager.ensureStt(LanguageCode.TELUGU, autoDetect = true)
+        // The base language and target both affect the recognizer configuration.
+        sessionManager.ensureStt(LanguageCode.HINDI, autoDetect = true)
         assertEquals(1, createCount)
     }
 

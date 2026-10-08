@@ -1,0 +1,90 @@
+{
+  "debug": {
+    "path": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\build\\app\\outputs\\apk\\debug\\app-debug.apk",
+    "sha256": "13939d2f0127a3fe388e470d5681c23819c99a6f07fdd287c2c9da44a197bcac",
+    "bytes": 86347091,
+    "debuggable": true,
+    "allow_backup": false,
+    "exported_activities": [
+      "com.example.itantra.MainActivity",
+      "androidx.activity.ComponentActivity",
+      "androidx.compose.ui.tooling.PreviewActivity"
+    ],
+    "logging_method_reference_count": 63,
+    "sensitive_sdk_logging_markers": [
+      "auth token: ",
+      "refresh_token: ",
+      "refreshed auth token: "
+    ],
+    "sherpa_jni_class_count": 123,
+    "native_library_sha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libonnxruntime.so": "7a2fb92eb67037837c3f0e428bd732fd0d05ced0546d9e740090c07573d8249a",
+      "lib/arm64-v8a/libsherpa-onnx-c-api.so": "c85e2382e2ca12b0513826be926eaccfea896b4cbf568182e287671ba526f80d",
+      "lib/arm64-v8a/libsherpa-onnx-cxx-api.so": "5eabb2bcf5a8af66aeab37431c09fab4a9c65cdebf02bd7e50f8c589044bd70e",
+      "lib/arm64-v8a/libsherpa-onnx-jni.so": "17a54c056abad7fbf4fc13fad158c4d80d2de85c0d135c3124a558af3ca0f60b",
+      "lib/arm64-v8a/libsqlcipher.so": "da51355b6c455150dae59e902c484292d33d752b7fec36f723558625d88048fa",
+      "lib/arm64-v8a/libtranslate_jni.so": "45040ff0cdd194d6e601589d759e6f1ba733de5f95790f76cc3e2046919046be"
+    },
+    "test_preview_classes_absent": false
+  },
+  "release": {
+    "path": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\build\\app\\outputs\\apk\\release\\app-release-unsigned.apk",
+    "sha256": "a75adbdb85c2bb1de2d8596de90ba3cca4ddce725a25cd598eaec6707bb21714",
+    "bytes": 65109058,
+    "debuggable": false,
+    "allow_backup": false,
+    "exported_activities": [
+      "com.example.itantra.MainActivity"
+    ],
+    "logging_method_reference_count": 0,
+    "sensitive_sdk_logging_markers": [],
+    "sherpa_jni_class_count": 123,
+    "native_library_sha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libonnxruntime.so": "7a2fb92eb67037837c3f0e428bd732fd0d05ced0546d9e740090c07573d8249a",
+      "lib/arm64-v8a/libsherpa-onnx-c-api.so": "c85e2382e2ca12b0513826be926eaccfea896b4cbf568182e287671ba526f80d",
+      "lib/arm64-v8a/libsherpa-onnx-cxx-api.so": "5eabb2bcf5a8af66aeab37431c09fab4a9c65cdebf02bd7e50f8c589044bd70e",
+      "lib/arm64-v8a/libsherpa-onnx-jni.so": "17a54c056abad7fbf4fc13fad158c4d80d2de85c0d135c3124a558af3ca0f60b",
+      "lib/arm64-v8a/libsqlcipher.so": "da51355b6c455150dae59e902c484292d33d752b7fec36f723558625d88048fa",
+      "lib/arm64-v8a/libtranslate_jni.so": "45040ff0cdd194d6e601589d759e6f1ba733de5f95790f76cc3e2046919046be"
+    },
+    "test_preview_classes_absent": true,
+    "native_matches_previous_apk": true
+  },
+  "phone_test": {
+    "path": "D:\\new itantra\\artifacts\\security-hardening-2026-10-08\\iTantra-1.15-security-test.apk",
+    "sha256": "226186b709a9eefb57bedc26ff1ab71670ee172fad6beb53ce4d69710a687e57",
+    "bytes": 65148517,
+    "debuggable": false,
+    "allow_backup": false,
+    "exported_activities": [
+      "com.example.itantra.MainActivity"
+    ],
+    "logging_method_reference_count": 0,
+    "sensitive_sdk_logging_markers": [],
+    "sherpa_jni_class_count": 123,
+    "native_library_sha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libonnxruntime.so": "7a2fb92eb67037837c3f0e428bd732fd0d05ced0546d9e740090c07573d8249a",
+      "lib/arm64-v8a/libsherpa-onnx-c-api.so": "c85e2382e2ca12b0513826be926eaccfea896b4cbf568182e287671ba526f80d",
+      "lib/arm64-v8a/libsherpa-onnx-cxx-api.so": "5eabb2bcf5a8af66aeab37431c09fab4a9c65cdebf02bd7e50f8c589044bd70e",
+      "lib/arm64-v8a/libsherpa-onnx-jni.so": "17a54c056abad7fbf4fc13fad158c4d80d2de85c0d135c3124a558af3ca0f60b",
+      "lib/arm64-v8a/libsqlcipher.so": "da51355b6c455150dae59e902c484292d33d752b7fec36f723558625d88048fa",
+      "lib/arm64-v8a/libtranslate_jni.so": "45040ff0cdd194d6e601589d759e6f1ba733de5f95790f76cc3e2046919046be"
+    },
+    "test_preview_classes_absent": true,
+    "content_matches_verified_release": true,
+    "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+    "signing_certificate_purpose": "Existing development certificate; phone testing only"
+  },
+  "unit_tests": {
+    "tests": 570,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

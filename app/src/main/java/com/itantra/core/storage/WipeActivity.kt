@@ -23,10 +23,18 @@ import java.io.File
 class WipeActivity : ComponentActivity() {
     companion object {
         fun marker(context: Context) = File(context.noBackupFilesDir, "wipe.pending")
+        fun hasPendingWipe(context: Context) = marker(context).exists() || File(marker(context).path + ".bak").exists()
+        fun writeRequest(context: Context, choices: Set<DataRemovalChoice>) {
+            val request = DataRemovalChoice.encode(choices)
+            val file = android.util.AtomicFile(marker(context))
+            val stream = file.startWrite()
+            try { stream.write(request); file.finishWrite(stream) }
+            catch (e: Exception) { file.failWrite(stream); throw e }
+        }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!marker(this).exists()) { finish(); return }
+        if (!hasPendingWipe(this)) { finish(); return }
         runWipe()
     }
     private fun runWipe() {
@@ -47,8 +55,14 @@ class WipeActivity : ComponentActivity() {
                     WipeFiles(filesDir, getDatabasePath(EncryptedDatabase.NAME).parentFile!!,
                         File(applicationInfo.dataDir, "shared_prefs"), noBackupFilesDir,
                         listOf(cacheDir, codeCacheDir) + externalCacheDirs.filterNotNull(),
-                        getExternalFilesDirs(null).filterNotNull(), AndroidKeyProvider()).wipe()
-                    check(marker(this@WipeActivity).delete())
+                        getExternalFilesDirs(null).filterNotNull(), AndroidKeyProvider(), clearHistory = { tables ->
+                            val database = EncryptedDatabase.open(this@WipeActivity, AndroidKeyProvider())
+                            try {
+                                HistoryDataRemoval.clear(database.openHelper.writableDatabase, tables)
+                            } finally { database.close() }
+                        }).wipe(android.util.AtomicFile(marker(this@WipeActivity)).openRead().use { DataRemovalChoice.decode(it.readBytes()) })
+                    android.util.AtomicFile(marker(this@WipeActivity)).delete()
+                    check(!hasPendingWipe(this@WipeActivity))
                 }
                 (getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager).cancelAll()
                 startActivity(Intent(this@WipeActivity, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
@@ -57,6 +71,12 @@ class WipeActivity : ComponentActivity() {
                 setContent { MaterialTheme { Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
                     Text("Wipe could not finish. Private data remains locked until the wipe completes.")
                     Button(onClick = { runWipe() }) { Text("Retry wipe") }
+                    com.example.itantra.ui.screens.settings.WipeDataAction { choices ->
+                        lifecycleScope.launch {
+                            withContext(Dispatchers.IO) { writeRequest(this@WipeActivity, choices) }
+                            runWipe()
+                        }
+                    }
                     TextButton(onClick = { finish() }) { Text("Close") }
                 } } }
             }

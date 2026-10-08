@@ -23,15 +23,32 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class BugfixFixture(val dao: MessageDao? = null) : Closeable {
+internal class BugfixFixture(
+    val dao: MessageDao? = null,
+    transportOverride: TransportEngine? = null,
+    deviceId: String = "IT-LOCAL-0001",
+    recognizerFactory: (LanguageCode) -> SpeechRecognizerEngine? = { null },
+    microphoneFrames: Flow<FloatArray>? = null,
+) : Closeable {
     val dir = kotlin.io.path.createTempDirectory("itantra-bugfix").toFile()
+    private val preferenceValues = ConcurrentHashMap<String, String>()
+    private val preferenceEditor = Proxy.newProxyInstance(SharedPreferences.Editor::class.java.classLoader,
+        arrayOf(SharedPreferences.Editor::class.java)) { proxy, method, args ->
+        when (method.name) {
+            "putString" -> { preferenceValues[args!![0] as String] = args[1] as String; proxy }
+            "apply" -> null
+            "commit" -> true
+            else -> proxy
+        }
+    } as SharedPreferences.Editor
     private val prefs = Proxy.newProxyInstance(SharedPreferences::class.java.classLoader,
         arrayOf(SharedPreferences::class.java)) { _, method, args ->
         when (method.name) {
             "getString" -> when (args!![0]) {
-                "device_id" -> "IT-LOCAL-0001"
-                else -> args[1]
+                "device_id" -> deviceId
+                else -> preferenceValues[args[0] as String] ?: args[1]
             }
+            "edit" -> preferenceEditor
             else -> null
         }
     } as SharedPreferences
@@ -47,7 +64,7 @@ internal class BugfixFixture(val dao: MessageDao? = null) : Closeable {
     var sendAction: suspend (ItantraPacket) -> TransmissionMetrics = {
         TransmissionMetrics(transmissionLatencyMillis = Measurement.Measured(12L))
     }
-    val transport = object : TransportEngine {
+    val transport = transportOverride ?: object : TransportEngine {
         override val isConnected = true
         override val isServer = true
         override fun observeConnectionState(): Flow<ConnectionState> = emptyFlow()
@@ -60,6 +77,9 @@ internal class BugfixFixture(val dao: MessageDao? = null) : Closeable {
         }
     }
     val routes = CopyOnWriteArrayList<Pair<LanguageCode, LanguageCode>>()
+    var translationAction: suspend (String, LanguageCode, LanguageCode) -> TranslationResult = { text, source, target ->
+        TranslationResult(text, "translated", true, source, target)
+    }
     val translation = object : TranslationEngine {
         override val isLoaded = true
         override val supportedSourceLanguages = LanguageCode.entries.toSet()
@@ -68,13 +88,15 @@ internal class BugfixFixture(val dao: MessageDao? = null) : Closeable {
         override fun release() {}
         override suspend fun translate(text: String, sourceLang: LanguageCode, targetLang: LanguageCode): TranslationResult {
             routes.add(sourceLang to targetLang)
-            return TranslationResult(text, "translated", true, sourceLang, targetLang)
+            return translationAction(text, sourceLang, targetLang)
         }
     }
     val spoken = CopyOnWriteArrayList<LanguageCode>()
+    val speechRequests = CopyOnWriteArrayList<SpeechSynthesisRequest>()
+    var ttsInstalled: (LanguageCode) -> Boolean = { true }
     val synthCalls = AtomicInteger()
     val session = ActiveLanguageSessionManager(object : EngineFactory {
-        override fun createRecognizer(language: LanguageCode): SpeechRecognizerEngine? = null
+        override fun createRecognizer(language: LanguageCode): SpeechRecognizerEngine? = recognizerFactory(language)
         override fun createSynthesizer(language: LanguageCode) = object : SpeechSynthesizerEngine {
             override val languageCode = language
             override var isLoaded = false
@@ -82,6 +104,7 @@ internal class BugfixFixture(val dao: MessageDao? = null) : Closeable {
             override suspend fun unload() { isLoaded = false }
             override suspend fun synthesize(request: SpeechSynthesisRequest): SpeechSynthesisResult {
                 spoken.add(request.languageCode)
+                speechRequests.add(request)
                 synthCalls.incrementAndGet()
                 // Exercise routing, without using Android AudioTrack in a host-side test.
                 return SpeechSynthesisResult(request.correlationId, floatArrayOf(), 16000, 1, 0)
@@ -91,10 +114,11 @@ internal class BugfixFixture(val dao: MessageDao? = null) : Closeable {
     val secure = SecureSessionManager()
     val remote = SecureSessionManager()
     var location = LocationResult.Success(12.3456789123, 77.1234567891, 4.25f, 1700000000123L)
+    var locationAction: suspend () -> LocationResult = { location }
     val coordinator = TransceiverCoordinator(context, session, repository, transport,
         InMemoryMetricsRecorder(), secure, TranslationRouter(translation), dao,
-        DeviceProfileManager(context, com.itantra.core.storage.MemoryKeyProvider()), TtsCapabilityProvider { true },
-        object : LocationProvider { override suspend fun getCurrentLocation() = location })
+        DeviceProfileManager(context, com.itantra.core.storage.MemoryKeyProvider()), TtsCapabilityProvider { ttsInstalled(it) },
+        object : LocationProvider { override suspend fun getCurrentLocation() = locationAction() }, microphoneFrames = microphoneFrames)
 
     fun verify() {
         val hello = secure.startHandshake(true)

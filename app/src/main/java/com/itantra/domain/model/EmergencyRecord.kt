@@ -24,7 +24,9 @@ data class EmergencyRecord(
     val retryCount: Int = 0,
     val maxRetries: Int = 5,
     val lastAttempt: Long = 0L,
-    val resolvedPhrase: String = ""
+    val resolvedPhrase: String = "",
+    // Legacy records remain unowned; another peer must not automatically clear them.
+    val peerId: String = ""
 ) {
     val isUnresolved: Boolean
         get() = !humanAckStatus && retryStatus != EmergencyRetryStatus.HUMAN_ACKED

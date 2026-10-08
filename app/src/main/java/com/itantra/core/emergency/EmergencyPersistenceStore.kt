@@ -131,6 +131,16 @@ class EmergencyPersistenceStore(
         }
     }
 
+    /** Network ALL_CLEAR applies only to alerts originating from that verified peer. */
+    fun resolveRemoteEmergencies(peerId: String): List<EmergencyRecord> = synchronized(lock) {
+        if (peerId.isBlank()) return@synchronized emptyList()
+        val resolved = records.values.filter { it.isUnresolved && it.source == "REMOTE" && it.peerId == peerId }
+            .map { it.copy(humanAckStatus = true, retryStatus = EmergencyRetryStatus.HUMAN_ACKED) }
+        resolved.forEach { records[it.messageId] = it }
+        if (resolved.isNotEmpty()) flushToDisk()
+        resolved
+    }
+
     /**
      * Bounded retry accounting. Increments retry count and sets last attempt timestamp.
      */

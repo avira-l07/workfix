@@ -23,8 +23,8 @@ android {
         applicationId = "com.example.itantra"
         minSdk = 26
         targetSdk = 37
-        versionCode = 9
-        versionName = "1.8-translation-routing"
+        versionCode = 16
+        versionName = "1.15-security"
 
         ndk {
             // Restricting to arm64-v8a only will crash on launch (UnsatisfiedLinkError) on any
@@ -40,19 +40,10 @@ android {
 
     buildTypes {
         release {
-            // This disables R8 shrinking/obfuscation/optimization for release builds.
-            // Legitimate if minification has broken ONNX/JNI reflection before (common), but
-            // left as-is it means the release APK is unminified and larger than it needs to be.
-            // Keeping it off but documenting *why*, so it reads as a decision rather than an
-            // oversight if a judge/reviewer looks at the build config:
-            //   - sherpa-onnx / JNI bindings rely on reflection that R8 can strip incorrectly
-            //     without carefully tuned keep rules; disabling shrinking avoids relearning that
-            //     the hard way close to a deadline.
-            // TODO post-hackathon: re-enable with a proper proguard-rules.pro covering
-            // com.k2fsa.sherpa.onnx.** before shipping anywhere real.
             optimization {
-                enable = false
+                enable = true
             }
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     compileOptions {

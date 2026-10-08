@@ -87,7 +87,7 @@ object FiveLanguageSelfTest {
                         .use { WavWriter.readWav(it) }
                     check(audio.isNotEmpty()) { "Bundled STT sample is empty" }
                     val start = SystemClock.elapsedRealtimeNanos()
-                    val transcript = engine.decodeDirect(audio, silencePadding = 1600)
+                    val transcript = session.recognizeCapture(engine, listOf(audio))
                     result = result.copy(
                         sttText = transcript.text,
                         script = scriptStatus(language, transcript.text),
@@ -103,17 +103,14 @@ object FiveLanguageSelfTest {
                 }
                 try {
                     session.ensureTts(language)
-                    val engine = session.currentTtsEngine ?: error("Selected TTS engine is unavailable")
                     val start = SystemClock.elapsedRealtimeNanos()
-                    val synthesized = engine.synthesize(SpeechSynthesisRequest(
+                    val synthesized = session.synthesizeTts(SpeechSynthesisRequest(
                         languageCode = language,
                         text = phrases.getValue(language),
                         correlationId = "five-language-self-test",
                     ))
                     val synthesisMs = (SystemClock.elapsedRealtimeNanos() - start) / 1_000_000
-                    check(synthesized.sampleRateHz > 0 && synthesized.pcmAudio.any { abs(it) > 0.001f }) {
-                        "TTS generated silent or invalid audio"
-                    }
+                    requireSpeechAudio(synthesized)
                     val speaker = SpeakerAudioSink(context)
                     try {
                         speaker.init(synthesized.sampleRateHz)

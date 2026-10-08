@@ -128,15 +128,15 @@ class MainActivity : ComponentActivity() {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
-        permissionsGranted = results.values.all { it }
+        permissionsGranted = results.isNotEmpty() && results.values.all { it }
     }
 
     private var onWifiDirectPermissionCallback: ((Boolean) -> Unit)? = null
 
     private val wifiDirectPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        onWifiDirectPermissionCallback?.invoke(isGranted)
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        onWifiDirectPermissionCallback?.invoke(results.isNotEmpty() && results.values.all { it })
         onWifiDirectPermissionCallback = null
     }
 
@@ -160,20 +160,18 @@ class MainActivity : ComponentActivity() {
     fun requestBluetoothDiscoverable(durationSeconds: Int = 120, onResult: (Boolean) -> Unit) {
         val btManager = getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
         val adapter = btManager?.adapter
-        if (adapter == null || !adapter.isEnabled) {
-            onResult(false)
-            return
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val hasAdvertise = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.BLUETOOTH_ADVERTISE
             ) == PackageManager.PERMISSION_GRANTED
-            if (!hasAdvertise) {
+            val hasConnect = ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+            if (!hasAdvertise || !hasConnect) {
                 onResult(false)
                 return
             }
         }
         try {
+            if (adapter == null || !adapter.isEnabled) { onResult(false); return }
             onDiscoverableResult = onResult
             val intent = android.content.Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
                 putExtra(android.bluetooth.BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, durationSeconds)
@@ -191,11 +189,16 @@ class MainActivity : ComponentActivity() {
             val hasPerm = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.NEARBY_WIFI_DEVICES
             ) == PackageManager.PERMISSION_GRANTED
-            if (hasPerm) {
+            val localNetworkGranted = Build.VERSION.SDK_INT < 37 || ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_LOCAL_NETWORK) == PackageManager.PERMISSION_GRANTED
+            if (hasPerm && localNetworkGranted) {
                 onResult(true)
             } else {
                 onWifiDirectPermissionCallback = onResult
-                wifiDirectPermissionLauncher.launch(Manifest.permission.NEARBY_WIFI_DEVICES)
+                val required = if (Build.VERSION.SDK_INT >= 37) arrayOf(
+                    Manifest.permission.NEARBY_WIFI_DEVICES, Manifest.permission.ACCESS_LOCAL_NETWORK)
+                    else arrayOf(Manifest.permission.NEARBY_WIFI_DEVICES)
+                wifiDirectPermissionLauncher.launch(required)
             }
         } else {
             val hasPerm = ContextCompat.checkSelfPermission(
@@ -205,7 +208,7 @@ class MainActivity : ComponentActivity() {
                 onResult(true)
             } else {
                 onWifiDirectPermissionCallback = onResult
-                wifiDirectPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                wifiDirectPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
             }
         }
     }
@@ -219,6 +222,7 @@ class MainActivity : ComponentActivity() {
         debugTestReceiver = null
         // Unregister bond receiver to avoid leaks.
         if (appStarted) AppGraph.bluetoothPeerTransport.unregisterBondReceiver(this)
+        if (appStarted) AppGraph.bluetoothPeerTransport.stopListening()
         // Unregister Wi-Fi Direct receiver to avoid leaks.
         if (appStarted) AppGraph.wifiDirectConnectionManager.unregisterReceiver(this)
         super.onDestroy()
@@ -234,7 +238,7 @@ class MainActivity : ComponentActivity() {
         savedInstanceState?.getString("itantra.destination")?.let { saved ->
             AppDestination.entries.firstOrNull { it.name == saved }?.let { destinationState.value = it }
         }
-        if (com.itantra.core.storage.WipeActivity.marker(this).exists()) {
+        if (com.itantra.core.storage.WipeActivity.hasPendingWipe(this)) {
             launchWipeProcess()
             return
         }
@@ -253,7 +257,7 @@ class MainActivity : ComponentActivity() {
                         Text("Stored data cannot be decrypted")
                         Text("Your existing files have been kept. Close the app and retry after restoring access to this device’s keys.")
                         Button(onClick = { finish() }) { Text("Close") }
-                        com.example.itantra.ui.screens.settings.WipeDataAction { beginWipe() }
+                        com.example.itantra.ui.screens.settings.WipeDataAction { beginWipe(it) }
                     }
                 }
             }
@@ -635,16 +639,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private var wiping = false
-    fun beginWipe() {
+    fun beginWipe(choices: Set<com.itantra.core.storage.DataRemovalChoice> = setOf(com.itantra.core.storage.DataRemovalChoice.ALL_PRIVATE)) {
+        val request = com.itantra.core.storage.DataRemovalChoice.encode(choices)
         if (wiping) return
         wiping = true
         setContent { ITantraTheme { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Stopping sessions for wipe…") } } }
         lifecycleScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    java.io.FileOutputStream(com.itantra.core.storage.WipeActivity.marker(this@MainActivity)).use {
-                        it.write(byteArrayOf(1)); it.fd.sync()
-                    }
+                    com.itantra.core.storage.WipeActivity.writeRequest(this@MainActivity, choices)
                 }
             } catch (_: Exception) {
                 wiping = false
@@ -908,7 +911,7 @@ fun TacticalAppScaffold(
                         SettingsScreen(
                             viewModel = settingsViewModel,
                             onBack = { currentDestination = AppDestination.HUB },
-                            onWipe = { (context as? MainActivity)?.beginWipe() },
+                            onWipe = { (context as? MainActivity)?.beginWipe(it) },
                             onLanguagePacks = openPacks,
                             onDiagnostics = openDiagnostics,
                             onRecycleBin = openBin,
@@ -923,6 +926,7 @@ fun TacticalAppScaffold(
                             .collectAsState(initial = ConnectionState.DISCONNECTED)
                         val liveSasRemainingSeconds by coordinator.sasRemainingSeconds.collectAsState()
                         val liveSecureSessionState by secureSession.state.collectAsState()
+                        val liveLocalSasConfirmation by secureSession.localSasConfirmation.collectAsState()
                         val activePeerProfile by coordinator.activePeerProfile.collectAsState()
 
                         var discoveredDevices by remember { mutableStateOf<List<PeerDevice>>(emptyList()) }
@@ -994,7 +998,7 @@ fun TacticalAppScaffold(
                                 addAction(android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_STARTED)
                                 addAction(android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
                             }
-                            context.registerReceiver(receiver, filter)
+                            ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
 
                             onDispose {
                                 try {
@@ -1007,15 +1011,14 @@ fun TacticalAppScaffold(
                                     }
                                 } catch (ignored: Exception) {}
                                 // Stop RFCOMM server listener when leaving Connect screen
-                                coroutineScope.launch {
-                                    AppGraph.bluetoothPeerTransport.listenerDesired = false
-                                    AppGraph.bluetoothPeerTransport.stopServer()
-                                }
+                                AppGraph.bluetoothPeerTransport.stopListening()
                             }
                         }
 
                         val connectedDeviceAddress by AppGraph.bluetoothPeerTransport.connectedDeviceAddress.collectAsState()
                         val btLastError by AppGraph.bluetoothPeerTransport.lastError.collectAsState()
+                        val bluetoothLinkState by AppGraph.bluetoothPeerTransport.observeConnectionState()
+                            .collectAsState(initial = ConnectionState.DISCONNECTED)
 
                         // Bonded devices list — only read if BLUETOOTH_CONNECT is granted.
                         // On Android 14/15/16 reading bondedDevices / device.name / device.address
@@ -1097,7 +1100,9 @@ fun TacticalAppScaffold(
                             sasCode = liveSasCode,
                             sasRemainingSeconds = liveSasRemainingSeconds,
                             secureSessionState = liveSecureSessionState,
+                            isLocallyConfirmed = liveLocalSasConfirmation,
                             connectedDeviceAddress = connectedDeviceAddress,
+                            bluetoothConnectionState = bluetoothLinkState,
                             selectedWifiPeerAddress = selectedWifiPeerAddress,
                             connectionError = btLastError.name.takeIf {
                                 btLastError != com.itantra.core.transport.peer.BluetoothError.NONE
@@ -1110,6 +1115,9 @@ fun TacticalAppScaffold(
                             }?.name,
                             wifiDirectInfo = wifiDirectInfo,
                             onBack = { currentDestination = AppDestination.HUB },
+                            onDisconnectBluetooth = {
+                                coroutineScope.launch { AppGraph.bluetoothPeerTransport.disconnect() }
+                            },
                             onBroadcastPing = {
                                 if (AppGraph.transportEngine.activeTransportFlow.value != AppGraph.bluetoothPeerTransport) {
                                     android.widget.Toast.makeText(context, "Disconnect Wi-Fi Direct before discovering Bluetooth devices", android.widget.Toast.LENGTH_SHORT).show()
@@ -1134,13 +1142,14 @@ fun TacticalAppScaffold(
                                                 ContextCompat.checkSelfPermission(
                                                     context, Manifest.permission.BLUETOOTH_SCAN
                                                 ) == PackageManager.PERMISSION_GRANTED
-                                            } else true
+                                            } else ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                                             if (hasScan) {
                                                 try {
                                                     @Suppress("MissingPermission") // hasScan checked above
                                                     if (btAdapter?.isDiscovering == true) btAdapter.cancelDiscovery()
                                                     @Suppress("MissingPermission")
-                                                    btAdapter?.startDiscovery()
+                                                    if (btAdapter?.startDiscovery() != true) AppGraph.bluetoothPeerTransport.setLastError(
+                                                        com.itantra.core.transport.peer.BluetoothError.DISCOVERY_FAILED)
                                                 } catch (e: SecurityException) {
                                                     android.util.Log.e("ConnectScreen", "startDiscovery denied", e)
                                                     AppGraph.bluetoothPeerTransport.setLastError(
@@ -1230,7 +1239,13 @@ fun TacticalAppScaffold(
                                 }
                             },
                             onConnectWifiDirect = { peer ->
-                                AppGraph.wifiDirectConnectionManager.connect(peer)
+                                if (AppGraph.bluetoothPeerTransport.isConnected || bluetoothLinkState == ConnectionState.CONNECTING) {
+                                    android.widget.Toast.makeText(context, "Disconnect Bluetooth before connecting Wi-Fi Direct", android.widget.Toast.LENGTH_SHORT).show()
+                                } else {
+                                    (context as? MainActivity)?.requestWifiDirectPermission { granted ->
+                                        if (granted) AppGraph.wifiDirectConnectionManager.connect(peer)
+                                    }
+                                }
                             },
                             onDisconnectWifiDirect = {
                                 AppGraph.wifiDirectConnectionManager.disconnect()

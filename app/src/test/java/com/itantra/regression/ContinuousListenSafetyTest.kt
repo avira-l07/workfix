@@ -4,12 +4,34 @@ import android.content.Context
 import android.content.ContextWrapper
 import com.itantra.core.inference.ContinuousListenEngine
 import com.itantra.core.inference.ContinuousListenState
+import com.itantra.core.inference.SentenceBoundaryConfig
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import java.io.File
 
 class ContinuousListenSafetyTest {
+    @Test fun uninterruptedFallbackSpeechStopsAtConfiguredMaximum() {
+        val engine = ContinuousListenEngine(FakeContext(), SentenceBoundaryConfig(minSpeechDurationSec = .02f, maxSpeechDurationSec = .1f))
+        engine.start()
+        repeat(4) { engine.feedAudio(FloatArray(512) { .5f }) }
+        assertNotNull(engine.lastSegment.value)
+        assertEquals(2048, engine.lastSegment.value!!.samples.size)
+        engine.stop()
+    }
+
+    @Test fun changingVadConfigKeepsAPausedEnginePausedAndAppliesTheNewLimit() {
+        val engine = ContinuousListenEngine(FakeContext())
+        engine.start()
+        engine.pauseListening()
+        engine.updateConfig(SentenceBoundaryConfig(minSpeechDurationSec = .02f, maxSpeechDurationSec = .1f))
+        assertEquals(ContinuousListenState.PAUSED, engine.state.value)
+        engine.feedAudio(floatArrayOf())
+        engine.resumeListening()
+        repeat(4) { engine.feedAudio(FloatArray(512) { .5f }) }
+        assertEquals(2048, engine.lastSegment.value!!.samples.size)
+        engine.stop()
+    }
 
     private class FakeContext : ContextWrapper(null) {
         private val tempDir = File(System.getProperty("java.io.tmpdir"), "vad_reg_test_${System.currentTimeMillis()}").apply { mkdirs() }

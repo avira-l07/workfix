@@ -93,6 +93,16 @@ data class TransceiverMessage(
         get() = if (source == MessageSource.LOCAL && translationStatus == TranslationStatus.SUCCESS)
             targetLanguage ?: language else language
 
+    /** Use a known source for local views; received original text lacks its language in older history. */
+    val translationInput: Pair<String, LanguageCode>?
+        get() {
+            if (deletedAtMillis != null || isLocationMessage ||
+                state in setOf(MessageState.RECORDING, MessageState.STT_PROCESSING) || text.isBlank()) return null
+            if (source == MessageSource.LOCAL && !originalText.isNullOrBlank() && language != null)
+                return originalText to language
+            return displayedTextLanguage?.let { text to it }
+        }
+
     val isLocationMessage: Boolean
         get() = isLocation || (latitude != null && longitude != null)
 

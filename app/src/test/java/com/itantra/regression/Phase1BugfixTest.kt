@@ -46,7 +46,9 @@ class Phase1BugfixTest {
                 f.add(sampleMessage(id))
                 f.update(id) { it.copy(state = MessageState.DELIVERED) }
             }
-            f.awaitCondition { dao.writes.get() == 2000 }
+            // Intermediate states may be coalesced while IO is busy; every final
+            // history row must still settle to the latest state.
+            f.awaitCondition { dao.rows.size == 1000 && dao.rows.values.all { it.stateName == "DELIVERED" } }
             assertEquals(1000, dao.rows.size)
             assertTrue("An old snapshot replaced DELIVERED", dao.rows.values.all { it.stateName == "DELIVERED" })
         }

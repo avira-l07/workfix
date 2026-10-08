@@ -1,0 +1,1 @@
+allprojects { project -> layout.buildDirectory.set(new File(rootProject.projectDir, "artifacts/functions-audit-2026-10-08/build/${project.name}")) }

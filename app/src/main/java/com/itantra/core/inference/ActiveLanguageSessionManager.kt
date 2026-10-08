@@ -3,6 +3,7 @@ package com.itantra.core.inference
 import com.itantra.domain.model.LanguageCode
 import com.itantra.domain.model.SpeechSynthesisRequest
 import com.itantra.domain.model.SpeechSynthesisResult
+import com.itantra.domain.model.SpeechRecognitionResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.NonCancellable
@@ -32,9 +33,9 @@ class ActiveLanguageSessionManager(
 ) {
     private val switchMutex = Mutex()
 
-    var currentSttEngine: SpeechRecognizerEngine? = null
+    @Volatile var currentSttEngine: SpeechRecognizerEngine? = null
         private set
-    var currentTtsEngine: SpeechSynthesizerEngine? = null
+    @Volatile var currentTtsEngine: SpeechSynthesizerEngine? = null
         private set
 
     private val _activeSttLanguage = MutableStateFlow<LanguageCode?>(null)
@@ -70,7 +71,7 @@ class ActiveLanguageSessionManager(
         switchMutex.withLock {
             val sttLoaded = currentSttEngine != null && currentSttEngine?.isLoaded == true
             val sameMode = _isSttAutoDetect.value == autoDetect
-            val sameLang = _activeSttLanguage.value == language || autoDetect
+            val sameLang = _activeSttLanguage.value == language
             val sameTarget = _activeTargetLanguage.value == targetLanguage
 
             android.util.Log.d(
@@ -100,10 +101,13 @@ class ActiveLanguageSessionManager(
             android.util.Log.d("ITANTRA_MIC_FLOW", "ensureStt: unloading previous STT engine, then creating new one for ${language.wireCode}")
             currentSttEngine?.unload()
             currentSttEngine = null
+            _activeSttLanguage.value = null
+            _activeTargetLanguage.value = null
 
             _sessionState.value = LanguageSessionState.LOADING_STT
+            var newStt: SpeechRecognizerEngine? = null
             try {
-                val newStt = engineFactory.createRecognizer(language, autoDetect, targetLanguage)
+                newStt = engineFactory.createRecognizer(language, autoDetect, targetLanguage)
                 android.util.Log.d("ITANTRA_MIC_FLOW", "ensureStt: engineFactory.createRecognizer returned ${if (newStt != null) newStt::class.simpleName else "null"}")
                 if (newStt != null) {
                     newStt.load()
@@ -120,13 +124,26 @@ class ActiveLanguageSessionManager(
                 }
             } catch (e: Throwable) {
                 android.util.Log.e("ITANTRA_MIC_FLOW", "ensureStt: EXCEPTION loading STT for ${language.wireCode}", e)
-                currentSttEngine?.unload()
+                withContext(NonCancellable) { newStt?.unload() }
                 currentSttEngine = null
                 _sessionState.value = LanguageSessionState.ERROR
                 throw e
             }
         }
     }
+
+    /** Decode one isolated capture; settings changes cannot release native STT mid-decode. */
+    suspend fun recognizeCapture(engine: SpeechRecognizerEngine, chunks: List<FloatArray>): SpeechRecognitionResult =
+        switchMutex.withLock {
+            check(currentSttEngine === engine && engine.isLoaded) { "Mic language changed; record again" }
+            engine.reset()
+            try {
+                for (chunk in chunks) engine.feed(chunk)
+                engine.finalizeUtterance()
+            } finally {
+                withContext(NonCancellable) { engine.reset() }
+            }
+        }
 
 
     /**

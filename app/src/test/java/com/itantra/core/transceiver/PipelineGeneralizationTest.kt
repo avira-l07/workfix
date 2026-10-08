@@ -17,6 +17,7 @@ import com.itantra.core.transport.ConnectionState
 import com.itantra.core.transport.TransportEngine
 import com.itantra.core.transport.packet.ItantraPacket
 import com.itantra.core.transport.packet.PacketType
+import com.itantra.core.transport.packet.ProfilePayload
 import com.itantra.data.languagepack.MockLanguagePackRepository
 import com.itantra.domain.model.*
 import kotlinx.coroutines.flow.Flow
@@ -33,6 +34,15 @@ import java.io.File
  * for the Hindi <-> English baseline.
  */
 class PipelineGeneralizationTest {
+
+    private suspend fun acceptPeerProfile(coordinator: TransceiverCoordinator, remote: SecureSessionManager) {
+        coordinator.handleIncomingPacket(remote.encrypt(ItantraPacket(
+            type = PacketType.PROFILE_HANDSHAKE,
+            messageId = 42L,
+            payload = ProfilePayload(deviceId = "IT-BBBB-0002", displayName = "Peer",
+                supportedLanguages = LanguageCode.entries).toBytes()
+        )))
+    }
 
     private class DummyStorage : LanguagePackStorage {
         override fun packDirectory(code: LanguageCode): File = File("dummy/${code.wireCode}")
@@ -319,9 +329,10 @@ class PipelineGeneralizationTest {
         val malayalamText = "ഇത് ഒരു സാധാരണ സന്ദേശമാണ്"
 
         // Peer is Hindi, user speaks/types Malayalam -> cross-language route
+        acceptPeerProfile(coordinator, bobCrypto)
         coordinator.sendTextMessage(
             text = malayalamText,
-            targetPeerId = "PEER-HINDI",
+            targetPeerId = "IT-BBBB-0002",
             priority = MessagePriority.NORMAL
         )
 
@@ -380,9 +391,10 @@ class PipelineGeneralizationTest {
         // Non-emergency Odia text
         val odiaText = "ଏହା ଏକ ସାଧାରଣ ବାର୍ତ୍ତା"
 
+        acceptPeerProfile(coordinator, bobCrypto)
         coordinator.sendTextMessage(
             text = odiaText,
-            targetPeerId = "PEER-HINDI",
+            targetPeerId = "IT-BBBB-0002",
             priority = MessagePriority.NORMAL
         )
 
@@ -428,9 +440,10 @@ class PipelineGeneralizationTest {
         val hindiText = "नमस्ते मित्र, सब ठीक है"
 
         // Source is Hindi, target is Malayalam -> ML Kit lacks Malayalam model -> UNSUPPORTED_ROUTE
+        acceptPeerProfile(coordinator, bobCrypto)
         coordinator.sendTextMessage(
             text = hindiText,
-            targetPeerId = "PEER-MALAYALAM",
+            targetPeerId = "IT-BBBB-0002",
             priority = MessagePriority.NORMAL
         )
 
@@ -487,9 +500,10 @@ class PipelineGeneralizationTest {
         val englishText = "The road ahead is clear"
 
         // Source is English, target is Odia -> ML Kit lacks Odia model -> UNSUPPORTED_ROUTE
+        acceptPeerProfile(coordinator, bobCrypto)
         coordinator.sendTextMessage(
             text = englishText,
-            targetPeerId = "PEER-ODIA",
+            targetPeerId = "IT-BBBB-0002",
             priority = MessagePriority.NORMAL
         )
 

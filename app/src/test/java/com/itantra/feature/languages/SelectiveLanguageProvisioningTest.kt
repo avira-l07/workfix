@@ -119,6 +119,29 @@ class SelectiveLanguageProvisioningTest {
         assertFalse(provisionCalled)
     }
 
+    @Test fun stagingUsesSavedSelectionsBeforeUiFlowsAreSubscribed() = runTest(testDispatcher) {
+        val repo = MockLanguagePackRepository().apply { simulateDownloads = true }
+        repo.setEnabledMicLanguages(setOf(LanguageCode.GUJARATI))
+        repo.setEnabledListenLanguages(setOf(LanguageCode.TELUGU))
+        val vm = LanguagePacksViewModel(repo, provisioner = {})
+        vm.toggleStagedMicLanguage(LanguageCode.BENGALI)
+        vm.applyAndProvisionSelected()
+        advanceUntilIdle()
+        assertEquals(setOf(LanguageCode.GUJARATI, LanguageCode.BENGALI), repo.getEnabledMicLanguages())
+        assertEquals(setOf(LanguageCode.TELUGU), repo.getEnabledListenLanguages())
+        assertEquals(setOf(Triple(LanguageCode.GUJARATI, true, false), Triple(LanguageCode.BENGALI, true, false),
+            Triple(LanguageCode.TELUGU, false, true)), repo.componentDownloadCalls.toSet())
+    }
+
+    @Test fun retryUsesPersistedListenOnlySelectionWithoutDownloadingItsMicModel() = runTest(testDispatcher) {
+        val repo = MockLanguagePackRepository().apply { simulateDownloads = true }
+        repo.setEnabledMicLanguages(setOf(LanguageCode.HINDI))
+        repo.setEnabledListenLanguages(setOf(LanguageCode.GUJARATI))
+        LanguagePacksViewModel(repo, provisioner = {}).retryProvision(LanguageCode.GUJARATI)
+        advanceUntilIdle()
+        assertEquals(listOf(Triple(LanguageCode.GUJARATI, false, true)), repo.componentDownloadCalls)
+    }
+
     @Test
     fun mlKitSupportedLanguages_excludesMalayalamAndOdia() {
         val supported = MlKitOfflineTranslationEngine.ML_KIT_SUPPORTED_LANGUAGES

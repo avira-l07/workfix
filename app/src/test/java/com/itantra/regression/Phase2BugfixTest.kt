@@ -23,6 +23,9 @@ class Phase2BugfixTest {
     @Test fun allClearResolvesMessagesBeforeReminderEvaluation() = runBlocking {
         BugfixFixture().use { f ->
             f.verify()
+            f.receive(ItantraPacket(PacketType.PROFILE_HANDSHAKE, messageId = 60,
+                payload = ProfilePayload(deviceId = "IT-AAAA-0001", displayName = "Peer",
+                    supportedLanguages = listOf(LanguageCode.ENGLISH)).toBytes()))
             f.session.ensureTts(LanguageCode.ENGLISH)
             f.receive(ItantraPacket(PacketType.EMERGENCY_CODE, messageId = 61,
                 flags = MessagePriority.CRITICAL.toByte(), languageCode = LanguageCode.ENGLISH,

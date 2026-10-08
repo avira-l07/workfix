@@ -1,0 +1,146 @@
+[
+  {
+    "class": "com.example.itantra.PacketProtocolTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.example.itantra.PacketProtocolTest.xml",
+    "sha256": "b7f76b066e8200840d475b3d553dd046b955d9aefa1a45e2ddf6add8fb3326b0"
+  },
+  {
+    "class": "com.itantra.core.crypto.AuditFixRegressionTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.crypto.AuditFixRegressionTest.xml",
+    "sha256": "5cb13ddb380f7702f5021c8b76698bf5a82cf4288da3ca7990c75461140b4599"
+  },
+  {
+    "class": "com.itantra.core.crypto.CryptoPrimitivesTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.crypto.CryptoPrimitivesTest.xml",
+    "sha256": "cd3ec51e14fb9419afcad507855524a7201599f6bc0428c6ac2947d04d1be74b"
+  },
+  {
+    "class": "com.itantra.core.crypto.EmergencySecurityTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.crypto.EmergencySecurityTest.xml",
+    "sha256": "bc122d302ae1bf15663670e3d535778cbe68ae6a2c4fb6244ade0c68924e8744"
+  },
+  {
+    "class": "com.itantra.core.crypto.SecureSessionManagerTest",
+    "tests": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.crypto.SecureSessionManagerTest.xml",
+    "sha256": "31d7de7f2f054123510a129fa01eb9d3c7fc214ef799e2ec60d6a60234a3f4e9"
+  },
+  {
+    "class": "com.itantra.core.inference.MarathiPiperVoiceTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.inference.MarathiPiperVoiceTest.xml",
+    "sha256": "8c237d33eba674325b5cd4163bf3cefc2b4a1fe55be569d20ee8389f5326ba64"
+  },
+  {
+    "class": "com.itantra.core.storage.DatabasePassphraseTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.storage.DatabasePassphraseTest.xml",
+    "sha256": "1fa565061def7d720c9068414af228d69fe2f314794ca5e7eb6a68f77fb64e8b"
+  },
+  {
+    "class": "com.itantra.core.storage.PrivateContentTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.storage.PrivateContentTest.xml",
+    "sha256": "acd4a26edafab0c52636b041b62a57d0b3957965dcd4cb384f46af0f00522756"
+  },
+  {
+    "class": "com.itantra.core.storage.WipeFilesTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.storage.WipeFilesTest.xml",
+    "sha256": "d0e6425bac69502b14c4142dd43bd1520a09b88a820c0bdf8f589bcc93014fbe"
+  },
+  {
+    "class": "com.itantra.core.transport.packet.PacketDecoderV1FrameTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.transport.packet.PacketDecoderV1FrameTest.xml",
+    "sha256": "4f42696b3112d82e5ff4b10b6422e3abfecec140775df0c3095ca786c04212d5"
+  },
+  {
+    "class": "com.itantra.core.transport.packet.PacketTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.transport.packet.PacketTest.xml",
+    "sha256": "d065ba1703571f4597179becb6e8d6323c101b37ac0a8cfc59089284e0a880f5"
+  },
+  {
+    "class": "com.itantra.core.transport.packet.ProfileHandshakeTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.core.transport.packet.ProfileHandshakeTest.xml",
+    "sha256": "dc52f185ab6464d39395e07794ea30f9ca18863499397645d7b158694dcd3b92"
+  },
+  {
+    "class": "com.itantra.data.languagepack.LanguagePackIntegrityTest",
+    "tests": 16,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.data.languagepack.LanguagePackIntegrityTest.xml",
+    "sha256": "12b818171d15e87c4be587c23cb09aad3b5ded354b17cbca50a83d441e5fcba5"
+  },
+  {
+    "class": "com.itantra.regression.CryptoCounterConcurrencyTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.regression.CryptoCounterConcurrencyTest.xml",
+    "sha256": "9cf9862f1de00e3d7a3aec3b9aa1fe1cbd6fa50de2071d7078ec7f702eaad5e8"
+  },
+  {
+    "class": "com.itantra.regression.ReplayWindowTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.regression.ReplayWindowTest.xml",
+    "sha256": "81529661abf24f951886ee426586df06c6a8f2ee3141d4b73b25a19550916293"
+  },
+  {
+    "class": "com.itantra.regression.SecureHandshakeIntegrationTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence": "D:\\new itantra\\artifacts\\functions-audit-2026-10-08\\test-results\\TEST-com.itantra.regression.SecureHandshakeIntegrationTest.xml",
+    "sha256": "27078e1e98b0b15f2a4762e4aaa74bfcf74a229908ff2274b8230731630d0899"
+  }
+]
