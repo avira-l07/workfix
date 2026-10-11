@@ -1,0 +1,1013 @@
+{
+  "date": "2026-10-11",
+  "scope": "Pinned desktop voice audit; no phone attached; no human ratings or MT quality score",
+  "voices": [
+    {
+      "language": "hi",
+      "model_id": "mms-tts-hi",
+      "model_sha256": "c44b4179e7ff0da4d76eac3929fc1dbd67c51f02da8fca083c445e17450c3f75",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true
+      },
+      "frontend": "characters",
+      "ascii_digits_missing": [
+        "5",
+        "6",
+        "7",
+        "9"
+      ],
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "मदद चाहिए",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 12004,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1021.72,
+          "audio_file": "hi-1.wav",
+          "roundtrip_stt": "वा",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "पानी भेजिए",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 13496,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1085.74,
+          "audio_file": "hi-2.wav",
+          "roundtrip_stt": "क पानी भेजिए",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "रास्ता बंद है",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 15749,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1260.3,
+          "audio_file": "hi-3.wav",
+          "roundtrip_stt": "का रास्ता बंद है",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "हम सुरक्षित हैं",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 16093,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1355.36,
+          "audio_file": "hi-4.wav",
+          "roundtrip_stt": "हम सुरक्षित हैं",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "डॉक्टर को बुलाइए",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 18432,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1219.74,
+          "audio_file": "hi-5.wav",
+          "roundtrip_stt": "तब तेरे को बुलाइए",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "मदद चाहिए 9876543210",
+          "missing_characters": [
+            "5",
+            "6",
+            "7",
+            "9"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        },
+        {
+          "category": "mixed_name",
+          "text": "मदद चाहिए Zubin",
+          "missing_characters": [
+            "Z",
+            "b",
+            "i",
+            "n",
+            "u"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        }
+      ]
+    },
+    {
+      "language": "en",
+      "model_id": "mms-tts-en",
+      "model_sha256": "409bafdb550948dc5c0b216e21b341732ef3cefead8008b512b034f1bdb27132",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true
+      },
+      "frontend": "characters",
+      "ascii_digits_missing": [
+        "7",
+        "8",
+        "9"
+      ],
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "We need help",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 16256,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1675.43,
+          "audio_file": "en-1.wav",
+          "roundtrip_stt": "We need help.",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "Send clean water",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 24104,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1952.4,
+          "audio_file": "en-2.wav",
+          "roundtrip_stt": "Send clean water,",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "The road is blocked",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 20374,
+          "sample_rate_hz": 16000,
+          "generation_ms": 2009.77,
+          "audio_file": "en-3.wav",
+          "roundtrip_stt": "the road is blocked,",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "We are safe",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 15410,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1217.07,
+          "audio_file": "en-4.wav",
+          "roundtrip_stt": "we Irsish",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "Call a doctor",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 17369,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1389.51,
+          "audio_file": "en-5.wav",
+          "roundtrip_stt": "Paul ador",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "We need help 9876543210",
+          "missing_characters": [
+            "7",
+            "8",
+            "9"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        },
+        {
+          "category": "mixed_name",
+          "text": "We need help Zubin",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review"
+        }
+      ]
+    },
+    {
+      "language": "bn",
+      "model_id": "mms-tts-bn",
+      "model_sha256": "c67081369061e87ba302bfbc0445543c4c23c04133514b7d6c7be2710363bc42",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true
+      },
+      "frontend": "characters",
+      "ascii_digits_missing": [],
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "সাহায্য দরকার",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 22147,
+          "sample_rate_hz": 16000,
+          "generation_ms": 2123.49,
+          "audio_file": "bn-1.wav",
+          "roundtrip_stt": "সাহায্য দোকার",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "পানি পাঠান",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 14017,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1338.97,
+          "audio_file": "bn-2.wav",
+          "roundtrip_stt": "পানি পাড়ান",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "রাস্তা বন্ধ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 16861,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1216.0,
+          "audio_file": "bn-3.wav",
+          "roundtrip_stt": "ব্রাস্ত পন্্রু",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "আমরা নিরাপদে আছি",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 21339,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1768.26,
+          "audio_file": "bn-4.wav",
+          "roundtrip_stt": "আমরা নিরাব্দে আছি",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ডাক্তার ডাকুন",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 17579,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1641.35,
+          "audio_file": "bn-5.wav",
+          "roundtrip_stt": "রাফতার রাকুম",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "সাহায্য দরকার 9876543210",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 21168,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1861.8,
+          "audio_file": "bn-6.wav",
+          "roundtrip_stt": "সাহায্য দকাত",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "mixed_name",
+          "text": "সাহায্য দরকার Zubin",
+          "missing_characters": [
+            "Z",
+            "b",
+            "i",
+            "n",
+            "u"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        }
+      ]
+    },
+    {
+      "language": "gu",
+      "model_id": "mms-tts-gu",
+      "model_sha256": "6d9b4f268765e19b6620983bd698c5e4fa943309560b6c7b199b50a4aae30d47",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true
+      },
+      "frontend": "characters",
+      "ascii_digits_missing": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "મદદ જોઈએ છે",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 16128,
+          "sample_rate_hz": 16000,
+          "generation_ms": 932.37,
+          "audio_file": "gu-1.wav",
+          "roundtrip_stt": "તમદત જોઈએ છે",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "પાણી મોકલો",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 13056,
+          "sample_rate_hz": 16000,
+          "generation_ms": 708.67,
+          "audio_file": "gu-2.wav",
+          "roundtrip_stt": "પાણી મોકલો",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "રસ્તો બંધ છે",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 15616,
+          "sample_rate_hz": 16000,
+          "generation_ms": 899.6,
+          "audio_file": "gu-3.wav",
+          "roundtrip_stt": "તેસ્ તો બંધ છે",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "અમે સુરક્ષિત છીએ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 19456,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1097.54,
+          "audio_file": "gu-4.wav",
+          "roundtrip_stt": "અમે સુરક્ષિત છીએ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ડોક્ટરને બોલાવો",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 17664,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1052.44,
+          "audio_file": "gu-5.wav",
+          "roundtrip_stt": "અડોક્ટરને બોલાવો",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "મદદ જોઈએ છે 9876543210",
+          "missing_characters": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        },
+        {
+          "category": "mixed_name",
+          "text": "મદદ જોઈએ છે Zubin",
+          "missing_characters": [
+            "Z",
+            "b",
+            "i",
+            "n",
+            "u"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        }
+      ]
+    },
+    {
+      "language": "mr",
+      "model_id": "piper-mr-IN-google-medium",
+      "model_sha256": "5b180a9fed4abf9877c2fe6be91128a14dca4fbb1f2d93a8144948e5af3caf8e",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true,
+        "espeak-ng-data/phontab": true,
+        "espeak-ng-data/phonindex": true,
+        "espeak-ng-data/phondata": true,
+        "espeak-ng-data/intonations": true,
+        "espeak-ng-data/mr_dict": true,
+        "espeak-ng-data/lang/inc/mr": true
+      },
+      "frontend": "espeak phonemes",
+      "ascii_digits_missing": null,
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "मदत हवी आहे",
+          "missing_characters": [],
+          "coverage": "phoneme frontend; needs listening review",
+          "samples": 23157,
+          "sample_rate_hz": 22050,
+          "generation_ms": 3310.87,
+          "audio_file": "mr-1.wav",
+          "roundtrip_stt": "मदत हवी आहे",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "पाणी पाठवा",
+          "missing_characters": [],
+          "coverage": "phoneme frontend; needs listening review",
+          "samples": 22936,
+          "sample_rate_hz": 22050,
+          "generation_ms": 237.63,
+          "audio_file": "mr-2.wav",
+          "roundtrip_stt": "पाणी पाठवा",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "रस्ता बंद आहे",
+          "missing_characters": [],
+          "coverage": "phoneme frontend; needs listening review",
+          "samples": 23303,
+          "sample_rate_hz": 22050,
+          "generation_ms": 286.38,
+          "audio_file": "mr-3.wav",
+          "roundtrip_stt": "रस्ता बंद आहे",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "आम्ही सुरक्षित आहोत",
+          "missing_characters": [],
+          "coverage": "phoneme frontend; needs listening review",
+          "samples": 31394,
+          "sample_rate_hz": 22050,
+          "generation_ms": 336.82,
+          "audio_file": "mr-4.wav",
+          "roundtrip_stt": "आम्ही सुरक्षित आहोत",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "डॉक्टरांना बोलवा",
+          "missing_characters": [],
+          "coverage": "phoneme frontend; needs listening review",
+          "samples": 23900,
+          "sample_rate_hz": 22050,
+          "generation_ms": 302.9,
+          "audio_file": "mr-5.wav",
+          "roundtrip_stt": "डॉक्टरांना बोलवा",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "मदत हवी आहे 9876543210",
+          "missing_characters": [],
+          "coverage": "phoneme frontend; needs listening review",
+          "samples": 119599,
+          "sample_rate_hz": 22050,
+          "generation_ms": 1156.04,
+          "audio_file": "mr-6.wav",
+          "roundtrip_stt": "मदत हवी आहे नऊ अब्ज सत्यांऐंशी कोटी पासष्ट लाख त्रेचाळीस हजार दोनशे दहा",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "mixed_name",
+          "text": "मदत हवी आहे Zubin",
+          "missing_characters": [],
+          "coverage": "phoneme frontend; needs listening review"
+        }
+      ]
+    },
+    {
+      "language": "kn",
+      "model_id": "mms-tts-kn",
+      "model_sha256": "9644cfa46c5802c4c2c8196f91eedc0cd54d46527bbc32589ebaf967ed07591f",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true
+      },
+      "frontend": "characters",
+      "ascii_digits_missing": [],
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "ಸಹಾಯ ಬೇಕು",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 19321,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1442.22,
+          "audio_file": "kn-1.wav",
+          "roundtrip_stt": "ಸಹಾಯ ಬೇಕು",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ನೀರು ಕಳುಹಿಸಿ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 22561,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1798.18,
+          "audio_file": "kn-2.wav",
+          "roundtrip_stt": "ನೀರು ಕಳುಲಿಸಿ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 25176,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1934.89,
+          "audio_file": "kn-3.wav",
+          "roundtrip_stt": "ದರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 38121,
+          "sample_rate_hz": 16000,
+          "generation_ms": 2782.81,
+          "audio_file": "kn-4.wav",
+          "roundtrip_stt": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 23319,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1953.81,
+          "audio_file": "kn-5.wav",
+          "roundtrip_stt": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "ಸಹಾಯ ಬೇಕು 9876543210",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 25193,
+          "sample_rate_hz": 16000,
+          "generation_ms": 2182.6,
+          "audio_file": "kn-6.wav",
+          "roundtrip_stt": "ಸಹಾಯ ಬೆರುಟು",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "mixed_name",
+          "text": "ಸಹಾಯ ಬೇಕು Zubin",
+          "missing_characters": [
+            "Z",
+            "b",
+            "i",
+            "n",
+            "u"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        }
+      ]
+    },
+    {
+      "language": "ml",
+      "model_id": "mms-tts-ml",
+      "model_sha256": "7f03397b7144325dc3deab36315c59e423319b8b575497caacbb08d28072b26c",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true
+      },
+      "frontend": "characters",
+      "ascii_digits_missing": [
+        "7",
+        "8",
+        "9"
+      ],
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "സഹായം വേണം",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 13390,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1331.28,
+          "audio_file": "ml-1.wav",
+          "roundtrip_stt": "സഹായം വേണം",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "വെള്ളം അയയ്ക്കൂ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 11058,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1357.07,
+          "audio_file": "ml-2.wav",
+          "roundtrip_stt": "വിളവഹിക്കൂ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "റോഡ് അടച്ചിരിക്കുന്നു",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 20933,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1854.3,
+          "audio_file": "ml-3.wav",
+          "roundtrip_stt": "അടച്ചിരിക്കുന്നു",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ഞങ്ങൾ സുരക്ഷിതരാണ്",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 24832,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1558.95,
+          "audio_file": "ml-4.wav",
+          "roundtrip_stt": "ഞങ്ങൾ സുരക്ഷിതാത്",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ഡോക്ടറെ വിളിക്കൂ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 13998,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1343.72,
+          "audio_file": "ml-5.wav",
+          "roundtrip_stt": "രൌട്ടറെ വിളിക്കൂ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "സഹായം വേണം 9876543210",
+          "missing_characters": [
+            "7",
+            "8",
+            "9"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        },
+        {
+          "category": "mixed_name",
+          "text": "സഹായം വേണം Zubin",
+          "missing_characters": [
+            "Z",
+            "b",
+            "n",
+            "u"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        }
+      ]
+    },
+    {
+      "language": "ta",
+      "model_id": "mms-tts-ta",
+      "model_sha256": "c44055b2e7c5719ca26708f6eb03680b0f1bbf6fdcb0df6480478f872f1f6e34",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true
+      },
+      "frontend": "characters",
+      "ascii_digits_missing": [
+        "8"
+      ],
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "உதவி தேவை",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 16312,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1346.58,
+          "audio_file": "ta-1.wav",
+          "roundtrip_stt": "உதவி தேவை",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "தண்ணீர் அனுப்புங்கள்",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 23486,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1889.58,
+          "audio_file": "ta-2.wav",
+          "roundtrip_stt": "தண்ணீர் அனுப்புங்கள்",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "சாலை மூடப்பட்டுள்ளது",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 23827,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1956.29,
+          "audio_file": "ta-3.wav",
+          "roundtrip_stt": "சாலை மூடப்பட்டுள்ளது",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 36964,
+          "sample_rate_hz": 16000,
+          "generation_ms": 2702.0,
+          "audio_file": "ta-4.wav",
+          "roundtrip_stt": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "மருத்துவரை அழைக்கவும்",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 24508,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1598.24,
+          "audio_file": "ta-5.wav",
+          "roundtrip_stt": "மருத்துவரை அழைக்கவும்",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "உதவி தேவை 9876543210",
+          "missing_characters": [
+            "8"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        },
+        {
+          "category": "mixed_name",
+          "text": "உதவி தேவை Zubin",
+          "missing_characters": [
+            "Z",
+            "b",
+            "i",
+            "n",
+            "u"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        }
+      ]
+    },
+    {
+      "language": "te",
+      "model_id": "mms-tts-te",
+      "model_sha256": "a8ec6093c0ec3c6dcb7edc0c4cd6c08e312cd3299b00d0aa4988d2a7fea2baa5",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true
+      },
+      "frontend": "characters",
+      "ascii_digits_missing": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "7",
+        "8",
+        "9"
+      ],
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "సహాయం కావాలి",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 23973,
+          "sample_rate_hz": 16000,
+          "generation_ms": 2075.05,
+          "audio_file": "te-1.wav",
+          "roundtrip_stt": "ప్రసహాయం కావాలి",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "నీరు పంపండి",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 16845,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1388.51,
+          "audio_file": "te-2.wav",
+          "roundtrip_stt": "పనీరు పంపణది",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "రహదారి మూసివేశారు",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 24667,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1965.18,
+          "audio_file": "te-3.wav",
+          "roundtrip_stt": "ప రహదారి మూసివేశారు",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "మేము సురక్షితంగా ఉన్నాము",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 29959,
+          "sample_rate_hz": 16000,
+          "generation_ms": 2208.9,
+          "audio_file": "te-4.wav",
+          "roundtrip_stt": "మేము సురక్షితంగా ఉన్నాము",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "వైద్యుడిని పిలవండి",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 21240,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1409.93,
+          "audio_file": "te-5.wav",
+          "roundtrip_stt": "ప వైద్యుడు నీ పిల్లవంండ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "సహాయం కావాలి 9876543210",
+          "missing_characters": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "7",
+            "8",
+            "9"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        },
+        {
+          "category": "mixed_name",
+          "text": "సహాయం కావాలి Zubin",
+          "missing_characters": [
+            "Z",
+            "b",
+            "i",
+            "n",
+            "u"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        }
+      ]
+    },
+    {
+      "language": "or",
+      "model_id": "mms-tts-or",
+      "model_sha256": "ab867f39b00f1fcb39dc97f5079150959b50df50d7f10e75232c56b52f19c021",
+      "checksums_verified": {
+        "model.onnx": true,
+        "tokens.txt": true
+      },
+      "frontend": "characters",
+      "ascii_digits_missing": [
+        "8"
+      ],
+      "human_listening_review": "NOT RUN",
+      "cases": [
+        {
+          "category": "phrase",
+          "text": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 17160,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1406.81,
+          "audio_file": "or-1.wav",
+          "roundtrip_stt": "ତ ବା ଜର ଆବଶ୍ୟକ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ପାଣି ପଠାନ୍ତୁ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 11227,
+          "sample_rate_hz": 16000,
+          "generation_ms": 816.96,
+          "audio_file": "or-2.wav",
+          "roundtrip_stt": "ପାଣି ପଠାନ୍ତୁ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ରାସ୍ତା ବନ୍ଦ ଅଛି",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 19329,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1520.9,
+          "audio_file": "or-3.wav",
+          "roundtrip_stt": "କରାସ୍ତା ବନ୍ଦ ଅଛି",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 21162,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1738.2,
+          "audio_file": "or-4.wav",
+          "roundtrip_stt": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "phrase",
+          "text": "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ",
+          "missing_characters": [],
+          "coverage": "covered; needs listening review",
+          "samples": 20299,
+          "sample_rate_hz": 16000,
+          "generation_ms": 1778.69,
+          "audio_file": "or-5.wav",
+          "roundtrip_stt": "ହଳା ତୁଙ୍କୁ ଡାଖୁଛୁ",
+          "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+        },
+        {
+          "category": "numeric",
+          "text": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210",
+          "missing_characters": [
+            "8"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        },
+        {
+          "category": "mixed_name",
+          "text": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ Zubin",
+          "missing_characters": [
+            "Z",
+            "b",
+            "i",
+            "n",
+            "u"
+          ],
+          "coverage": "BLOCKED: text would lose characters"
+        }
+      ]
+    }
+  ]
+}

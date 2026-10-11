@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-11",
+  "apk": {
+    "path": "D:\\new itantra\\artifacts\\model-conversion-audit-2026-10-11\\iTantra-1.16-model-audit-test.apk",
+    "sha256": "98970ca61e20f93fbf40fe3f867d42792751f9e9673f7248349dfdcf8405e18c",
+    "bytes": 65148517,
+    "debuggable": false,
+    "allow_backup": false,
+    "exported_activities": [
+      "com.example.itantra.MainActivity"
+    ],
+    "logging_method_reference_count": 0,
+    "sensitive_sdk_logging_markers": [],
+    "sherpa_jni_class_count": 123,
+    "native_library_sha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libonnxruntime.so": "7a2fb92eb67037837c3f0e428bd732fd0d05ced0546d9e740090c07573d8249a",
+      "lib/arm64-v8a/libsherpa-onnx-c-api.so": "c85e2382e2ca12b0513826be926eaccfea896b4cbf568182e287671ba526f80d",
+      "lib/arm64-v8a/libsherpa-onnx-cxx-api.so": "5eabb2bcf5a8af66aeab37431c09fab4a9c65cdebf02bd7e50f8c589044bd70e",
+      "lib/arm64-v8a/libsherpa-onnx-jni.so": "17a54c056abad7fbf4fc13fad158c4d80d2de85c0d135c3124a558af3ca0f60b",
+      "lib/arm64-v8a/libsqlcipher.so": "da51355b6c455150dae59e902c484292d33d752b7fec36f723558625d88048fa",
+      "lib/arm64-v8a/libtranslate_jni.so": "45040ff0cdd194d6e601589d759e6f1ba733de5f95790f76cc3e2046919046be"
+    },
+    "test_preview_classes_absent": true,
+    "content_matches_built_release": true,
+    "new_validation_markers_present": [
+      "NUMERIC_CONTENT_REQUIRES_REVIEW",
+      "SOURCE_SCRIPT_MISMATCH",
+      "needs numbers written in words"
+    ],
+    "native_libraries_match_previous_test_apk": true,
+    "signing_certificate_sha256": "765479824648e2c71b8fcd6b5c5a837427da652318f08ed954a584829a148f95",
+    "signing_purpose": "Existing development certificate; phone testing only",
+    "actual_apk_package": "package: name='com.example.itantra' versionCode='17' versionName='1.16-model-audit' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'"
+  },
+  "unit_tests": {
+    "tests": 589,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "voice_packs_checksums_verified": 10,
+  "desktop_waveforms_generated": 53,
+  "desktop_candidate_routes": 72,
+  "phone_validation": "NOT RUN; no attached device",
+  "human_linguistic_accuracy_score": null,
+  "limitations": "Structural validation and desktop probes do not establish translation meaning or voice intelligibility."
+}

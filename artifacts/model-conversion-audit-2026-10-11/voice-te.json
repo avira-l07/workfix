@@ -1,0 +1,112 @@
+{
+  "language": "te",
+  "model_id": "mms-tts-te",
+  "model_sha256": "a8ec6093c0ec3c6dcb7edc0c4cd6c08e312cd3299b00d0aa4988d2a7fea2baa5",
+  "checksums_verified": {
+    "model.onnx": true,
+    "tokens.txt": true
+  },
+  "frontend": "characters",
+  "ascii_digits_missing": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "7",
+    "8",
+    "9"
+  ],
+  "human_listening_review": "NOT RUN",
+  "cases": [
+    {
+      "category": "phrase",
+      "text": "సహాయం కావాలి",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 23973,
+      "sample_rate_hz": 16000,
+      "generation_ms": 2075.05,
+      "audio_file": "te-1.wav",
+      "roundtrip_stt": "ప్రసహాయం కావాలి",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "నీరు పంపండి",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 16845,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1388.51,
+      "audio_file": "te-2.wav",
+      "roundtrip_stt": "పనీరు పంపణది",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "రహదారి మూసివేశారు",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 24667,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1965.18,
+      "audio_file": "te-3.wav",
+      "roundtrip_stt": "ప రహదారి మూసివేశారు",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "మేము సురక్షితంగా ఉన్నాము",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 29959,
+      "sample_rate_hz": 16000,
+      "generation_ms": 2208.9,
+      "audio_file": "te-4.wav",
+      "roundtrip_stt": "మేము సురక్షితంగా ఉన్నాము",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "వైద్యుడిని పిలవండి",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 21240,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1409.93,
+      "audio_file": "te-5.wav",
+      "roundtrip_stt": "ప వైద్యుడు నీ పిల్లవంండ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "numeric",
+      "text": "సహాయం కావాలి 9876543210",
+      "missing_characters": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "7",
+        "8",
+        "9"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    },
+    {
+      "category": "mixed_name",
+      "text": "సహాయం కావాలి Zubin",
+      "missing_characters": [
+        "Z",
+        "b",
+        "i",
+        "n",
+        "u"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    }
+  ]
+}

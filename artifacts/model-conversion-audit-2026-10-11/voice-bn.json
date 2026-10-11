@@ -1,0 +1,98 @@
+{
+  "language": "bn",
+  "model_id": "mms-tts-bn",
+  "model_sha256": "c67081369061e87ba302bfbc0445543c4c23c04133514b7d6c7be2710363bc42",
+  "checksums_verified": {
+    "model.onnx": true,
+    "tokens.txt": true
+  },
+  "frontend": "characters",
+  "ascii_digits_missing": [],
+  "human_listening_review": "NOT RUN",
+  "cases": [
+    {
+      "category": "phrase",
+      "text": "সাহায্য দরকার",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 22147,
+      "sample_rate_hz": 16000,
+      "generation_ms": 2123.49,
+      "audio_file": "bn-1.wav",
+      "roundtrip_stt": "সাহায্য দোকার",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "পানি পাঠান",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 14017,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1338.97,
+      "audio_file": "bn-2.wav",
+      "roundtrip_stt": "পানি পাড়ান",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "রাস্তা বন্ধ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 16861,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1216.0,
+      "audio_file": "bn-3.wav",
+      "roundtrip_stt": "ব্রাস্ত পন্্রু",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "আমরা নিরাপদে আছি",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 21339,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1768.26,
+      "audio_file": "bn-4.wav",
+      "roundtrip_stt": "আমরা নিরাব্দে আছি",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ডাক্তার ডাকুন",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 17579,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1641.35,
+      "audio_file": "bn-5.wav",
+      "roundtrip_stt": "রাফতার রাকুম",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "numeric",
+      "text": "সাহায্য দরকার 9876543210",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 21168,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1861.8,
+      "audio_file": "bn-6.wav",
+      "roundtrip_stt": "সাহায্য দকাত",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "mixed_name",
+      "text": "সাহায্য দরকার Zubin",
+      "missing_characters": [
+        "Z",
+        "b",
+        "i",
+        "n",
+        "u"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    }
+  ]
+}

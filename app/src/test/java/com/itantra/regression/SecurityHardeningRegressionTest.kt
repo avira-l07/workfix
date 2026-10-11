@@ -57,6 +57,8 @@ class SecurityHardeningRegressionTest {
             MessageState.REMOTE_PLAYING, MessageState.REMOTE_PLAYBACK_CONFIRMED, MessageState.ERROR)
         BugfixFixture().use { f ->
             f.verify(); profile(f, "IT-AAAA-0001")
+            // This test exercises receipts, not MT. Preserve the numeric test ID.
+            f.translationAction = { text, source, target -> com.itantra.core.translation.TranslationResult(text, text, true, source, target) }
             receipts.forEachIndexed { index, type ->
                 f.sendAction = { TransmissionMetrics() }
                 f.coordinator.sendTextMessage("receipt test $index", "IT-AAAA-0001")

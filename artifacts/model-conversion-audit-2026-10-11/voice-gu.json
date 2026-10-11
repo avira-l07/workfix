@@ -1,0 +1,114 @@
+{
+  "language": "gu",
+  "model_id": "mms-tts-gu",
+  "model_sha256": "6d9b4f268765e19b6620983bd698c5e4fa943309560b6c7b199b50a4aae30d47",
+  "checksums_verified": {
+    "model.onnx": true,
+    "tokens.txt": true
+  },
+  "frontend": "characters",
+  "ascii_digits_missing": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9"
+  ],
+  "human_listening_review": "NOT RUN",
+  "cases": [
+    {
+      "category": "phrase",
+      "text": "મદદ જોઈએ છે",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 16128,
+      "sample_rate_hz": 16000,
+      "generation_ms": 932.37,
+      "audio_file": "gu-1.wav",
+      "roundtrip_stt": "તમદત જોઈએ છે",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "પાણી મોકલો",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 13056,
+      "sample_rate_hz": 16000,
+      "generation_ms": 708.67,
+      "audio_file": "gu-2.wav",
+      "roundtrip_stt": "પાણી મોકલો",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "રસ્તો બંધ છે",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 15616,
+      "sample_rate_hz": 16000,
+      "generation_ms": 899.6,
+      "audio_file": "gu-3.wav",
+      "roundtrip_stt": "તેસ્ તો બંધ છે",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "અમે સુરક્ષિત છીએ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 19456,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1097.54,
+      "audio_file": "gu-4.wav",
+      "roundtrip_stt": "અમે સુરક્ષિત છીએ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ડોક્ટરને બોલાવો",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 17664,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1052.44,
+      "audio_file": "gu-5.wav",
+      "roundtrip_stt": "અડોક્ટરને બોલાવો",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "numeric",
+      "text": "મદદ જોઈએ છે 9876543210",
+      "missing_characters": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    },
+    {
+      "category": "mixed_name",
+      "text": "મદદ જોઈએ છે Zubin",
+      "missing_characters": [
+        "Z",
+        "b",
+        "i",
+        "n",
+        "u"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    }
+  ]
+}

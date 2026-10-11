@@ -1,0 +1,231 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+
+> Task :app:kspDebugKotlin
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :app:processDebugUnitTestManifest UP-TO-DATE
+> Task :app:generateDebugUnitTestConfig UP-TO-DATE
+> Task :app:verifySpeechDataLeakage SKIPPED
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+
+> Task :app:kspDebugUnitTestKotlin
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+Kotlin does not yet support 25 JDK target, falling back to Kotlin JVM_24 JVM target
+
+> Task :app:compileDebugUnitTestKotlin
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:24:36 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:24:90 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:30:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:31:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:34:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:34:23 Unresolved reference 'sampleMessage'.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:36:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:37:62 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:39:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:39:19 Unresolved reference 'sampleMessage'.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:40:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:41:47 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:46:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:47:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:49:44 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:51:39 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:58:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:59:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:61:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:63:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:64:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:65:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:65:38 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:66:28 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:67:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:67:38 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:68:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:69:58 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:75:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:76:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:77:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:78:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:79:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:79:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:80:24 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:81:16 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:82:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:83:47 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:88:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:89:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:90:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:90:19 Unresolved reference 'sampleMessage'.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:91:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:94:31 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:95:45 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:96:27 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:101:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:102:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:105:27 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:106:26 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:111:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:112:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:113:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:114:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:114:35 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:116:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:122:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:123:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:124:28 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:125:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:126:31 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:131:60 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:133:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:133:47 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:133:74 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:134:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:135:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:135:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:136:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:136:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:141:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:142:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:143:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:144:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:144:35 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:146:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:151:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:152:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:153:28 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:153:72 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:154:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:156:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:156:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:157:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:157:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:162:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:163:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:164:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:165:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:167:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:169:27 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:170:26 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:175:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:176:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:177:27 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:184:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:184:19 Unresolved reference 'sampleMessage'.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:186:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:186:19 Unresolved reference 'sampleMessage'.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:189:16 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:190:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:196:48 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:197:55 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:198:45 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:203:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:204:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:206:26 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:207:27 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:210:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:213:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:214:31 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:215:35 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:218:26 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:219:27 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:224:23 Cannot access 'class RecordingMessageDao : MessageDao': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:230:32 Cannot access 'class RecordingMessageDao : MessageDao': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:233:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:235:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:235:23 Unresolved reference 'sampleMessage'.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:237:46 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:238:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:239:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:239:23 Unresolved reference 'sampleMessage'.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:240:30 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:241:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:243:19 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:243:44 Cannot access 'class RecordingMessageDao : MessageDao': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:243:94 Cannot access 'class RecordingMessageDao : MessageDao': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:244:36 Cannot access 'class RecordingMessageDao : MessageDao': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:260:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:262:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:262:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:263:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:264:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:265:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:265:35 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:267:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:270:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:271:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:271:59 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:273:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:273:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:274:26 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:275:27 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:276:26 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:281:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:282:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:283:28 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:284:30 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:287:20 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:289:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:289:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:290:29 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:293:27 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:298:9 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:299:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:300:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:301:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:301:35 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:303:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+
+> Task :app:compileDebugUnitTestKotlin FAILED
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:304:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:307:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:309:15 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:309:34 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+e: file:///D:/new%20itantra/app/src/test/java/com/itantra/regression/SecurityHardeningRegressionTest.kt:310:46 Cannot access 'class BugfixFixture : Closeable': it is internal in file.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugUnitTestKotlin' (registered by plugin 'com.android.internal.application').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m 5s
+31 actionable tasks: 6 executed, 25 up-to-date

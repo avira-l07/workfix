@@ -1,0 +1,98 @@
+{
+  "language": "mr",
+  "model_id": "piper-mr-IN-google-medium",
+  "model_sha256": "5b180a9fed4abf9877c2fe6be91128a14dca4fbb1f2d93a8144948e5af3caf8e",
+  "checksums_verified": {
+    "model.onnx": true,
+    "tokens.txt": true,
+    "espeak-ng-data/phontab": true,
+    "espeak-ng-data/phonindex": true,
+    "espeak-ng-data/phondata": true,
+    "espeak-ng-data/intonations": true,
+    "espeak-ng-data/mr_dict": true,
+    "espeak-ng-data/lang/inc/mr": true
+  },
+  "frontend": "espeak phonemes",
+  "ascii_digits_missing": null,
+  "human_listening_review": "NOT RUN",
+  "cases": [
+    {
+      "category": "phrase",
+      "text": "मदत हवी आहे",
+      "missing_characters": [],
+      "coverage": "phoneme frontend; needs listening review",
+      "samples": 23157,
+      "sample_rate_hz": 22050,
+      "generation_ms": 3310.87,
+      "audio_file": "mr-1.wav",
+      "roundtrip_stt": "मदत हवी आहे",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "पाणी पाठवा",
+      "missing_characters": [],
+      "coverage": "phoneme frontend; needs listening review",
+      "samples": 22936,
+      "sample_rate_hz": 22050,
+      "generation_ms": 237.63,
+      "audio_file": "mr-2.wav",
+      "roundtrip_stt": "पाणी पाठवा",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "रस्ता बंद आहे",
+      "missing_characters": [],
+      "coverage": "phoneme frontend; needs listening review",
+      "samples": 23303,
+      "sample_rate_hz": 22050,
+      "generation_ms": 286.38,
+      "audio_file": "mr-3.wav",
+      "roundtrip_stt": "रस्ता बंद आहे",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "आम्ही सुरक्षित आहोत",
+      "missing_characters": [],
+      "coverage": "phoneme frontend; needs listening review",
+      "samples": 31394,
+      "sample_rate_hz": 22050,
+      "generation_ms": 336.82,
+      "audio_file": "mr-4.wav",
+      "roundtrip_stt": "आम्ही सुरक्षित आहोत",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "डॉक्टरांना बोलवा",
+      "missing_characters": [],
+      "coverage": "phoneme frontend; needs listening review",
+      "samples": 23900,
+      "sample_rate_hz": 22050,
+      "generation_ms": 302.9,
+      "audio_file": "mr-5.wav",
+      "roundtrip_stt": "डॉक्टरांना बोलवा",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "numeric",
+      "text": "मदत हवी आहे 9876543210",
+      "missing_characters": [],
+      "coverage": "phoneme frontend; needs listening review",
+      "samples": 119599,
+      "sample_rate_hz": 22050,
+      "generation_ms": 1156.04,
+      "audio_file": "mr-6.wav",
+      "roundtrip_stt": "मदत हवी आहे नऊ अब्ज सत्यांऐंशी कोटी पासष्ट लाख त्रेचाळीस हजार दोनशे दहा",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "mixed_name",
+      "text": "मदत हवी आहे Zubin",
+      "missing_characters": [],
+      "coverage": "phoneme frontend; needs listening review"
+    }
+  ]
+}

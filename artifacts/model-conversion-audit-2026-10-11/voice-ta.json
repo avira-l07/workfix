@@ -1,0 +1,96 @@
+{
+  "language": "ta",
+  "model_id": "mms-tts-ta",
+  "model_sha256": "c44055b2e7c5719ca26708f6eb03680b0f1bbf6fdcb0df6480478f872f1f6e34",
+  "checksums_verified": {
+    "model.onnx": true,
+    "tokens.txt": true
+  },
+  "frontend": "characters",
+  "ascii_digits_missing": [
+    "8"
+  ],
+  "human_listening_review": "NOT RUN",
+  "cases": [
+    {
+      "category": "phrase",
+      "text": "உதவி தேவை",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 16312,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1346.58,
+      "audio_file": "ta-1.wav",
+      "roundtrip_stt": "உதவி தேவை",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "தண்ணீர் அனுப்புங்கள்",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 23486,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1889.58,
+      "audio_file": "ta-2.wav",
+      "roundtrip_stt": "தண்ணீர் அனுப்புங்கள்",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "சாலை மூடப்பட்டுள்ளது",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 23827,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1956.29,
+      "audio_file": "ta-3.wav",
+      "roundtrip_stt": "சாலை மூடப்பட்டுள்ளது",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 36964,
+      "sample_rate_hz": 16000,
+      "generation_ms": 2702.0,
+      "audio_file": "ta-4.wav",
+      "roundtrip_stt": "நாங்கள் பாதுகாப்பாக இருக்கிறோம்",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "மருத்துவரை அழைக்கவும்",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 24508,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1598.24,
+      "audio_file": "ta-5.wav",
+      "roundtrip_stt": "மருத்துவரை அழைக்கவும்",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "numeric",
+      "text": "உதவி தேவை 9876543210",
+      "missing_characters": [
+        "8"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    },
+    {
+      "category": "mixed_name",
+      "text": "உதவி தேவை Zubin",
+      "missing_characters": [
+        "Z",
+        "b",
+        "i",
+        "n",
+        "u"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "language": "en",
+  "model_id": "mms-tts-en",
+  "model_sha256": "409bafdb550948dc5c0b216e21b341732ef3cefead8008b512b034f1bdb27132",
+  "checksums_verified": {
+    "model.onnx": true,
+    "tokens.txt": true
+  },
+  "frontend": "characters",
+  "ascii_digits_missing": [
+    "7",
+    "8",
+    "9"
+  ],
+  "human_listening_review": "NOT RUN",
+  "cases": [
+    {
+      "category": "phrase",
+      "text": "We need help",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 16256,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1675.43,
+      "audio_file": "en-1.wav",
+      "roundtrip_stt": "We need help.",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "Send clean water",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 24104,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1952.4,
+      "audio_file": "en-2.wav",
+      "roundtrip_stt": "Send clean water,",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "The road is blocked",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 20374,
+      "sample_rate_hz": 16000,
+      "generation_ms": 2009.77,
+      "audio_file": "en-3.wav",
+      "roundtrip_stt": "the road is blocked,",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "We are safe",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 15410,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1217.07,
+      "audio_file": "en-4.wav",
+      "roundtrip_stt": "we Irsish",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "Call a doctor",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 17369,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1389.51,
+      "audio_file": "en-5.wav",
+      "roundtrip_stt": "Paul ador",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "numeric",
+      "text": "We need help 9876543210",
+      "missing_characters": [
+        "7",
+        "8",
+        "9"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    },
+    {
+      "category": "mixed_name",
+      "text": "We need help Zubin",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review"
+    }
+  ]
+}

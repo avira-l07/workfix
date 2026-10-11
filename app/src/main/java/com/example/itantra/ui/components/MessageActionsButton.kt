@@ -175,6 +175,8 @@ private fun MessageLanguagesSheet(message: TransceiverMessage, coordinator: Tran
 }
 
 private fun translationErrorLabel(error: String?): String = when {
+    error in setOf("SOURCE_SCRIPT_MISMATCH", "OUTPUT_SCRIPT_MISMATCH", "NUMERIC_CONTENT_REQUIRES_REVIEW",
+        "TRANSLATION_EMPTY", "TRANSLATION_METADATA_MISMATCH") -> com.itantra.core.translation.translationFailureMessage(error)
     error == "UNSUPPORTED_ROUTE" -> "Translation for this language pair is unavailable in this build."
     error?.startsWith("MODEL_") == true || error in setOf("ENGINE_NOT_LOADED", "ENGINE_NOT_INITIALIZED", "NOT_INCLUDED_IN_BUILD") ->
         "Install the offline translation models for this language pair in Language packs or Diagnostics."

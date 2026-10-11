@@ -1,0 +1,96 @@
+{
+  "language": "or",
+  "model_id": "mms-tts-or",
+  "model_sha256": "ab867f39b00f1fcb39dc97f5079150959b50df50d7f10e75232c56b52f19c021",
+  "checksums_verified": {
+    "model.onnx": true,
+    "tokens.txt": true
+  },
+  "frontend": "characters",
+  "ascii_digits_missing": [
+    "8"
+  ],
+  "human_listening_review": "NOT RUN",
+  "cases": [
+    {
+      "category": "phrase",
+      "text": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 17160,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1406.81,
+      "audio_file": "or-1.wav",
+      "roundtrip_stt": "ତ ବା ଜର ଆବଶ୍ୟକ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ପାଣି ପଠାନ୍ତୁ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 11227,
+      "sample_rate_hz": 16000,
+      "generation_ms": 816.96,
+      "audio_file": "or-2.wav",
+      "roundtrip_stt": "ପାଣି ପଠାନ୍ତୁ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ରାସ୍ତା ବନ୍ଦ ଅଛି",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 19329,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1520.9,
+      "audio_file": "or-3.wav",
+      "roundtrip_stt": "କରାସ୍ତା ବନ୍ଦ ଅଛି",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 21162,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1738.2,
+      "audio_file": "or-4.wav",
+      "roundtrip_stt": "ଆମେ ସୁରକ୍ଷିତ ଅଛୁ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 20299,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1778.69,
+      "audio_file": "or-5.wav",
+      "roundtrip_stt": "ହଳା ତୁଙ୍କୁ ଡାଖୁଛୁ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "numeric",
+      "text": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210",
+      "missing_characters": [
+        "8"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    },
+    {
+      "category": "mixed_name",
+      "text": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ Zubin",
+      "missing_characters": [
+        "Z",
+        "b",
+        "i",
+        "n",
+        "u"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    }
+  ]
+}

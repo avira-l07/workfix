@@ -1,0 +1,730 @@
+{
+  "date": "2026-10-11",
+  "model": {
+    "repository": "hari31416/indictrans2-indic-indic-dist-320M-ONNX-int8",
+    "revision": "b04956dee2f2a3e06e44bf09f8d654a6b81af99a",
+    "files": [
+      {
+        "name": "config.json",
+        "bytes": 1382,
+        "sha256": "26b4ea9e28ec600085f3b872506c31e61edac3b0523158806cf61c41332d6323"
+      },
+      {
+        "name": "decoder_model.onnx",
+        "bytes": 2037642,
+        "sha256": "33f6dd13aff20d67cb659cc534b918f947c75691c7ee54a5494406f757923092"
+      },
+      {
+        "name": "decoder_shared.onnx.data",
+        "bytes": 203048944,
+        "sha256": "5b35423deb71577d1bb95d7abb702042bdf5724846e8b21a8cb9f6757c54dfd7"
+      },
+      {
+        "name": "decoder_with_past_model.onnx",
+        "bytes": 1850619,
+        "sha256": "0f1f620993308f01f23460a60d534e3bd92e73d8d6e74141bcdb7ecbaaf86abb"
+      },
+      {
+        "name": "dict.SRC.json",
+        "bytes": 3391208,
+        "sha256": "3d3b180702520742dec423a5a7f7b4e3dad399d69e40ca7df294a1567884bed5"
+      },
+      {
+        "name": "dict.TGT.json",
+        "bytes": 3390440,
+        "sha256": "f7817850c9e4b99c59fad57d0611c7720f1921f215e6f247cf25d52eff7f1146"
+      },
+      {
+        "name": "encoder_model.onnx",
+        "bytes": 831435,
+        "sha256": "0b965dfef8d5ba16603a9fbcc9d326acf6438e2768c52f6816004d9956e15810"
+      },
+      {
+        "name": "encoder_model.onnx.data",
+        "bytes": 120068096,
+        "sha256": "914b82d0a08240d8cc133034a0958733ffc4d98b13a69111029ed8a85a9c159b"
+      },
+      {
+        "name": "generation_config.json",
+        "bytes": 168,
+        "sha256": "8eed3ca41af1a8bcfc433db9444d8967d3fdf500239ad70adda780b701d2f3b2"
+      },
+      {
+        "name": "model.SRC",
+        "bytes": 3256903,
+        "sha256": "ac9257c8e76b8b607705b959cc3d075656ea33032f7a974e467b8941df6e98d4"
+      },
+      {
+        "name": "model.TGT",
+        "bytes": 3256903,
+        "sha256": "ac9257c8e76b8b607705b959cc3d075656ea33032f7a974e467b8941df6e98d4"
+      },
+      {
+        "name": "tokenizer_meta.json",
+        "bytes": 71,
+        "sha256": "6835ed2487318967fcc5669e153e5fcf138e3b73026130c8921fe59b7e3597c1"
+      },
+      {
+        "name": "tokenizer_src.json",
+        "bytes": 23876630,
+        "sha256": "d15ba1265a61b3b66122aab74e888442093a2c711f51b0f9896108661e1d346c"
+      },
+      {
+        "name": "tokenizer_tgt.json",
+        "bytes": 23869629,
+        "sha256": "51b05cd37636765e158146534d54452be558df32c6ab06ba4caeecdd0266a580"
+      }
+    ]
+  },
+  "scope": "Diagnostic desktop probes; no approved human references, no accuracy score, not integrated in APK",
+  "results": [
+    {
+      "source": "hi",
+      "target": "bn",
+      "input": "मदद चाहिए 9876543210 Zubin",
+      "output": "9876543210 জুবিন সাহায্য চায়",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.216
+    },
+    {
+      "source": "hi",
+      "target": "gu",
+      "input": "मदद चाहिए 9876543210 Zubin",
+      "output": "મદદની જરૂર છે 9876543210 ઝુબિન",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.256
+    },
+    {
+      "source": "hi",
+      "target": "mr",
+      "input": "मदद चाहिए 9876543210 Zubin",
+      "output": "9876543210 झुबिनला मदत हवी आहे",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.249
+    },
+    {
+      "source": "hi",
+      "target": "kn",
+      "input": "मदद चाहिए 9876543210 Zubin",
+      "output": "ಸಹಾಯ ಬೇಕು 9876543210 ಜ್ಬಿನ್",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.222
+    },
+    {
+      "source": "hi",
+      "target": "ml",
+      "input": "मदद चाहिए 9876543210 Zubin",
+      "output": "9876543210 ജുബിൻ സഹായം തേടുന്നു",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.231
+    },
+    {
+      "source": "hi",
+      "target": "ta",
+      "input": "मदद चाहिए 9876543210 Zubin",
+      "output": "9876543210 ஜுபைன் உதவி தேவைப்படுகிறது",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.225
+    },
+    {
+      "source": "hi",
+      "target": "te",
+      "input": "मदद चाहिए 9876543210 Zubin",
+      "output": "9876543210 జబిన్ సహాయం కావాలి",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.244
+    },
+    {
+      "source": "hi",
+      "target": "or",
+      "input": "मदद चाहिए 9876543210 Zubin",
+      "output": "ସାହାଯ୍ଯ଼ ଦରକାର 9876543210 ଜୁବିନ୍",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.235
+    },
+    {
+      "source": "bn",
+      "target": "hi",
+      "input": "সাহায্য দরকার 9876543210 Zubin",
+      "output": "9876543210 ज़ुबिन को मदद की आवश्यकता है",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.292
+    },
+    {
+      "source": "bn",
+      "target": "gu",
+      "input": "সাহায্য দরকার 9876543210 Zubin",
+      "output": "મદદની જરૂર છે 9876543210 ઝુબિન",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.275
+    },
+    {
+      "source": "bn",
+      "target": "mr",
+      "input": "সাহায্য দরকার 9876543210 Zubin",
+      "output": "9876543210 झुबिनला मदत हवी आहे",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.268
+    },
+    {
+      "source": "bn",
+      "target": "kn",
+      "input": "সাহায্য দরকার 9876543210 Zubin",
+      "output": "9876543210 ಜ್ಬಿನ್ ಸಹಾಯ ಬೇಕು",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.259
+    },
+    {
+      "source": "bn",
+      "target": "ml",
+      "input": "সাহায্য দরকার 9876543210 Zubin",
+      "output": "സഹായം ആവശ്യമുണ്ട് 9876543210 ജുബിൻ",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.287
+    },
+    {
+      "source": "bn",
+      "target": "ta",
+      "input": "সাহায্য দরকার 9876543210 Zubin",
+      "output": "9876543210 ஜுபைன் உதவி தேவை",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.293
+    },
+    {
+      "source": "bn",
+      "target": "te",
+      "input": "সাহায্য দরকার 9876543210 Zubin",
+      "output": "సహాయం అవసరం 9876543210 జుబిన్",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.23
+    },
+    {
+      "source": "bn",
+      "target": "or",
+      "input": "সাহায্য দরকার 9876543210 Zubin",
+      "output": "ସାହାଯ୍ଯ଼ ଆବଶ୍ଯ଼କ 9876543210 ଜୁବିନ୍",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.248
+    },
+    {
+      "source": "gu",
+      "target": "hi",
+      "input": "મદદ જોઈએ છે 9876543210 Zubin",
+      "output": "9876543210 ज़ुबिन को मदद चाहिए",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.298
+    },
+    {
+      "source": "gu",
+      "target": "bn",
+      "input": "મદદ જોઈએ છે 9876543210 Zubin",
+      "output": "সাহায্যের প্রয়োজন 9876543210 জুবিন",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.226
+    },
+    {
+      "source": "gu",
+      "target": "mr",
+      "input": "મદદ જોઈએ છે 9876543210 Zubin",
+      "output": "9876543210 झुबिनला मदत हवी आहे",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.248
+    },
+    {
+      "source": "gu",
+      "target": "kn",
+      "input": "મદદ જોઈએ છે 9876543210 Zubin",
+      "output": "9876543210 ಜ್ಬಿನ್ ಸಹಾಯ ಬೇಕು",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.283
+    },
+    {
+      "source": "gu",
+      "target": "ml",
+      "input": "મદદ જોઈએ છે 9876543210 Zubin",
+      "output": "9876543210 ജുബിന് സഹായം വേണം",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.262
+    },
+    {
+      "source": "gu",
+      "target": "ta",
+      "input": "મદદ જોઈએ છે 9876543210 Zubin",
+      "output": "9876543210 ஜுபின் உதவி கோருகிறார்",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.275
+    },
+    {
+      "source": "gu",
+      "target": "te",
+      "input": "મદદ જોઈએ છે 9876543210 Zubin",
+      "output": "9876543210 జుబిన్కు సహాయం కావాలి",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.239
+    },
+    {
+      "source": "gu",
+      "target": "or",
+      "input": "મદદ જોઈએ છે 9876543210 Zubin",
+      "output": "ସାହାଯ୍ଯ଼ ଦରକାର 9876543210 ଜୁବିନ୍",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.236
+    },
+    {
+      "source": "mr",
+      "target": "hi",
+      "input": "मदत हवी आहे 9876543210 Zubin",
+      "output": "9876543210 ज़ुबिन को मदद चाहिए",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.255
+    },
+    {
+      "source": "mr",
+      "target": "bn",
+      "input": "मदत हवी आहे 9876543210 Zubin",
+      "output": "সাহায্যের প্রয়োজন 9876543210 জুবিন",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.211
+    },
+    {
+      "source": "mr",
+      "target": "gu",
+      "input": "मदत हवी आहे 9876543210 Zubin",
+      "output": "9876543210 ઝુબિન મદદ માંગે છે",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.251
+    },
+    {
+      "source": "mr",
+      "target": "kn",
+      "input": "मदत हवी आहे 9876543210 Zubin",
+      "output": "ಸಹಾಯ ಬೇಕು 9876543210 ಜುಬಿನ್",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.258
+    },
+    {
+      "source": "mr",
+      "target": "ml",
+      "input": "मदत हवी आहे 9876543210 Zubin",
+      "output": "സഹായം ആവശ്യമുണ്ട് 9876543210 ജുബിൻ",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.291
+    },
+    {
+      "source": "mr",
+      "target": "ta",
+      "input": "मदत हवी आहे 9876543210 Zubin",
+      "output": "9876543210 ஜுபினுக்கு உதவி தேவை",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.248
+    },
+    {
+      "source": "mr",
+      "target": "te",
+      "input": "मदत हवी आहे 9876543210 Zubin",
+      "output": "సహాయం కావాలి 9876543210 జుబిన్",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.243
+    },
+    {
+      "source": "mr",
+      "target": "or",
+      "input": "मदत हवी आहे 9876543210 Zubin",
+      "output": "ସାହାଯ୍ଯ଼ ଦରକାର 9876543210 ଜୁବିନ୍",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.247
+    },
+    {
+      "source": "kn",
+      "target": "hi",
+      "input": "ಸಹಾಯ ಬೇಕು 9876543210 Zubin",
+      "output": "9876543210 ज़ुबिन को मदद की आवश्यकता है",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.266
+    },
+    {
+      "source": "kn",
+      "target": "bn",
+      "input": "ಸಹಾಯ ಬೇಕು 9876543210 Zubin",
+      "output": "সাহায্যের প্রয়োজন 9876543210 জুবিন",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.261
+    },
+    {
+      "source": "kn",
+      "target": "gu",
+      "input": "ಸಹಾಯ ಬೇಕು 9876543210 Zubin",
+      "output": "9876543210 ઝુબિનને મદદની જરૂર છે",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.269
+    },
+    {
+      "source": "kn",
+      "target": "mr",
+      "input": "ಸಹಾಯ ಬೇಕು 9876543210 Zubin",
+      "output": "9876543210 झुबिनला मदत हवी आहे",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.306
+    },
+    {
+      "source": "kn",
+      "target": "ml",
+      "input": "ಸಹಾಯ ಬೇಕು 9876543210 Zubin",
+      "output": "9876543210 ജുബിൻ സഹായം ആവശ്യപ്പെടുന്നു",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.315
+    },
+    {
+      "source": "kn",
+      "target": "ta",
+      "input": "ಸಹಾಯ ಬೇಕು 9876543210 Zubin",
+      "output": "9876543210 ஜுபைன் உதவி தேவை",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.286
+    },
+    {
+      "source": "kn",
+      "target": "te",
+      "input": "ಸಹಾಯ ಬೇಕು 9876543210 Zubin",
+      "output": "సహాయం కావాలి 9876543210 జుబిన్",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.268
+    },
+    {
+      "source": "kn",
+      "target": "or",
+      "input": "ಸಹಾಯ ಬೇಕು 9876543210 Zubin",
+      "output": "ସାହାଯ୍ଯ଼ ଦରକାର 9876543210 ଜୁବିନ୍",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.235
+    },
+    {
+      "source": "ml",
+      "target": "hi",
+      "input": "സഹായം വേണം 9876543210 Zubin",
+      "output": "9876543210 ज़ुबिन को मदद चाहिए",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.263
+    },
+    {
+      "source": "ml",
+      "target": "bn",
+      "input": "സഹായം വേണം 9876543210 Zubin",
+      "output": "9876543210 জুবিন সাহায্য চায়",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.225
+    },
+    {
+      "source": "ml",
+      "target": "gu",
+      "input": "സഹായം വേണം 9876543210 Zubin",
+      "output": "9876543210 ઝુબિનને મદદની જરૂર છે",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.327
+    },
+    {
+      "source": "ml",
+      "target": "mr",
+      "input": "സഹായം വേണം 9876543210 Zubin",
+      "output": "9876543210 झूबिनला मदत हवी आहे",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.262
+    },
+    {
+      "source": "ml",
+      "target": "kn",
+      "input": "സഹായം വേണം 9876543210 Zubin",
+      "output": "9876543210 ಜ್ಬಿನ್ ಸಹಾಯ ಬೇಕು",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.242
+    },
+    {
+      "source": "ml",
+      "target": "ta",
+      "input": "സഹായം വേണം 9876543210 Zubin",
+      "output": "9876543210 ஜுபினுக்கு உதவி தேவை",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.227
+    },
+    {
+      "source": "ml",
+      "target": "te",
+      "input": "സഹായം വേണം 9876543210 Zubin",
+      "output": "9876543210 జబిన్కు సహాయం కావాలి",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.274
+    },
+    {
+      "source": "ml",
+      "target": "or",
+      "input": "സഹായം വേണം 9876543210 Zubin",
+      "output": "ସାହାଯ୍ଯ଼ ଦରକାର 9876543210 ଜୁବିନ୍",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.284
+    },
+    {
+      "source": "ta",
+      "target": "hi",
+      "input": "உதவி தேவை 9876543210 Zubin",
+      "output": "सहायता की आवश्यकता 9876543210 ज़ुबिन",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.251
+    },
+    {
+      "source": "ta",
+      "target": "bn",
+      "input": "உதவி தேவை 9876543210 Zubin",
+      "output": "সাহায্যের প্রয়োজন 9876543210 জুবিন",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.276
+    },
+    {
+      "source": "ta",
+      "target": "gu",
+      "input": "உதவி தேவை 9876543210 Zubin",
+      "output": "મદદની જરૂર 9876543210 ઝુબિન",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.279
+    },
+    {
+      "source": "ta",
+      "target": "mr",
+      "input": "உதவி தேவை 9876543210 Zubin",
+      "output": "मदत आवश्यक 9876543210 झुबिन",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.245
+    },
+    {
+      "source": "ta",
+      "target": "kn",
+      "input": "உதவி தேவை 9876543210 Zubin",
+      "output": "ಸಹಾಯ ಬೇಕು 9876543210 ಜ್ಬಿನ್",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.269
+    },
+    {
+      "source": "ta",
+      "target": "ml",
+      "input": "உதவி தேவை 9876543210 Zubin",
+      "output": "സഹായം ആവശ്യമുണ്ട് 9876543210 ജുബിൻ",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.29
+    },
+    {
+      "source": "ta",
+      "target": "te",
+      "input": "உதவி தேவை 9876543210 Zubin",
+      "output": "సహాయం అవసరం 9876543210 జుబిన్",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.232
+    },
+    {
+      "source": "ta",
+      "target": "or",
+      "input": "உதவி தேவை 9876543210 Zubin",
+      "output": "ସାହାଯ୍ଯ଼ର ଆବଶ୍ଯ଼କତା 9876543210 ଜୁବିନ୍",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.238
+    },
+    {
+      "source": "te",
+      "target": "hi",
+      "input": "సహాయం కావాలి 9876543210 Zubin",
+      "output": "9876543210 ज़ुबिन को मदद चाहिए",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.29
+    },
+    {
+      "source": "te",
+      "target": "bn",
+      "input": "సహాయం కావాలి 9876543210 Zubin",
+      "output": "সাহায্যের প্রয়োজন 9876543210 জুবিন",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.299
+    },
+    {
+      "source": "te",
+      "target": "gu",
+      "input": "సహాయం కావాలి 9876543210 Zubin",
+      "output": "9876543210 ઝુબિનને મદદની જરૂર છે",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.294
+    },
+    {
+      "source": "te",
+      "target": "mr",
+      "input": "సహాయం కావాలి 9876543210 Zubin",
+      "output": "9876543210 झुबिनला मदत हवी आहे",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.343
+    },
+    {
+      "source": "te",
+      "target": "kn",
+      "input": "సహాయం కావాలి 9876543210 Zubin",
+      "output": "9876543210 ಜ್ಬಿನ್ ಸಹಾಯ ಬೇಕು",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.295
+    },
+    {
+      "source": "te",
+      "target": "ml",
+      "input": "సహాయం కావాలి 9876543210 Zubin",
+      "output": "9876543210 ജുബിൻ സഹായം തേടുന്നു",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.341
+    },
+    {
+      "source": "te",
+      "target": "ta",
+      "input": "సహాయం కావాలి 9876543210 Zubin",
+      "output": "9876543210 ஜுபினுக்கு உதவி தேவை",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.279
+    },
+    {
+      "source": "te",
+      "target": "or",
+      "input": "సహాయం కావాలి 9876543210 Zubin",
+      "output": "ସାହାଯ୍ଯ଼ ଦରକାର 9876543210 ଜୁବିନ",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.31
+    },
+    {
+      "source": "or",
+      "target": "hi",
+      "input": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210 Zubin",
+      "output": "9876543210 ज़ुबिन को मदद की आवश्यकता है",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.31
+    },
+    {
+      "source": "or",
+      "target": "bn",
+      "input": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210 Zubin",
+      "output": "সাহায্যের প্রয়োজন 9876543210 জুবিন",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.373
+    },
+    {
+      "source": "or",
+      "target": "gu",
+      "input": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210 Zubin",
+      "output": "મદદની જરૂર 9876543210 ઝુબિન",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.294
+    },
+    {
+      "source": "or",
+      "target": "mr",
+      "input": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210 Zubin",
+      "output": "9876543210 झुबिनला मदत हवी आहे",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.354
+    },
+    {
+      "source": "or",
+      "target": "kn",
+      "input": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210 Zubin",
+      "output": "9876543210 ಜ್ಬಿನ್ ಸಹಾಯ ಬೇಕು",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.292
+    },
+    {
+      "source": "or",
+      "target": "ml",
+      "input": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210 Zubin",
+      "output": "സഹായം ആവശ്യമാണ് 9876543210 ഷ്ബിൻ",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.359
+    },
+    {
+      "source": "or",
+      "target": "ta",
+      "input": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210 Zubin",
+      "output": "உதவி தேவை 9876543210 ஜுபின்",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.269
+    },
+    {
+      "source": "or",
+      "target": "te",
+      "input": "ସାହାଯ୍ୟ ଆବଶ୍ୟକ 9876543210 Zubin",
+      "output": "9876543210 జబిన్ సహాయం కావాలి",
+      "phone_digits_preserved": true,
+      "name_review": "REQUIRED; arbitrary name may be transliterated",
+      "latency_seconds": 0.233
+    }
+  ]
+}

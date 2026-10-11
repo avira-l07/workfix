@@ -46,12 +46,18 @@ class TranslationRouter(
             return TranslationResult(text, "", false, source, target, error = "UNSUPPORTED_ROUTE")
         }
 
+        if (sourceScriptConflict(text, source)) {
+            return TranslationResult(text, "", false, source, target, error = "SOURCE_SCRIPT_MISMATCH")
+        }
+
         return try {
             val res = engine.translate(text, source, target)
             if (com.example.itantra.BuildConfig.DEBUG) {
                 android.util.Log.i("ITANTRA_MT_CALL", "TranslationRouter: success=${res.isSuccessful}, error=${res.error}")
             }
-            res
+            val validationError = translationOutputError(text, source, target, res)
+            if (validationError == null) res else
+                TranslationResult(text, "", false, source, target, error = validationError)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

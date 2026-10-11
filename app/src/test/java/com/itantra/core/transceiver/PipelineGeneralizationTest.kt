@@ -85,6 +85,7 @@ class PipelineGeneralizationTest {
         var callCount = 0
         var shouldFail = false
         var failError = "MT_FAILED"
+        var output: String? = null
 
         override fun init(modelsDir: File) {}
         override fun release() {}
@@ -96,7 +97,7 @@ class PipelineGeneralizationTest {
             }
             return TranslationResult(
                 originalText = text,
-                translatedText = "[TRANSLATED $sourceLang->$targetLang] $text",
+                translatedText = output ?: "[TRANSLATED $sourceLang->$targetLang] $text",
                 isSuccessful = true,
                 sourceLanguage = sourceLang,
                 targetLanguage = targetLang
@@ -654,15 +655,17 @@ class PipelineGeneralizationTest {
     @Test
     fun `test cross-language between two non-English languages routes through MT engine`() = runBlocking {
         val mtEngine = ConfigurableTranslationEngine()
+        mtEngine.output = "வழி தெளிவாக உள்ளது"
         val router = TranslationRouter(mtEngine)
 
         // Hindi mic -> Tamil target
         val hiToTaResult = router.routeAndTranslate("रास्ता साफ है", LanguageCode.HINDI, LanguageCode.TAMIL)
         assertTrue("Hindi -> Tamil cross-language MT must succeed", hiToTaResult.isSuccessful)
-        assertEquals("[TRANSLATED HINDI->TAMIL] रास्ता साफ है", hiToTaResult.translatedText)
+        assertEquals("வழி தெளிவாக உள்ளது", hiToTaResult.translatedText)
         assertEquals(1, mtEngine.callCount)
 
         // Tamil mic -> Telugu target
+        mtEngine.output = "దారి స్పష్టంగా ఉంది"
         val taToTeResult = router.routeAndTranslate("வழி தெளிவாக உள்ளது", LanguageCode.TAMIL, LanguageCode.TELUGU)
         assertTrue("Tamil -> Telugu cross-language MT must succeed", taToTeResult.isSuccessful)
         assertEquals(2, mtEngine.callCount)

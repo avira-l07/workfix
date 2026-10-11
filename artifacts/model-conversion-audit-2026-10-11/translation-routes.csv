@@ -1,0 +1,101 @@
+source,target,route,new_device_quality_measurement
+hi,hi,same-language; no translation,NOT RUN
+hi,en,ML Kit,NOT RUN
+hi,bn,ML Kit; English intermediary,NOT RUN
+hi,gu,ML Kit; English intermediary,NOT RUN
+hi,mr,ML Kit; English intermediary,NOT RUN
+hi,kn,ML Kit; English intermediary,NOT RUN
+hi,ml,unsupported,NOT RUN
+hi,ta,ML Kit; English intermediary,NOT RUN
+hi,te,ML Kit; English intermediary,NOT RUN
+hi,or,unsupported,NOT RUN
+en,hi,ML Kit,NOT RUN
+en,en,same-language; no translation,NOT RUN
+en,bn,ML Kit,NOT RUN
+en,gu,ML Kit,NOT RUN
+en,mr,ML Kit,NOT RUN
+en,kn,ML Kit,NOT RUN
+en,ml,unsupported,NOT RUN
+en,ta,ML Kit,NOT RUN
+en,te,ML Kit,NOT RUN
+en,or,unsupported,NOT RUN
+bn,hi,ML Kit; English intermediary,NOT RUN
+bn,en,ML Kit,NOT RUN
+bn,bn,same-language; no translation,NOT RUN
+bn,gu,ML Kit; English intermediary,NOT RUN
+bn,mr,ML Kit; English intermediary,NOT RUN
+bn,kn,ML Kit; English intermediary,NOT RUN
+bn,ml,unsupported,NOT RUN
+bn,ta,ML Kit; English intermediary,NOT RUN
+bn,te,ML Kit; English intermediary,NOT RUN
+bn,or,unsupported,NOT RUN
+gu,hi,ML Kit; English intermediary,NOT RUN
+gu,en,ML Kit,NOT RUN
+gu,bn,ML Kit; English intermediary,NOT RUN
+gu,gu,same-language; no translation,NOT RUN
+gu,mr,ML Kit; English intermediary,NOT RUN
+gu,kn,ML Kit; English intermediary,NOT RUN
+gu,ml,unsupported,NOT RUN
+gu,ta,ML Kit; English intermediary,NOT RUN
+gu,te,ML Kit; English intermediary,NOT RUN
+gu,or,unsupported,NOT RUN
+mr,hi,ML Kit; English intermediary,NOT RUN
+mr,en,ML Kit,NOT RUN
+mr,bn,ML Kit; English intermediary,NOT RUN
+mr,gu,ML Kit; English intermediary,NOT RUN
+mr,mr,same-language; no translation,NOT RUN
+mr,kn,ML Kit; English intermediary,NOT RUN
+mr,ml,unsupported,NOT RUN
+mr,ta,ML Kit; English intermediary,NOT RUN
+mr,te,ML Kit; English intermediary,NOT RUN
+mr,or,unsupported,NOT RUN
+kn,hi,ML Kit; English intermediary,NOT RUN
+kn,en,ML Kit,NOT RUN
+kn,bn,ML Kit; English intermediary,NOT RUN
+kn,gu,ML Kit; English intermediary,NOT RUN
+kn,mr,ML Kit; English intermediary,NOT RUN
+kn,kn,same-language; no translation,NOT RUN
+kn,ml,unsupported,NOT RUN
+kn,ta,ML Kit; English intermediary,NOT RUN
+kn,te,ML Kit; English intermediary,NOT RUN
+kn,or,unsupported,NOT RUN
+ml,hi,unsupported,NOT RUN
+ml,en,unsupported,NOT RUN
+ml,bn,unsupported,NOT RUN
+ml,gu,unsupported,NOT RUN
+ml,mr,unsupported,NOT RUN
+ml,kn,unsupported,NOT RUN
+ml,ml,same-language; no translation,NOT RUN
+ml,ta,unsupported,NOT RUN
+ml,te,unsupported,NOT RUN
+ml,or,unsupported,NOT RUN
+ta,hi,ML Kit; English intermediary,NOT RUN
+ta,en,ML Kit,NOT RUN
+ta,bn,ML Kit; English intermediary,NOT RUN
+ta,gu,ML Kit; English intermediary,NOT RUN
+ta,mr,ML Kit; English intermediary,NOT RUN
+ta,kn,ML Kit; English intermediary,NOT RUN
+ta,ml,unsupported,NOT RUN
+ta,ta,same-language; no translation,NOT RUN
+ta,te,ML Kit; English intermediary,NOT RUN
+ta,or,unsupported,NOT RUN
+te,hi,ML Kit; English intermediary,NOT RUN
+te,en,ML Kit,NOT RUN
+te,bn,ML Kit; English intermediary,NOT RUN
+te,gu,ML Kit; English intermediary,NOT RUN
+te,mr,ML Kit; English intermediary,NOT RUN
+te,kn,ML Kit; English intermediary,NOT RUN
+te,ml,unsupported,NOT RUN
+te,ta,ML Kit; English intermediary,NOT RUN
+te,te,same-language; no translation,NOT RUN
+te,or,unsupported,NOT RUN
+or,hi,unsupported,NOT RUN
+or,en,unsupported,NOT RUN
+or,bn,unsupported,NOT RUN
+or,gu,unsupported,NOT RUN
+or,mr,unsupported,NOT RUN
+or,kn,unsupported,NOT RUN
+or,ml,unsupported,NOT RUN
+or,ta,unsupported,NOT RUN
+or,te,unsupported,NOT RUN
+or,or,same-language; no translation,NOT RUN

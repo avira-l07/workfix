@@ -6,6 +6,7 @@ import com.itantra.core.audio.SpeakerAudioSink
 import com.itantra.core.crypto.SecureSessionManager
 import com.itantra.core.translation.TRANSLATION_SCOPE_NOTE
 import com.itantra.core.translation.TranslationResult
+import com.itantra.core.translation.translationFailureMessage
 import com.itantra.core.crypto.SecureSessionState
 import android.content.Context
 import com.itantra.core.inference.ActiveLanguageSessionManager
@@ -1366,6 +1367,18 @@ class TransceiverCoordinator(
         val rawSrcLang = packet.sourceLanguage ?: packet.languageCode
         val pktTargetLang = packet.targetLanguage ?: packet.languageCode
 
+        if (!isEmergencyCode && rawSrcLang == null && pktTargetLang == null) {
+            // Preserve unknown-language text, but never invent a voice language.
+            addMessage(TransceiverMessage(packet.messageId, null, priority = packet.flags.toInt(),
+                text = String(packet.payload, Charsets.UTF_8), translationStatus = com.itantra.domain.model.TranslationStatus.FAILED,
+                source = MessageSource.REMOTE, createdAtLocal = System.currentTimeMillis(), state = MessageState.DELIVERED,
+                peerId = receivedPeerId, senderDeviceId = receivedPeerId,
+                receiverDeviceId = deviceProfileManager?.currentDeviceId ?: "",
+                statusDetail = "Message language unavailable; original preserved, speech not played"))
+            sendTtsFailed(packet.messageId, generation)
+            return
+        }
+
         // Automatic receive preserves the language actually carried by the packet,
         // including a translation already completed by the sender.
         val srcLang = rawSrcLang ?: pktTargetLang ?: LanguageCode.HINDI
@@ -1381,10 +1394,11 @@ class TransceiverCoordinator(
             String(packet.payload, Charsets.UTF_8)
         }
 
-        val pktLang = pktTargetLang ?: localLanguage
+        val pktLang = payloadLanguage
         var textLanguage = if (isEmergencyCode) localLanguage else pktLang
         var translationStatus = com.itantra.domain.model.TranslationStatus.NONE
         var originalText: String? = null
+        var translationFailure: String? = null
 
         if (!isEmergencyCode) {
             // FIX 027: Determine whether receiver-side translation is needed.
@@ -1418,6 +1432,7 @@ class TransceiverCoordinator(
                     // preserve the original text so user sees what arrived; preserve error explicitly.
                     textLanguage = pktLang
                     translationStatus = com.itantra.domain.model.TranslationStatus.FAILED
+                    translationFailure = translationFailureMessage(translationRes?.error)
                     android.util.Log.w("TransceiverCoord", "FIX 027: Receiver-side translation FAILED: ${translationRes?.error}. Preserving transcript.")
                 }
             }
@@ -1437,6 +1452,7 @@ class TransceiverCoordinator(
             text = text,
             originalText = originalText,
             translationStatus = translationStatus,
+            statusDetail = translationFailure,
             source = MessageSource.REMOTE,
             createdAtLocal = System.currentTimeMillis(),
             state = MessageState.DELIVERED,
@@ -1865,7 +1881,7 @@ class TransceiverCoordinator(
                                 val errorDetail = when {
                                     translationRes.error == "NOT_INCLUDED_IN_BUILD" -> TRANSLATION_SCOPE_NOTE
                                     translationRes.error?.startsWith("MODEL_") == true -> "Translation blocked: ${translationRes.error}"
-                                    else -> "Translation failed: ${translationRes.error ?: "Unknown"}"
+                                    else -> translationFailureMessage(translationRes.error)
                                 }
                                 updateMessage(msgId) {
                                     it.copy(
@@ -2250,7 +2266,7 @@ class TransceiverCoordinator(
                                     translationRes.error?.startsWith("MODEL_") == true ->
                                         "Translation blocked: ${translationRes.error}"
                                     else ->
-                                        "Translation failed: ${translationRes.error ?: "Unknown"}"
+                                        translationFailureMessage(translationRes.error)
                                 }
                                 updateMessage(msgId) {
                                     it.copy(
@@ -2424,7 +2440,7 @@ class TransceiverCoordinator(
                         translationRes.error?.startsWith("MODEL_") == true ->
                             "Translation blocked: ${translationRes.error}"
                         else ->
-                            "Translation failed: ${translationRes.error ?: "Unknown"}"
+                            translationFailureMessage(translationRes.error)
                     }
                     updateMessage(msgId) {
                         it.copy(

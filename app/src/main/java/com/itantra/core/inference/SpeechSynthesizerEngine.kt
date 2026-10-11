@@ -8,10 +8,8 @@ import com.itantra.domain.model.SpeechSynthesisResult
  * Contract for an offline text-to-speech engine bound to one loaded
  * language pack.
  *
- * NO IMPLEMENTATION EXISTS YET — same rationale as [SpeechRecognizerEngine]:
- * this lets the lifecycle/session management and UI be built against a
- * stable contract before a concrete TTS runtime (e.g. a converted/quantized
- * FastPitch+HiFi-GAN pair, or a sherpa-onnx TTS model) is chosen.
+ * Implemented by [SherpaOnnxSpeechSynthesizer] using the installed voice.
+ * Synthesis speaks the supplied text; translation happens before this boundary.
  *
  * Lifecycle mirrors [SpeechRecognizerEngine]: [load] before [synthesize],
  * [unload] to fully release resources when this language is no longer

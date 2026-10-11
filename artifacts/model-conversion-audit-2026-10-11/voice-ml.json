@@ -1,0 +1,99 @@
+{
+  "language": "ml",
+  "model_id": "mms-tts-ml",
+  "model_sha256": "7f03397b7144325dc3deab36315c59e423319b8b575497caacbb08d28072b26c",
+  "checksums_verified": {
+    "model.onnx": true,
+    "tokens.txt": true
+  },
+  "frontend": "characters",
+  "ascii_digits_missing": [
+    "7",
+    "8",
+    "9"
+  ],
+  "human_listening_review": "NOT RUN",
+  "cases": [
+    {
+      "category": "phrase",
+      "text": "സഹായം വേണം",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 13390,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1331.28,
+      "audio_file": "ml-1.wav",
+      "roundtrip_stt": "സഹായം വേണം",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "വെള്ളം അയയ്ക്കൂ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 11058,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1357.07,
+      "audio_file": "ml-2.wav",
+      "roundtrip_stt": "വിളവഹിക്കൂ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "റോഡ് അടച്ചിരിക്കുന്നു",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 20933,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1854.3,
+      "audio_file": "ml-3.wav",
+      "roundtrip_stt": "അടച്ചിരിക്കുന്നു",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ഞങ്ങൾ സുരക്ഷിതരാണ്",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 24832,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1558.95,
+      "audio_file": "ml-4.wav",
+      "roundtrip_stt": "ഞങ്ങൾ സുരക്ഷിതാത്",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ഡോക്ടറെ വിളിക്കൂ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 13998,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1343.72,
+      "audio_file": "ml-5.wav",
+      "roundtrip_stt": "രൌട്ടറെ വിളിക്കൂ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "numeric",
+      "text": "സഹായം വേണം 9876543210",
+      "missing_characters": [
+        "7",
+        "8",
+        "9"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    },
+    {
+      "category": "mixed_name",
+      "text": "സഹായം വേണം Zubin",
+      "missing_characters": [
+        "Z",
+        "b",
+        "n",
+        "u"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    }
+  ]
+}

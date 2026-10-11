@@ -185,12 +185,13 @@ class SherpaOnnxSpeechSynthesizer(
         synthMutex.withLock {
             val engine = tts ?: throw IllegalStateException("TTS_ENGINE_NOT_LOADED")
             require(request.languageCode == languageCode) { "TTS_LANGUAGE_MISMATCH" }
-            requireTtsTextCoverage(languageCode, request.text, vocabulary, languageCode == LanguageCode.MARATHI)
+            val speechText = prepareTtsText(request.text)
+            requireTtsTextCoverage(languageCode, speechText, vocabulary, languageCode == LanguageCode.MARATHI)
             val t0 = SystemClock.elapsedRealtimeNanos()
             Log.i("SherpaOnnxTTS", "TTS synth start lang=${languageCode.wireCode} chars=${request.text.length} correlationId=${request.correlationId}")
 
             val generatedAudio = try {
-                engine.generate(request.text)
+                engine.generate(speechText)
             } catch (t: Throwable) {
                 throw TtsSynthesisException("TTS_SYNTHESIS_FAILED: Native generation failed for ${languageCode.wireCode}: ${t.message}", t)
             }

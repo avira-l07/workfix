@@ -12,6 +12,7 @@ import com.google.mlkit.nl.translate.TranslatorOptions
 import com.itantra.core.inference.LanguageScriptDetector
 import com.itantra.domain.model.LanguageCode
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -20,11 +21,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * Phase 5/6/7/8/10: Google ML Kit on-device translation engine for Hindi↔English.
- *
- * Supports exactly two translation routes:
- *   - Hindi → English
- *   - English → Hindi
+ * ML Kit on-device translation for [ML_KIT_SUPPORTED_LANGUAGES].
+ * Non-English routes use the SDK's English intermediary.
  *
  * Models are downloaded once via [prepareOfflineModels] (requires Internet + Wi-Fi).
  * After provisioning, [translate] runs fully offline — no cloud calls.
@@ -150,10 +148,12 @@ class MlKitOfflineTranslationEngine(
      * Downloads translation models for a specific language pair with English.
      */
     suspend fun prepareOfflineModelForLanguage(lang: LanguageCode): TranslationModelState = withContext(Dispatchers.IO) {
-        if (!ML_KIT_SUPPORTED_LANGUAGES.contains(lang) || lang == LanguageCode.ENGLISH) {
+        if (!ML_KIT_SUPPORTED_LANGUAGES.contains(lang)) {
+            return@withContext TranslationModelState.NOT_INSTALLED
+        }
+        if (lang == LanguageCode.ENGLISH) {
             return@withContext TranslationModelState.READY
         }
-        val langTag = toMlKitLanguageTag(lang) ?: return@withContext TranslationModelState.NOT_INSTALLED
         _pairModelStates.update { it + (lang to TranslationModelState.DOWNLOADING) }
 
         val conditions = DownloadConditions.Builder().build()
@@ -161,12 +161,15 @@ class MlKitOfflineTranslationEngine(
             val toEn = getOrCreateTranslator(lang, LanguageCode.ENGLISH)
             val fromEn = getOrCreateTranslator(LanguageCode.ENGLISH, lang)
 
-            toEn?.downloadModelIfNeeded(conditions)?.await()
-            fromEn?.downloadModelIfNeeded(conditions)?.await()
+            checkNotNull(toEn).downloadModelIfNeeded(conditions).await()
+            checkNotNull(fromEn).downloadModelIfNeeded(conditions).await()
 
             _pairModelStates.update { it + (lang to TranslationModelState.READY) }
             checkModelReadiness()
             TranslationModelState.READY
+        } catch (e: CancellationException) {
+            _pairModelStates.update { it + (lang to TranslationModelState.NOT_INSTALLED) }
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Model download failed for $lang", e)
             _pairModelStates.update { it + (lang to TranslationModelState.FAILED) }
@@ -235,27 +238,13 @@ class MlKitOfflineTranslationEngine(
                 return failure(text, sourceLang, targetLang, "TRANSLATION_EMPTY")
             }
 
-            // Phase 10: HI→EN validation — should not simply echo Hindi source
-            if (sourceLang == LanguageCode.HINDI && targetLang == LanguageCode.ENGLISH) {
-                if (translated.trim() == text.trim()) {
-                    Log.w(TAG, "HI→EN produced identical output — possible echo")
-                }
+            // Retain the SDK's former EN->HI safeguard and extend it to all
+            // Indic targets. A Latin-only result may be a name, but these voices
+            // require native script; preserve the source rather than inventing one.
+            if (LanguageScriptDetector.detectScriptMismatch(translated, targetLang) != null) {
+                return failure(text, sourceLang, targetLang, "OUTPUT_SCRIPT_MISMATCH")
             }
-
-            // Phase 10: EN→HI validation — result must contain Devanagari
-            if (sourceLang == LanguageCode.ENGLISH && targetLang == LanguageCode.HINDI) {
-                if (!LanguageScriptDetector.containsDevanagari(translated)) {
-                    Log.w(TAG, "EN→HI produced non-Devanagari output; content redacted")
-                    return TranslationResult(
-                        originalText = text,
-                        translatedText = translated,
-                        isSuccessful = false,
-                        sourceLanguage = sourceLang,
-                        targetLanguage = targetLang,
-                        error = "OUTPUT_SCRIPT_MISMATCH"
-                    )
-                }
-            }
+            // Remaining shared output checks live in TranslationRouter.
 
             if (com.example.itantra.BuildConfig.DEBUG) {
                 // Log only metadata, never plaintext (Phase 24)
@@ -270,8 +259,10 @@ class MlKitOfflineTranslationEngine(
                 sourceLanguage = sourceLang,
                 targetLanguage = targetLang
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Translation inference failed: ${e.message}")
+            Log.e(TAG, "Translation inference failed; content redacted")
             failure(text, sourceLang, targetLang, "INFERENCE_FAILED")
         }
     }

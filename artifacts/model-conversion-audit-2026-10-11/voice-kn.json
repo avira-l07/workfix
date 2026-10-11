@@ -1,0 +1,98 @@
+{
+  "language": "kn",
+  "model_id": "mms-tts-kn",
+  "model_sha256": "9644cfa46c5802c4c2c8196f91eedc0cd54d46527bbc32589ebaf967ed07591f",
+  "checksums_verified": {
+    "model.onnx": true,
+    "tokens.txt": true
+  },
+  "frontend": "characters",
+  "ascii_digits_missing": [],
+  "human_listening_review": "NOT RUN",
+  "cases": [
+    {
+      "category": "phrase",
+      "text": "ಸಹಾಯ ಬೇಕು",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 19321,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1442.22,
+      "audio_file": "kn-1.wav",
+      "roundtrip_stt": "ಸಹಾಯ ಬೇಕು",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ನೀರು ಕಳುಹಿಸಿ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 22561,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1798.18,
+      "audio_file": "kn-2.wav",
+      "roundtrip_stt": "ನೀರು ಕಳುಲಿಸಿ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 25176,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1934.89,
+      "audio_file": "kn-3.wav",
+      "roundtrip_stt": "ದರಸ್ತೆ ಮುಚ್ಚಲಾಗಿದೆ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 38121,
+      "sample_rate_hz": 16000,
+      "generation_ms": 2782.81,
+      "audio_file": "kn-4.wav",
+      "roundtrip_stt": "ನಾವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇವೆ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "phrase",
+      "text": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 23319,
+      "sample_rate_hz": 16000,
+      "generation_ms": 1953.81,
+      "audio_file": "kn-5.wav",
+      "roundtrip_stt": "ವೈದ್ಯರನ್ನು ಕರೆಸಿ",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "numeric",
+      "text": "ಸಹಾಯ ಬೇಕು 9876543210",
+      "missing_characters": [],
+      "coverage": "covered; needs listening review",
+      "samples": 25193,
+      "sample_rate_hz": 16000,
+      "generation_ms": 2182.6,
+      "audio_file": "kn-6.wav",
+      "roundtrip_stt": "ಸಹಾಯ ಬೆರುಟು",
+      "roundtrip_scope": "Automated proxy: either STT or TTS can introduce errors"
+    },
+    {
+      "category": "mixed_name",
+      "text": "ಸಹಾಯ ಬೇಕು Zubin",
+      "missing_characters": [
+        "Z",
+        "b",
+        "i",
+        "n",
+        "u"
+      ],
+      "coverage": "BLOCKED: text would lose characters"
+    }
+  ]
+}

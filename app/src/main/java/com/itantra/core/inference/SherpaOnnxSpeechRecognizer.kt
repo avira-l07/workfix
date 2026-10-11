@@ -23,6 +23,10 @@ internal fun whisperLanguageCode(code: LanguageCode): String {
 internal fun languageCodeFromWhisper(code: String): LanguageCode? =
     LanguageCode.fromWireCode(code.trim())?.takeIf { it in ModelFileSpecs.supportedWhisperLanguages }
 
+/** Whisper's acoustic language is not the language of its translated output. */
+internal fun whisperTextLanguage(acousticLanguage: LanguageCode, translatedToEnglish: Boolean): LanguageCode =
+    if (translatedToEnglish) LanguageCode.ENGLISH else acousticLanguage
+
 /** Exact digital silence only: do not impose a threshold on quiet speech. */
 internal fun isDigitalSilence(samples: FloatArray): Boolean = samples.all { it == 0f }
 
@@ -267,7 +271,7 @@ class SherpaOnnxSpeechRecognizer(
         return SpeechRecognitionResult(
             text = cleanedText,
             isFinal = true,
-            languageCode = resolvedLanguage,
+            languageCode = whisperTextLanguage(resolvedLanguage, isTranslateMode),
             confidence = null,
             timestampMillis = System.currentTimeMillis(),
             pureInferenceMs = pureInferenceMs,
